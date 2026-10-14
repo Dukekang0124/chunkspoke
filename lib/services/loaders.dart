@@ -4,6 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../models/content_pack.dart';
 import 'database.dart';
 import 'chunk_progress.dart';
+import 'session.dart';
 
 Future<ContentPack> loadContentPack() async {
   final str = await rootBundle.loadString('assets/content_pack.json');
@@ -45,6 +46,23 @@ class ProgressService {
   Future<void> init() async {
     await _db.db;
     _cache.addAll(await _db.getAllKv());
+    await ensureMigrated();
+  }
+
+  /// M4：v1.1.0 首启检测旧数据 → 重置学习进度（保留 Azure Key / 更新源 / FTUE 等设置）。
+  /// 返回 true 表示本次发生了重置（供 UI 提示"训练系统升级，从第一课重新开始"）。
+  Future<bool> ensureMigrated() async {
+    if (!Migration.needsReset(_kv('dataVersion'))) return false;
+    await _db.setKv('completed', jsonEncode([]));
+    await _db.setKv('dims', jsonEncode({}));
+    await _db.setKv('streak', '0');
+    await _db.setKv('lastActiveDay', '');
+    await _db.setKv('scores', jsonEncode([]));
+    await _db.setKv('review', jsonEncode({}));
+    await _db.resetChunks();
+    await _db.setKv('dataVersion', Migration.currentDataVersion);
+    _cache.addAll(await _db.getAllKv());
+    return true;
   }
 
   String? _kv(String k) => _cache[k];

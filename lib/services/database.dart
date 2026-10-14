@@ -132,6 +132,11 @@ class AppDatabase {
     return rows.map(ChunkRow.fromMap).toList();
   }
 
+  // 旧数据重置（M4）：清空进度表，保留 kv 设置。
+  Future<void> resetChunks() async {
+    await (await db).delete('chunks');
+  }
+
   // —— sessions (history) ——
   Future<void> insertSession(String key, String outcome, int score) async {
     await (await db).insert('sessions', {
