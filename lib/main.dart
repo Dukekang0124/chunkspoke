@@ -4,7 +4,7 @@ import 'models/content_pack.dart';
 import 'services/loaders.dart';
 import 'ui/theme.dart';
 import 'screens/ftue.dart';
-import 'screens/map.dart';
+import 'screens/nav.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +37,7 @@ class ChunkSpokeApp extends StatelessWidget {
       title: 'ChunkSpoke',
       debugShowCheckedModeBanner: false,
       theme: darkTheme,
-      home: progress.seenFtue ? const MapScreen() : const FtueScreen(),
+      home: progress.seenFtue ? const AppNav() : const FtueScreen(),
     );
   }
 }

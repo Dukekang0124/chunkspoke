@@ -19,27 +19,24 @@ class MeScreen extends StatelessWidget {
         : 0;
     final acc = progress.avgScore.round();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Me')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _stat('Chunks mastered', '$chunks'),
-          _stat('Day streak', '$streak', 'Consecutive days'),
-          _stat('Chinese hint rate', '$hintRate%', 'Lower is better'),
-          _stat('Accuracy average', '$acc', 'Text Match / PA score'),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
-              onPressed: () => Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-              child: const Text('Settings', style: TextStyle(color: Colors.white)),
-            ),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _stat('Chunks mastered', '$chunks'),
+        _stat('Day streak', '$streak', 'Consecutive days'),
+        _stat('Chinese hint rate', '$hintRate%', 'Lower is better'),
+        _stat('Accuracy average', '$acc', 'Text Match / PA score'),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+            onPressed: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            child: const Text('Settings', style: TextStyle(color: Colors.black87)),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -47,7 +44,7 @@ class MeScreen extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
+          color: kCard,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

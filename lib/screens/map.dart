@@ -5,9 +5,6 @@ import '../services/loaders.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'level.dart';
-import 'settings.dart';
-import 'review.dart';
-import 'me.dart';
 
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
@@ -19,30 +16,14 @@ class MapScreen extends StatelessWidget {
     final completed = progress.completedLevels;
     final levels = content.levels;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ChunkSpoke'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white70),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const ReviewScreen())),
-          ),
-          IconButton(
-            icon: const Icon(Icons.person, color: Colors.white70),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const MeScreen())),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white70),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: GridView.builder(
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const TodayCard(),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             crossAxisSpacing: 12,
@@ -68,6 +49,71 @@ class MapScreen extends StatelessWidget {
             );
           },
         ),
+      ],
+    );
+  }
+}
+
+/// M5 首页今日会话卡：展示到期数 / 冷启动“今天开始”，一击开练。
+class TodayCard extends StatefulWidget {
+  const TodayCard({super.key});
+  @override
+  State<TodayCard> createState() => _TodayCardState();
+}
+
+class _TodayCardState extends State<TodayCard> {
+  int _due = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final p = Provider.of<ProgressService>(context, listen: false);
+    final due = await p.chunkStore.dueChunkKeys(DateTime.now().millisecondsSinceEpoch);
+    if (mounted) setState(() => _due = due.length);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Provider.of<ContentPack>(context, listen: false);
+    final progress = Provider.of<ProgressService>(context, listen: false);
+    final completed = progress.completedLevels;
+    final levels = content.levels;
+    final target =
+        levels.firstWhere((l) => !completed.contains(l.id), orElse: () => levels.first);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: kCard,
+        border: Border.all(color: kPrimary.withOpacity(0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('今日会话',
+              style: TextStyle(color: kPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Text(
+            _due > 0
+                ? '$_due 个词块到期复习'
+                : (progress.streak == 0 ? '今天开始 · 新学一关' : '今天也来练一练'),
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => LevelScreen(level: target)),
+              ),
+              child: const Text('一击开练', style: TextStyle(color: Colors.black87)),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -105,7 +151,7 @@ class _LevelCell extends StatelessWidget {
       onLongPress: unlocked ? null : onLongPressLocked,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
+          color: kCard,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withOpacity(0.5)),
         ),
