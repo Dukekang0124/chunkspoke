@@ -65,9 +65,42 @@ class _BuildStepState extends State<BuildStep> {
       child: Column(
         children: [
           SceneCard(widget.level.theme),
-          const SizedBox(height: 22),
-          const Text('Build the sentence', style: TextStyle(color: Colors.white70)),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+          const Text('中文题干 · 拼出这句英文',
+              style: TextStyle(color: kPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: kBg.withOpacity(0.5),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Text(widget.chunk.meaningCN,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+          ),
+          if (widget.chunk.sentence.coreWords.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: widget.chunk.sentence.coreWords
+                  .map((w) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(999),
+                          color: kPrimary.withOpacity(0.16),
+                          border: Border.all(color: kPrimary.withOpacity(0.5)),
+                        ),
+                        child: Text(w, style: const TextStyle(color: kPrimary, fontSize: 13)),
+                      ))
+                  .toList(),
+            ),
+          ],
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -89,8 +122,8 @@ class _BuildStepState extends State<BuildStep> {
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: Colors.white24),
                           ),
-                          child: Text(_expected[i],
-                              style: const TextStyle(color: Colors.white38, fontSize: 16)),
+                          child: const Text('—',
+                              style: TextStyle(color: Colors.white24, fontSize: 16)),
                         ),
                   onWillAccept: (data) => data == _expected[i] && _filled[i] == null,
                   onAccept: (data) => _place(i, data!),

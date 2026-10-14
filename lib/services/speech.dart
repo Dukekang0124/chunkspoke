@@ -28,6 +28,7 @@ class SayOutcome {
   final int? textMatchScore;
   final PronunciationResult? azure;
   final bool wrong;
+  final bool noSpeech;
   SayOutcome({
     required this.passed,
     required this.level,
@@ -35,6 +36,7 @@ class SayOutcome {
     this.textMatchScore,
     this.azure,
     this.wrong = false,
+    this.noSpeech = false,
   });
 }
 

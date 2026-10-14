@@ -92,6 +92,20 @@ class _SayWidgetState extends State<SayWidget> {
       });
     } else {
       await _speech.stopLocal();
+      // no-speech 缺陷修复：没听到不算分、不入均值，提示重试。
+      if (_heard.trim().isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _thinking = false;
+          _outcome = SayOutcome(
+            passed: false,
+            level: 'L2',
+            recognized: '(no speech)',
+            noSpeech: true,
+          );
+        });
+        return;
+      }
       final tm = _speech.textMatch(widget.sentence, _heard);
       p.recordScore(tm.score);
       final passed = tm.passed;
@@ -101,7 +115,7 @@ class _SayWidgetState extends State<SayWidget> {
         _outcome = SayOutcome(
           passed: passed,
           level: 'L2',
-          recognized: _heard.isEmpty ? '(no speech)' : _heard,
+          recognized: _heard,
           textMatchScore: tm.score,
           wrong: !passed,
         );
@@ -211,6 +225,36 @@ class _SayWidgetState extends State<SayWidget> {
                 style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
                 onPressed: widget.onDone,
                 child: const Text('Next sentence', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (o.noSpeech) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A2E),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.mic_off, color: kPrimary, size: 36),
+            const SizedBox(height: 8),
+            const Text('没听到，再试一次',
+                style: TextStyle(color: Colors.white, fontSize: 18)),
+            const SizedBox(height: 6),
+            const Text('没捕捉到声音，请靠近麦克风重试',
+                style: TextStyle(color: Colors.white70, fontSize: 14)),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+                onPressed: _retry,
+                child: const Text('再试一次', style: TextStyle(color: Colors.white)),
               ),
             ),
           ],

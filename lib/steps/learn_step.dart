@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
@@ -5,7 +6,7 @@ import '../services/loaders.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 
-/// LEARN 步骤：逐张展示词块卡，自动播放发音，长按英文弹中文。无测试。
+/// LEARN 步骤：展示英文词块 + 中文卡；中文卡长按 3.5 秒溶解（隐藏）用于自测回忆。
 class LearnStep extends StatefulWidget {
   final Level level;
   final VoidCallback onDone;
@@ -17,6 +18,8 @@ class LearnStep extends StatefulWidget {
 
 class _LearnStepState extends State<LearnStep> {
   int _i = 0;
+  bool _cnDissolved = false;
+  Timer? _dissolveTimer;
 
   TtsService get _tts => Provider.of<TtsService>(context, listen: false);
 
@@ -26,11 +29,30 @@ class _LearnStepState extends State<LearnStep> {
     _play();
   }
 
+  @override
+  void dispose() {
+    _dissolveTimer?.cancel();
+    super.dispose();
+  }
+
   void _play() => _tts.speak(widget.level.chunks[_i].text);
 
+  void _beginDissolve() {
+    _dissolveTimer?.cancel();
+    _dissolveTimer = Timer(const Duration(milliseconds: 3500), () {
+      if (mounted) setState(() => _cnDissolved = true);
+    });
+  }
+
+  void _cancelDissolve() => _dissolveTimer?.cancel();
+
   void _next() {
+    _dissolveTimer?.cancel();
     if (_i < widget.level.chunks.length - 1) {
-      setState(() => _i++);
+      setState(() {
+        _i++;
+        _cnDissolved = false;
+      });
       _play();
     } else {
       widget.onDone();
@@ -51,14 +73,35 @@ class _LearnStepState extends State<LearnStep> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CnText(c.text, c.meaningCN,
+                  Text(c.text,
                       style: TextStyle(
                           color: chunkColor(c.type),
                           fontSize: 30,
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 18),
-                  CnText(c.sentence.text, c.meaningCN,
-                      style: const TextStyle(color: Colors.white, fontSize: 18)),
+                  GestureDetector(
+                    onTap: () => setState(() => _cnDissolved = false),
+                    onLongPressStart: (_) => _beginDissolve(),
+                    onLongPressEnd: (_) => _cancelDissolve(),
+                    onLongPressMove: (_) => _cancelDissolve(),
+                    child: AnimatedOpacity(
+                      opacity: _cnDissolved ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 400),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: kBg.withOpacity(0.5),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Text(c.meaningCN,
+                            style: const TextStyle(color: Colors.white, fontSize: 18)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(_cnDissolved ? '已隐藏 · 点按恢复' : '长按中文卡 3.5 秒溶解（自测）',
+                      style: const TextStyle(color: Colors.white38, fontSize: 12)),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: _play,
