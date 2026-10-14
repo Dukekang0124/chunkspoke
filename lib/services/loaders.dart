@@ -3,6 +3,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_tts/flutter_tts.dart';
 import '../models/content_pack.dart';
 import 'database.dart';
+import 'chunk_progress.dart';
 
 Future<ContentPack> loadContentPack() async {
   final str = await rootBundle.loadString('assets/content_pack.json');
@@ -217,6 +218,9 @@ class ProgressService {
     }
     return n;
   }
+
+  // 结构化进度存储（M1 状态机/调度后端），与 ProgressService 共享同一 SQLite 库。
+  ChunkProgressStore get chunkStore => ChunkProgressStore(_db);
 }
 
 class TtsService {

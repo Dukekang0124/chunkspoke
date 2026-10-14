@@ -64,20 +64,84 @@ const Set<String> _stopwords = {
   'there',
 };
 
-/// 语音服务：L1 Azure 发音评测（真实三项分数）；L2 speech_to_text 本地识别 + Text Match 计分。
+String _normalize(String s) => s
+    .toLowerCase()
+    .replaceAll(RegExp(r"[^a-z0-9' ]"), '')
+    .replaceAll(RegExp(r'\s+'), ' ')
+    .trim();
+
+Set<String> _coreWords(String sentence) => _normalize(sentence)
+    .split(' ')
+    .where((w) => w.isNotEmpty && !_stopwords.contains(w))
+    .toSet();
+
+int _levenshtein(String a, String b) {
+  a = a.toLowerCase();
+  b = b.toLowerCase();
+  final m = a.length, n = b.length;
+  if (m == 0) return n;
+  if (n == 0) return m;
+  final dp = List.generate(m + 1, (_) => List.filled(n + 1, 0));
+  for (var i = 0; i <= m; i++) dp[i][0] = i;
+  for (var j = 0; j <= n; j++) dp[0][j] = j;
+  for (var i = 1; i <= m; i++) {
+    for (var j = 1; j <= n; j++) {
+      final cost = a[i - 1] == b[j - 1] ? 0 : 1;
+      dp[i][j] = [
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      ].reduce((x, y) => x < y ? x : y);
+    }
+  }
+  return dp[m][n];
+}
+
+/// 词级容错：完全相等 / 编辑距离≤1 / 词干近似（短词为长词前缀且长度差≤1）。
+bool _wordClose(String target, String cand) {
+  target = _normalize(target);
+  cand = _normalize(cand);
+  if (target.isEmpty || cand.isEmpty) return false;
+  if (target == cand) return true;
+  if (_levenshtein(target, cand) <= 1) return true;
+  final shorter = target.length <= cand.length ? target : cand;
+  final longer = target.length <= cand.length ? cand : target;
+  return longer.startsWith(shorter) && (longer.length - shorter.length) <= 1;
+}
+
+/// L4 开口判定结果：命中 / 缺失的目标核心词（用于琥珀高亮）。
+class ChunkHitResult {
+  final bool allHit;
+  final List<String> hit;
+  final List<String> missed;
+  ChunkHitResult({required this.allHit, required this.hit, required this.missed});
+}
+
+/// L4 开口命中：expected 核心词（含 variants 候选）在 recognized 中以任意词序出现即命中；
+/// 逐词编辑距离≤1 / 词干容错。stopwords 不参与判定。
+ChunkHitResult chunkHit(String expected, String recognized,
+    {List<String> variants = const []}) {
+  final targets = _coreWords(expected).toList();
+  final rec =
+      _normalize(recognized).split(' ').where((w) => w.isNotEmpty).toSet();
+  final hit = <String>[];
+  final missed = <String>[];
+  for (final t in targets) {
+    final candidates = [t, ...variants];
+    final ok = candidates.any((c) => rec.any((rw) => _wordClose(c, rw)));
+    if (ok) {
+      hit.add(t);
+    } else {
+      missed.add(t);
+    }
+  }
+  return ChunkHitResult(allHit: missed.isEmpty, hit: hit, missed: missed);
+}
+
+/// 语音服务：L1 Azure 发音评测（真实三项分数）；L2 speech_to_text 本地识别 + Text Match 计分；
+/// L4 Azure STT 转写（供开口题型容错命中）。
 class SpeechService {
   final stt.SpeechToText _stt = stt.SpeechToText();
-
-  String _normalize(String s) => s
-      .toLowerCase()
-      .replaceAll(RegExp(r"[^a-z0-9' ]"), '')
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim();
-
-  Set<String> _coreWords(String sentence) => _normalize(sentence)
-      .split(' ')
-      .where((w) => w.isNotEmpty && !_stopwords.contains(w))
-      .toSet();
 
   /// L2：本地识别结果计分（Text Match）。
   /// 核心词命中率 ≥60% 判通过；分数 = 60 + 40×命中率。
@@ -164,6 +228,34 @@ class SpeechService {
     } catch (e) {
       return PronunciationResult(
           accuracy: 0, fluency: 0, completeness: 0, passed: false, error: '$e');
+    }
+  }
+
+  /// L4：Azure STT 转写（REST）。返回识别文本；失败/离线返回空串（交上层降级）。
+  Future<String> transcribeAzure(String audioPath, String key, String region) async {
+    try {
+      final url = Uri.parse(
+        'https://$region.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed',
+      );
+      final bytes = await File(audioPath).readAsBytes();
+      final resp = await http
+          .post(
+            url,
+            headers: {
+              'Ocp-Apim-Subscription-Key': key,
+              'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+              'Accept': 'application/json',
+            },
+            body: bytes,
+          )
+          .timeout(const Duration(seconds: 20));
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        return (data['DisplayText'] as String?) ?? '';
+      }
+      return '';
+    } catch (_) {
+      return '';
     }
   }
 }
