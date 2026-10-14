@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../models/content_pack.dart';
+import 'database.dart';
 
 Future<ContentPack> loadContentPack() async {
   final str = await rootBundle.loadString('assets/content_pack.json');
@@ -33,47 +33,70 @@ class Appeal {
       );
 }
 
+// ProgressService: storage backend replaced Hive -> SQLite (M1).
+// Public interface (getters/methods) is intentionally UNCHANGED so UI and
+// service call sites keep working; an in-memory cache backs the synchronous
+// getters, while mutations persist to SQLite and update the cache.
 class ProgressService {
-  late Box _box;
+  final AppDatabase _db = AppDatabase();
+  final Map<String, String> _cache = {};
 
   Future<void> init() async {
-    await Hive.initFlutter();
-    _box = await Hive.openBox('cs_progress');
+    await _db.db;
+    _cache.addAll(await _db.getAllKv());
   }
 
-  Set<String> get completedLevels =>
-      Set<String>.from((_box.get('completed', defaultValue: <String>[]) as List).cast<String>());
+  String? _kv(String k) => _cache[k];
+  Future<void> _put(String k, String v) async {
+    _cache[k] = v;
+    await _db.setKv(k, v);
+  }
+
+  Set<String> get completedLevels => Set<String>.from(
+      (jsonDecode(_kv('completed') ?? '[]') as List).cast<String>());
 
   Future<void> markCompleted(String id) async {
     final set = completedLevels;
     set.add(id);
-    await _box.put('completed', set.toList());
+    await _put('completed', jsonEncode(set.toList()));
   }
 
-  bool get seenFtue => _box.get('seenFtue', defaultValue: false) as bool;
-  Future<void> setSeenFtue(bool v) => _box.put('seenFtue', v);
+  bool get seenFtue => _kv('seenFtue') == 'true';
+  Future<void> setSeenFtue(bool v) => _put('seenFtue', v.toString());
 
-  String? get azureKey => _box.get('azureKey') as String?;
-  Future<void> setAzureKey(String? k) => _box.put('azureKey', k);
+  // Empty/unset key reads back as null to keep "无 Key 回显" behavior identical.
+  String? get azureKey {
+    final v = _kv('azureKey');
+    return (v == null || v.isEmpty) ? null : v;
+  }
 
-  String? get azureRegion => _box.get('azureRegion') as String?;
-  Future<void> setAzureRegion(String? r) => _box.put('azureRegion', r);
+  Future<void> setAzureKey(String? k) => _put('azureKey', k ?? '');
 
-  // —— 更新源（远端 version.json 地址，可在设置页改动，便于免重装测试更新链路） ——
-  String? get updateUrl => _box.get('updateUrl') as String?;
-  Future<void> setUpdateUrl(String? u) => _box.put('updateUrl', u);
+  String? get azureRegion {
+    final v = _kv('azureRegion');
+    return (v == null || v.isEmpty) ? null : v;
+  }
 
-  int get hintCount => _box.get('hintCount', defaultValue: 0) as int;
-  Future<void> incHint() => _box.put('hintCount', hintCount + 1);
+  Future<void> setAzureRegion(String? r) => _put('azureRegion', r ?? '');
 
-  int get sayCount => _box.get('sayCount', defaultValue: 0) as int;
-  Future<void> incSay() => _box.put('sayCount', sayCount + 1);
+  String? get updateUrl {
+    final v = _kv('updateUrl');
+    return (v == null || v.isEmpty) ? null : v;
+  }
+
+  Future<void> setUpdateUrl(String? u) => _put('updateUrl', u ?? '');
+
+  int get hintCount => int.tryParse(_kv('hintCount') ?? '') ?? 0;
+  Future<void> incHint() => _put('hintCount', (hintCount + 1).toString());
+
+  int get sayCount => int.tryParse(_kv('sayCount') ?? '') ?? 0;
+  Future<void> incSay() => _put('sayCount', (sayCount + 1).toString());
 
   // —— 掌握度四维：recognize / build / say / swap ——
   static const List<String> _dims = ['recognize', 'build', 'say', 'swap'];
   List<bool> dimsFor(String levelId) {
     final map =
-        (_box.get('dims', defaultValue: <String, dynamic>{}) as Map).cast<String, dynamic>();
+        jsonDecode(_kv('dims') ?? '{}') as Map<String, dynamic>;
     final raw = map[levelId];
     if (raw == null) return const [false, false, false, false];
     final list = (raw as List).cast<bool>();
@@ -82,7 +105,7 @@ class ProgressService {
 
   Future<void> recordDim(String levelId, String dim) async {
     final map = Map<String, dynamic>.from(
-        (_box.get('dims', defaultValue: <String, dynamic>{}) as Map).cast<String, dynamic>());
+        jsonDecode(_kv('dims') ?? '{}') as Map<String, dynamic>);
     final list = (map[levelId] as List? ?? [false, false, false, false])
         .cast<bool>()
         .toList();
@@ -90,18 +113,17 @@ class ProgressService {
     final idx = _dims.indexOf(dim);
     if (idx >= 0) list[idx] = true;
     map[levelId] = list;
-    await _box.put('dims', map);
+    await _put('dims', jsonEncode(map));
   }
 
   // —— 申诉收件箱 ——
   List<Appeal> appeals() {
-    final raw =
-        (_box.get('appeals', defaultValue: <dynamic>[]) as List).cast<Map<String, dynamic>>();
-    return raw.map((j) => Appeal.fromJson(j)).toList();
+    final raw = jsonDecode(_kv('appeals') ?? '[]') as List;
+    return raw.map((j) => Appeal.fromJson(j as Map<String, dynamic>)).toList();
   }
 
   Future<void> addAppeal(String levelId, String expected, String audioPath) async {
-    final list = (_box.get('appeals', defaultValue: <dynamic>[]) as List)
+    final list = (jsonDecode(_kv('appeals') ?? '[]') as List)
         .cast<Map<String, dynamic>>()
         .toList();
     list.add(Appeal(
@@ -109,23 +131,34 @@ class ProgressService {
             expected: expected,
             audioPath: audioPath,
             ts: DateTime.now().millisecondsSinceEpoch).toJson());
-    await _box.put('appeals', list);
+    await _put('appeals', jsonEncode(list));
   }
 
-  int get appealCount =>
-      (_box.get('appeals', defaultValue: <dynamic>[]) as List).length;
+  int get appealCount => appeals().length;
 
-  // —— 复习队列（次日到期） ——
+  // —— 申诉：仅记事件日志，不存音频（超出本期音频存储范围） ——
+  Future<void> logAppeal(String levelId, String expected) async {
+    final list = (jsonDecode(_kv('appeals') ?? '[]') as List)
+        .cast<Map<String, dynamic>>()
+        .toList();
+    list.add({
+      'levelId': levelId,
+      'expected': expected,
+      'ts': DateTime.now().millisecondsSinceEpoch
+    });
+    await _put('appeals', jsonEncode(list));
+  }
+
+  // —— 复习队列（次日到期，兼容旧接口；M4 起以 chunks.due_date 为准） ——
   Map<String, int> _reviewMap() =>
-      Map<String, int>.from((_box.get('review', defaultValue: <String, int>{})
-          as Map).cast<String, int>());
+      Map<String, int>.from(jsonDecode(_kv('review') ?? '{}') as Map<String, dynamic>);
 
   Future<void> scheduleReview(List<String> chunkKeys) async {
     final map = _reviewMap();
     final next =
         DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch;
     for (final k in chunkKeys) map.putIfAbsent(k, () => next);
-    await _box.put('review', map);
+    await _put('review', jsonEncode(map));
   }
 
   List<String> dueReviews() {
@@ -140,54 +173,41 @@ class ProgressService {
   Future<void> removeReview(String key) async {
     final map = _reviewMap();
     map.remove(key);
-    await _box.put('review', map);
+    await _put('review', jsonEncode(map));
   }
 
   int get dueReviewCount => dueReviews().length;
 
   // —— 连续天数（streak） ——
-  String? get lastActiveDay => _box.get('lastActiveDay') as String?;
-  int get streak => _box.get('streak', defaultValue: 0) as int;
+  String? get lastActiveDay => _kv('lastActiveDay');
+  int get streak => int.tryParse(_kv('streak') ?? '') ?? 0;
   Future<void> bumpStreak() async {
     final today = _dateKey(DateTime.now());
     if (lastActiveDay == today) return;
     final last = lastActiveDay;
     final s = (last != null &&
-            last == _dateKey(DateTime.now().subtract(const Duration(days: 1))))
+            last ==
+                _dateKey(DateTime.now()
+                    .subtract(const Duration(days: 1))))
         ? streak + 1
         : 1;
-    await _box.put('streak', s);
-    await _box.put('lastActiveDay', today);
+    await _put('streak', s.toString());
+    await _put('lastActiveDay', today);
   }
 
   String _dateKey(DateTime d) => '${d.year}-${d.month}-${d.day}';
 
   // —— 发音分数（用于 Accuracy average） ——
   Future<void> recordScore(int s) async {
-    final list =
-        (_box.get('scores', defaultValue: <int>[]) as List).cast<int>().toList();
+    final list = (jsonDecode(_kv('scores') ?? '[]') as List).cast<int>().toList();
     list.add(s.clamp(0, 100));
-    await _box.put('scores', list);
+    await _put('scores', jsonEncode(list));
   }
 
   double get avgScore {
-    final list = (_box.get('scores', defaultValue: <int>[]) as List).cast<int>();
+    final list = (jsonDecode(_kv('scores') ?? '[]') as List).cast<int>();
     if (list.isEmpty) return 0;
     return list.reduce((a, b) => a + b) / list.length;
-  }
-
-  // —— 申诉：仅记事件日志，不存音频（超出本期音频存储范围） ——
-  Future<void> logAppeal(String levelId, String expected) async {
-    final list = (_box.get('appeals', defaultValue: <dynamic>[])
-            as List)
-        .cast<Map<String, dynamic>>()
-        .toList();
-    list.add({
-      'levelId': levelId,
-      'expected': expected,
-      'ts': DateTime.now().millisecondsSinceEpoch
-    });
-    await _box.put('appeals', list);
   }
 
   int chunksMastered(ContentPack content) {
