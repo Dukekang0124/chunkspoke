@@ -1,0 +1,41 @@
+name: chunkspoke_flutter
+description: "Think in chunks. Speak in English."
+publish_to: 'none'
+version: 1.0.1+2
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  flutter_tts: ^4.0.2
+  http: ^1.2.0
+  speech_to_text: ^7.0.0
+  path_provider: ^2.1.1
+  permission_handler: ^11.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/content_pack.json
+    - assets/version.json
+    - assets/icon/icon.png
+    - assets/icon/icon_foreground.png
+
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#0F0F1A"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  android: true
+  ios: false
+  min_sdk_android: 21
