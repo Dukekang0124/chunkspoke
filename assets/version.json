@@ -1,7 +1,7 @@
 {
-  "version": "1.0.1",
-  "buildNumber": 2,
+  "version": "1.1.0",
+  "buildNumber": 5,
   "apkUrl": "",
   "contentUrl": "",
-  "notes": "AI 智能增强：4 模型优先降级（语义复核 + 提示）；可编辑更新源。"
+  "notes": "M6 发版：应用更名『开口说英语』；词块库扩至 500；掌握硬门槛状态机；GLM-4-Flash 可选 AI 助手（周报/学习计划/变式造句）。"
 }
