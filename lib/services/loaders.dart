@@ -229,10 +229,12 @@ class ProgressService {
     return list.reduce((a, b) => a + b) / list.length;
   }
 
-  int chunksMastered(ContentPack content) {
+  /// M7：已掌握词块数 = 达到 mastered 等级的 chunk 总数（硬门槛统计）。
+  Future<int> chunksMastered(ContentPack content) async {
+    final set = (await chunkStore.allMasteredKeys()).toSet();
     int n = 0;
     for (final lv in content.levels) {
-      if (completedLevels.contains(lv.id)) n += lv.chunks.length;
+      n += lv.chunks.where((c) => set.contains(c.id)).length;
     }
     return n;
   }

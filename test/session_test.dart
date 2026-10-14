@@ -30,21 +30,27 @@ void main() {
 
   group('PracticeSession', () {
     final all = List.generate(12, (i) => _c('c$i'));
-    test('到期充足（≥4）直接返回到期', () {
+    test('有到期复习 → 先练到期，不插新学', () {
       final due = all.take(6).toList();
       final plan = PracticeSession.buildPlan(due, all);
       expect(plan.length, 6);
-    });
-    test('到期不足则补新学至 4', () {
-      final due = all.take(1).toList();
-      final plan = PracticeSession.buildPlan(due, all);
-      expect(plan.length, 4);
       expect(plan.first.id, 'c0'); // 到期优先
     });
-    test('到期超限只取前 10', () {
+    test('到期仅 1 个 → 只练该到期，不补新学', () {
+      final due = all.take(1).toList();
+      final plan = PracticeSession.buildPlan(due, all);
+      expect(plan.length, 1);
+      expect(plan.first.id, 'c0');
+    });
+    test('到期超限（>12）→ 最多取 12', () {
       final due = all.take(20).toList();
       final plan = PracticeSession.buildPlan(due, all);
-      expect(plan.length, 10);
+      expect(plan.length, 12);
+    });
+    test('无到期复习 → 推新学且每日 ≤5', () {
+      final plan = PracticeSession.buildPlan([], all);
+      expect(plan.length, 5); // 每日新学 ≤5
+      expect(plan.first.id, 'c0');
     });
     test('hasContent', () {
       expect(PracticeSession.hasContent(0), isFalse);

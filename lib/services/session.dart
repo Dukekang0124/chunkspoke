@@ -15,23 +15,20 @@ class Sm2Scheduler {
       ReviewScheduler.nextDue(from, stage);
 }
 
-/// 每日会话编排（M4）：到期优先，补新学至 3–5，最后给总结屏。
+/// 每日会话编排（M7）：到期复习优先；复习未清不推新学；每日新学 ≤5。
 class PracticeSession {
-  /// 返回当日应练词块：到期最多取 [maxDue] 个；不足 [minNew] 个则补未学新词。
+  /// 返回当日应练词块：
+  ///  - 有到期复习 → 先练复习（最多 [maxDue]），不插入新学；
+  ///  - 无到期复习 → 再推新学，且每日新学 ≤ [maxNew]。
   static List<Chunk> buildPlan(
     List<Chunk> dueChunks,
     List<Chunk> allChunks, {
-    int maxDue = 10,
-    int minNew = 4,
+    int maxDue = 12,
+    int maxNew = 5,
   }) {
     final due = dueChunks.take(maxDue).toList();
-    if (due.length >= minNew) return due;
-    final taken = due.map((c) => c.id).toSet();
-    final fresh = allChunks
-        .where((c) => !taken.contains(c.id))
-        .take((minNew - due.length).clamp(0, minNew))
-        .toList();
-    return [...due, ...fresh];
+    if (due.isNotEmpty) return due; // 复习优先，复习未清不推新
+    return allChunks.take(maxNew).toList(); // 每日新学 ≤5
   }
 
   /// 是否有内容可练（决定是否显示总结屏 / 冷启动空态）。

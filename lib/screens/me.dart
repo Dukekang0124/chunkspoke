@@ -12,7 +12,6 @@ class MeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = Provider.of<ProgressService>(context);
     final content = Provider.of<ContentPack>(context);
-    final chunks = progress.chunksMastered(content);
     final streak = progress.streak;
     final hintRate = progress.sayCount + progress.hintCount > 0
         ? (progress.hintCount / (progress.hintCount + progress.sayCount) * 100).round()
@@ -22,10 +21,13 @@ class MeScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _stat('Chunks mastered', '$chunks'),
-        _stat('Day streak', '$streak', 'Consecutive days'),
-        _stat('Chinese hint rate', '$hintRate%', 'Lower is better'),
-        _stat('Accuracy average', '$acc', 'Text Match / PA score'),
+        FutureBuilder<int>(
+          future: progress.chunksMastered(content),
+          builder: (c, s) => _stat('已掌握词块', '${s.data ?? 0}', 'L2一次过+L4≥80%'),
+        ),
+        _stat('连续打卡', '$streak', '连续天数'),
+        _stat('中文提示率', '$hintRate%', '越低越好'),
+        _stat('平均准确度', '$acc', '文本匹配 / 发音评分'),
         const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
@@ -33,7 +35,7 @@ class MeScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: () => Navigator.of(context)
                 .push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-            child: const Text('Settings', style: TextStyle(color: Colors.black87)),
+            child: const Text('设置', style: TextStyle(color: Colors.black87)),
           ),
         ),
       ],
