@@ -52,5 +52,6 @@ app.*.map.json
 .env.*
 !.env.example
 
-# Vosk 离线模型（~39MB，构建期由 tools/fetch_vosk_model.py 落位，避免仓库过大）
-assets/vosk-model-small-en-us-0.15.zip
+# Vosk 离线模型：随包内置（离线语音识别必需）。已提交入库，CI 与本地构建均确定性可用，
+# 不再依赖构建期联网下载第三方资源（避免 CI 资源打包失败 / 离线场景缺模型）。
+# 注：体积约 39MB，为换取 CI 必绿与离线可用，接受入库。
