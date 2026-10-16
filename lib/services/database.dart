@@ -178,6 +178,26 @@ class AppDatabase {
     return rows.map((r) => r['chunk_key'] as String).toList();
   }
 
+  // —— M7 AI 周报统计（绝不读录音原文，仅聚合数字 + 词块 ID）—— //
+  Future<int> countSessionEvent(String name) async {
+    final r = await (await db).rawQuery(
+        'SELECT COUNT(*) c FROM sessions WHERE outcome = ?', [name]);
+    return (r.first['c'] as int?) ?? 0;
+  }
+
+  Future<double> avgSessionScore() async {
+    final r = await (await db).rawQuery(
+        'SELECT AVG(score) a FROM sessions WHERE score > 0');
+    final v = r.first['a'];
+    return v == null ? 0.0 : (v as num).toDouble();
+  }
+
+  Future<List<ChunkRow>> topFailChunks(int n) async {
+    final rows = await (await db).query('chunks',
+        where: 'fail_count > 0', orderBy: 'fail_count DESC', limit: n);
+    return rows.map((m) => ChunkRow.fromMap(m)).toList();
+  }
+
   // —— sessions (history) ——
   Future<void> insertSession(String key, String outcome, int score) async {
     await (await db).insert('sessions', {

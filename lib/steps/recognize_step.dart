@@ -59,7 +59,9 @@ class _RecognizeStepState extends State<RecognizeStep> {
     } else {
       _streak[_current.id] = 0;
       setState(() => _shake = 12);
-      Future.delayed(const Duration(milliseconds: 150), () => setState(() => _shake = 0));
+      Future.delayed(const Duration(milliseconds: 150), () {
+        if (mounted) setState(() => _shake = 0);
+      });
     }
   }
 
@@ -70,7 +72,7 @@ class _RecognizeStepState extends State<RecognizeStep> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          const Text('Tap the chunk you hear', style: TextStyle(color: Colors.white70)),
+          const Text('点你听到的词块', style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 14),
           IconButton(
             icon: const Icon(Icons.volume_up, color: kPrimary, size: 40),
@@ -93,7 +95,7 @@ class _RecognizeStepState extends State<RecognizeStep> {
             ),
           ),
           const Spacer(),
-          Text('Need a hint? Long-press a chunk later.',
+          Text('需要提示？稍后长按词块',
               style: const TextStyle(color: Colors.white38, fontSize: 12)),
         ],
       ),

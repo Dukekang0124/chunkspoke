@@ -1,22 +1,67 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
+import '../services/chunk_progress.dart';
+import '../services/database.dart';
+import '../services/crash_log.dart';
 import '../services/state_machine.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import 'listen_pick_step.dart';
 import 'build_step.dart';
-import 'say_widget.dart';
-import 'swap_step.dart';
 import 'l4_step.dart';
 
-/// 每个词块循环：BUILD → SAY → SWAP → [L4 开口]。
-/// 各阶段完成时用状态机事件驱动 chunk 推进（L1→L2→L3→L4→复习），
-/// L4 阶段由 ChunkProgressStore 的当前 level 决定是否出现（M1/M3 状态机）。
+/// 练习阶段枚举（值即环节序号，供状态机在两种顺序间切换）。
+class Phase {
+  static const int listenPick = 0; // ① 听音识块
+  static const int speakChunk = 1; // ② 开口说块
+  static const int buildSentence = 2; // ③ 块拼句
+  static const int speakSentence = 3; // ④ 开口说句
+}
+
+/// 会话环节顺序（纯函数，供状态机与单测复用）：
+/// 新学 = ①→②→③→④；复习 = ②→④（跳过听辨块与块拼句）。
+List<int> phaseOrder({required bool reviewMode}) => reviewMode
+    ? const [Phase.speakChunk, Phase.speakSentence]
+    : const [
+        Phase.listenPick,
+        Phase.speakChunk,
+        Phase.buildSentence,
+        Phase.speakSentence
+      ];
+
+/// 五步状态机的「下一环节」：返回 -1 表示本块最后一步（结算掌握）。
+/// 新学：0→1→2→3→-1；复习：1→3→-1。
+int nextPhase(int cur, {required bool reviewMode}) {
+  final order = phaseOrder(reviewMode: reviewMode);
+  final i = order.indexOf(cur);
+  if (i < 0 || i >= order.length - 1) return -1;
+  return order[i + 1];
+}
+
+/// 词块拼装练习闭环（v1.2.2·五步）：
+///   新学块：① 听音识块 → ② 开口说块 → ③ 块拼句 → ④ 开口说句 → ⑤ 掌握判定
+///   复习块（reviewMode）：只走 ② 开口说块 → ④ 开口说句 两步（间隔复习，轻量）。
+/// ②④ 双达标 → 绿勾 / 进度 +1 跳动 / 鼓励语 → 进下一块。
+/// 块全部完成后（新学模式）进入「句子闯关」（目标句逐句开口说对即过）。
+/// 掌握计数：通过即 +1，落盘由 ChunkProgressStore 完成；顶/底圆环读同一数据源（P0-2）。
 class PracticeLoop extends StatefulWidget {
   final Level level;
+
+  /// 指定要练的词块序列；缺省为 level.chunks。复习会话用到期块列表传入。
+  final List<Chunk>? chunks;
+
+  /// 复习模式：只走 ② 开口说块 + ④ 开口说句 两步。
+  final bool reviewMode;
   final VoidCallback onDone;
-  const PracticeLoop({required this.level, required this.onDone, super.key});
+  const PracticeLoop(
+      {required this.level,
+      this.chunks,
+      this.reviewMode = false,
+      required this.onDone,
+      super.key});
 
   @override
   State<PracticeLoop> createState() => _PracticeLoopState();
@@ -24,103 +69,377 @@ class PracticeLoop extends StatefulWidget {
 
 class _PracticeLoopState extends State<PracticeLoop> {
   int _ci = 0; // 当前词块索引
-  int _phase = 0; // 0 build, 1 say, 2 swap, 3 l4
-  bool _isL4 = false;
+  int _phase = Phase.listenPick; // 当前环节序号
+  int _mastered = 0; // 本次会话已掌握/已完成块数（进度环）
+  bool _ready = false;
+  bool _showResume = false;
+  int _resumeIndex = 0;
+  bool _challenge = false; // 句子闯关模式
+  int _si = 0; // 当前目标句索引
 
-  Chunk get _chunk => widget.level.chunks[_ci];
+  bool _chunkDone = false;
+  String _encourage = '';
+  Timer? _doneTimer;
 
+  List<Chunk> get _chunks => widget.chunks ?? widget.level.chunks;
+  Chunk get _chunk => _chunks[_ci];
   ProgressService get _p => Provider.of<ProgressService>(context, listen: false);
+  int get _total => _chunks.length;
+  int get _challengeTotal => widget.level.sentences.length;
+  List<String> get _keys => _chunks.map((c) => c.id).toList(growable: false);
+
+  /// 环节顺序：新学四步；复习两步（跳过听辨块与块拼句）。
+  List<int> get _order => phaseOrder(reviewMode: widget.reviewMode);
+
+  int _nextPhaseOf(int cur) => nextPhase(cur, reviewMode: widget.reviewMode);
+
+  final List<String> _cheers = const [
+    '搞定！',
+    '漂亮！',
+    '稳了！',
+    '这就是节奏！',
+    '记住了！',
+    '脱口而出了！',
+    '肌肉记忆+1',
+    '再来一块！',
+    '越来越顺了！',
+    '一块到手！',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _refreshL4();
+    _init();
   }
 
-  void _refreshL4() {
-    _p.chunkStore.get(_chunk.id).then((row) {
-      if (mounted) setState(() => _isL4 = row.level == ChunkLevel.l4);
+  @override
+  void dispose() {
+    _doneTimer?.cancel();
+    super.dispose();
+  }
+
+  /// 断点续练：找到「下一个未完成块」，并统计已掌握数。
+  /// 复习会话不走断点门（每次按到期列表从首个开始）。
+  Future<void> _init() async {
+    int mastered = 0;
+    int start = 0;
+    try {
+      if (!widget.reviewMode) {
+        start = await _p.chunkStore.nextUnmasteredIndex(_keys);
+      }
+      for (final c in _chunks) {
+        final row = await _p.chunkStore.get(c.id);
+        if (ChunkProgressStore.isMastered(row)) mastered++;
+      }
+    } catch (e, st) {
+      CrashLog.write('PracticeLoop._init: $e', st);
+    }
+    if (!mounted) return;
+    setState(() {
+      _resumeIndex = start >= _total ? 0 : start;
+      _ci = _resumeIndex;
+      _phase = _order.first;
+      _mastered = mastered;
+      _showResume =
+          !widget.reviewMode && mastered > 0 && mastered < _total;
+      _ready = true;
     });
   }
 
+  /// 当前词块对应的「目标句」（块拼句 / 开口说句用）；无则回退为该词块自身。
+  TargetSentence _sentenceForChunk(Chunk c) {
+    for (final s in widget.level.sentences) {
+      if (s.chunkIds.contains(c.id)) return s;
+    }
+    return TargetSentence(
+        id: c.id, text: c.text, meaningCN: c.meaningCN, chunkIds: [c.id]);
+  }
+
+  /// 后台落盘（不阻塞 UI）：异常只记录，绝不抛回调用方导致卡死。
+  Future<void> _persist(ChunkEvent event,
+      {int accuracy = 0, bool selfEval = false}) async {
+    try {
+      await _p.chunkStore.applyEvent(_chunk.id, event,
+          accuracy: accuracy, selfEval: selfEval);
+    } catch (e, st) {
+      CrashLog.write('applyEvent($event) 失败（已乐观推进，不阻塞）: $e', st);
+    }
+  }
+
+  /// 通过当前环节 → 按顺序切到下一环节并后台落盘。
+  /// 若已是本会话最后一步（新学=开口说句 / 复习=开口说句），则结算掌握。
+  void _passPhase(ChunkEvent event,
+      {int accuracy = 0, bool selfEval = false}) {
+    if (!mounted) return;
+    final next = _nextPhaseOf(_phase);
+    if (next < 0) {
+      _onChunkComplete(mastered: true);
+      return;
+    }
+    setState(() => _phase = next);
+    _persist(event, accuracy: accuracy, selfEval: selfEval);
+  }
+
   void _advance() {
-    if (_ci < widget.level.chunks.length - 1) {
+    if (_ci < _total - 1) {
       setState(() {
         _ci++;
-        _phase = 0;
+        _phase = _order.first;
       });
-      _refreshL4();
     } else {
       widget.onDone();
     }
   }
 
+  void _enterChallenge() {
+    if (!mounted) return;
+    setState(() {
+      _challenge = true;
+      _si = 0;
+    });
+  }
+
+  void _challengeNext() {
+    if (_si < _challengeTotal - 1) {
+      setState(() => _si++);
+    } else {
+      widget.onDone();
+    }
+  }
+
+  /// 一块完成 → ⑤ 掌握判定 + 反馈三件套（绿勾 / 进度跳动 / 鼓励语）。
+  Future<void> _onChunkComplete({bool? mastered, bool deferToReview = false}) async {
+    // 真实出口：主动跳过/延期 → 置复习队列 + 次日到期，推进到下一块。
+    if (deferToReview) {
+      await _scheduleReview(_chunk.id);
+      if (!mounted) return;
+      _advance();
+      return;
+    }
+    final justMastered = mastered ??
+        ChunkProgressStore.isMastered(await _safeGet(_chunk.id));
+    if (!mounted) return;
+    final remaining = _total - (_ci + 1);
+    if (justMastered) {
+      try {
+        await _p.bumpStreak();
+      } catch (e, st) {
+        CrashLog.write('bumpStreak: $e', st);
+      }
+      _mastered++;
+    }
+    setState(() {
+      _chunkDone = true;
+      _encourage = justMastered
+          ? '${_cheers[_ci % _cheers.length]} 还剩 $remaining 个'
+          : '没到 90%，现在再练一遍';
+    });
+    _doneTimer?.cancel();
+    if (!justMastered) {
+      _doneTimer = Timer(const Duration(milliseconds: 1200), () {
+        if (!mounted) return;
+        setState(() {
+          _chunkDone = false;
+          _phase = _order.first;
+        });
+      });
+      return;
+    }
+    _doneTimer = Timer(const Duration(milliseconds: 1300), () {
+      if (!mounted) return;
+      setState(() => _chunkDone = false);
+      // 新学模式最后一块掌握且本场景有目标句 → 进入「句子闯关」；复习模式直接结束。
+      if (!widget.reviewMode && _ci == _total - 1 && _challengeTotal > 0) {
+        _enterChallenge();
+      } else {
+        _advance();
+      }
+    });
+  }
+
+  /// 主动跳过/延期：置复习队列 + 次日到期（容错，失败不阻断推进）。
+  Future<void> _scheduleReview(String key) async {
+    try {
+      await _p.chunkStore.applyEvent(key, ChunkEvent.scheduleReview);
+    } catch (e, st) {
+      CrashLog.write('scheduleReview($key): $e', st);
+    }
+  }
+
+  Future<ChunkRow> _safeGet(String key) async {
+    try {
+      return await _p.chunkStore.get(key);
+    } catch (e, st) {
+      CrashLog.write('PracticeLoop.get($key): $e', st);
+      return ChunkRow(chunkKey: key, level: ChunkLevel.l1, dueDate: 0,
+          failCount: 0, lastScore: 0);
+    }
+  }
+
   String _phaseLabel() {
+    if (_challenge) return '句子闯关';
     switch (_phase) {
-      case 0:
-        return 'Build';
-      case 1:
-        return 'Say';
-      case 2:
-        return 'Swap';
+      case Phase.listenPick:
+        return '听音识块';
+      case Phase.speakChunk:
+        return widget.reviewMode ? '复习·开口说块' : '开口说块';
+      case Phase.buildSentence:
+        return '块拼句';
       default:
-        return 'Open';
+        return widget.reviewMode ? '复习·开口说句' : '开口说句';
+    }
+  }
+
+  Widget _header() => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            MasteryRing(_total > 0 ? _mastered / _total : 0, size: 38),
+            const SizedBox(width: 8),
+            Text(widget.reviewMode ? '复习 $_mastered/$_total' : '已掌握 $_mastered/$_total',
+                style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            const Spacer(),
+            Text(_phaseLabel(),
+                style: const TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
+            const SizedBox(width: 10),
+            if (_challenge)
+              Text('第 ${_si + 1}/$_challengeTotal 句',
+                  style: const TextStyle(color: Colors.white54, fontSize: 13))
+            else
+              Text('第 ${_ci + 1}/$_total 块',
+                  style: const TextStyle(color: Colors.white54, fontSize: 13)),
+          ],
+        ),
+      );
+
+  Widget _resumeGate() => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              MasteryRing(_total > 0 ? _mastered / _total : 0, size: 84),
+              const SizedBox(height: 16),
+              Text('已掌握 $_mastered/$_total',
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              Text('上次学到第 ${_resumeIndex + 1} 块',
+                  style: const TextStyle(color: Colors.white70, fontSize: 15)),
+              const SizedBox(height: 26),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => setState(() {
+                    _showResume = false;
+                    _ci = _resumeIndex;
+                    _phase = _order.first;
+                  }),
+                  child: Text('继续 · 第 ${_resumeIndex + 1} 块',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => setState(() {
+                  _showResume = false;
+                  _ci = 0;
+                  _phase = _order.first;
+                }),
+                child: const Text('从头开始',
+                    style: TextStyle(color: Colors.white54)),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _chunkDoneView() => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.check_circle, color: kUnlocked, size: 72),
+            const SizedBox(height: 12),
+            Text(_encourage,
+                style: const TextStyle(
+                    color: kUnlocked, fontSize: 18, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 14),
+            MasteryRing(_total > 0 ? _mastered / _total : 0, size: 60),
+            const SizedBox(height: 8),
+            Text(widget.reviewMode ? '复习 $_mastered/$_total' : '已掌握 $_mastered/$_total',
+                style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+      );
+
+  Widget _body() {
+    if (_challenge) {
+      final s = widget.level.sentences[_si];
+      return L4Step(
+        chunk: _chunk,
+        levelId: widget.level.id,
+        theme: widget.level.theme,
+        targetText: s.text,
+        persist: false,
+        onPass: _challengeNext,
+        onSkip: _challengeNext,
+      );
+    }
+    switch (_phase) {
+      case Phase.listenPick:
+        return ListenPickStep(
+          chunk: _chunk,
+          level: widget.level,
+          onDone: () => _passPhase(ChunkEvent.assembleCorrect),
+        );
+      case Phase.speakChunk:
+        return L4Step(
+          chunk: _chunk,
+          levelId: widget.level.id,
+          theme: widget.level.theme,
+          targetText: _chunk.text,
+          onPass: () => _passPhase(ChunkEvent.dragCorrect),
+          onSkip: () => _onChunkComplete(deferToReview: true),
+        );
+      case Phase.buildSentence:
+        return BuildStep(
+          level: widget.level,
+          chunk: _chunk,
+          sentence: _sentenceForChunk(_chunk),
+          onDone: () => _passPhase(ChunkEvent.accuracyPass),
+        );
+      default:
+        final s = _sentenceForChunk(_chunk);
+        return L4Step(
+          chunk: _chunk,
+          levelId: widget.level.id,
+          theme: widget.level.theme,
+          targetText: s.text,
+          onPass: () => _onChunkComplete(mastered: true),
+          onSkip: () => _onChunkComplete(deferToReview: true),
+        );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_ready) {
+      return const Center(child: CircularProgressIndicator(color: kPrimary));
+    }
+    if (_showResume) return _resumeGate();
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(_phaseLabel(),
-                  style: const TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
-              Text('chunk ${_ci + 1}/${widget.level.chunks.length}',
-                  style: const TextStyle(color: Colors.white54)),
-            ],
-          ),
-        ),
-        Expanded(
-          child: _phase == 0
-              ? BuildStep(
-                  level: widget.level,
-                  chunk: _chunk,
-                  onDone: () async {
-                    await _p.chunkStore.applyEvent(_chunk.id, ChunkEvent.assembleCorrect);
-                    if (mounted) setState(() => _phase = 1);
-                  },
-                )
-              : _phase == 1
-                  ? SayWidget(
-                      sentence: _chunk.sentence.text,
-                      levelId: widget.level.id,
-                      onDone: () async {
-                        await _p.chunkStore.applyEvent(_chunk.id, ChunkEvent.dragCorrect);
-                        if (mounted) setState(() => _phase = 2);
-                      },
-                    )
-                  : _phase == 2
-                      ? SwapStep(
-                          chunk: _chunk,
-                          levelId: widget.level.id,
-                          onDone: _isL4
-                              ? () => setState(() => _phase = 3)
-                              : () async {
-                                  await _p.chunkStore
-                                      .applyEvent(_chunk.id, ChunkEvent.accuracyPass);
-                                  _advance();
-                                },
-                        )
-                      : L4Step(
-                          chunk: _chunk,
-                          levelId: widget.level.id,
-                          onDone: _advance,
-                        ),
-        ),
+        _header(),
+        Expanded(child: _chunkDone ? _chunkDoneView() : _body()),
       ],
     );
   }

@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
+    <!-- 外部存储（Android/data/.../files）下的更新包 -->
     <external-files-path name="updates" path="." />
+    <!-- 内部 files/updates：UpdateService 实际落盘路径（getApplicationDocumentsDirectory） -->
+    <files-path name="updates" path="updates" />
 </paths>

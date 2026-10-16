@@ -20,7 +20,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  test('L1 -> L4 path, accuracy recorded, L4 fail x2 demotes to L3', () async {
+  test('L1 -> L4 path, accuracy recorded, L4 fail no longer demotes (single exit)', () async {
     final db = _newDb();
     await db.db;
     final store = ChunkProgressStore(db);
@@ -35,22 +35,45 @@ void main() {
     expect((await store.get('k')).level, ChunkLevel.l4);
     expect((await store.get('k')).lastScore, 80);
 
-    // First fail: stays L4, counts 1.
+    // 失败不再自动降级：保持 L4（单一出口=跳过/答案），failCount 不递增。
     await store.applyEvent('k', ChunkEvent.speakFail);
     expect((await store.get('k')).level, ChunkLevel.l4);
-    expect((await store.get('k')).failCount, 1);
-
-    // Second fail: demote to L3, counter reset.
-    await store.applyEvent('k', ChunkEvent.speakFail);
-    expect((await store.get('k')).level, ChunkLevel.l3);
     expect((await store.get('k')).failCount, 0);
 
-    // Recover to L4 then succeed -> review with a due date queued.
+    await store.applyEvent('k', ChunkEvent.speakFail);
+    expect((await store.get('k')).level, ChunkLevel.l4);
+
+    // 重新走通 → speakSuccess 达标即 mastered（逾期日期 0）。
     await store.applyEvent('k', ChunkEvent.accuracyPass, accuracy: 90);
-    await store.applyEvent('k', ChunkEvent.speakSuccess);
+    await store.applyEvent('k', ChunkEvent.speakSuccess, accuracy: 95);
     final row = await store.get('k');
-    expect(row.level, ChunkLevel.review);
-    expect(row.dueDate, greaterThan(0));
+    expect(row.level, ChunkLevel.mastered);
+    expect(row.dueDate, 0);
+  });
+
+  test('P0-2 集成：掌握状态落盘，重开后仍保留（顶/底圆环同源）', () async {
+    _dbCounter++;
+    final p = '${Directory.systemTemp.path}/cp_persist_$_dbCounter.db';
+    final f = File(p);
+    if (f.existsSync()) f.deleteSync();
+
+    final db1 = AppDatabase(path: p);
+    await db1.db;
+    final s1 = ChunkProgressStore(db1);
+    // 走完 happy path → mastered（l2OneTry=1、accuracy≥80）。
+    await s1.applyEvent('a', ChunkEvent.assembleCorrect);
+    await s1.applyEvent('a', ChunkEvent.dragCorrect);
+    await s1.applyEvent('a', ChunkEvent.accuracyPass, accuracy: 90);
+    await s1.applyEvent('a', ChunkEvent.speakSuccess, accuracy: 95);
+    expect(ChunkProgressStore.isMastered(await s1.get('a')), isTrue);
+
+    // 杀进程重开：关闭原连接、用同路径新实例读取（模拟重启）。
+    await (await db1.db).close();
+    final db2 = AppDatabase(path: p);
+    await db2.db;
+    final s2 = ChunkProgressStore(db2);
+    expect(ChunkProgressStore.isMastered(await s2.get('a')), isTrue);
+    expect((await s2.allMasteredKeys()).length, 1); // 同数据源：重开圆环仍显示 1
   });
 
   test('due chunks query returns chunks in review past their due date', () async {
@@ -73,7 +96,7 @@ void main() {
       {bool oneTry = true, int l3acc = 90}) async {
     await store.applyEvent(k, ChunkEvent.assembleCorrect); // l1->l2
     if (!oneTry) {
-      await store.applyEvent(k, ChunkEvent.dragWrong); // l2 stays, l2OneTry=0
+      await store.applyEvent(k, ChunkEvent.dragWrong); // 拖错 → l2OneTry=0（随后 dragCorrect 补回 1，见 §4.3）
     }
     await store.applyEvent(k, ChunkEvent.dragCorrect); // l2->l3
     await store.applyEvent(k, ChunkEvent.accuracyPass, accuracy: l3acc); // l3->l4
@@ -97,16 +120,27 @@ void main() {
     expect(ChunkProgressStore.isMastered(await store2.get('k')), isTrue);
   });
 
-  test('L2 两次过（先错后对）→ l2OneTry=0 → 即使 L4 90% 也不 mastered', () async {
+  test('L2 先错后对 → 拖对补回 l2OneTry=1 → L4 90% 可 mastered（§4.3 毒块已恢复）',
+      () async {
     final db = _newDb();
     await db.db;
     final store = ChunkProgressStore(db);
     await _toL4(store, 'k', oneTry: false);
-    final row = await store.get('k');
-    expect(row.l2OneTry, 0);
+    expect((await store.get('k')).l2OneTry, 1); // 拖对即补回“一次过”
     await store.applyEvent('k', ChunkEvent.speakSuccess, accuracy: 95);
-    expect((await store.get('k')).level, ChunkLevel.review);
-    expect(ChunkProgressStore.isMastered(await store.get('k')), isFalse);
+    expect((await store.get('k')).level, ChunkLevel.mastered);
+    expect(ChunkProgressStore.isMastered(await store.get('k')), isTrue);
+  });
+
+  test('scheduleReview → 置 review + 次日到期（§4.2 真实出口）', () async {
+    final db = _newDb();
+    await db.db;
+    final store = ChunkProgressStore(db);
+    await _toL4(store, 'k', oneTry: true);
+    await store.applyEvent('k', ChunkEvent.scheduleReview);
+    final row = await store.get('k');
+    expect(row.level, ChunkLevel.review);
+    expect(row.dueDate, greaterThan(DateTime.now().millisecondsSinceEpoch));
   });
 
   test('L4 无 Key 自评路径：l2OneTry=1 + selfEval → mastered；未自评 → review',

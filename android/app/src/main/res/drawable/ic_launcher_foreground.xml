@@ -1,0 +1,33 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 词块/积木隐喻：错位叠放圆角词块，投影/高光分层（禁止纯平面） -->
+    <!-- 投影 -->
+    <path
+        android:fillColor="#000000"
+        android:fillAlpha="0.30"
+        android:pathData="M22,60 H86 V106 H22 Z" />
+    <!-- 深色块 2（带描边） -->
+    <path
+        android:fillColor="#1A1B2E"
+        android:strokeColor="#4A4A66"
+        android:strokeWidth="2"
+        android:pathData="M66,46 H96 A12,12 0 0 1 108,58 V88 A12,12 0 0 1 96,100 H66 A12,12 0 0 1 54,88 V58 A12,12 0 0 1 66,46 Z" />
+    <!-- 深色块 3（带描边） -->
+    <path
+        android:fillColor="#1A1B2E"
+        android:strokeColor="#4A4A66"
+        android:strokeWidth="2"
+        android:pathData="M28,52 H52 A10,10 0 0 1 62,62 V86 A10,10 0 0 1 52,96 H28 A10,10 0 0 1 18,86 V62 A10,10 0 0 1 28,52 Z" />
+    <!-- 琥珀块 1（主视觉，置顶） -->
+    <path
+        android:fillColor="#FFB84D"
+        android:pathData="M41,26 H63 A15,15 0 0 1 78,41 V63 A15,15 0 0 1 63,78 H41 A15,15 0 0 1 26,63 V41 A15,15 0 0 1 41,26 Z" />
+    <!-- 琥珀块高光 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.24"
+        android:pathData="M42,32 H71 A9,9 0 0 1 80,41 V50 A9,9 0 0 1 71,59 H42 A9,9 0 0 1 33,50 V41 A9,9 0 0 1 42,32 Z" />
+</vector>

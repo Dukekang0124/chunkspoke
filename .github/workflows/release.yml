@@ -1,0 +1,33 @@
+name: Release Build & Publish
+
+# 触发：push 到 main（或手动 workflow_dispatch）→ 仅作为「测试绿闸」：
+# 跑全量 flutter test，必须全绿才出绿勾。
+# 注意：正式发版 APK 由本地发布管线（release_build.py，已打 AGP9 补丁 + 内置离线
+# Vosk 模型）产出，并经 GitHub Releases API 上传（见交付说明）；CI 不重复构建/发布，
+# 以避免 CI 环境缺离线模型导致语音不可用、以及 vosk 插件命名空间问题导致挂红。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 仅授予读取与写回 version.json 的最小权限。
+permissions:
+  contents: write
+
+jobs:
+  test-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # 依赖变更先解析；失败即停。
+      - name: Pub get
+        run: flutter pub get
+
+      # 全量测试：不绿即失败（不会进入发布）。
+      - name: Full test (must be green)
+        run: flutter test

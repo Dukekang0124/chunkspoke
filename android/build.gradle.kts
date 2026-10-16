@@ -1,5 +1,9 @@
 allprojects {
     repositories {
+        // 国内网络：优先阿里云镜像，回退官方源。
+        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        maven { url = uri("https://maven.aliyun.com/repository/public") }
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
         google()
         mavenCentral()
     }

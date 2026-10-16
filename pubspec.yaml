@@ -1,7 +1,7 @@
 name: chunkspoke_flutter
 description: "Think in chunks. Speak in English."
 publish_to: 'none'
-version: 1.1.0+5
+version: 1.2.4+2019
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -13,9 +13,11 @@ dependencies:
   sqflite: ^2.4.1
   flutter_tts: ^4.0.2
   http: ^1.2.0
-  speech_to_text: ^7.0.0
+  vosk_flutter: ^0.3.48
   path_provider: ^2.1.1
   permission_handler: ^11.3.0
+  crypto: ^3.0.3
+  package_info_plus: ^10.2.2
 
 dev_dependencies:
   flutter_test:
@@ -24,6 +26,14 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   sqflite_common_ffi: ^2.3.2
 
+# vosk_flutter(0.3.48) 声明较旧的 http/permission_handler 约束；本项目已验证
+# http^1.2.0 / permission_handler^11.3.0 可正常工作，此处强制统一版本，避免降级
+# 引发其余依赖冲突。仅 Vosk 离线识别使用本插件，模型已随包内置（不触发其下载路径）。
+dependency_overrides:
+  http: ^1.2.0
+  permission_handler: ^11.3.0
+  sqflite_common_ffi: ^2.4.4
+
 flutter:
   uses-material-design: true
   assets:
@@ -31,6 +41,7 @@ flutter:
     - assets/version.json
     - assets/icon/icon.png
     - assets/icon/icon_foreground.png
+    - assets/vosk-model-small-en-us-0.15.zip
 
 flutter_launcher_icons:
   image_path: "assets/icon/icon.png"

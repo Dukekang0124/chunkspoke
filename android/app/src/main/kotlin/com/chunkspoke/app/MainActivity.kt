@@ -1,28 +1,37 @@
-package com.example.chunkspoke_flutter
+package com.chunkspoke.app
 
 import android.content.Intent
 import android.media.AudioFormat
 import android.media.AudioRecord
+import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.abs
 
 class MainActivity : FlutterActivity() {
     private val UPDATE_CH = "chunkspoke/update"
     private val REC_CH = "chunkspoke/recorder"
+    private val LEVEL_CH = "chunkspoke/recorder_level"
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
     private var recFile: File? = null
     private var recOut: FileOutputStream? = null
+    private var levelSink: EventChannel.EventSink? = null
+    private var player: MediaPlayer? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -101,9 +110,64 @@ class MainActivity : FlutterActivity() {
                             result.error("REC", e.message, null)
                         }
                     }
+                    "play" -> {
+                        try {
+                            playRecording(call.arguments as? String)
+                            result.success(null)
+                        } catch (e: Exception) {
+                            result.error("PLAY", e.message, null)
+                        }
+                    }
+                    "stopPlay" -> {
+                        try {
+                            stopPlayback()
+                            result.success(null)
+                        } catch (e: Exception) {
+                            result.error("PLAY", e.message, null)
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }
+
+        // —— 采集电平通道（录音期间实时 RMS/峰值 0..1，供 UI 电平反馈自检） ——
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, LEVEL_CH)
+            .setStreamHandler(object : EventChannel.StreamHandler {
+                override fun onListen(args: Any?, events: EventChannel.EventSink?) {
+                    levelSink = events
+                }
+
+                override fun onCancel(args: Any?) {
+                    levelSink = null
+                }
+            })
+    }
+
+    private fun emitLevel(level: Double) {
+        mainHandler.post { levelSink?.success(level) }
+    }
+
+    private fun playRecording(path: String?) {
+        if (path == null) throw IllegalArgumentException("path null")
+        stopPlayback()
+        player = MediaPlayer().apply {
+            setDataSource(path)
+            setOnCompletionListener { stopPlayback() }
+            prepare()
+            start()
+        }
+    }
+
+    private fun stopPlayback() {
+        try {
+            player?.stop()
+        } catch (_: Exception) {
+        }
+        try {
+            player?.release()
+        } catch (_: Exception) {
+        }
+        player = null
     }
 
     private fun startRecording(path: String?) {
@@ -125,14 +189,34 @@ class MainActivity : FlutterActivity() {
             bufSize,
         )
         audioRecord!!.startRecording()
+        emitLevel(0.0)
         val buffer = ByteArray(2048)
         recordingThread = Thread({
+            var lastEmit = 0L
             while (audioRecord != null &&
                 audioRecord!!.recordingState == AudioRecord.RECORDSTATE_RECORDING
             ) {
                 val r = audioRecord!!.read(buffer, 0, buffer.size)
-                if (r > 0) recOut!!.write(buffer, 0, r)
+                if (r > 0) {
+                    recOut!!.write(buffer, 0, r)
+                    // 峰值电平（16-bit PCM LE）→ 0..1，节流 ~12 次/秒
+                    var peak = 0
+                    var i = 0
+                    while (i + 1 < r) {
+                        val sample = ((buffer[i + 1].toInt() shl 8) or (buffer[i].toInt() and 0xFF))
+                            .toShort().toInt()
+                        val a = abs(sample)
+                        if (a > peak) peak = a
+                        i += 2
+                    }
+                    val now = System.currentTimeMillis()
+                    if (now - lastEmit >= 80L) {
+                        lastEmit = now
+                        emitLevel((peak / 32768.0).coerceIn(0.0, 1.0))
+                    }
+                }
             }
+            emitLevel(0.0)
         }, "recorder")
         recordingThread!!.start()
     }

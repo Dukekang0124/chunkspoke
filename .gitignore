@@ -46,3 +46,11 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# 本地密钥（构建期经 --dart-define 注入，明文只进编译产物，绝不入库）
+.env
+.env.*
+!.env.example
+
+# Vosk 离线模型（~39MB，构建期由 tools/fetch_vosk_model.py 落位，避免仓库过大）
+assets/vosk-model-small-en-us-0.15.zip

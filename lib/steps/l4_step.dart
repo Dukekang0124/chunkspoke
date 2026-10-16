@@ -4,29 +4,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
+import '../services/crash_log.dart';
 import '../services/loaders.dart';
 import '../services/recording.dart';
 import '../services/speech.dart';
 import '../services/state_machine.dart';
+import '../services/chunk_progress.dart';
+import '../services/database.dart';
+import '../services/speech_judge.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import '../ui/feedback.dart';
 
-/// 琥珀高亮色（M5 统一收口色彩令牌前先用此常量对齐“目标词琥珀高亮”意图）。
+/// 琥珀高亮色（统一收口“目标词琥珀高亮”意图）。
 const Color kAmber = Color(0xFFFFB84D);
 
-/// L4 开口题型（三层同代码路径，永不死路/红屏）：
-///  - 有 Azure Key：中文场景提示 → 开口 → Azure STT(en-US) →
-///    chunkHit(词序无关 + 编辑距离≤1 + 词干容错) 命中 → 目标词琥珀高亮。
-///  - 失败×2 → 转 L3 照读，文案“今天先读一遍，明天它回来找你”。
-///  - 无 Key / 离线：录音自听（回放）+ 自评，与在线降级同一路径。
-///
-/// 采集链路自检同 SAY：权限预检 / 实时电平 / 2 秒宽限 / 诊断行。
+/// 开口题型（复用收紧后的判定管线 judgeSpeech：规范化 + 词级序列比对 + 置信度门槛 + 空/静音拒绝）。
+/// 同一份代码服务于两个环节：
+///  - ② 开口说块：targetText = 词块文本
+///  - ④ 场景开口：targetText = 整句文本
+/// 通过 → onPass（由调用方决定“进阶”还是“掌握”）；3 次未过 → 正确答案 + 跳过入口（onSkip）。
 class L4Step extends StatefulWidget {
   final Chunk chunk;
   final String levelId;
   final String theme;
-  final VoidCallback onDone;
-  const L4Step({required this.chunk, required this.levelId, required this.theme, required this.onDone, super.key});
+  final String targetText;
+  final VoidCallback onPass;
+  final VoidCallback onSkip;
+  /// 是否落盘掌握事件：句子闯关模式下传 false（仅推进，不影响词块掌握）。
+  final bool persist;
+  const L4Step(
+      {required this.chunk,
+      required this.levelId,
+      required this.theme,
+      required this.targetText,
+      required this.onPass,
+      required this.onSkip,
+      this.persist = true,
+      super.key});
 
   @override
   State<L4Step> createState() => _L4StepState();
@@ -44,9 +59,11 @@ class _L4StepState extends State<L4Step> {
   bool _playing = false;
   String? _recPath;
   String _transcript = '';
-  ChunkHitResult? _hit;
-  bool _demoted = false;
+  JudgeOutcome? _judge;
+  int _attempts = 0; // 开口尝试次数（满 3 次展示正确答案 + 跳过入口）
+  bool _showAnswer = false; // 3 次未过 → 展示正确答案并给跳过入口
   bool _selfAssess = false;
+  bool _engineFailed = false; // Vosk 加载失败（无 Azure）→ 明确报错
 
   double _level = 0;
   bool _levelActive = false;
@@ -58,6 +75,9 @@ class _L4StepState extends State<L4Step> {
 
   ProgressService get _p => Provider.of<ProgressService>(context, listen: false);
 
+  /// 限定 Vosk 识别范围（提升命中与评分精度）。
+  List<String> get _phrases => [widget.targetText];
+
   @override
   void initState() {
     super.initState();
@@ -65,27 +85,44 @@ class _L4StepState extends State<L4Step> {
         _p.azureKey!.isNotEmpty &&
         _p.azureRegion != null &&
         _p.azureRegion!.isNotEmpty;
-    // 权限预检（无论有无 Key，都要真实录音/自听），禁止静默失败。
     _rec.ensurePermission().then((perm) {
       if (!mounted) return;
       setState(() {
         _perm = perm;
-        if (perm != MicPerm.granted) {
+        _permBlocked = perm != MicPerm.granted;
+      });
+      if (perm == MicPerm.granted) {
+        _loadEngine();
+      }
+    }).catchError((e, st) {
+      CrashLog.write('L4.perm: $e', st);
+      if (mounted) {
+        setState(() {
           _permBlocked = true;
           _ready = false;
-        } else {
-          _permBlocked = false;
-          _ready = true;
-        }
-      });
+        });
+      }
     });
-    Provider.of<TtsService>(context, listen: false).speak(widget.chunk.sentence.text);
+    Provider.of<TtsService>(context, listen: false).speak(widget.targetText);
+  }
+
+  Future<void> _loadEngine() async {
+    setState(() => _engineFailed = false);
+    final ok = await _speech.initVosk();
+    if (!mounted) return;
+    setState(() {
+      _ready = ok;
+      _engineFailed = !ok;
+    });
   }
 
   @override
   void dispose() {
     _levelSub?.cancel();
     _playTimer?.cancel();
+    if (_listening) {
+      _rec.stop();
+    }
     _rec.stopPlay();
     super.dispose();
   }
@@ -102,7 +139,7 @@ class _L4StepState extends State<L4Step> {
   }
 
   Future<void> _start() async {
-    if (_demoted || _selfAssess || _permBlocked || !_ready) return;
+    if (_selfAssess || _permBlocked || !_ready) return;
     _levelActive = false;
     setState(() => _level = 0);
     final path = await _rec.start();
@@ -114,14 +151,12 @@ class _L4StepState extends State<L4Step> {
       _recPath = path;
       _listening = true;
       _transcript = '';
-      _hit = null;
     });
     _listenStart = DateTime.now();
     _levelSub?.cancel();
     _levelSub = _rec.levels.listen(_applyLevel);
   }
 
-  /// 2 秒真实采集宽限：不足则继续采集至满 2 秒。
   Future<void> _graceTo2s() async {
     final start = _listenStart;
     if (start == null) return;
@@ -141,50 +176,76 @@ class _L4StepState extends State<L4Step> {
     _cancelLevels();
     final path = await _rec.stop();
     if (path != null) _recPath = path;
-    if (_hasAzure && _recPath != null) {
-      final text = await _speech.transcribeAzure(
-          _recPath!, _p.azureKey!, _p.azureRegion!);
+    final usePath = path ?? _recPath;
+    if (usePath != null && await _speech.initVosk()) {
+      final r = await _speech.recognize(usePath, _phrases);
+      final dur = await _speech.durationSec(usePath);
       if (!mounted) return;
-      final hit = chunkHit(widget.chunk.sentence.text, text,
-          variants: widget.chunk.sentence.swapOptions);
-      if (hit.allHit) HapticFeedback.mediumImpact();
-      final total = hit.hit.length + hit.missed.length;
-      final accuracy = hit.allHit
-          ? 100
-          : (total > 0 ? (hit.hit.length / total * 100).round() : 0);
-      setState(() {
-        _thinking = false;
-        _transcript = text;
-        _hit = hit;
-      });
-      await _resolveAttempt(hit.allHit, accuracy: accuracy);
-    } else {
-      _enterSelfAssess();
+      await _finishWith(r.text, r.confidence, dur);
+      return;
     }
+    if (usePath != null && _hasAzure) {
+      final text = await _speech.transcribeAzure(
+          usePath, _p.azureKey!, _p.azureRegion!);
+      final dur = await _speech.durationSec(usePath);
+      if (!mounted) return;
+      // Azure 无 Vosk 置信度 → confidence=null，判定走文本相似度（不当作 0 拒判）。
+      await _finishWith(text, null, dur);
+      return;
+    }
+    _enterSelfAssess();
+  }
+
+  /// 用 judgeSpeech 三层漏斗判定（规范化 → 完全匹配快速通道 → 模糊层）。
+  Future<void> _finishWith(
+      String text, double? confidence, double durationSec) async {
+    final outcome = judgeSpeech(
+        target: widget.targetText,
+        recognized: text,
+        confidence: confidence,
+        durationSec: durationSec);
+    if (outcome.pass) HapticFeedback.mediumImpact();
+    final accuracy = (outcome.similarity * 100).round();
+    setState(() {
+      _thinking = false;
+      _transcript = text;
+      _judge = outcome;
+    });
+    await _resolveAttempt(outcome.pass, accuracy: accuracy);
   }
 
   Future<void> _resolveAttempt(bool passed,
       {int accuracy = 0, bool selfEval = false}) async {
     final store = _p.chunkStore;
     if (passed) {
-      await store.applyEvent(widget.chunk.id, ChunkEvent.speakSuccess,
-          accuracy: accuracy, selfEval: selfEval);
+      if (widget.persist) {
+        try {
+          await store.applyEvent(widget.chunk.id, ChunkEvent.speakSuccess,
+              accuracy: accuracy, selfEval: selfEval);
+        } catch (e, st) {
+          CrashLog.write('L4.speakSuccess: $e', st);
+        }
+      }
       if (!mounted) return;
-      widget.onDone();
+      widget.onPass();
       return;
     }
-    // 失败计数；失败×2 → 转 L3 照读
-    await store.applyEvent(widget.chunk.id, ChunkEvent.speakFail);
-    final row = await store.get(widget.chunk.id);
+    try {
+      await store.applyEvent(widget.chunk.id, ChunkEvent.speakFail);
+    } catch (e, st) {
+      CrashLog.write('L4.speakFail: $e', st);
+    }
     if (!mounted) return;
-    if (row.level == ChunkLevel.l3) {
-      setState(() => _demoted = true);
+    _attempts++;
+    if (_attempts >= 3) {
+      setState(() => _showAnswer = true);
     } else {
-      setState(() {}); // 提示再试一次
+      setState(() {});
     }
   }
 
   void _enterSelfAssess() {
+    buzzWrong();
     setState(() {
       _thinking = false;
       _selfAssess = true;
@@ -211,24 +272,25 @@ class _L4StepState extends State<L4Step> {
     });
   }
 
+  /// 目标句：未通过时按逐词对齐把错词标红（matched=false）。
   Widget _targetSentence() {
-    final words = widget.chunk.sentence.text.split(' ');
-    final hitSet = _hit?.hit.toSet() ?? {};
+    final judge = _judge;
+    final words =
+        judge != null ? judge.targetWords : widget.targetText.split(' ');
+    final matched = judge?.targetMatched;
     return Wrap(
       spacing: 6,
       runSpacing: 6,
       alignment: WrapAlignment.center,
-      children: words.map((w) {
-        final clean =
-            w.toLowerCase().replaceAll(RegExp(r"[^a-z0-9']"), '');
-        final hit = hitSet.contains(clean);
-        return Text(w,
+      children: List.generate(words.length, (i) {
+        final ok = matched == null || i >= matched.length || matched[i];
+        return Text(words[i],
             style: TextStyle(
-              color: hit ? kAmber : Colors.white,
+              color: ok ? Colors.white : Colors.redAccent,
               fontSize: 22,
-              fontWeight: hit ? FontWeight.bold : FontWeight.normal,
+              fontWeight: ok ? FontWeight.normal : FontWeight.bold,
             ));
-      }).toList(),
+      }),
     );
   }
 
@@ -292,23 +354,53 @@ class _L4StepState extends State<L4Step> {
         ),
       );
 
-  Widget _readBack() => Column(
+  Widget _engineFailedCard() => Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: kCard,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: kPrimary),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: kPrimary, size: 36),
+            const SizedBox(height: 8),
+            const Text('识别引擎初始化失败',
+                style: TextStyle(color: Colors.white, fontSize: 18)),
+            const SizedBox(height: 6),
+            const Text('重启应用或反馈给我们',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 14)),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+                onPressed: _loadEngine,
+                child: const Text('重试加载引擎',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  /// 3 次未通过：展示正确答案 + 跳过入口（不计入掌握，置复习队列）。
+  Widget _answerCard() => Column(
         children: [
-          const Text('今天先读一遍，明天它回来找你',
-              style: TextStyle(color: kAmber, fontSize: 18, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center),
-          const SizedBox(height: 10),
+          const Text('正确答案：', style: TextStyle(color: Colors.white70), textAlign: TextAlign.center),
+          const SizedBox(height: 8),
           _targetSentence(),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
+          const Text('已试 3 次未通过，可跳过本句（不计入掌握）',
+              style: TextStyle(color: Colors.white54, fontSize: 13), textAlign: TextAlign.center),
+          const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
-              onPressed: () {
-                // 照读完成：转交 M4 会话/复习循环统一排程（明天回来）。
-                widget.onDone();
-              },
-              child: const Text('我读完了', style: TextStyle(color: Colors.white)),
+              onPressed: () => widget.onSkip(),
+              child: const Text('跳过本句（不计入掌握）', style: TextStyle(color: Colors.white)),
             ),
           ),
         ],
@@ -321,7 +413,7 @@ class _L4StepState extends State<L4Step> {
           const SizedBox(height: 10),
           TextButton(
             onPressed: () => Provider.of<TtsService>(context, listen: false)
-                .speak(widget.chunk.sentence.text),
+                .speak(widget.targetText),
             child: const Text('🔊 揭目标句', style: TextStyle(color: kPrimary)),
           ),
           const SizedBox(height: 6),
@@ -339,19 +431,25 @@ class _L4StepState extends State<L4Step> {
             children: [
               ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
-                  onPressed: () => _selfConfirm(true),
+                  onPressed: _recPath == null ? null : () => _selfConfirm(true),
                   child: const Text('我说对了', style: TextStyle(color: Colors.white))),
               OutlinedButton(
                   onPressed: () => _selfConfirm(false),
                   child: const Text('没说对', style: TextStyle(color: Colors.white70))),
             ],
           ),
+          if (_recPath == null)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text('请先录音，再确认“我说对了”',
+                  style: TextStyle(color: Colors.white38, fontSize: 12)),
+            ),
         ],
       );
 
   @override
   Widget build(BuildContext context) {
-    final waiting = !_ready && !_permBlocked;
+    final waiting = !_ready && !_permBlocked && !_engineFailed;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -366,19 +464,23 @@ class _L4StepState extends State<L4Step> {
               color: kBg.withOpacity(0.5),
               border: Border.all(color: Colors.white24),
             ),
-            child: Text(widget.chunk.meaningCN,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+            child: CnText(
+              widget.targetText,
+              widget.chunk.meaningCN,
+              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+            ),
           ),
           const SizedBox(height: 16),
           const Text('开口说出来', style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 10),
-          if (_hit != null && !_selfAssess) _targetSentence(),
+          if (_judge != null && !_selfAssess) _targetSentence(),
           const Spacer(),
           if (_permBlocked)
             _permCard()
-          else if (_demoted)
-            _readBack()
+          else if (_engineFailed)
+            _engineFailedCard()
+          else if (_showAnswer)
+            _answerCard()
           else if (_selfAssess)
             _selfAssessCard()
           else if (_thinking)
@@ -397,10 +499,16 @@ class _L4StepState extends State<L4Step> {
                 _micButton(),
               ],
             )
-          else if (_hit != null && !_hit!.allHit)
+          else if (_judge != null && !_judge!.pass)
             Column(
               children: [
-                const Text('没完全命中，再试一次', style: TextStyle(color: kPrimary)),
+                Text(
+                  _judge!.reason == 'empty' ||
+                          _judge!.reason == 'lowConf' ||
+                          _judge!.reason == 'tooShort'
+                      ? '没有听清，请再说一遍'
+                      : '再试一次（错词已标红）',
+                  style: const TextStyle(color: kPrimary)),
                 const SizedBox(height: 6),
                 if (_transcript.trim().isNotEmpty)
                   Padding(
@@ -423,12 +531,24 @@ class _L4StepState extends State<L4Step> {
                 _micButton(),
               ],
             )
-          else if (_hit != null && _hit!.allHit)
+          else if (_judge != null && _judge!.pass)
             const Text('命中！', style: TextStyle(color: kUnlocked, fontSize: 20))
           else if (waiting)
-            const Text('正在准备麦克风…', style: TextStyle(color: Colors.white54))
+            const Column(
+              children: [
+                CircularProgressIndicator(color: kPrimary),
+                SizedBox(height: 10),
+                Text('引擎准备中…', style: TextStyle(color: Colors.white54)),
+              ],
+            )
           else
             _micButton(),
+          if (!_showAnswer)
+            TextButton(
+              onPressed: () => widget.onSkip(),
+              child: const Text('先跳过，明天复习见',
+                  style: TextStyle(color: Colors.white38)),
+            ),
           const SizedBox(height: 16),
         ],
       ),

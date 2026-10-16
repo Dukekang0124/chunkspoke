@@ -36,15 +36,80 @@ import re
 import shutil
 import subprocess
 import datetime
+import zipfile
+import sys
+
+# Windows 控制台默认 GBK，遇到 ✓ 等符号会抛 UnicodeEncodeError；统一切到 UTF-8。
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 
 SRC = os.path.dirname(os.path.abspath(__file__))          # 工作副本（源）
 DST = r'D:\chunkspoke_flutter'                            # 构建副本（产物位置）
 FLUTTER = r'D:\tools\flutter\bin\flutter.bat'
-JAVA_HOME = r'C:\tools\jdk17'
+# JAVA_HOME：优先取环境变量；否则落到已知可用嵌套路径（D:\tools\jdk17-full\jdk-17.0.12+7）。
+JAVA_HOME = os.environ.get('JAVA_HOME') or r'D:\tools\jdk17-full\jdk-17.0.12+7'
+
+# 内置 AI 服务密钥（构建期经 --dart-define=BUILTIN_LLM_KEYS 注入）。
+# 仅从环境变量或本地 .env（已被 .gitignore 排除）读取；明文只进编译产物，绝不打印。
+BUILTIN_KEY_ENV = 'BUILTIN_LLM_KEYS'
+
+
+def read_builtin_keys():
+    """读取内置 LLM 密钥 JSON（优先级：环境变量 > 本地 .env）。返回字符串或 None。"""
+    v = os.environ.get(BUILTIN_KEY_ENV)
+    if v:
+        return v.strip().strip("'").strip('"')
+    env_path = os.path.join(SRC, '.env')
+    if os.path.isfile(env_path):
+        try:
+            txt = open(env_path, encoding='utf-8').read()
+            m = re.search(r"%s\s*=\s*'([^']*)'" % BUILTIN_KEY_ENV, txt)
+            if m:
+                return m.group(1)
+            m = re.search(r'%s\s*=\s*"([^"]*)"' % BUILTIN_KEY_ENV, txt)
+            if m:
+                return m.group(1)
+        except OSError:
+            pass
+    return None
+
+
+def builtin_define():
+    """构造 --dart-define 参数（若注入则脱敏打印，绝不输出明文）。"""
+    v = read_builtin_keys()
+    if not v:
+        print('  (内置 LLM 密钥：未注入，使用本地降级 / 自定义模型路径)')
+        return ''
+    print('  ✓ 内置 LLM 密钥注入：已启用（长度 %d，已脱敏）' % len(v))
+    return ' --dart-define=%s=%s' % (BUILTIN_KEY_ENV, v)
+
+
+def ensure_vosk_model():
+    """构建期确保 Vosk 离线模型 zip 落位于 assets（禁止运行时/首启联网）。"""
+    m = os.path.join(SRC, 'assets', 'vosk-model-small-en-us-0.15.zip')
+    if os.path.isfile(m) and os.path.getsize(m) > 1_000_000:
+        return
+    print('=== 确保 Vosk 离线模型（构建期下载，仅一次）===')
+    sh(f'"{sys.executable}" "{os.path.join(SRC, "tools", "fetch_vosk_model.py")}"',
+       cwd=SRC)
+
+
+def patch_vosk_plugin():
+    """修补 vosk_flutter 插件以适配 AGP 9（补 namespace / 提升 compileSdk），幂等。"""
+    print('=== 修补 vosk_flutter 插件以适配 AGP 9 ===')
+    sh(f'"{sys.executable}" "{os.path.join(SRC, "tools", "patch_vosk_plugin.py")}"',
+       cwd=SRC)
 
 
 def sh(cmd, cwd=DST):
-    print('\n$', cmd, '  (cwd=', cwd, ')')
+    # 脱敏：日志中绝不出现内置密钥明文（仅显示 <已脱敏>）。
+    masked = re.sub(r"--dart-define=BUILTIN_LLM_KEYS=[^\s]*",
+                    "--dart-define=BUILTIN_LLM_KEYS=<已脱敏>", cmd)
+    print('\n$', masked, '  (cwd=', cwd, ')')
     return subprocess.run(cmd, cwd=cwd, shell=True,
                           env={**os.environ, 'JAVA_HOME': JAVA_HOME}).returncode
 
@@ -55,7 +120,8 @@ def sync_src():
     robocopy 退出码语义：0-7 均为成功态（1=有复制，2=目标多余，3=两者…），≥8 才是真错误。
     sh() 本身只返回 returncode 不拦截，这里按 robocopy 语义显式判码，避免成功态被当失败、
     也避免真失败被静默放过。"""
-    excl = '/XD build .dart_tool .git feature'
+    # 排除 .env（本地密钥，绝不进构建副本 / 仓库）。
+    excl = '/XD build .dart_tool .git feature /XF .env'
     rc = sh(f'robocopy "{SRC}" "{DST}" /MIR {excl} /R:1 /W:1')
     if rc >= 8:
         raise SystemExit(f'[sync] robocopy 失败，退出码 {rc}（≥8 为真错误）')
@@ -140,15 +206,19 @@ def recolor_icon():
     print('  ✓ 图标已对齐 v2.0 §7（#0F0F1A + 白色块 + 声波缺口）')
 
 
-def build_arm64(build_number=None):
+def build_arm64(build_number=None, dart_define='', cwd=DST, no_pub=True):
     # --no-pub：pub 缓存已暖，跳过构建内联网 pub get（曾因网络抖动挂死整轮）
-    cmd = f'"{FLUTTER}" build apk --release --split-per-abi -P force-version-code-ignoring-abi=true --no-pub'
+    cmd = (f'"{FLUTTER}" build apk --release --split-per-abi '
+           f'-P force-version-code-ignoring-abi=true'
+           f'{" --no-pub" if no_pub else ""}{dart_define}')
     if build_number is not None:
         # Android 覆盖安装判据是 manifest versionCode，不是 assets/version.json。
         # 显式 --build-number 双保险（pubspec 已 +N 仍再钉一次）。
         cmd += f' --build-number={build_number}'
-    sh(cmd, cwd=DST)
-    apk = os.path.join(DST, 'build', 'app', 'outputs', 'flutter-apk',
+    rc = sh(cmd, cwd=cwd)
+    if rc != 0:
+        raise SystemExit(f'[build] flutter build 失败，退出码 {rc}')
+    apk = os.path.join(cwd, 'build', 'app', 'outputs', 'flutter-apk',
                        'app-arm64-v8a-release.apk')
     return apk, certutil_sha(apk), os.path.getsize(apk)
 
@@ -183,6 +253,82 @@ def aapt_version_code(apk):
     return (m.group(1), m.group(0))
 
 
+def _key_fragments(keys_json):
+    """从注入 JSON 派生密钥前 12 字符片段（运行期派生，不写死进脚本）。"""
+    frags = []
+    try:
+        for e in json.loads(keys_json or '[]'):
+            k = (e.get('key') or '')
+            if len(k) >= 12:
+                frags.append(k[:12])
+    except Exception:
+        pass
+    return frags
+
+
+def bundle_selfcheck(apk, keys_json):
+    """尽力而为：解压 libapp.so，确认内置 Key 片段只存在于该编译产物常量区。"""
+    frags = _key_fragments(keys_json)
+    if not frags:
+        return '(无注入密钥，跳过包内自检)'
+    try:
+        with zipfile.ZipFile(apk) as z:
+            so = None
+            for n in z.namelist():
+                if n.endswith('libapp.so'):
+                    so = z.read(n)
+                    break
+        if so is None:
+            return '(未找到 libapp.so，跳过包内自检)'
+        found = [f for f in frags if f.encode('utf-8') in so]
+        if found:
+            return f'包内 libapp.so 命中 {len(found)}/{len(frags)} 个密钥片段（编译产物常量区；符合预期）'
+        return '(包内未命中任何密钥片段)'
+    except Exception as e:  # 尽力而为，绝不伪造
+        return f'(包内自检异常：{e})'
+
+
+def git_leak_check(keys_json):
+    """git log -p 全量自查：内置 Key 是否曾进入版本历史。"""
+    frags = _key_fragments(keys_json)
+    if not frags:
+        return '(无注入密钥，跳过 git 泄漏自查)'
+    try:
+        r = subprocess.run(['git', '-C', SRC, 'log', '-p'],
+                           capture_output=True, text=True,
+                           encoding='utf-8', errors='replace')
+        out = r.stdout or ''
+    except Exception as e:
+        return f'(git 自查异常：{e})'
+    leaked = [f for f in frags if f in out]
+    if leaked:
+        return f'⚠ 发现 {len(leaked)} 个密钥片段曾出现在 git 历史！必须处理。'
+    return f'git log -p 自查：{len(frags)} 个片段均未出现（无泄漏）✓'
+
+
+def do_preview(bd, out_arg, build_number=10):
+    """预览构建：同步到 ASCII 路径副本 DST 后单构建 arm64，直出桌面
+    app-v1.1.0-preview.apk（禁止 upload）。源码路径含中文会触发 AOT 快照器
+    读 app.dill 失败，故改在 DST 构建。"""
+    print('=== 预览构建（单 arm64，直出桌面，禁止 upload）===')
+    print('--- 同步源码到构建副本 DST（ASCII 路径，规避中文路径 AOT 失败）---')
+    sync_src()
+    out_path = out_arg or os.path.join(
+        os.path.expanduser('~'), 'Desktop', 'app-v1.1.0-preview.apk')
+    # no_pub=False：DST 首次构建需联网解析依赖（pub 缓存可能不实）。
+    apk, sha, size = build_arm64(
+        build_number=build_number,
+        dart_define=bd, cwd=DST, no_pub=False)
+    shutil.copy(apk, out_path)
+    print(f'  ✓ 预览包已输出：{out_path}')
+    print(f'  体积 {size} B | SHA {sha}')
+    keys = read_builtin_keys() or ''
+    print('--- 构建自检（尽力而为，如实报告）---')
+    print('  包内：', bundle_selfcheck(out_path, keys))
+    print('  git ：', git_leak_check(keys))
+    print('====================================')
+
+
 def main():
     ap = argparse.ArgumentParser(description='ChunkSpoke 回填+双包重建')
     ap.add_argument('--release-url', help='GitHub Release 地址（tag 或 download 形式，自动推导两个 URL）')
@@ -193,7 +339,19 @@ def main():
     ap.add_argument('--bf', type=int, default=2, help='F 的 versionCode')
     ap.add_argument('--bf3', type=int, default=3, help='F3 的 versionCode')
     ap.add_argument('--no-recolor', action='store_true', help='关闭图标调色（默认已批准并入：#0F0F1A+白色块+声波缺口）')
+    ap.add_argument('--preview', action='store_true',
+                    help='预览构建：单 arm64 直出桌面 app-v1.1.0-preview.apk（含注入与自检，不做双包/回填/upload）')
+    ap.add_argument('--out', default=None, help='预览 APK 输出路径（默认桌面 app-v1.1.0-preview.apk）')
+    ap.add_argument('--build-number', type=int, default=None,
+                    help='预览构建 versionCode 覆盖（默认 10）')
     a = ap.parse_args()
+
+    bd = builtin_define()
+    ensure_vosk_model()
+    patch_vosk_plugin()
+    if a.preview:
+        do_preview(bd, a.out, a.build_number if a.build_number is not None else 10)
+        return
 
     if a.release_url:
         u = re.sub(r'/releases/tag/', '/releases/download/', a.release_url).rstrip('/')
@@ -219,7 +377,7 @@ def main():
         "notes": f"版本 {a.vf}：更新链路基线（零功能改动）。",
     })
     set_pubspec_version(a.vf, a.bf)
-    f_apk, f_sha, f_size = build_arm64(a.bf)
+    f_apk, f_sha, f_size = build_arm64(a.bf, dart_define=bd)
 
     # 防 F3 覆盖：F 构建后立即物理另存（SHA 已在 build_arm64 内即时记账）
     f_kept = f_apk.replace('app-arm64-v8a-release.apk', 'app-F-vc2-release.apk')
@@ -232,7 +390,7 @@ def main():
         "notes": f"版本 {a.vf3}：应用内更新链路验证（从 {a.vf} 升上来）。",
     })
     set_pubspec_version(a.vf3, a.bf3)
-    f3_apk, f3_sha, f3_size = build_arm64(a.bf3)
+    f3_apk, f3_sha, f3_size = build_arm64(a.bf3, dart_define=bd)
 
     now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
     print('\n==================== 发布回填结果 ====================')

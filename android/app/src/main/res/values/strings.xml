@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用名单一资源点：改此处全局生效（manifest label 引用 @string/app_name） -->
+    <string name="app_name">ChunkSpoke</string>
+</resources>

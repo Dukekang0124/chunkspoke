@@ -7,37 +7,9 @@ import '../ui/theme.dart';
 import 'level.dart';
 import 'review.dart';
 
-/// 场景中文名（去掉字母前缀，直接用场景名）。key 为 content_pack 的 theme。
-const Map<String, String> _sceneCN = {
-  'Asking for things': '索取东西',
-  'Breakfast': '早餐',
-  'Coffee & Cafe': '咖啡馆',
-  'Directions': '问路',
-  'Eating out': '外出就餐',
-  'Feelings': '情绪表达',
-  'Greetings': '打招呼',
-  'Home & Hotel': '住宿·酒店',
-  'Invitations': '邀请',
-  'Just checking': '确认一下',
-  'Kind requests': '委婉请求',
-  "Let's go": '出发吧',
-  'Morning routine': '晨间日常',
-  'Numbers & paying': '数字与付款',
-  'Opinions': '表达看法',
-  'Places': '地点',
-  'Quick responses': '快速回应',
-  'Restaurant': '餐厅点餐',
-  'Shopping': '购物',
-  'Time & plans': '时间与计划',
-  'Understanding': '听懂对方',
-  'Weekend vibes': '周末时光',
-  'Weather': '天气',
-  'eXclamations': '感叹语',
-  'Yes & no': '是与否',
-  'Sleep & rest': '睡眠与休息',
-};
+import '../ui/labels.dart';
 
-String _cn(Level lv) => _sceneCN[lv.theme] ?? lv.theme;
+String _cn(Level lv) => sceneCn(lv.theme);
 
 /// 难度分组（按内容顺序切三档：入门 / 进阶 / 挑战）。
 const List<(String, int, int)> _tiers = [
@@ -60,10 +32,16 @@ class MapScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('练习')),
-      body: FutureBuilder<Set<String>>(
-        future: progress.chunkStore.allMasteredKeys().then((l) => l.toSet()),
+      body: FutureBuilder<(Set<String>, List<String>)>(
+        future: (() async {
+          final m = (await progress.chunkStore.allMasteredKeys()).toSet();
+          final due =
+              await progress.chunkStore.dueChunkKeys(DateTime.now().millisecondsSinceEpoch);
+          return (m, due);
+        })(),
         builder: (ctx, snap) {
-          final mastered = snap.data ?? <String>{};
+          final mastered = snap.data?.$1 ?? <String>{};
+          final due = snap.data?.$2 ?? const <String>[];
           int masteredIn(Level lv) =>
               lv.chunks.where((c) => mastered.contains(c.id)).length;
           bool unlockedAt(int i) => i == 0 ||
@@ -74,7 +52,7 @@ class MapScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              TodayCard(mastered: mastered, content: content),
+              TodayCard(mastered: mastered, content: content, due: due),
               const SizedBox(height: 18),
               for (final (label, start, end) in _tiers)
                 if (start < levels.length) ...[
@@ -200,11 +178,16 @@ class _SceneRow extends StatelessWidget {
 class TodayCard extends StatelessWidget {
   final Set<String> mastered;
   final ContentPack content;
-  const TodayCard({super.key, required this.mastered, required this.content});
+  final List<String> due;
+  const TodayCard(
+      {super.key,
+      required this.mastered,
+      required this.content,
+      required this.due});
 
   @override
   Widget build(BuildContext context) {
-    final due = mastered.length; // 已掌握总数（概览）
+    final masteredCount = mastered.length; // 已掌握总数（概览）
     final anyLocked = content.levels
         .any((lv) => mastered.intersection(lv.chunks.map((c) => c.id).toSet()).length <
             (lv.chunks.length * _unlockRatio));
@@ -246,7 +229,7 @@ class TodayCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '已掌握 $due 个词块',
+            '已掌握 $masteredCount 个词块',
             style: const TextStyle(
                 color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
           ),
@@ -255,6 +238,34 @@ class TodayCard extends StatelessWidget {
             anyLocked ? '温故知新，把未掌握的词块练到 80%' : '保持节奏，每天 5 分钟',
             style: const TextStyle(color: Colors.white54, fontSize: 13),
           ),
+          if (due.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ReviewScreen()),
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                decoration: BoxDecoration(
+                  color: kUnlocked.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: kUnlocked.withOpacity(0.5)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.replay, color: kUnlocked, size: 18),
+                    const SizedBox(width: 8),
+                    Text('今日复习 ${due.length} 个词块',
+                        style: const TextStyle(color: kUnlocked, fontSize: 15)),
+                    const Spacer(),
+                    const Icon(Icons.arrow_forward_ios, size: 14, color: kUnlocked),
+                  ],
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -275,9 +286,17 @@ class TodayCard extends StatelessWidget {
     );
   }
 
-  void _openToday(BuildContext context) {
+  void _openToday(BuildContext context) async {
     HapticFeedback.mediumImpact();
     final content = this.content;
+    // 到期复习优先：进入复习会话（② 开口说块 + ④ 开口说句，轻量两步）。
+    if (due.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ReviewScreen()),
+      );
+      return;
+    }
     final firstUnlockedLocked = content.levels.firstWhere(
       (l) => !mastered
           .intersection(l.chunks.map((c) => c.id).toSet())

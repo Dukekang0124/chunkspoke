@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 背景层（矢量源）：#0F1424 → #F5A623 135° 对角渐变。
+     实际进包用 PNG 自适应背景（tools/gen_icon.py 生成），本文件为矢量源，可替换。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+  <gradient
+      android:angle="135"
+      android:startColor="#0F1424"
+      android:endColor="#F5A623"
+      android:type="linear" />
+</shape>

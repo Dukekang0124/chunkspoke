@@ -1,30 +1,62 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'models/content_pack.dart';
+import 'services/crash_log.dart';
 import 'services/loaders.dart';
 import 'ui/theme.dart';
+import 'ui/error_page.dart';
 import 'screens/ftue.dart';
 import 'screens/nav.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final progress = ProgressService();
-  await progress.init();
-  await progress.bumpStreak();
-  final content = await loadContentPack();
-  final tts = TtsService();
-  await tts.init();
+void main() {
+  // 全局错误拦截（P0 加固）：任何页面/异步异常都不允许灰屏或闪退退桌面。
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    FlutterError.onError = (details) {
+      FlutterError.presentError(details);
+      CrashLog.write('FlutterError: ${details.exception}', details.stack);
+    };
+    WidgetsBinding.instance.platformDispatcher.onError = (e, st) {
+      CrashLog.write('PlatformError: $e', st);
+      return true;
+    };
+    // 组件构建异常 → 应用内错误页（替代默认灰屏 ErrorWidget）。
+    ErrorWidget.builder = (details) =>
+        ErrorBody(detail: details.exception);
+    await bootstrap();
+  }, (e, st) {
+    CrashLog.write('Uncaught: $e', st);
+  });
+}
 
-  runApp(
-    MultiProvider(
-      providers: [
-        Provider<ProgressService>.value(value: progress),
-        Provider<ContentPack>.value(value: content),
-        Provider<TtsService>.value(value: tts),
-      ],
-      child: const ChunkSpokeApp(),
-    ),
-  );
+Future<void> bootstrap() async {
+  try {
+    final progress = ProgressService();
+    await progress.init();
+    final content = await loadContentPack();
+    final tts = TtsService();
+    await tts.init();
+    runApp(
+      MultiProvider(
+        providers: [
+          Provider<ProgressService>.value(value: progress),
+          Provider<ContentPack>.value(value: content),
+          Provider<TtsService>.value(value: tts),
+        ],
+        child: const ChunkSpokeApp(),
+      ),
+    );
+  } catch (e, st) {
+    // 启动链路兜底：初始化失败也渲染应用内错误页（带重试），绝不静默退出。
+    CrashLog.write('Bootstrap: $e', st);
+    runApp(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: darkTheme,
+      home: Scaffold(body: ErrorBody(detail: e, onRetry: main)),
+    ));
+  }
 }
 
 class ChunkSpokeApp extends StatelessWidget {
@@ -37,6 +69,9 @@ class ChunkSpokeApp extends StatelessWidget {
       title: 'ChunkSpoke',
       debugShowCheckedModeBanner: false,
       theme: darkTheme,
+      // 防御：根节点铺满应用底色，任何时刻（含栈空/过渡）都不会露系统黑底。
+      builder: (context, child) =>
+          ColoredBox(color: kBg, child: child ?? const SizedBox.shrink()),
       home: progress.seenFtue ? const AppNav() : const FtueScreen(),
     );
   }

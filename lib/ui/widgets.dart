@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/loaders.dart';
 import 'theme.dart';
+import 'labels.dart';
 
 /// 词块视觉芯片：颜色 + 形状双重编码。纯展示，拖拽/点击由外层包裹。
 class ChunkTile extends StatelessWidget {
@@ -109,57 +110,51 @@ class SceneCard extends StatelessWidget {
         alignment: Alignment.center,
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Text(theme,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(sceneCn(theme),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              Text(theme,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            ],
+          ),
         ),
       );
 }
 
-/// 录音态波形（仅视觉，无音频采集）。
-class Waveform extends StatefulWidget {
-  const Waveform({super.key});
-  @override
-  State<Waveform> createState() => _WaveformState();
-}
+/// 录音态实时电平条：条高只由真实采集电平（0..1）驱动，非自由动画。
+/// 说话时整排抬起并跳动 = 采集正常；全程平贴底部不动 = 采集故障（一眼可判）。
+class LevelMeter extends StatelessWidget {
+  final double level; // 0..1 实时峰值/音量
+  const LevelMeter({required this.level, super.key});
 
-class _WaveformState extends State<Waveform> with SingleTickerProviderStateMixin {
-  late final AnimationController _c;
   @override
-  void initState() {
-    super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 700))
-      ..repeat(reverse: true);
+  Widget build(BuildContext context) {
+    final l = level.clamp(0.0, 1.0);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(24, (i) {
+        // 稳定权重：各条高度不同；电平为 0 时全部回落成一条平线。
+        final w = 0.45 + 0.55 * (0.5 + 0.5 * sin(i * pi / 6));
+        final h = 8.0 + l * 48.0 * w;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 90),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          width: 4,
+          height: h,
+          decoration: BoxDecoration(
+            color: kPrimary.withOpacity(0.45 + l * 0.55 * w),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        );
+      }),
+    );
   }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(
-            24,
-            (i) => AnimatedBuilder(
-                  animation: _c,
-                  builder: (_, __) {
-                    final v = (sin((_c.value * 2 * pi) + i * 0.5) * 0.5 + 0.5);
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      width: 4,
-                      height: 8 + v * 44,
-                      decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.5 + v * 0.5),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    );
-                  },
-                )),
-      );
 }
 
 /// 掌握度环（Phase 1 用整体完成度；四维点亮在 Phase 3）。

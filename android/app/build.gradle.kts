@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.chunkspoke_flutter"
+    namespace = "com.chunkspoke.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.chunkspoke_flutter"
+        applicationId = "com.chunkspoke.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24
@@ -34,6 +34,13 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    packaging {
+        jniLibs {
+            // Vosk 的 libvosk.so 依赖 libc++_shared.so，需随包内置（否则 release 启动期 dlopen 失败崩溃）。
+            pickFirsts += setOf("**/libc++_shared.so")
         }
     }
 }

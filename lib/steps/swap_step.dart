@@ -39,14 +39,14 @@ class _SwapStepState extends State<SwapStep> {
   @override
   Widget build(BuildContext context) {
     if (_saying && _chosen != null) {
-      return SayWidget(sentence: _newSentence(_chosen!), levelId: widget.levelId, onDone: widget.onDone);
+      return SayWidget(sentence: _newSentence(_chosen!), levelId: widget.levelId, onDone: (_) => widget.onDone);
     }
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           const SizedBox(height: 8),
-          const Text('Swap one part', style: TextStyle(color: Colors.white70)),
+          const Text('替换其中一部分', style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -74,7 +74,7 @@ class _SwapStepState extends State<SwapStep> {
             }),
           ),
           const SizedBox(height: 24),
-          const Text('Choose a swap', style: TextStyle(color: Colors.white70)),
+          const Text('选择一个替换词', style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
@@ -92,8 +92,8 @@ class _SwapStepState extends State<SwapStep> {
           ),
           const Spacer(),
           TextButton(
-            onPressed: widget.onDone,
-            child: const Text('Skip', style: TextStyle(color: Colors.white38)),
+            onPressed: () => _confirmSkip(context),
+            child: const Text('跳过', style: TextStyle(color: Colors.white38)),
           ),
           const SizedBox(height: 12),
         ],

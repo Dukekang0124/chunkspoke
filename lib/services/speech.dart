@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'vosk_engine.dart';
 
 /// Azure 发音评测结果（三项分数）。
 class PronunciationResult {
@@ -29,6 +29,7 @@ class SayOutcome {
   final PronunciationResult? azure;
   final bool wrong;
   final bool noSpeech;
+  final List<bool>? targetMatched; // 目标句逐词命中标记（用于错词标红）
   SayOutcome({
     required this.passed,
     required this.level,
@@ -37,6 +38,7 @@ class SayOutcome {
     this.azure,
     this.wrong = false,
     this.noSpeech = false,
+    this.targetMatched,
   });
 }
 
@@ -109,39 +111,31 @@ bool _wordClose(String target, String cand) {
   return longer.startsWith(shorter) && (longer.length - shorter.length) <= 1;
 }
 
-/// L4 开口判定结果：命中 / 缺失的目标核心词（用于琥珀高亮）。
-class ChunkHitResult {
-  final bool allHit;
-  final List<String> hit;
-  final List<String> missed;
-  ChunkHitResult({required this.allHit, required this.hit, required this.missed});
-}
+/// 口语判定已迁移到 `speech_judge.dart` 的 [judgeSpeech]（P0-1 收紧：规范化 +
+/// 词级序列比对 + 置信度门槛 + 空/静音拒绝），L4 开口与 SAY 照读共用。
 
-/// L4 开口命中：expected 核心词（含 variants 候选）在 recognized 中以任意词序出现即命中；
-/// 逐词编辑距离≤1 / 词干容错。stopwords 不参与判定。
-ChunkHitResult chunkHit(String expected, String recognized,
-    {List<String> variants = const []}) {
-  final targets = _coreWords(expected).toList();
-  final rec =
-      _normalize(recognized).split(' ').where((w) => w.isNotEmpty).toSet();
-  final hit = <String>[];
-  final missed = <String>[];
-  for (final t in targets) {
-    final candidates = [t, ...variants];
-    final ok = candidates.any((c) => rec.any((rw) => _wordClose(c, rw)));
-    if (ok) {
-      hit.add(t);
-    } else {
-      missed.add(t);
-    }
-  }
-  return ChunkHitResult(allHit: missed.isEmpty, hit: hit, missed: missed);
-}
-
-/// 语音服务：L1 Azure 发音评测（真实三项分数）；L2 speech_to_text 本地识别 + Text Match 计分；
-/// L4 Azure STT 转写（供开口题型容错命中）。
+/// 语音服务（识别优先级）：Vosk 离线（默认必通，随包内置）＞ Azure STT（用户配 Key 才启用的高精度增强）。
+/// 已移除系统 SpeechRecognizer（speech_to_text）路径——无 GMS 国行机上是空壳，永不产出。
+/// 保留：L1 Azure 发音评测（REST）、Azure STT 转写（增强）、文本匹配/开口命中计分。
 class SpeechService {
-  final stt.SpeechToText _stt = stt.SpeechToText();
+  final Transcriber _transcriber;
+
+  SpeechService({Transcriber? transcriber})
+      : _transcriber = transcriber ?? SpeechEngine.instance;
+
+  /// 加载 Vosk 离线识别引擎（默认必通）。成功/失败据此决定降级或报错。
+  Future<bool> initVosk() => _transcriber.init();
+
+  bool get voskReady => _transcriber.isReady;
+  bool get voskFailed => _transcriber.failed;
+
+  /// 用 Vosk 转写本地录音（16k 单声道 WAV）；phrases 限定识别范围，提升命中/评分精度。
+  /// 返回文本 + 置信度（置信度可能为 null=字段缺失，判定层据此走文本相似度兜底）。
+  Future<VoskResult> recognize(String wavPath, List<String> phrases) =>
+      _transcriber.transcribe(wavPath, phrases);
+
+  /// 录音时长（秒），供判定管线的「过短录音无效」防噪兜底。
+  Future<double> durationSec(String wavPath) => wavDurationSec(wavPath);
 
   /// L2：本地识别结果计分（Text Match）。
   /// 核心词命中率 ≥60% 判通过；分数 = 60 + 40×命中率。
@@ -155,29 +149,6 @@ class SpeechService {
     final hitRate = hit / core.length;
     final score = (60 + 40 * hitRate).round();
     return TextMatchResult(recognized: recognized, score: score, hitRate: hitRate, passed: hitRate >= 0.6);
-  }
-
-  /// L2：真实初始化 speech_to_text（仅当真实失败才允许落 L3）。
-  Future<bool> initLocal() async {
-    try {
-      return await _stt.initialize();
-    } catch (_) {
-      return false;
-    }
-  }
-
-  void startLocal(void Function(String) onResult) {
-    _stt.listen(
-      onResult: (r) => onResult(r.recognizedWords),
-      localeId: 'en_US',
-      listenMode: stt.ListenMode.dictation,
-    );
-  }
-
-  Future<void> stopLocal() async {
-    try {
-      await _stt.stop();
-    } catch (_) {}
   }
 
   /// L1：Azure Pronunciation Assessment（REST）。

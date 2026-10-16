@@ -83,7 +83,6 @@ class _LearnStepState extends State<LearnStep> {
                     onTap: () => setState(() => _cnDissolved = false),
                     onLongPressStart: (_) => _beginDissolve(),
                     onLongPressEnd: (_) => _cancelDissolve(),
-                    onLongPressMove: (_) => _cancelDissolve(),
                     child: AnimatedOpacity(
                       opacity: _cnDissolved ? 0.0 : 1.0,
                       duration: const Duration(milliseconds: 400),
@@ -105,7 +104,7 @@ class _LearnStepState extends State<LearnStep> {
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: _play,
-                    child: const Text('Replay', style: TextStyle(color: Colors.white70)),
+                    child: const Text('重听', style: TextStyle(color: Colors.white70)),
                   ),
                 ],
               ),
@@ -123,7 +122,7 @@ class _LearnStepState extends State<LearnStep> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: _next,
-              child: Text(_i < widget.level.chunks.length - 1 ? 'Next' : 'Start practice',
+              child: Text(_i < widget.level.chunks.length - 1 ? '继续' : '开始练习',
                   style: const TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ),

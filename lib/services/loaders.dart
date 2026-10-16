@@ -98,6 +98,43 @@ class ProgressService {
 
   Future<void> setAzureRegion(String? r) => _put('azureRegion', r ?? '');
 
+  // —— M7 双层 AI 服务配置 ——
+  // 自定义层：用户自配 OpenAI 兼容服务（baseUrl + model + key），开关默认关。
+  // 内置层：编译期注入（见 builtin_llm.dart），此处只存「失败时间戳 / 整体不可用」状态。
+  // 所有 Key 仅存于本地 kv，绝不打印 / 写日志；仓库内永不出现明文。
+
+  String? _blank(String? v) => (v == null || v.isEmpty) ? null : v;
+
+  bool get customLlmEnabled => _kv('customLlmEnabled') == 'true';
+  Future<void> setCustomLlmEnabled(bool v) => _put('customLlmEnabled', v.toString());
+
+  String? get customLlmUrl => _blank(_kv('customLlmUrl'));
+  Future<void> setCustomLlmUrl(String? v) => _put('customLlmUrl', v ?? '');
+
+  String? get customLlmModel => _blank(_kv('customLlmModel'));
+  Future<void> setCustomLlmModel(String? v) => _put('customLlmModel', v ?? '');
+
+  String? get customLlmKey => _blank(_kv('customLlmKey'));
+  Future<void> setCustomLlmKey(String? v) => _put('customLlmKey', v ?? '');
+
+  /// 清除自定义配置（含开关关闭），回落到内置层。
+  Future<void> clearCustomLlm() async {
+    await setCustomLlmEnabled(false);
+    await setCustomLlmUrl(null);
+    await setCustomLlmModel(null);
+    await setCustomLlmKey(null);
+  }
+
+  // —— 内置层可用性状态（失败时间戳用于 ≥60s 退避，避免重试风暴）——
+  int builtinFailTs(int i) =>
+      int.tryParse(_kv('builtinFail_$i') ?? '') ?? 0;
+  Future<void> setBuiltinFailTs(int i, int ts) =>
+      _put('builtinFail_$i', ts.toString());
+
+  bool get builtinUnavailable => _kv('builtinUnavailable') == 'true';
+  Future<void> setBuiltinUnavailable(bool v) =>
+      _put('builtinUnavailable', v.toString());
+
   String? get updateUrl {
     final v = _kv('updateUrl');
     return (v == null || v.isEmpty) ? null : v;
@@ -214,12 +251,17 @@ class ProgressService {
     await _put('lastActiveDay', today);
   }
 
+  // —— 每日目标（留存钩子，D10）：默认 5 句/天，存 kv ——
+  int get dailyGoal => int.tryParse(_kv('dailyGoal') ?? '') ?? 5;
+  Future<void> setDailyGoal(int n) async => await _put('dailyGoal', n.toString());
+
   String _dateKey(DateTime d) => '${d.year}-${d.month}-${d.day}';
 
   // —— 发音分数（用于 Accuracy average） ——
   Future<void> recordScore(int s) async {
     final list = (jsonDecode(_kv('scores') ?? '[]') as List).cast<int>().toList();
     list.add(s.clamp(0, 100));
+    if (list.length > 50) list.removeAt(0); // 保留最近 50 条，避免 kv 膨胀（D11）
     await _put('scores', jsonEncode(list));
   }
 

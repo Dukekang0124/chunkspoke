@@ -3,6 +3,7 @@ import '../ui/theme.dart';
 import 'map.dart';
 import 'me.dart';
 import 'settings.dart';
+import '../services/update/update_flow.dart';
 
 /// M5 两栏导航：[练习][进度] + 齿轮（设置）。
 class AppNav extends StatefulWidget {
@@ -14,6 +15,13 @@ class AppNav extends StatefulWidget {
 class _AppNavState extends State<AppNav> {
   int _index = 0;
   final List<Widget> _tabs = const [MapScreen(), MeScreen()];
+
+  @override
+  void initState() {
+    super.initState();
+    // 进入首屏后静默检查更新（每次冷启动最多一次，网络失败静默跳过）。
+    runUpdateCheck(context);
+  }
 
   @override
   Widget build(BuildContext context) {

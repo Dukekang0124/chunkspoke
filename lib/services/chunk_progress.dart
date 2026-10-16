@@ -29,6 +29,16 @@ class ChunkProgressStore {
     );
   }
 
+  /// 断点续练：返回第一个「尚未掌握」的词块索引；全部掌握则返回 keys.length。
+  /// 「下一个未完成块」= 首个未 mastered 的块（完成 2 块 → 返回 2，即第 3 块）。
+  Future<int> nextUnmasteredIndex(List<String> keys) async {
+    for (int i = 0; i < keys.length; i++) {
+      final row = await get(keys[i]);
+      if (!isMastered(row)) return i;
+    }
+    return keys.length;
+  }
+
   /// Mastered requires L2 one-try AND (score >= 80 OR self-eval).
   static bool isMastered(ChunkRow r) =>
       isMasteredWith(r.l2OneTry, r.lastScore, r.l4SelfEval);
@@ -39,30 +49,28 @@ class ChunkProgressStore {
   Future<void> applyEvent(String key, ChunkEvent event,
       {int accuracy = 0, bool selfEval = false}) async {
     final p = await get(key);
+    // 主动跳过/延期：置复习队列 + 次日到期（兑现“明天回来找你”真实出口）。
+    if (event == ChunkEvent.scheduleReview) {
+      await db.upsertChunk(p.copyWith(
+        level: ChunkLevel.review,
+        dueDate: ReviewScheduler.nextDue(DateTime.now(), 0).millisecondsSinceEpoch,
+      ));
+      await db.insertSession(key, event.name, 0);
+      return;
+    }
     ChunkLevel next = ChunkStateMachine.transition(p.level, event);
 
-    // L4 fail counter: two fails demote back to L3 and reset the counter.
-    int failCount = p.failCount;
-    if (event == ChunkEvent.speakFail && p.level == ChunkLevel.l4) {
-      failCount += 1;
-      if (failCount >= 2) {
-        next = ChunkLevel.l3;
-        failCount = 0;
-      }
-    }
-
-    // L2 one-try tracking.
+    // L2 one-try tracking（§4.3 修复“拖错一次永不掌握”毒块）：
+    // 任何关卡重练 L2 都重新计——拖对即补回“一次过”，拖错清零；
+    // 最终以完成建造的那次拖对为准（不依赖是否首次尝试）。
     int l2OneTry = p.l2OneTry;
     if (next == ChunkLevel.l2 && p.level != ChunkLevel.l2) {
       l2OneTry = -1; // entering L2 fresh — reset the one-try flag
     }
-    if (p.level == ChunkLevel.l2 && event == ChunkEvent.dragWrong) {
-      l2OneTry = 0; // needed more than one try -> never counts as one-try
-    }
-    if (p.level == ChunkLevel.l2 &&
-        event == ChunkEvent.dragCorrect &&
-        l2OneTry != 0) {
+    if (event == ChunkEvent.dragCorrect) {
       l2OneTry = 1;
+    } else if (event == ChunkEvent.dragWrong) {
+      l2OneTry = 0;
     }
 
     int lastScore = p.lastScore;
@@ -84,7 +92,7 @@ class ChunkProgressStore {
           next == ChunkLevel.review && p.level != ChunkLevel.review;
       await db.upsertChunk(p.copyWith(
         level: next,
-        failCount: failCount,
+        failCount: p.failCount,
         // 展示用 lastScore：仅当本次有 STT 分才覆盖 L3 分。
         lastScore: accuracy > 0 ? accuracy : p.lastScore,
         l2OneTry: l2OneTry,
@@ -99,7 +107,7 @@ class ChunkProgressStore {
 
     await db.upsertChunk(p.copyWith(
       level: next,
-      failCount: failCount,
+      failCount: p.failCount,
       lastScore: lastScore,
       l2OneTry: l2OneTry,
       l4SelfEval: p.l4SelfEval,
@@ -114,4 +122,9 @@ class ChunkProgressStore {
 
   /// All chunk keys currently at the mastered level (scene-unlock / stats).
   Future<List<String>> allMasteredKeys() => db.allMasteredKeys();
+
+  // —— M7 AI 周报统计（聚合数字 + 词块 ID，不碰录音原文）——
+  Future<int> spokenCount() => db.countSessionEvent('speakSuccess');
+  Future<double> avgScore() => db.avgSessionScore();
+  Future<List<ChunkRow>> topFail(int n) => db.topFailChunks(n);
 }

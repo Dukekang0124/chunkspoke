@@ -2,88 +2,133 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
+import '../services/session.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import '../steps/practice_loop.dart';
 
-/// Review 次日队列：展示到期复习的词块（TTS 跟读 + 标记完成）。
-class ReviewScreen extends StatelessWidget {
+/// 复习页：展示到期复习词块（统一以 chunk.id 为键，与 chunks 表一致）。
+/// 复习走「轻量两步」——② 开口说块 + ④ 开口说句（不再听辨块/块拼句）。
+class ReviewScreen extends StatefulWidget {
   const ReviewScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final content = Provider.of<ContentPack>(context);
-    final progress = Provider.of<ProgressService>(context);
-    final lookup = <String, Chunk>{};
-    for (final lv in content.levels) {
-      for (final c in lv.chunks) lookup['${lv.id}:${c.id}'] = c;
-    }
-    final items = progress
-        .dueReviews()
-        .where((k) => lookup.containsKey(k))
-        .map((k) => lookup[k]!)
-        .toList();
+  State<ReviewScreen> createState() => _ReviewScreenState();
+}
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Review')),
-      body: items.isEmpty
-          ? const Center(
-              child: Text('No review due. Come back tomorrow!',
-                  style: TextStyle(color: Colors.white70, fontSize: 16)),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: items.length,
-              itemBuilder: (context, i) {
-                final c = items[i];
-                return Card(
-                  color: const Color(0xFF1A1A2E),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            ChunkTile(c.text, c.type),
-                            const Spacer(),
-                            IconButton(
-                              icon: const Icon(Icons.volume_up, color: kPrimary),
-                              onPressed: () => Provider.of<TtsService>(context, listen: false)
-                                  .speak(c.sentence.text),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(c.sentence.text,
-                            style: const TextStyle(color: Colors.white, fontSize: 15)),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
-                            onPressed: () {
-                              progress.removeReview('${_levelOf(content, c)}:${c.id}');
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                                  content: Text('Reviewed!'), duration: Duration(seconds: 1)));
-                            },
-                            child: const Text('Mark reviewed',
-                                style: TextStyle(color: Colors.white)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-    );
+class _ReviewScreenState extends State<ReviewScreen> {
+  Future<List<Chunk>>? _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
   }
 
-  String _levelOf(ContentPack content, Chunk c) {
+  void _reload() {
+    final content = Provider.of<ContentPack>(context, listen: false);
+    final progress = Provider.of<ProgressService>(context, listen: false);
+    final lookup = <String, Chunk>{};
     for (final lv in content.levels) {
-      if (lv.chunks.any((x) => x.id == c.id)) return lv.id;
+      for (final c in lv.chunks) lookup[c.id] = c;
     }
-    return '';
+    setState(() {
+      _future = progress.chunkStore
+          .dueChunkKeys(DateTime.now().millisecondsSinceEpoch)
+          .then((keys) => keys
+              .where(lookup.containsKey)
+              .map((k) => lookup[k]!)
+              .toList());
+    });
+  }
+
+  void _startReview(List<Chunk> due) {
+    final content = Provider.of<ContentPack>(context, listen: false);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text('复习课堂')),
+          body: PracticeLoop(
+            level: PracticeSession.reviewLevel(content, due),
+            chunks: due,
+            reviewMode: true,
+            onDone: () => Navigator.of(context).maybePop(),
+          ),
+        ),
+      ),
+    ).then((_) => _reload());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('复习')),
+      body: FutureBuilder<List<Chunk>>(
+        future: _future,
+        builder: (ctx, snap) {
+          final items = snap.data ?? const <Chunk>[];
+          if (items.isEmpty) {
+            return const Center(
+              child: Text('今天没有待复习词块',
+                  style: TextStyle(color: Colors.white70, fontSize: 16)),
+            );
+          }
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kUnlocked,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => _startReview(items),
+                  icon: const Icon(Icons.play_arrow, color: Colors.white),
+                  label: Text('开始复习（${items.length} 个 · 开口说块 + 开口说句）',
+                      style: const TextStyle(color: Colors.white, fontSize: 15)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              for (final c in items) _ReviewItem(chunk: c),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ReviewItem extends StatelessWidget {
+  final Chunk chunk;
+  const _ReviewItem({required this.chunk});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: const Color(0xFF1A1A2E),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            ChunkTile(chunk.text, chunk.type),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(chunk.meaningCN,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14)),
+            ),
+            IconButton(
+              icon: const Icon(Icons.volume_up, color: kPrimary),
+              onPressed: () => Provider.of<TtsService>(context, listen: false)
+                  .speak(chunk.text),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

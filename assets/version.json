@@ -1,7 +1,8 @@
 {
-  "version": "1.1.0",
-  "buildNumber": 5,
-  "apkUrl": "",
-  "contentUrl": "",
-  "notes": "M6 发版：应用更名『开口说英语』；词块库扩至 500；掌握硬门槛状态机；GLM-4-Flash 可选 AI 助手（周报/学习计划/变式造句）。"
+  "versionName": "1.2.4",
+  "versionCode": 2019,
+  "url": "https://github.com/Dukekang0124/chunkspoke/releases/download/v1.2.4/app-arm64-v8a-release.apk",
+  "sha256": "b71b0820d4d61cab9f60e73839ade4c9d1d13ae5440ad8b6bd746f534e728b88",
+  "size": 69845438,
+  "notes": "v1.2.4（versionCode 2019）：应用内自更新闭环上线——内置 GitHub raw 更新源、启动静默检查、三态弹窗、应用内进度条可取消下载、SHA-256 校验、FileProvider 调起安装、缓存复用免重下；五步词块闭环定稿；判定管线三层漏斗；掌握计数修复；新图标。"
 }

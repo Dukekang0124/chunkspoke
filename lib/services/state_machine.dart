@@ -21,10 +21,12 @@ enum ChunkEvent {
   accuracyFail, // L3 fail (retry)
   speakSuccess, // L4 -> review
   speakFail, // L4 fail (counts toward fail x2)
+  scheduleReview, // 主动跳过/延期 -> review（次日到期）
 }
 
 class ChunkStateMachine {
   static ChunkLevel transition(ChunkLevel current, ChunkEvent event) {
+    if (event == ChunkEvent.scheduleReview) return ChunkLevel.review;
     switch (current) {
       case ChunkLevel.l1:
         return event == ChunkEvent.assembleCorrect ? ChunkLevel.l2 : ChunkLevel.l1;

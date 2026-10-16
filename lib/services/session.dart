@@ -15,7 +15,7 @@ class Sm2Scheduler {
       ReviewScheduler.nextDue(from, stage);
 }
 
-/// 每日会话编排（M7）：到期复习优先；复习未清不推新学；每日新学 ≤5。
+/// 每日会话编排（M7 / v1.2.2 五步）：新块 3~5 个（五步闭环）+ 旧块复习 5 个（②④两步）。
 class PracticeSession {
   /// 返回当日应练词块：
   ///  - 有到期复习 → 先练复习（最多 [maxDue]），不插入新学；
@@ -31,8 +31,56 @@ class PracticeSession {
     return allChunks.take(maxNew).toList(); // 每日新学 ≤5
   }
 
+  /// 每日会话 = 新块（≤[maxNew]，各走五步）+ 到期复习块（≤[maxReview]，各走②④两步）。
+  static DailyPlan dailyPlan({
+    required List<Chunk> dueChunks,
+    required List<Chunk> newChunks,
+    int maxNew = 5,
+    int maxReview = 5,
+  }) {
+    return DailyPlan(
+      newChunks: newChunks.take(maxNew).toList(),
+      reviewChunks: dueChunks.take(maxReview).toList(),
+    );
+  }
+
+  /// 由到期复习块构造一个「合成场景」，供 review 模式的 PracticeLoop 使用：
+  /// 每个块的开口说句目标 = 原场景中「包含该块」的目标句（找不到则回退为该块自身）。
+  static Level reviewLevel(ContentPack content, List<Chunk> chunks) {
+    final sentences = <TargetSentence>[];
+    for (final c in chunks) {
+      TargetSentence? found;
+      for (final lv in content.levels) {
+        for (final s in lv.sentences) {
+          if (s.chunkIds.contains(c.id)) {
+            found = s;
+            break;
+          }
+        }
+        if (found != null) break;
+      }
+      sentences.add(found ??
+          TargetSentence(
+              id: c.id, text: c.text, meaningCN: c.meaningCN, chunkIds: [c.id]));
+    }
+    return Level(
+        id: 'review',
+        theme: 'Review',
+        sceneImage: '',
+        chunks: chunks,
+        sentences: sentences);
+  }
+
   /// 是否有内容可练（决定是否显示总结屏 / 冷启动空态）。
   static bool hasContent(int practicedCount) => practicedCount > 0;
+}
+
+/// 每日会话计划：新块（五步）+ 到期复习块（②④两步）。
+class DailyPlan {
+  final List<Chunk> newChunks;
+  final List<Chunk> reviewChunks;
+  const DailyPlan({required this.newChunks, required this.reviewChunks});
+  int get total => newChunks.length + reviewChunks.length;
 }
 
 /// 数据迁移（M4）：v1.1.0 首启检测旧数据 → 重置。
