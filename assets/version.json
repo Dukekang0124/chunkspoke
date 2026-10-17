@@ -1,8 +1,8 @@
 {
-  "versionName": "1.2.4",
-  "versionCode": 2019,
+  "versionName": "1.2.5",
+  "versionCode": 2020,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
-  "sha256": "6dd37b92bbb3a06c65055135252bd833da971697837fc83c86f931ae7a374d8d",
-  "size": 69845490,
-  "notes": "v1.2.4（versionCode 2019）：应用内自更新闭环上线——内置 GitHub raw 更新源、启动静默检查、三态弹窗、应用内进度条可取消下载、SHA-256 校验、FileProvider 调起安装、缓存复用免重下；五步词块闭环定稿；判定管线三层漏斗；掌握计数修复；新图标。"
+  "sha256": "a643b25634cd94ddb806caaa454231e78ad478bc1c5c716bcead2e1b4027341e",
+  "size": 69846018,
+  "notes": "v1.2.5（versionCode 2020）：修复五步掌握判定/说块重复事件/拼句准确度/毒块/复习排程/首页刷新/设置回滚等缺陷，并为 9 个场景补充目标句。"
 }
