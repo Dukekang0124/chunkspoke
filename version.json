@@ -1,8 +1,8 @@
 {
-  "versionName": "1.2.5",
-  "versionCode": 2020,
+  "versionName": "1.2.8",
+  "versionCode": 2028,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
-  "sha256": "a643b25634cd94ddb806caaa454231e78ad478bc1c5c716bcead2e1b4027341e",
-  "size": 69846018,
-  "notes": "v1.2.5（versionCode 2020）：修复全流程自测发现的缺陷——五步掌握判定以落盘结果为准（不再无条件 +1）、说块不再重复写掌握事件、拼句准确度不再被冲零、拼句误拖不再毒化「一次过」、完成关卡改为写入 chunks 到期复习队列（复习闭环真正生效）、首页返回后显式刷新计数、设置页版本取真实安装版本且测试连接失败自动回滚；另为 9 个场景补充目标句。\n\n说明：url 为 GitHub Releases 固化直链；sha256/size 为真值，可直接校验。"
+  "sha256": "ecfadc617d1adb3602d5063486626086aa9ac662c6ac66809f11ab4b78b50157",
+  "size": 69918418,
+  "notes": "v1.2.8（versionCode 2028）：修复应用内更新——检查改为多源兜底（GitHub raw → jsDelivr），国内网络不再「检查失败」；远端清单缺少 versionCode 时不再误判「已是最新」。其余沿用 v1.2.7（SRS 阶梯、跟读软着陆、反向产出、权限/引擎前置、每日目标、487 句目标句）。"
 }
