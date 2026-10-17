@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
+import '../services/chunk_progress.dart';
+import '../services/crash_log.dart';
 import '../ui/theme.dart';
 import '../ui/labels.dart';
 import '../steps/practice_loop.dart';
@@ -25,8 +27,19 @@ class _LevelScreenState extends State<LevelScreen> {
     for (final d in const ['recognize', 'build', 'say', 'swap']) {
       await progress.recordDim(widget.level.id, d);
     }
-    await progress.scheduleReview(
-        widget.level.chunks.map((c) => '${widget.level.id}:${c.id}').toList());
+    // 将本关仍未掌握的块放入到期复习队列：写 chunks 表 due_date（与首页到期读取同源），
+    // 修正旧 kv 'review' 键格式错配导致「完成关卡→排复习」失效的问题（S5）。
+    final store = progress.chunkStore;
+    for (final c in widget.level.chunks) {
+      try {
+        final row = await store.get(c.id);
+        if (!ChunkProgressStore.isMastered(row)) {
+          await store.applyEvent(c.id, ChunkEvent.scheduleReview);
+        }
+      } catch (e, st) {
+        CrashLog.write('Level.finish review(${c.id}): $e', st);
+      }
+    }
     if (mounted) setState(() => _done = true);
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/loaders.dart';
-import '../services/update_service.dart';
+import '../services/update/update_service.dart';
 import '../services/update/update_flow.dart';
 import '../services/llm_provider.dart';
 import '../services/builtin_llm.dart';
@@ -41,7 +41,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _customKey = TextEditingController(text: p.customLlmKey ?? '');
     // 异步初始化全部兜底：失败不阻塞设置页渲染，更不允许未捕获异常（P0 加固）。
     UpdateService().local().then((v) {
-      if (mounted) setState(() => _ver = v.version);
+      if (mounted) setState(() => _ver = v.versionName);
     }).catchError((_) {
       // 本地版本读取失败 → 保持默认显示，不阻塞。
     });
@@ -88,22 +88,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _testConnection() async {
     final p = Provider.of<ProgressService>(context, listen: false);
+    // 记录测试前的配置，失败时回滚，避免把自定义层留在「已启用但不可用」状态（S11）。
+    final prevEnabled = p.customLlmEnabled;
+    final prevUrl = p.customLlmUrl;
+    final prevModel = p.customLlmModel;
+    final prevKey = p.customLlmKey;
+    final newUrl = _customUrl.text.trim().isEmpty ? null : _customUrl.text.trim();
+    final newModel =
+        _customModel.text.trim().isEmpty ? null : _customModel.text.trim();
+    final newKey = _customKey.text.trim().isEmpty ? null : _customKey.text.trim();
     // 先落地当前自定义字段，再测试（不弹保存提示，仅验证连通性）。
-    p.setCustomLlmEnabled(true);
-    p.setCustomLlmUrl(_customUrl.text.trim().isEmpty ? null : _customUrl.text.trim());
-    p.setCustomLlmModel(_customModel.text.trim().isEmpty ? null : _customModel.text.trim());
-    p.setCustomLlmKey(_customKey.text.trim().isEmpty ? null : _customKey.text.trim());
+    await p.setCustomLlmEnabled(true);
+    await p.setCustomLlmUrl(newUrl);
+    await p.setCustomLlmModel(newModel);
+    await p.setCustomLlmKey(newKey);
     setState(() {
       _testing = true;
       _testMsg = null;
       _testOk = null;
     });
     final r = await LlmProvider(p).testCustom();
+    if (!r.ok) {
+      await p.setCustomLlmEnabled(prevEnabled);
+      await p.setCustomLlmUrl(prevUrl);
+      await p.setCustomLlmModel(prevModel);
+      await p.setCustomLlmKey(prevKey);
+    }
     if (!mounted) return;
     setState(() {
       _testing = false;
       _testOk = r.ok;
       _testMsg = r.ok ? '已连接：${r.reason}' : r.reason;
+      _customOn = prevEnabled;
     });
   }
 

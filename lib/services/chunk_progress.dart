@@ -69,7 +69,9 @@ class ChunkProgressStore {
     }
     if (event == ChunkEvent.dragCorrect) {
       l2OneTry = 1;
-    } else if (event == ChunkEvent.dragWrong) {
+    } else if (event == ChunkEvent.dragWrong && p.level == ChunkLevel.l2) {
+      // 仅在 L2（说块）阶段拖错才清零；拼句阶段（L3）误拖不应毒化
+      // 「一次过」标记，否则 ④ 说得再好也进不了掌握（S14）。
       l2OneTry = 0;
     }
 

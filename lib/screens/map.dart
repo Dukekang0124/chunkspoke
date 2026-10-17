@@ -21,24 +21,46 @@ const List<(String, int, int)> _tiers = [
 /// 场景解锁门槛：上一场景 mastered ≥ 80%（替换旧的“字母顺序解锁”）。
 const double _unlockRatio = 0.8;
 
-class MapScreen extends StatelessWidget {
+class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
+
+  @override
+  State<MapScreen> createState() => _MapScreenState();
+}
+
+class _MapScreenState extends State<MapScreen> {
+  Future<(Set<String>, List<String>)>? _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  Future<(Set<String>, List<String>)> _load() async {
+    final progress = Provider.of<ProgressService>(context, listen: false);
+    final m = (await progress.chunkStore.allMasteredKeys()).toSet();
+    final due = await progress.chunkStore
+        .dueChunkKeys(DateTime.now().millisecondsSinceEpoch);
+    return (m, due);
+  }
+
+  /// 从会话/复习返回后刷新计数：ProgressService 非 ChangeNotifier，
+  /// 必须显式重建，否则首页计数停留在进入前的值（S12）。
+  void _reload() {
+    if (!mounted) return;
+    setState(() => _future = _load());
+  }
 
   @override
   Widget build(BuildContext context) {
     final content = Provider.of<ContentPack>(context);
-    final progress = Provider.of<ProgressService>(context);
     final levels = content.levels;
 
     return Scaffold(
       appBar: AppBar(title: const Text('练习')),
       body: FutureBuilder<(Set<String>, List<String>)>(
-        future: (() async {
-          final m = (await progress.chunkStore.allMasteredKeys()).toSet();
-          final due =
-              await progress.chunkStore.dueChunkKeys(DateTime.now().millisecondsSinceEpoch);
-          return (m, due);
-        })(),
+        future: _future,
         builder: (ctx, snap) {
           final mastered = snap.data?.$1 ?? <String>{};
           final due = snap.data?.$2 ?? const <String>[];
@@ -52,7 +74,11 @@ class MapScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              TodayCard(mastered: mastered, content: content, due: due),
+              TodayCard(
+                  mastered: mastered,
+                  content: content,
+                  due: due,
+                  onReturn: _reload),
               const SizedBox(height: 18),
               for (final (label, start, end) in _tiers)
                 if (start < levels.length) ...[
@@ -66,6 +92,7 @@ class MapScreen extends StatelessWidget {
                             unlocked: unlockedAt(e.key),
                             masteredCount: masteredIn(e.value),
                             mastered: mastered,
+                            onReturn: _reload,
                           ))
                       .toList(),
                   const SizedBox(height: 14),
@@ -108,12 +135,14 @@ class _SceneRow extends StatelessWidget {
   final bool unlocked;
   final int masteredCount;
   final Set<String> mastered;
+  final VoidCallback onReturn;
   const _SceneRow(
       {required this.level,
       required this.index,
       required this.unlocked,
       required this.masteredCount,
-      required this.mastered});
+      required this.mastered,
+      required this.onReturn});
 
   @override
   Widget build(BuildContext context) {
@@ -161,10 +190,13 @@ class _SceneRow extends StatelessWidget {
                   size: 16, color: Colors.white38)
               : null,
           onTap: unlocked
-              ? () => Navigator.push(
+              ? () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => LevelScreen(level: level)),
-                  )
+                  );
+                  onReturn();
+                }
               : () => ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                         content: Text('上一场景掌握度需达 80% 才能解锁')),
@@ -179,11 +211,13 @@ class TodayCard extends StatelessWidget {
   final Set<String> mastered;
   final ContentPack content;
   final List<String> due;
+  final VoidCallback onReturn;
   const TodayCard(
       {super.key,
       required this.mastered,
       required this.content,
-      required this.due});
+      required this.due,
+      required this.onReturn});
 
   @override
   Widget build(BuildContext context) {
@@ -241,10 +275,13 @@ class TodayCard extends StatelessWidget {
           if (due.isNotEmpty) ...[
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ReviewScreen()),
-              ),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReviewScreen()),
+                );
+                onReturn();
+              },
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
@@ -291,10 +328,11 @@ class TodayCard extends StatelessWidget {
     final content = this.content;
     // 到期复习优先：进入复习会话（② 开口说块 + ④ 开口说句，轻量两步）。
     if (due.isNotEmpty) {
-      Navigator.push(
+      await Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ReviewScreen()),
       );
+      onReturn();
       return;
     }
     final firstUnlockedLocked = content.levels.firstWhere(
@@ -303,9 +341,10 @@ class TodayCard extends StatelessWidget {
           .contains(l.chunks.first.id),
       orElse: () => content.levels.first,
     );
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => LevelScreen(level: firstUnlockedLocked)),
     );
+    onReturn();
   }
 }

@@ -32,11 +32,12 @@ class _FtueScreenState extends State<FtueScreen> {
         () { if (mounted) setState(() => showStart = true); });
   }
 
-  void _start() {
+  Future<void> _start() async {
     final content = Provider.of<ContentPack>(context, listen: false);
     final level = content.levels.firstWhere((l) => l.id == 'A',
         orElse: () => content.levels.first);
-    Provider.of<ProgressService>(context, listen: false).setSeenFtue(true);
+    await Provider.of<ProgressService>(context, listen: false).setSeenFtue(true);
+    if (!mounted) return;
     final nav = Navigator.of(context);
     // P0 修复：先把「场景列表(AppNav)」作为栈底落地，再在其上进入练习页。
     // 修复前用 pushReplacement 会替换掉唯一的地图路由，练习页 ✕ pop() 后栈空 → 整屏黑。

@@ -1340,6 +1340,45 @@
       ]
      }
     }
+   ],
+   "sentences": [
+    {
+     "id": "s_b1",
+     "text": "I'd like a cup of coffee",
+     "meaningCN": "我想要一杯咖啡",
+     "chunkIds": [
+      "b01",
+      "b07"
+     ]
+    },
+    {
+     "id": "s_b2",
+     "text": "could I have the menu",
+     "meaningCN": "能给我菜单吗",
+     "chunkIds": [
+      "b11",
+      "b03"
+     ]
+    },
+    {
+     "id": "s_b3",
+     "text": "I need a table for two",
+     "meaningCN": "我需要一张两人桌",
+     "chunkIds": [
+      "b13",
+      "b05"
+     ]
+    },
+    {
+     "id": "s_b4",
+     "text": "can you bring me the bill",
+     "meaningCN": "能把账单拿给我吗",
+     "chunkIds": [
+      "b19",
+      "b16",
+      "b06"
+     ]
+    }
    ]
   },
   {
@@ -2391,6 +2430,44 @@
       ]
      }
     }
+   ],
+   "sentences": [
+    {
+     "id": "s_c1",
+     "text": "a coffee with milk",
+     "meaningCN": "一杯加奶咖啡",
+     "chunkIds": [
+      "c01",
+      "c02"
+     ]
+    },
+    {
+     "id": "s_c2",
+     "text": "a latte with milk",
+     "meaningCN": "一杯加奶拿铁",
+     "chunkIds": [
+      "c06",
+      "c02"
+     ]
+    },
+    {
+     "id": "s_c3",
+     "text": "a medium iced tea",
+     "meaningCN": "一杯中杯冰茶",
+     "chunkIds": [
+      "c12",
+      "c08"
+     ]
+    },
+    {
+     "id": "s_c4",
+     "text": "a coffee to go",
+     "meaningCN": "一杯咖啡带走",
+     "chunkIds": [
+      "c01",
+      "c04"
+     ]
+    }
    ]
   },
   {
@@ -3414,6 +3491,35 @@
        "take"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "s_d1",
+     "text": "I recommend the special",
+     "meaningCN": "我推荐今日特餐",
+     "chunkIds": [
+      "d15",
+      "d07"
+     ]
+    },
+    {
+     "id": "s_d2",
+     "text": "today's soup tastes good",
+     "meaningCN": "今天的汤很好喝",
+     "chunkIds": [
+      "d08",
+      "d16"
+     ]
+    },
+    {
+     "id": "s_d3",
+     "text": "I recommend a starter",
+     "meaningCN": "我推荐一份前菜",
+     "chunkIds": [
+      "d15",
+      "d04"
+     ]
     }
    ]
   },
@@ -5448,6 +5554,17 @@
        "tried"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "s_f1",
+     "text": "try on something cheaper",
+     "meaningCN": "试穿更便宜的",
+     "chunkIds": [
+      "f06",
+      "f19"
+     ]
     }
    ]
   },
@@ -7565,6 +7682,44 @@
        "madam"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "s_h1",
+     "text": "where is the exit",
+     "meaningCN": "出口在哪",
+     "chunkIds": [
+      "h01",
+      "h19"
+     ]
+    },
+    {
+     "id": "s_h2",
+     "text": "where is the subway",
+     "meaningCN": "地铁在哪",
+     "chunkIds": [
+      "h01",
+      "h15"
+     ]
+    },
+    {
+     "id": "s_h3",
+     "text": "where is a bus stop",
+     "meaningCN": "公交站在哪",
+     "chunkIds": [
+      "h01",
+      "h16"
+     ]
+    },
+    {
+     "id": "s_h4",
+     "text": "where is a map",
+     "meaningCN": "地图在哪",
+     "chunkIds": [
+      "h01",
+      "h17"
+     ]
     }
    ]
   },
@@ -12740,6 +12895,35 @@
       ]
      }
     }
+   ],
+   "sentences": [
+    {
+     "id": "s_m1",
+     "text": "I think it's good",
+     "meaningCN": "我觉得不错",
+     "chunkIds": [
+      "m01",
+      "m10"
+     ]
+    },
+    {
+     "id": "s_m2",
+     "text": "I think it's bad",
+     "meaningCN": "我觉得不好",
+     "chunkIds": [
+      "m01",
+      "m11"
+     ]
+    },
+    {
+     "id": "s_m3",
+     "text": "I think it is important",
+     "meaningCN": "我觉得这很重要",
+     "chunkIds": [
+      "m01",
+      "m14"
+     ]
+    }
    ]
   },
   {
@@ -13786,6 +13970,26 @@
        "band"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "s_n1",
+     "text": "would you like a gift",
+     "meaningCN": "你想要一份礼物吗",
+     "chunkIds": [
+      "n01",
+      "n20"
+     ]
+    },
+    {
+     "id": "s_n2",
+     "text": "let's celebrate a birthday",
+     "meaningCN": "我们庆祝生日吧",
+     "chunkIds": [
+      "n08",
+      "n07"
+     ]
     }
    ]
   },
@@ -14872,6 +15076,35 @@
        "them"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "s_o1",
+     "text": "could you help me please",
+     "meaningCN": "能请你帮帮我吗",
+     "chunkIds": [
+      "o01",
+      "o03"
+     ]
+    },
+    {
+     "id": "s_o2",
+     "text": "could you hold on",
+     "meaningCN": "能稍等一下吗",
+     "chunkIds": [
+      "o01",
+      "o24"
+     ]
+    },
+    {
+     "id": "s_o3",
+     "text": "may I go ahead",
+     "meaningCN": "我可以先走吗",
+     "chunkIds": [
+      "o19",
+      "o21"
+     ]
     }
    ]
   },
@@ -18113,6 +18346,26 @@
        "say"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "s_r1",
+     "text": "say that again in English",
+     "meaningCN": "用英语再说一遍",
+     "chunkIds": [
+      "r02",
+      "r05"
+     ]
+    },
+    {
+     "id": "s_r2",
+     "text": "speak slowly in English",
+     "meaningCN": "用英语说慢点",
+     "chunkIds": [
+      "r03",
+      "r05"
+     ]
     }
    ]
   },

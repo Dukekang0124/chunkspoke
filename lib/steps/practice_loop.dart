@@ -173,7 +173,7 @@ class _PracticeLoopState extends State<PracticeLoop> {
     if (!mounted) return;
     final next = _nextPhaseOf(_phase);
     if (next < 0) {
-      _onChunkComplete(mastered: true);
+      _onChunkComplete();
       return;
     }
     setState(() => _phase = next);
@@ -232,7 +232,7 @@ class _PracticeLoopState extends State<PracticeLoop> {
       _chunkDone = true;
       _encourage = justMastered
           ? '${_cheers[_ci % _cheers.length]} 还剩 $remaining 个'
-          : '没到 90%，现在再练一遍';
+          : '没到 80%，现在再练一遍';
     });
     _doneTimer?.cancel();
     if (!justMastered) {
@@ -407,6 +407,9 @@ class _PracticeLoopState extends State<PracticeLoop> {
           levelId: widget.level.id,
           theme: widget.level.theme,
           targetText: _chunk.text,
+          // 说块只推进到下一环节（dragCorrect），不再落 speakSuccess，
+          // 避免「说块」与「说句」重复写掌握事件（S2）。
+          persist: false,
           onPass: () => _passPhase(ChunkEvent.dragCorrect),
           onSkip: () => _onChunkComplete(deferToReview: true),
         );
@@ -415,7 +418,8 @@ class _PracticeLoopState extends State<PracticeLoop> {
           level: widget.level,
           chunk: _chunk,
           sentence: _sentenceForChunk(_chunk),
-          onDone: () => _passPhase(ChunkEvent.accuracyPass),
+          // 拼句正确完成 = 本步准确度满分，避免 lastScore 被冲成 0（S3）。
+          onDone: () => _passPhase(ChunkEvent.accuracyPass, accuracy: 100),
         );
       default:
         final s = _sentenceForChunk(_chunk);
@@ -424,7 +428,8 @@ class _PracticeLoopState extends State<PracticeLoop> {
           levelId: widget.level.id,
           theme: widget.level.theme,
           targetText: s.text,
-          onPass: () => _onChunkComplete(mastered: true),
+          // 掌握与否以落盘后的 store 判定为准，不无条件 +1（S1）。
+          onPass: () => _onChunkComplete(),
           onSkip: () => _onChunkComplete(deferToReview: true),
         );
     }
