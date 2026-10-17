@@ -1,8 +1,8 @@
 {
-  "versionName": "1.2.8",
-  "versionCode": 2028,
+  "versionName": "1.2.9",
+  "versionCode": 2029,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
-  "sha256": "ecfadc617d1adb3602d5063486626086aa9ac662c6ac66809f11ab4b78b50157",
-  "size": 69918418,
-  "notes": "v1.2.8（versionCode 2028）：修复应用内更新——检查改为多源兜底（GitHub raw → jsDelivr），国内网络不再「检查失败」；远端清单缺少 versionCode 时不再误判「已是最新」。其余沿用 v1.2.7（SRS 阶梯、跟读软着陆、反向产出、权限/引擎前置、每日目标、487 句目标句）。"
+  "sha256": "0a5e478277fc24af4eb186441566598be0bcdf161b9610675bc6aeb4dbd50729",
+  "size": 69983950,
+  "notes": "v1.2.9（versionCode 2029）：更新弹窗新增「浏览器下载」——应用内下载慢或中断时，可把下载地址交给系统浏览器/下载工具续传；应用内下载失败、校验失败会自动引导到浏览器下载，不再只弹一句失败提示。其余沿用 v1.2.8（多源兜底、超时保护、安装路径修复）。"
 }
