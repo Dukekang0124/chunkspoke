@@ -1,8 +1,8 @@
 {
-  "versionName": "1.2.9",
-  "versionCode": 2029,
+  "versionName": "1.2.10",
+  "versionCode": 2030,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
-  "sha256": "0a5e478277fc24af4eb186441566598be0bcdf161b9610675bc6aeb4dbd50729",
-  "size": 69983950,
-  "notes": "v1.2.9（versionCode 2029）：更新弹窗新增「浏览器下载」——应用内下载慢或中断时，可把下载地址交给系统浏览器/下载工具续传；应用内下载失败、校验失败会自动引导到浏览器下载，不再只弹一句失败提示。其余沿用 v1.2.8（多源兜底、超时保护、安装路径修复）。"
+  "sha256": "b549981c780f587c7d6df771c420e14672f0b25dce0bb46bf894de1943a22c03",
+  "size": 69983958,
+  "notes": "v1.2.10（versionCode 2030）：下载体验补齐——进度条显示实时速度与预估剩余时间（如「2% · 1.6/66.7MB · 1.2MB/s · 剩 52 秒」）；下载源速度 <100KB/s 持续 10 秒自动切换备用源（切源丢弃旧分段，避免坏包）；下载请求强制 identity 编码，修复断点续传可能拼出半截 gzip 流导致校验失败。其余沿用 v1.2.9（浏览器下载兜底、失败自动引导）。"
 }
