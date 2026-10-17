@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../services/chunk_progress.dart';
+import '../services/state_machine.dart';
 import '../services/crash_log.dart';
 import '../ui/theme.dart';
 import '../ui/labels.dart';
