@@ -4,6 +4,7 @@ import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import '../ui/feedback.dart';
 
 /// RECOGNIZE 步骤：听音选词，每词块连续 3 次选对即过；答错仅重置计数 + 轻微抖动，无红叉、无报错文案。
 class RecognizeStep extends StatefulWidget {
@@ -76,7 +77,7 @@ class _RecognizeStepState extends State<RecognizeStep> {
           const SizedBox(height: 14),
           IconButton(
             icon: const Icon(Icons.volume_up, color: kPrimary, size: 40),
-            onPressed: () => _tts.speak(_current.text),
+            onPressed: () => speakOrHint(context, _tts, _current.text),
           ),
           const SizedBox(height: 20),
           AnimatedContainer(

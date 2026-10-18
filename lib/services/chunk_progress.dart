@@ -160,6 +160,9 @@ class ChunkProgressStore {
   /// All chunk keys currently at the mastered level (scene-unlock / stats).
   Future<List<String>> allMasteredKeys() => db.allMasteredKeys();
 
+  /// 最近一次未来的复习到期时间（epoch ms；无则 null）。
+  Future<int?> nextDueTimestamp(int now) => db.nextDueTimestamp(now);
+
   // —— M7 AI 周报统计（聚合数字 + 词块 ID，不碰录音原文）——
   Future<int> spokenCount() => db.countSessionEvent('speakSuccess');
   Future<double> avgScore() => db.avgSessionScore();

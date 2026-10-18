@@ -43,13 +43,13 @@ void main() {
   });
 
   group('每日会话计划 dailyPlan', () {
-    test('新块 ≤5、复习 ≤5', () {
+    test('新块 ≤6、复习 ≤6', () {
       final due = List.generate(9, (i) => _chunk('d$i', 'due $i'));
       final news = List.generate(9, (i) => _chunk('n$i', 'new $i'));
       final plan = PracticeSession.dailyPlan(dueChunks: due, newChunks: news);
-      expect(plan.newChunks.length, 5);
-      expect(plan.reviewChunks.length, 5);
-      expect(plan.total, 10);
+      expect(plan.newChunks.length, 6);
+      expect(plan.reviewChunks.length, 6);
+      expect(plan.total, 12);
     });
   });
 

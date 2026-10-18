@@ -45,7 +45,7 @@ class L4Step extends StatefulWidget {
   State<L4Step> createState() => _L4StepState();
 }
 
-class _L4StepState extends State<L4Step> {
+class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   final RecordingService _rec = RecordingService();
   final SpeechService _speech = SpeechService();
   bool _hasAzure = false;
@@ -74,6 +74,8 @@ class _L4StepState extends State<L4Step> {
   double _level = 0;
   bool _levelActive = false;
   StreamSubscription<double>? _levelSub;
+  // B3：麦克风呼吸脉动（监听时循环缩放 1.0↔1.06）。
+  late final AnimationController _breathCtrl;
   DateTime? _listenStart;
   Timer? _playTimer;
 
@@ -87,6 +89,8 @@ class _L4StepState extends State<L4Step> {
   @override
   void initState() {
     super.initState();
+    _breathCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
     _hasAzure = _p.azureKey != null &&
         _p.azureKey!.isNotEmpty &&
         _p.azureRegion != null &&
@@ -134,6 +138,7 @@ class _L4StepState extends State<L4Step> {
       _rec.stop();
     }
     _rec.stopPlay();
+    _breathCtrl.dispose();
     super.dispose();
   }
 
@@ -197,8 +202,10 @@ class _L4StepState extends State<L4Step> {
             alignment: WrapAlignment.center,
             children: widget.targetText.split(' ').map((w) {
               return OutlinedButton(
-                onPressed: () =>
-                    Provider.of<TtsService>(context, listen: false).speak(w),
+                onPressed: () => speakOrHint(
+                    context,
+                    Provider.of<TtsService>(context, listen: false),
+                    w),
                 child: Text(w, style: const TextStyle(color: kPrimary)),
               );
             }).toList(),
@@ -261,6 +268,9 @@ class _L4StepState extends State<L4Step> {
       _listening = true;
       _transcript = '';
     });
+    if (!MediaQuery.of(context).disableAnimations) {
+      _breathCtrl.repeat(reverse: true); // B3 呼吸脉动（尊重系统减弱动画）
+    }
     _listenStart = DateTime.now();
     _levelSub?.cancel();
     _levelSub = _rec.levels.listen(_applyLevel);
@@ -283,6 +293,8 @@ class _L4StepState extends State<L4Step> {
       _thinking = true;
     });
     _cancelLevels();
+    _breathCtrl.stop();
+    _breathCtrl.value = 0;
     final path = await _rec.stop();
     if (path != null) _recPath = path;
     final usePath = path ?? _recPath;
@@ -315,6 +327,13 @@ class _L4StepState extends State<L4Step> {
         durationSec: durationSec);
     if (outcome.pass) HapticFeedback.mediumImpact();
     final accuracy = (outcome.similarity * 100).round();
+    // A2① 平均准确度=文本匹配相似度：每次开口判定（通过与否）都记相似度，
+    // 使「平均准确度」真实反映开口文本匹配，而不是恒为 0。
+    try {
+      await _p.recordScore(accuracy);
+    } catch (e, st) {
+      CrashLog.write('L4.recordScore: $e', st);
+    }
     setState(() {
       _thinking = false;
       _transcript = text;
@@ -411,16 +430,48 @@ class _L4StepState extends State<L4Step> {
 
   Widget _micButton() => GestureDetector(
         onTap: _listening ? _stop : _start,
-        child: Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: kPrimary.withOpacity(0.2),
-            border: Border.all(color: kPrimary, width: 2),
-          ),
-          child: Icon(_listening ? Icons.stop : Icons.mic,
-              color: kPrimary, size: 44),
+        child: AnimatedBuilder(
+          animation: _breathCtrl,
+          builder: (ctx, _) {
+            final breath = 1.0 + _breathCtrl.value * 0.06; // 呼吸脉动
+            final ring = 8.0 + _level * 28.0; // 音量环随实时振幅扩张
+            return SizedBox(
+              width: 150,
+              height: 150,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // 音量环：实时跟随输入振幅
+                  Container(
+                    width: 96 + ring * 2,
+                    height: 96 + ring * 2,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: kPrimary.withOpacity(_listening ? 0.45 : 0.0),
+                        width: 3,
+                      ),
+                    ),
+                  ),
+                  // 麦克风主体：聆听时呼吸脉动
+                  Transform.scale(
+                    scale: _listening ? breath : 1.0,
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: kPrimary.withOpacity(0.2),
+                        border: Border.all(color: kPrimary, width: 2),
+                      ),
+                      child: Icon(_listening ? Icons.stop : Icons.mic,
+                          color: kPrimary, size: 44),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       );
 
@@ -527,8 +578,10 @@ class _L4StepState extends State<L4Step> {
               style: TextStyle(color: Colors.white70), textAlign: TextAlign.center),
           const SizedBox(height: 10),
           TextButton(
-            onPressed: () => Provider.of<TtsService>(context, listen: false)
-                .speak(widget.targetText),
+            onPressed: () => speakOrHint(
+                context,
+                Provider.of<TtsService>(context, listen: false),
+                widget.targetText),
             child: const Text('🔊 揭目标句', style: TextStyle(color: kPrimary)),
           ),
           const SizedBox(height: 6),

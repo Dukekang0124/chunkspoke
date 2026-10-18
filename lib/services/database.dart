@@ -191,6 +191,18 @@ class AppDatabase {
     return rows.map((r) => r['chunk_key'] as String).toList();
   }
 
+  // 最近一次未来的复习到期时间（epoch ms；无则 null），供会话战报「下次复习时间」。
+  Future<int?> nextDueTimestamp(int now) async {
+    final rows = await (await db).query('chunks',
+        columns: ['due_date'],
+        where: 'due_date > ? AND level = ?',
+        whereArgs: [now, ChunkLevel.review.index],
+        orderBy: 'due_date ASC',
+        limit: 1);
+    if (rows.isEmpty) return null;
+    return rows.first['due_date'] as int;
+  }
+
   // —— M7 AI 周报统计（绝不读录音原文，仅聚合数字 + 词块 ID）—— //
   Future<int> countSessionEvent(String name) async {
     final r = await (await db).rawQuery(

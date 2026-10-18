@@ -1,7 +1,7 @@
 name: chunkspoke_flutter
 description: "Think in chunks. Speak in English."
 publish_to: 'none'
-version: 1.3.1+2034
+version: 1.4.2+2043
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -15,11 +15,14 @@ dependencies:
   http: ^1.2.0
   vosk_flutter: ^0.3.48
   path_provider: ^2.1.1
+  path: ^1.9.0
   permission_handler: ^11.3.0
   crypto: ^3.0.3
+  archive: ^3.6.1
   package_info_plus: ^10.2.2
   flutter_local_notifications: ^17.2.4
   timezone: ^0.9.4
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:
@@ -43,7 +46,6 @@ flutter:
     - assets/version.json
     - assets/icon/icon.png
     - assets/icon/icon_foreground.png
-    - assets/vosk-model-small-en-us-0.15.zip
 
 flutter_launcher_icons:
   image_path: "assets/icon/icon.png"

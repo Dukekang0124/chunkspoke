@@ -187,6 +187,8 @@ def main():
         'size': size,
         'notes': a.notes if a.notes is not None else (old.get('notes') or ''),
     }
+    if old.get('model'):
+        obj['model'] = old['model']  # v1.4.2 模型外移清单（name/modelVersion/sha256/parts）跨版本保留
     if len(urls) > 1:
         obj['urls'] = urls  # 备用源：主源失败时客户端按顺序重试
 

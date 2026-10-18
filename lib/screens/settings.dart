@@ -8,6 +8,7 @@ import '../services/builtin_llm.dart';
 import '../services/vosk_engine.dart';
 import '../services/notification_service.dart';
 import '../ui/theme.dart';
+import '../ui/feedback.dart';
 import 'ai_coach_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _notifOn = false;
   int _notifHour = 20;
   int _notifMinute = 0;
+  bool _soundOn = true; // B7：音效开关（震动跟随系统，无独立开关）
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _notifOn = p.notifEnabled;
     _notifHour = p.notifHour;
     _notifMinute = p.notifMinute;
+    _soundOn = p.soundOn;
     // 异步初始化全部兜底：失败不阻塞设置页渲染，更不允许未捕获异常（P0 加固）。
     UpdateService().local().then((v) {
       if (mounted) setState(() => _ver = v.versionName);
@@ -240,9 +243,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final (text, color) = switch (_engineState) {
       EngineState.ready => ('识别引擎：离线引擎已就绪（Vosk）', kUnlocked),
       EngineState.failed => ('识别引擎初始化失败，重启应用或反馈', kError),
+      EngineState.downloading => ('识别引擎：正在下载离线模型…', Colors.white54),
+      EngineState.extracting => ('识别引擎：正在解压离线模型…', Colors.white54),
       EngineState.loading => ('识别引擎：准备中…', Colors.white54),
       EngineState.unknown =>
-        ('识别引擎：首次开口自动加载（离线）', Colors.white54),
+        ('识别引擎：首次使用需下载离线模型', Colors.white54),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -310,6 +315,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _toggleSound(bool v) async {
+    final p = Provider.of<ProgressService>(context, listen: false);
+    await p.setSoundOn(v);
+    if (mounted) setState(() => _soundOn = v);
+  }
+
+  /// B7：音效开关（震动跟随系统，不提供独立开关）。
+  Widget _soundCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: SwitchListTile(
+          title: const Text('音效', style: TextStyle(color: kText)),
+          subtitle: const Text('答对提示音（关闭后仅保留视觉反馈）',
+              style: TextStyle(color: Colors.white54, fontSize: 12)),
+          value: _soundOn,
+          activeColor: kPrimary,
+          onChanged: _toggleSound,
+        ),
+      ),
+    );
+  }
+
+  /// A7：反馈入口（发邮件 / 复制邮箱）。
+  Widget _feedbackEntry(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          leading: const Icon(Icons.feedback_outlined, color: kPrimary),
+          title: const Text('反馈与建议', style: TextStyle(color: kText)),
+          subtitle: const Text('发邮件或复制邮箱',
+              style: TextStyle(color: Colors.white54, fontSize: 12)),
+          trailing: const Icon(Icons.arrow_forward_ios,
+              size: 16, color: Colors.white38),
+          onTap: () => showFeedbackSheet(context),
+        ),
+      ),
+    );
+  }
+
   Widget _label(String t) =>
       Text(t, style: const TextStyle(color: Colors.white70, fontSize: 14));
 
@@ -350,6 +406,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _engineRow(),
             const SizedBox(height: 16),
             _notificationCard(context),
+            const SizedBox(height: 12),
+            _soundCard(context),
+            const SizedBox(height: 12),
+            _feedbackEntry(context),
             const SizedBox(height: 20),
 
             // —— AI 助手：常驻入口 ——

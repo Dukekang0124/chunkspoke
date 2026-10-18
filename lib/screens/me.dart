@@ -46,11 +46,14 @@ class MeScreen extends StatelessWidget {
                 : '完成首次练习后显示';
             return Column(
               children: [
-                _stat('平均准确度', avgText, sub: '文本匹配 / 发音评分'),
+                _stat('平均准确度', avgText, sub: '文本匹配相似度'),
+                // A2①：发音评分独立展示，未配置发音服务时显示「—」，绝不显示 0。
+                _stat('发音评分', '—',
+                    sub: progress.azureKey == null ? '未配置发音评分' : '已配置发音服务'),
                 _stat('自由造句次数', '${progress.freeBuildCount} 次',
                     sub: '用已掌握词块自由开口'),
                 _stat('已解锁场景', '$unlockedScenes 个',
-                    sub: '掌握度≥60% 可自由造句'),
+                    sub: '掌握度≥60%'),
               ],
             );
           },
@@ -70,7 +73,7 @@ class MeScreen extends StatelessWidget {
     );
   }
 
-  /// 掌握度 ≥60% 的场景数（自由造句解锁门槛，P0-四）。
+  /// 掌握度 ≥60% 的场景数（场景解锁统计）。
   Future<int> _unlockedScenes(ProgressService p, ContentPack content) async {
     final mastered = (await p.chunkStore.allMasteredKeys()).toSet();
     int n = 0;

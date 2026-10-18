@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
+
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../services/chunk_progress.dart';
 import '../services/state_machine.dart';
 import '../services/crash_log.dart';
+import '../services/session_report.dart';
 import '../ui/theme.dart';
 import '../ui/labels.dart';
+import '../ui/feedback.dart';
+import '../ui/motion.dart';
 import '../steps/practice_loop.dart';
 
 /// 场景会话页：直接进入「逐块闭环」练习（听辨→造句→照读→开口）。
@@ -22,8 +27,11 @@ class LevelScreen extends StatefulWidget {
 class _LevelScreenState extends State<LevelScreen> {
   bool _done = false;
   List<bool> _dims = const [true, true, true, true];
+  SessionReport? _report;
+  String _nextReview = '暂无待复习';
+  String? _nextUnlockName; // B5：下一场景名（最后一关为 null）
 
-  Future<void> _finish() async {
+  Future<void> _finish(SessionReport report) async {
     final progress = Provider.of<ProgressService>(context, listen: false);
     await progress.markCompleted(widget.level.id);
     // 将本关仍未掌握的块放入到期复习队列：写 chunks 表 due_date（与首页到期读取同源）。
@@ -55,8 +63,33 @@ class _LevelScreenState extends State<LevelScreen> {
     } catch (e, st) {
       CrashLog.write('Level.finish dims: $e', st);
     }
-    if (mounted) setState(() => _done = true);
-    if (mounted) _dims = dims;
+    // B6：下次复习时间（最近一次未来到期）。
+    String nextReview = '暂无待复习';
+    try {
+      final ts = await store.nextDueTimestamp(
+          DateTime.now().millisecondsSinceEpoch);
+      if (ts != null) {
+        final d = DateTime.fromMillisecondsSinceEpoch(ts);
+        nextReview = '${d.month}月${d.day}日';
+      }
+    } catch (e, st) {
+      CrashLog.write('Level.nextDue: $e', st);
+    }
+    String? nextName;
+    try {
+      final content = Provider.of<ContentPack>(context, listen: false);
+      final idx = content.levels.indexWhere((lv) => lv.id == widget.level.id);
+      if (idx >= 0 && idx < content.levels.length - 1) {
+        nextName = sceneCn(content.levels[idx + 1].theme);
+      }
+    } catch (_) {}
+    if (mounted) {
+      _report = report;
+      _nextReview = nextReview;
+      _nextUnlockName = nextName;
+      setState(() => _done = true);
+      _dims = dims;
+    }
   }
 
   @override
@@ -81,79 +114,258 @@ class _LevelScreenState extends State<LevelScreen> {
         ),
       ),
       body: _done
-          ? _Completion(level: widget.level, dims: _dims)
+          ? _Completion(
+              level: widget.level,
+              dims: _dims,
+              report: _report,
+              nextReview: _nextReview,
+              nextUnlockName: _nextUnlockName)
           : PracticeLoop(level: widget.level, onDone: _finish),
     );
   }
 }
 
-class _Completion extends StatelessWidget {
+class _Completion extends StatefulWidget {
   final Level level;
   final List<bool> dims; // 顺序：听辨 / 说块 / 拼句 / 开口（按真实达成置灰/点亮）
-  const _Completion({required this.level, required this.dims});
+  final SessionReport? report;
+  final String nextReview;
+  final String? nextUnlockName;
+  const _Completion(
+      {required this.level,
+      required this.dims,
+      this.report,
+      this.nextReview = '暂无待复习',
+      this.nextUnlockName});
+
+  @override
+  State<_Completion> createState() => _CompletionState();
+}
+
+class _CompletionState extends State<_Completion>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _confetti;
+  late final AnimationController _badge;
+  bool _lowPower = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _confetti =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))
+          ..forward();
+    _badge =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 500))
+          ..forward();
+    // B7 省电模式探测：省电时粒子减半。
+    PowerService.isPowerSaveMode().then((v) {
+      if (mounted) setState(() => _lowPower = v);
+    });
+  }
+
+  @override
+  void dispose() {
+    _confetti.dispose();
+    _badge.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     const labels = ['听辨', '说块', '拼句', '开口'];
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.check_circle, color: kUnlocked, size: 64),
-            const SizedBox(height: 16),
-            const Text('关卡完成！',
-                style: TextStyle(
-                    fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 8),
-            const Text('星 = 本次真实达成，未达标的留给你补练',
-                style: TextStyle(fontSize: 13, color: Colors.white54)),
-            const SizedBox(height: 20),
-            Row(
+    final reduce = MediaQuery.of(context).disableAnimations; // B7 尊重系统减弱动画
+    final policy = MotionPolicy(reduceMotion: reduce, lowPower: _lowPower);
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(28),
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(labels.length, (i) {
-                final ok = i < dims.length && dims[i];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Column(
-                    children: [
-                      Icon(ok ? Icons.star : Icons.star_border,
-                          color: ok ? kUnlocked : Colors.white24, size: 28),
-                      const SizedBox(height: 4),
-                      Text(labels[i],
-                          style: TextStyle(
-                              color: ok ? Colors.white70 : Colors.white38,
-                              fontSize: 12)),
-                    ],
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape:
-                      RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              children: [
+                // B5 徽章（scale-in 弹入）
+                ScaleTransition(
+                  scale: CurvedAnimation(parent: _badge, curve: Curves.easeOutBack),
+                  child: const Icon(Icons.emoji_events, color: kPrimary, size: 72),
                 ),
-                onPressed: () => Navigator.of(context).maybePop(),
-                child: const Text('返回地图',
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                const SizedBox(height: 14),
+                const Text('关卡完成！',
+                    style: TextStyle(
+                        fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                const Text('星 = 本次真实达成，未达标的留给你补练',
+                    style: TextStyle(fontSize: 13, color: Colors.white54)),
+                if (widget.nextUnlockName != null) ...[
+                  const SizedBox(height: 12),
+                  _unlockBanner(widget.nextUnlockName!, reduce),
+                ],
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(labels.length, (i) {
+                    final ok = i < widget.dims.length && widget.dims[i];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Column(
+                        children: [
+                          Icon(ok ? Icons.star : Icons.star_border,
+                              color: ok ? kUnlocked : Colors.white24, size: 28),
+                          const SizedBox(height: 4),
+                          Text(labels[i],
+                              style: TextStyle(
+                                  color: ok ? Colors.white70 : Colors.white38,
+                                  fontSize: 12)),
+                        ],
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 20),
+                _reportCard(),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    child: const Text('返回地图',
+                        style: TextStyle(color: Colors.white, fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  child: const Text('补练没拿到的星（回场景再练一遍）',
+                      style: TextStyle(color: Colors.white38, fontSize: 13)),
+                ),
+                TextButton(
+                  onPressed: () => showFeedbackSheet(context),
+                  child: const Text('反馈',
+                      style: TextStyle(color: Colors.white54, fontSize: 13)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // B5 彩带（尊重系统减弱动画 / 省电降级时跳过或减半）
+        if (policy.confettiOn)
+          IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _confetti,
+              builder: (_, __) => CustomPaint(
+                size: Size.infinite,
+                painter: _ConfettiPainter(_confetti.value, policy.particles(60)),
               ),
             ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.of(context).maybePop(),
-              child: const Text('补练没拿到的星（回场景再练一遍）',
-                  style: TextStyle(color: Colors.white38, fontSize: 13)),
-            ),
-          ],
-        ),
+          ),
+      ],
+    );
+  }
+
+  Widget _unlockBanner(String name, bool reduce) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: kPrimary.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: kPrimary.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(reduce ? Icons.lock_open : Icons.lock, color: kPrimary, size: 16),
+          const SizedBox(width: 6),
+          Text('下一场景已解锁：$name',
+              style: const TextStyle(color: kPrimary, fontSize: 13)),
+        ],
       ),
     );
   }
+
+  Widget _reportCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('本次战报',
+              style: TextStyle(
+                  color: kPrimary, fontWeight: FontWeight.w700, fontSize: 15)),
+          const SizedBox(height: 8),
+          _reportRow('新学块', '${widget.report?.newMastered ?? 0} 个'),
+          _reportRow('开口句数', '${widget.report?.spoken ?? 0} 句'),
+          _reportRow('最高连对', '${widget.report?.maxCombo ?? 0} 连'),
+          _reportRow('下次复习', widget.nextReview),
+        ],
+      ),
+    );
+  }
+
+  Widget _reportRow(String k, String v) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Text(k, style: const TextStyle(color: Colors.white54, fontSize: 13)),
+          const Spacer(),
+          Text(v,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+/// B5 彩带粒子绘制。
+class _ConfettiPainter extends CustomPainter {
+  final double t;
+  final int count;
+  _ConfettiPainter(this.t, this.count);
+  final math.Random _rng = math.Random(7);
+  static const _colors = [
+    Color(0xFFFFB84D),
+    Color(0xFF34D399),
+    Colors.white,
+    Color(0xFFF59E0B),
+    Color(0xFF60A5FA),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var i = 0; i < count; i++) {
+      final x = _rng.nextDouble() * size.width;
+      final y = (_rng.nextDouble() * size.height + t * size.height) % size.height;
+      final c = _colors[i % _colors.length];
+      final w = 6.0 + _rng.nextDouble() * 5;
+      final h = 10.0 + _rng.nextDouble() * 6;
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(_rng.nextDouble() * math.pi + t * 4);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromCenter(center: Offset.zero, width: w, height: h),
+            const Radius.circular(2)),
+        Paint()..color = c.withOpacity(1.0 - t * 0.25),
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ConfettiPainter old) => old.t != t;
 }

@@ -547,8 +547,10 @@ class _SayWidgetState extends State<SayWidget> {
               style: const TextStyle(color: Colors.white, fontSize: 20)),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: () =>
-                Provider.of<TtsService>(context, listen: false).speak(widget.sentence),
+            onPressed: () => speakOrHint(
+                context,
+                Provider.of<TtsService>(context, listen: false),
+                widget.sentence),
             child: const Text('重听', style: TextStyle(color: Colors.white70)),
           ),
           const Spacer(),

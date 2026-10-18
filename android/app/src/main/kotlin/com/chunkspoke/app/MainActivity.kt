@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
@@ -25,6 +26,7 @@ class MainActivity : FlutterActivity() {
     private val UPDATE_CH = "chunkspoke/update"
     private val REC_CH = "chunkspoke/recorder"
     private val LEVEL_CH = "chunkspoke/recorder_level"
+    private val POWER_CH = "chunkspoke/power"
     private val mainHandler = Handler(Looper.getMainLooper())
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
@@ -112,6 +114,23 @@ class MainActivity : FlutterActivity() {
                         } catch (e: Exception) {
                             result.error("INSTALL", e.message, null)
                         }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
+        // —— 省电模式探测（B7：动效/触感自动降级） ——
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, POWER_CH)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "isPowerSaveMode" -> {
+                        val pm = getSystemService(POWER_SERVICE) as PowerManager
+                        val save = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            pm.isPowerSaveMode
+                        } else {
+                            false
+                        }
+                        result.success(save)
                     }
                     else -> result.notImplemented()
                 }

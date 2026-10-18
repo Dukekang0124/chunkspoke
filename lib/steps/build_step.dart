@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +28,7 @@ class BuildStep extends StatefulWidget {
   State<BuildStep> createState() => _BuildStepState();
 }
 
-class _BuildStepState extends State<BuildStep> {
+class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMixin {
   late final List<String> _expected; // 按 chunkIds 顺序展开的目标词块文本
   late final List<String?> _filled;
   late final List<String> _tray; // 可拖拽的词块卡片（正确块 + ≤2 干扰块）
@@ -35,10 +36,14 @@ class _BuildStepState extends State<BuildStep> {
   bool _built = false;
   bool _revealEn = false;
   int _selected = -1; // 已落槽块中“被选中待互换”的索引
+  // B2：错误抖动 + 红闪
+  late final AnimationController _shakeCtrl;
 
   @override
   void initState() {
     super.initState();
+    _shakeCtrl =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
     final byId = {for (final c in widget.level.chunks) c.id: c};
     _expected = widget.sentence.orderedChunkTexts(byId);
     _filled = List<String?>.filled(_expected.length, null);
@@ -66,7 +71,7 @@ class _BuildStepState extends State<BuildStep> {
     });
     if (assemblyCorrect(_filled, _expected)) {
       setState(() => _built = true);
-      chimeCorrect();
+      chimeCorrect(context);
       Provider.of<TtsService>(context, listen: false).speak(widget.sentence.text);
       Future.delayed(const Duration(milliseconds: 700), () {
         if (mounted) widget.onDone();
@@ -92,11 +97,18 @@ class _BuildStepState extends State<BuildStep> {
   }
 
   void _recordWrong() {
+    if (mounted) _shakeCtrl.forward(from: 0); // B2 错误抖动
     final store =
         Provider.of<ProgressService>(context, listen: false).chunkStore;
     store.applyEvent(widget.chunk.id, ChunkEvent.dragWrong).catchError((e, st) {
       CrashLog.write('Build.dragWrong: $e', st);
     });
+  }
+
+  @override
+  void dispose() {
+    _shakeCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -132,58 +144,95 @@ class _BuildStepState extends State<BuildStep> {
                     style: const TextStyle(color: kPrimary)),
               ),
               TextButton(
-                onPressed: () => Provider.of<TtsService>(context, listen: false)
-                    .speak(widget.sentence.text),
+                onPressed: () => speakOrHint(
+                    context,
+                    Provider.of<TtsService>(context, listen: false),
+                    widget.sentence.text),
                 child: const Text('🔊 听句子', style: TextStyle(color: kPrimary)),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _built ? kUnlocked : Colors.white24, width: _built ? 2 : 1),
-              color: _built ? kUnlocked.withOpacity(0.08) : Colors.transparent,
-            ),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: List.generate(_expected.length, (i) {
-                return DragTarget<String>(
-                  builder: (ctx, cand, rej) => GestureDetector(
-                    onTap: () => _tapSlot(i),
-                    child: _filled[i] != null
-                        ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: _selected == i ? kPrimary : Colors.white24,
-                                width: _selected == i ? 2 : 1,
-                              ),
-                            ),
-                            child: ChunkTile(_filled[i]!, _typeFor(_filled[i]!)),
-                          )
-                        : Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: _selected == i ? kPrimary : Colors.white24,
-                                width: _selected == i ? 2 : 1,
-                              ),
-                            ),
-                            child: const Text('—',
-                                style: TextStyle(color: Colors.white24, fontSize: 16)),
-                          ),
+          AnimatedBuilder(
+            animation: _shakeCtrl,
+            builder: (ctx, _) {
+              final s = _shakeCtrl.value;
+              final shaking = s > 0 && s < 1;
+              final dx = shaking
+                  ? math.sin(s * math.pi * 6) * 8 * (1 - s)
+                  : 0.0;
+              return Transform.translate(
+                offset: Offset(dx, 0),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: shaking
+                          ? Colors.redAccent
+                          : (_built ? kUnlocked : Colors.white24),
+                      width: 2,
+                    ),
+                    color: shaking
+                        ? Colors.redAccent.withOpacity(0.12)
+                        : (_built
+                            ? kUnlocked.withOpacity(0.08)
+                            : Colors.transparent),
+                    boxShadow: _built
+                        ? [BoxShadow(color: kUnlocked.withOpacity(0.4), blurRadius: 14)]
+                        : null,
                   ),
-                  onWillAccept: (data) => data == _expected[i] && _filled[i] == null,
-                  onAccept: (data) => _place(i, data),
-                );
-              }),
-            ),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: List.generate(_expected.length, (i) {
+                      return DragTarget<String>(
+                        builder: (ctx, cand, rej) => GestureDetector(
+                          onTap: () => _tapSlot(i),
+                          // B2 磁吸：落槽瞬间 150ms 弹性缩放入位
+                          child: AnimatedScale(
+                            scale: _filled[i] != null ? 1.0 : 0.85,
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeOutBack,
+                            child: _filled[i] != null
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: _selected == i ? kPrimary : Colors.white24,
+                                        width: _selected == i ? 2 : 1,
+                                      ),
+                                    ),
+                                    child: ChunkTile(_filled[i]!, _typeFor(_filled[i]!)),
+                                  )
+                                : Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: _selected == i ? kPrimary : Colors.white24,
+                                        width: _selected == i ? 2 : 1,
+                                      ),
+                                    ),
+                                    child: const Text('—',
+                                        style: TextStyle(
+                                            color: Colors.white24, fontSize: 16)),
+                                  ),
+                          ),
+                        ),
+                        onWillAccept: (data) =>
+                            data == _expected[i] && _filled[i] == null,
+                        onAccept: (data) => _place(i, data),
+                      );
+                    }),
+                  ),
+                ),
+              );
+            },
           ),
           if (_built)
             const Padding(

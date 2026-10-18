@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v1.4.2 模型外移（硬化⑤）：离线语音模型由首启分块下载到 app_flutter/models/，
+     排除出 Android 云备份，避免 40MB 模型被同步浪费流量与配额。 -->
+<full-backup-content>
+    <exclude domain="root" path="app_flutter/models/"/>
+</full-backup-content>

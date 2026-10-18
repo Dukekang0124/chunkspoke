@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
+import '../services/changelog.dart';
+import '../services/loaders.dart';
 import '../ui/theme.dart';
 import 'map.dart';
 import 'me.dart';
@@ -21,6 +25,42 @@ class _AppNavState extends State<AppNav> {
     super.initState();
     // 进入首屏后静默检查更新（每次冷启动最多一次，网络失败静默跳过）。
     runUpdateCheck(context);
+    _maybeShowChangelog();
+  }
+
+  /// A6：首启一次性「本次更新」清单，标题/内容由当前版本号动态生成，看过记忆不再弹。
+  Future<void> _maybeShowChangelog() async {
+    final p = Provider.of<ProgressService>(context, listen: false);
+    if (p.seenChangelog140) return;
+    final info = await PackageInfo.fromPlatform();
+    final c = buildChangelog(info.version);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await p.setSeenChangelog140();
+      if (!mounted) return;
+      showDialog<void>(
+        context: context,
+        builder: (_) => AlertDialog(
+          backgroundColor: kCard,
+          title: Text(c.title, style: const TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final item in c.items) ...[
+                Text(item, style: const TextStyle(color: Colors.white70)),
+                const SizedBox(height: 6),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('开始使用', style: TextStyle(color: kPrimary)),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   @override

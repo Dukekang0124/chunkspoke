@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../ui/theme.dart';
+import '../ui/widgets.dart';
 import 'level.dart';
 import 'review.dart';
 import 'free_build_screen.dart';
@@ -73,6 +74,18 @@ class _MapScreenState extends State<MapScreen> {
                   masteredIn(levels[i - 1]) / levels[i - 1].chunks.length >=
                       _unlockRatio);
 
+          // A1：自由造句沙盒——累计掌握 ≥10 块全局解锁。
+          final masteredChunks = <Chunk>[];
+          for (final lv in levels) {
+            for (final c in lv.chunks) {
+              if (mastered.contains(c.id)) masteredChunks.add(c);
+            }
+          }
+          final combo = masteredChunks.length > 1
+              ? masteredChunks.length * (masteredChunks.length - 1) ~/ 2
+              : 0;
+          final sandboxOn = freeBuildUnlocked(masteredChunks.length);
+
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -82,6 +95,14 @@ class _MapScreenState extends State<MapScreen> {
                   due: due,
                   dailyNew: progress.dailyNewCount,
                   onReturn: _reload),
+              const SizedBox(height: 12),
+              _FreeBuildCard(
+                masteredCount: masteredChunks.length,
+                combo: combo,
+                unlocked: sandboxOn,
+                masteredChunks: masteredChunks,
+                onReturn: _reload,
+              ),
               const SizedBox(height: 18),
               for (final (label, start, end) in _tiers)
                 if (start < levels.length) ...[
@@ -132,6 +153,83 @@ class _TierHeader extends StatelessWidget {
       );
 }
 
+/// A1：自由造句沙盒入口卡片——累计掌握 ≥10 块全局解锁，可点击进入沙盒。
+class _FreeBuildCard extends StatelessWidget {
+  final int masteredCount;
+  final int combo;
+  final bool unlocked;
+  final List<Chunk> masteredChunks;
+  final VoidCallback onReturn;
+  const _FreeBuildCard({
+    required this.masteredCount,
+    required this.combo,
+    required this.unlocked,
+    required this.masteredChunks,
+    required this.onReturn,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: unlocked ? 1 : 0.65,
+      child: GestureDetector(
+        onTap: unlocked
+            ? () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) =>
+                          FreeBuildScreen(masteredChunks: masteredChunks)),
+                );
+                onReturn();
+              }
+            : null,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF241A06), Color(0xFF1A1B2E)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: unlocked ? kPrimary.withOpacity(0.6) : Colors.white12),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: kPrimary, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('自由造句沙盒 · 累计可组合句子 $combo+',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(
+                      unlocked
+                          ? '已掌握 $masteredCount 块，选块拼句、开口判定'
+                          : '累计掌握 10 块解锁（当前 $masteredCount/10）',
+                      style: const TextStyle(
+                          color: Colors.white54, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(unlocked ? Icons.arrow_forward_ios : Icons.lock,
+                  size: 16, color: unlocked ? kPrimary : Colors.white38),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SceneRow extends StatelessWidget {
   final Level level;
   final int index;
@@ -152,7 +250,6 @@ class _SceneRow extends StatelessWidget {
     final total = level.chunks.length;
     final ratio = total > 0 ? masteredCount / total : 0.0;
     final done = masteredCount >= (total * _unlockRatio);
-    final freeBuildOn = unlocked && ratio >= 0.6;
     final status = done ? '🟢' : (unlocked ? '🟡' : '⚪');
     return Opacity(
       opacity: unlocked ? 1 : 0.5,
@@ -212,6 +309,9 @@ class _SceneRow extends StatelessWidget {
                     ],
                   ),
                 ),
+                // A2③：场景圆环与「已掌握 x/y」同源（均取 masteredCount/total）。
+                MasteryRing(total > 0 ? masteredCount / total : 0, size: 42),
+                const SizedBox(width: 8),
                 if (unlocked)
                   const Icon(Icons.arrow_forward_ios,
                       size: 16, color: Colors.white38),
@@ -228,30 +328,6 @@ class _SceneRow extends StatelessWidget {
                     AlwaysStoppedAnimation(done ? kUnlocked : kPrimary),
               ),
             ),
-            if (freeBuildOn) ...[
-              const SizedBox(height: 10),
-              GestureDetector(
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => FreeBuildScreen(level: level)),
-                  );
-                  onReturn();
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: kPrimary.withOpacity(0.5)),
-                  ),
-                  child: const Text('🆓 自由造句',
-                      style: TextStyle(color: kPrimary, fontSize: 13)),
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -276,6 +352,18 @@ class TodayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final masteredCount = mastered.length; // 已掌握总数（概览）
+    // A3：每日会话瘦身——新学 ≤6（跨场景按序取尚未掌握块），复习到期优先。
+    final newChunks = <String>[];
+    for (final lv in content.levels) {
+      for (final c in lv.chunks) {
+        if (newChunks.length >= 6) break;
+        if (!mastered.contains(c.id)) newChunks.add(c.id);
+      }
+      if (newChunks.length >= 6) break;
+    }
+    final reviewCount = due.length;
+    final newCount = newChunks.length;
+    final allClear = reviewCount == 0 && newCount == 0;
     final anyLocked = content.levels
         .any((lv) => mastered.intersection(lv.chunks.map((c) => c.id).toSet()).length <
             (lv.chunks.length * _unlockRatio));
@@ -323,7 +411,7 @@ class TodayCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '今日待复习：${due.length} 个词块  |  今日新学：$dailyNew 个词块',
+            '复习 $reviewCount 个 + 新学 $newCount 个',
             style: const TextStyle(color: Colors.white54, fontSize: 13),
           ),
           if (due.isNotEmpty) ...[
@@ -357,6 +445,12 @@ class TodayCard extends StatelessWidget {
               ),
             ),
           ],
+          if (allClear) ...[
+            const SizedBox(height: 12),
+            const Text('今日已清空，明天见 🎉',
+                style: TextStyle(
+                    color: kUnlocked, fontSize: 15, fontWeight: FontWeight.w600)),
+          ],
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -367,9 +461,9 @@ class TodayCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: () => _openToday(context),
-              child: const Text('一击开练',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              onPressed: allClear ? null : () => _openToday(context),
+              child: Text(allClear ? '今日已清空，明天见' : '一击开练',
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
             ),
           ),
         ],

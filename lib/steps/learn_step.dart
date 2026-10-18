@@ -5,6 +5,7 @@ import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import '../ui/feedback.dart';
 
 /// LEARN 步骤：展示英文词块 + 中文卡；中文卡长按 3.5 秒溶解（隐藏）用于自测回忆。
 class LearnStep extends StatefulWidget {
@@ -103,7 +104,8 @@ class _LearnStepState extends State<LearnStep> {
                       style: const TextStyle(color: Colors.white38, fontSize: 12)),
                   const SizedBox(height: 12),
                   TextButton(
-                    onPressed: _play,
+                    onPressed: () => speakOrHint(
+                        context, _tts, widget.level.chunks[_i].text),
                     child: const Text('重听', style: TextStyle(color: Colors.white70)),
                   ),
                 ],

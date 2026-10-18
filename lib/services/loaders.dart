@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_tts/flutter_tts.dart';
 import '../models/content_pack.dart';
+import 'crash_log.dart';
 import 'database.dart';
 import 'chunk_progress.dart';
 import 'session.dart';
@@ -40,13 +41,24 @@ class Appeal {
 // service call sites keep working; an in-memory cache backs the synchronous
 // getters, while mutations persist to SQLite and update the cache.
 class ProgressService {
-  final AppDatabase _db = AppDatabase();
+  final AppDatabase _db;
   final Map<String, String> _cache = {};
+  ProgressService({AppDatabase? db}) : _db = db ?? AppDatabase();
 
   Future<void> init() async {
     await _db.db;
     _cache.addAll(await _db.getAllKv());
     await ensureMigrated();
+    await _migrateSchema();
+  }
+
+  /// 非破坏式 schema 版本管理（A0 红线）：只做增量/幂等升级，绝不破坏现有进度。
+  /// 未来新增列一律走「ALTER ADD COLUMN + 默认值」，在此按版本逐级追加。
+  Future<void> _migrateSchema() async {
+    final stored = int.tryParse(_kv('schemaVersion') ?? '') ?? 0;
+    if (stored >= SchemaMigration.currentSchema) return;
+    // v1.4.0（schema=1）：无结构变更，仅落版本号。后续版本在此追加 1→2、2→3…
+    await _put('schemaVersion', '${SchemaMigration.currentSchema}');
   }
 
   /// M4：v1.1.0 首启检测旧数据 → 重置学习进度（保留 Azure Key / 更新源 / FTUE 等设置）。
@@ -301,12 +313,41 @@ class ProgressService {
     await _put('dailyNewCount', (cur + 1).toString());
   }
 
-  // —— 自由造句（P0-四）——
+  // —— 自由造句（P0-四 / v1.4.0 沙盒）——
   int get freeBuildCount => int.tryParse(_kv('freeBuildCount') ?? '') ?? 0;
   Future<void> incFreeBuild() =>
       _put('freeBuildCount', (freeBuildCount + 1).toString());
   bool get freeBuildBadge => _kv('freeBuildBadge') == 'true';
   Future<void> awardFreeBuildBadge() => _put('freeBuildBadge', 'true');
+
+  // —— 里程碑（A4）：累计掌握 10/25/50/100 块各庆祝一次，数字全部真实 ——
+  static const List<int> kMilestones = [10, 25, 50, 100];
+  Set<int> get celebratedMilestones {
+    final raw = jsonDecode(_kv('milestones') ?? '[]') as List;
+    return raw.cast<int>().toSet();
+  }
+
+  Future<void> markMilestoneCelebrated(int n) async {
+    final set = celebratedMilestones..add(n);
+    await _put('milestones', jsonEncode(set.toList()));
+  }
+
+  /// 当前应触发、且尚未庆祝的最小里程碑（无则 null）。
+  Future<int?> pendingMilestone() async {
+    final total = (await chunkStore.allMasteredKeys()).length;
+    for (final m in kMilestones) {
+      if (total >= m && !celebratedMilestones.contains(m)) return m;
+    }
+    return null;
+  }
+
+  // —— 升级亮点（A6）：v1.4.0 首启一次性清单，看过记忆不再弹 ——
+  bool get seenChangelog140 => _kv('seenChangelog140') == 'true';
+  Future<void> setSeenChangelog140() => _put('seenChangelog140', 'true');
+
+  // —— 体验开关（B7）：音效开关（震动跟随系统，无需独立开关）——
+  bool get soundOn => _kv('soundOn') != 'false'; // 默认开
+  Future<void> setSoundOn(bool v) => _put('soundOn', v.toString());
 
   // —— 首次练习漏斗标记（P0-七）——
   bool get firstPracticeStarted => _kv('firstPracticeStarted') == 'true';
@@ -371,20 +412,85 @@ class ProgressService {
       ChunkProgressStore(_db, onNewMastery: () { bumpDailyNew(); });
 }
 
+/// A1：自由造句沙盒解锁阈值（累计掌握 ≥10 块）。
+const int kFreeBuildUnlockMastered = 10;
+bool freeBuildUnlocked(int masteredCount) =>
+    masteredCount >= kFreeBuildUnlockMastered;
+
 class TtsService {
   final FlutterTts _tts = FlutterTts();
 
+  /// 英语语音变体回退顺序：en-US 优先，设备不支持时逐级降级。
+  static const List<String> _enVariants = [
+    'en-US', 'en-GB', 'en-AU', 'en-CA', 'en-IN', 'en',
+  ];
+
+  String? _language;
+  String? _lastError;
+  bool _available = false;
+
+  /// 实际选用的 TTS 语言（en-US 不可用时自动回退到其他英语变体）。
+  String? get language => _language;
+
+  /// TTS 是否可用（已找到可用的英语语音）。
+  bool get available => _available;
+
+  /// 最近一次播放失败原因（供诊断 / UI 提示「无法播放」）。
+  String? get lastError => _lastError;
+
+  /// 初始化：检测英语语音可用性，en-US 不可用则回退到其他英语变体。
+  /// 全程非致命：任何异常都记为不可用，绝不阻塞启动。
   Future<void> init() async {
-    await _tts.setLanguage('en-US');
-    await _tts.setSpeechRate(0.9);
-    await _tts.setPitch(1.0);
+    try {
+      for (final lang in _enVariants) {
+        final ok = await _tts.isLanguageAvailable(lang);
+        if (ok == true) {
+          await _tts.setLanguage(lang);
+          await _tts.setSpeechRate(0.9);
+          await _tts.setPitch(1.0);
+          _language = lang;
+          _available = true;
+          _lastError = null;
+          return;
+        }
+      }
+      _available = false;
+      _lastError = 'no-english-tts';
+    } catch (e, st) {
+      _available = false;
+      _lastError = '$e';
+      CrashLog.write('TtsService.init: $e', st);
+    }
   }
 
-  Future<void> speak(String text) async {
-    await _tts.speak(text);
+  /// 播放文本。成功返回 true；引擎不可用或播放失败返回 false，
+  /// 并记录 lastError（供 UI 提示「无法播放」，避免点喇叭无声且无任何反馈）。
+  Future<bool> speak(String text) async {
+    if (!_available) {
+      _lastError ??= 'tts-unavailable';
+      return false;
+    }
+    try {
+      final r = await _tts.speak(text);
+      // flutter_tts 的 speak 返回 1（成功）或 0（失败）。
+      if (r == 0) {
+        _lastError = 'tts-speak-returned-0';
+        return false;
+      }
+      _lastError = null;
+      return true;
+    } catch (e, st) {
+      _lastError = '$e';
+      CrashLog.write('TtsService.speak: $e', st);
+      return false;
+    }
   }
 
   Future<void> stop() async {
-    await _tts.stop();
+    try {
+      await _tts.stop();
+    } catch (e, st) {
+      CrashLog.write('TtsService.stop: $e', st);
+    }
   }
 }

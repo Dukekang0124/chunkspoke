@@ -15,7 +15,7 @@ class Sm2Scheduler {
       ReviewScheduler.nextDue(from, stage);
 }
 
-/// 每日会话编排（M7 / v1.2.2 五步）：新块 3~5 个（五步闭环）+ 旧块复习 5 个（②④两步）。
+/// 每日会话编排（M7 / v1.2.2 五步；v1.4.0 瘦身）：新块 ≤6 个（五步闭环）+ 旧块复习（②④两步）。
 class PracticeSession {
   /// 返回当日应练词块：
   ///  - 有到期复习 → 先练复习（最多 [maxDue]），不插入新学；
@@ -24,19 +24,19 @@ class PracticeSession {
     List<Chunk> dueChunks,
     List<Chunk> allChunks, {
     int maxDue = 12,
-    int maxNew = 5,
+    int maxNew = 6,
   }) {
     final due = dueChunks.take(maxDue).toList();
     if (due.isNotEmpty) return due; // 复习优先，复习未清不推新
-    return allChunks.take(maxNew).toList(); // 每日新学 ≤5
+    return allChunks.take(maxNew).toList(); // 每日新学 ≤6
   }
 
   /// 每日会话 = 新块（≤[maxNew]，各走五步）+ 到期复习块（≤[maxReview]，各走②④两步）。
   static DailyPlan dailyPlan({
     required List<Chunk> dueChunks,
     required List<Chunk> newChunks,
-    int maxNew = 5,
-    int maxReview = 5,
+    int maxNew = 6,
+    int maxReview = 6,
   }) {
     return DailyPlan(
       newChunks: newChunks.take(maxNew).toList(),
@@ -81,6 +81,15 @@ class DailyPlan {
   final List<Chunk> reviewChunks;
   const DailyPlan({required this.newChunks, required this.reviewChunks});
   int get total => newChunks.length + reviewChunks.length;
+}
+
+/// 非破坏式 schema 版本管理（A0 红线）：
+///  - `Migration.currentDataVersion` 是「破坏式重置」标记，v1.1.0 起冻结，永不再上调；
+///  - `SchemaMigration.currentSchema` 是「增量、非破坏」结构版本，只做 ALTER ADD COLUMN（带默认值），
+///    绝不 DROP / 改名 / 清空，升级前后用户进度（掌握块/连击/打卡/自由造句计数）完整保留。
+class SchemaMigration {
+  /// v1.4.0 基线：无新增列，schema 记 1。
+  static const int currentSchema = 1;
 }
 
 /// 数据迁移（M4）：v1.1.0 首启检测旧数据 → 重置。

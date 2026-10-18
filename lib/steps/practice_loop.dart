@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../services/chunk_progress.dart';
 import '../services/database.dart';
 import '../services/crash_log.dart';
 import '../services/state_machine.dart';
+import '../services/session_report.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'listen_pick_step.dart';
@@ -55,7 +58,7 @@ class PracticeLoop extends StatefulWidget {
 
   /// 复习模式：只走 ② 开口说块 + ④ 开口说句 两步。
   final bool reviewMode;
-  final VoidCallback onDone;
+  final void Function(SessionReport report) onDone;
   const PracticeLoop(
       {required this.level,
       this.chunks,
@@ -78,8 +81,15 @@ class _PracticeLoopState extends State<PracticeLoop> {
   int _si = 0; // 当前目标句索引
 
   bool _chunkDone = false;
+  bool _justMastered = false;
   String _encourage = '';
   Timer? _doneTimer;
+
+  // —— B1 / B6：连对与战报统计（本会话内累计）——
+  int _combo = 0; // 连续掌握块数（断连重计）
+  int _maxCombo = 0; // 本次最高连对
+  int _newMastered = 0; // 本次新掌握块数
+  int _spoken = 0; // 本次开口判定通过次数
 
   List<Chunk> get _chunks => widget.chunks ?? widget.level.chunks;
   Chunk get _chunk => _chunks[_ci];
@@ -88,8 +98,21 @@ class _PracticeLoopState extends State<PracticeLoop> {
   int get _challengeTotal => widget.level.sentences.length;
   List<String> get _keys => _chunks.map((c) => c.id).toList(growable: false);
 
-  /// 环节顺序：新学四步；复习两步（跳过听辨块与块拼句）。
-  List<int> get _order => phaseOrder(reviewMode: widget.reviewMode);
+  /// 环节顺序：新学四步；复习两步；首场景前 3 块走加速档（跳过块拼句，A5）。
+  List<int> get _order {
+    if (widget.reviewMode) return phaseOrder(reviewMode: true);
+    if (_accel) {
+      return const [
+        Phase.listenPick,
+        Phase.speakChunk,
+        Phase.speakSentence
+      ];
+    }
+    return phaseOrder(reviewMode: false);
+  }
+
+  /// A5 加速档：全新用户首场景前 3 块（听音识块→开口说块→开口说句），跳过块拼句。
+  bool get _accel => !widget.reviewMode && !_p.firstPracticeDone && _ci < 3;
 
   int _nextPhaseOf(int cur) => nextPhase(cur, reviewMode: widget.reviewMode);
 
@@ -195,9 +218,16 @@ class _PracticeLoopState extends State<PracticeLoop> {
         _phase = _order.first;
       });
     } else {
-      widget.onDone();
+      widget.onDone(_report());
     }
   }
+
+  SessionReport _report() => SessionReport(
+        newMastered: _newMastered,
+        spoken: _spoken,
+        maxCombo: _maxCombo,
+        reviewed: widget.reviewMode ? _total : 0,
+      );
 
   void _enterChallenge() {
     if (!mounted) return;
@@ -211,7 +241,7 @@ class _PracticeLoopState extends State<PracticeLoop> {
     if (_si < _challengeTotal - 1) {
       setState(() => _si++);
     } else {
-      widget.onDone();
+      widget.onDone(_report());
     }
   }
 
@@ -243,9 +273,16 @@ class _PracticeLoopState extends State<PracticeLoop> {
         CrashLog.write('firstPracticeDone log: $e', st);
       }
       _mastered++;
+      _combo++;
+      if (_combo > _maxCombo) _maxCombo = _combo;
+      _newMastered++;
+      _maybeCelebrateMilestone(); // 非阻塞：跨里程碑弹全屏庆祝（A4）
+    } else {
+      _combo = 0; // 断连重计（B1）
     }
     setState(() {
       _chunkDone = true;
+      _justMastered = justMastered;
       _encourage = justMastered
           ? '${_cheers[_ci % _cheers.length]} 还剩 $remaining 个'
           : '没到 80%，现在再练一遍';
@@ -279,6 +316,54 @@ class _PracticeLoopState extends State<PracticeLoop> {
       await _p.chunkStore.applyEvent(key, ChunkEvent.scheduleReview);
     } catch (e, st) {
       CrashLog.write('scheduleReview($key): $e', st);
+    }
+  }
+
+  /// A4：跨里程碑（10/25/50/100）弹全屏庆祝 + 可保存战报卡。
+  Future<void> _maybeCelebrateMilestone() async {
+    int? ms;
+    try {
+      ms = await _p.pendingMilestone();
+    } catch (e, st) {
+      CrashLog.write('pendingMilestone: $e', st);
+    }
+    if (ms == null || !mounted) return;
+    final milestone = ms; // 提升为非空，供闭包捕获
+    try {
+      await _p.markMilestoneCelebrated(milestone);
+    } catch (e, st) {
+      CrashLog.write('markMilestone: $e', st);
+    }
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _MilestoneDialog(
+          milestone: milestone,
+          onSave: () => _saveMilestoneReport(milestone)),
+    );
+  }
+
+  Future<void> _saveMilestoneReport(int ms) async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final f = File('${dir.path}/chunkspoke_milestone_$ms.txt');
+      final now = DateTime.now();
+      await f.writeAsString(
+        'ChunkSpoke 里程碑战报\n'
+        '累计掌握：$ms 块\n'
+        '连续打卡：${_p.streak} 天\n'
+        '今日开口：${_p.todaySpoken} 句\n'
+        '日期：${now.year}-${now.month}-${now.day}\n',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('战报卡已保存到 ${f.path}'),
+          duration: const Duration(seconds: 2),
+        ));
+      }
+    } catch (e, st) {
+      CrashLog.write('saveMilestoneReport: $e', st);
     }
   }
 
@@ -383,11 +468,38 @@ class _PracticeLoopState extends State<PracticeLoop> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check_circle, color: kUnlocked, size: 72),
+            // B4 掌握盖章：已掌握时盖「已掌握」章，否则绿勾。
+            if (_justMastered)
+              Transform.rotate(
+                angle: -0.15,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: kPrimary, width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text('已掌握',
+                      style: TextStyle(
+                          color: kPrimary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 2)),
+                ),
+              )
+            else
+              const Icon(Icons.check_circle, color: kUnlocked, size: 72),
             const SizedBox(height: 12),
             Text(_encourage,
                 style: const TextStyle(
                     color: kUnlocked, fontSize: 18, fontWeight: FontWeight.w600)),
+            // B1：连对 ≥3 显示 Combo xN（断连重计）。
+            if (_combo >= 3) ...[
+              const SizedBox(height: 8),
+              Text('Combo x$_combo',
+                  style: const TextStyle(
+                      color: kPrimary, fontSize: 16, fontWeight: FontWeight.w700)),
+            ],
             const SizedBox(height: 14),
             MasteryRing(_total > 0 ? _mastered / _total : 0, size: 60),
             const SizedBox(height: 8),
@@ -406,7 +518,10 @@ class _PracticeLoopState extends State<PracticeLoop> {
         theme: widget.level.theme,
         targetText: s.text,
         persist: false,
-        onPass: _challengeNext,
+        onPass: () {
+          _spoken++;
+          _challengeNext();
+        },
         onSkip: _challengeNext,
       );
     }
@@ -426,7 +541,10 @@ class _PracticeLoopState extends State<PracticeLoop> {
           // 说块只推进到下一环节（dragCorrect），不再落 speakSuccess，
           // 避免「说块」与「说句」重复写掌握事件（S2）。
           persist: false,
-          onPass: () => _passPhase(ChunkEvent.dragCorrect),
+          onPass: () {
+            _spoken++;
+            _passPhase(ChunkEvent.dragCorrect);
+          },
           onSkip: () => _onChunkComplete(deferToReview: true),
         );
       case Phase.buildSentence:
@@ -445,7 +563,10 @@ class _PracticeLoopState extends State<PracticeLoop> {
           theme: widget.level.theme,
           targetText: s.text,
           // 掌握与否以落盘后的 store 判定为准，不无条件 +1（S1）。
-          onPass: () => _onChunkComplete(),
+          onPass: () {
+            _spoken++;
+            _onChunkComplete();
+          },
           onSkip: () => _onChunkComplete(deferToReview: true),
         );
     }
@@ -462,6 +583,79 @@ class _PracticeLoopState extends State<PracticeLoop> {
         _header(),
         Expanded(child: _chunkDone ? _chunkDoneView() : _body()),
       ],
+    );
+  }
+}
+
+/// A4：里程碑全屏庆祝弹窗 + 可保存战报卡（数字全部真实）。
+class _MilestoneDialog extends StatelessWidget {
+  final int milestone;
+  final VoidCallback onSave;
+  const _MilestoneDialog({required this.milestone, required this.onSave});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = Provider.of<ProgressService>(context, listen: false);
+    return Dialog(
+      backgroundColor: kCard,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.emoji_events, color: kPrimary, size: 64),
+            const SizedBox(height: 12),
+            const Text('里程碑达成 🎉',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            Text('累计掌握 $milestone 块',
+                style: const TextStyle(
+                    color: kPrimary, fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: kBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('连续打卡 ${p.streak} 天',
+                      style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                  const SizedBox(height: 6),
+                  Text('今日开口 ${p.todaySpoken} 句',
+                      style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+                onPressed: onSave,
+                child: const Text('保存战报卡',
+                    style: TextStyle(
+                        color: Colors.black87, fontWeight: FontWeight.w700)),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('继续', style: TextStyle(color: kPrimary)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

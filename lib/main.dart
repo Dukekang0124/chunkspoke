@@ -9,6 +9,7 @@ import 'services/notification_service.dart';
 import 'ui/theme.dart';
 import 'ui/error_page.dart';
 import 'screens/ftue.dart';
+import 'screens/model_gate.dart';
 import 'screens/nav.dart';
 import 'screens/onboarding_screen.dart';
 
@@ -88,9 +89,11 @@ class ChunkSpokeApp extends StatelessWidget {
       // 防御：根节点铺满应用底色，任何时刻（含栈空/过渡）都不会露系统黑底。
       builder: (context, child) =>
           ColoredBox(color: kBg, child: child ?? const SizedBox.shrink()),
-      home: !progress.onboardingDone
-          ? const OnboardingScreen()
-          : (progress.seenFtue ? const AppNav() : const FtueScreen()),
+      home: ModelGate(
+        child: !progress.onboardingDone
+            ? const OnboardingScreen()
+            : (progress.seenFtue ? const AppNav() : const FtueScreen()),
+      ),
     );
   }
 }

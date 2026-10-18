@@ -104,7 +104,7 @@ class _ListenPickStepState extends State<ListenPickStep> {
           const SizedBox(height: 12),
           IconButton(
             icon: const Icon(Icons.volume_up, color: kPrimary, size: 40),
-            onPressed: () => _tts.speak(widget.chunk.text),
+            onPressed: () => speakOrHint(context, _tts, widget.chunk.text),
           ),
           const SizedBox(height: 16),
           if (_revealed)

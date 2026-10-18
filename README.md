@@ -43,3 +43,15 @@ flutter build apk --release     # 产物：build/app/outputs/flutter-apk/app-rel
 ## 本机未做之事（受环境限制）
 - 本机无 Flutter / Java，未能执行 `flutter analyze` / `build apk`。请在你机器上构建并粘贴任何编译报错，我来修。
 - Phase 2（录音 + 本地 STT + Azure + 申诉链路）、Phase 3（掌握度四维 / 解锁 / Review / Me）、Phase 4（更新机制 + 视觉打磨 + release）按方案逐 Phase 推进。
+
+## 更新通道与 jsDelivr 缓存处置
+
+应用内自更新清单（`version.json`）主源走 `raw.githubusercontent.com`（即时生效），
+`cdn.jsdelivr.net` 仅作清单兜底 + 服务分块/APK 大文件。jsDelivr 对 `@main` 有约 12h 缓存，
+遇缓存事故（兜底源返回旧清单、分块 404/旧文件）用 purge 强制刷新：
+
+```text
+https://purge.jsdelivr.net/gh/<OWNER>/<REPO>@<branch>/<path>
+```
+
+完整发布流程、字段定义与 purge 判定见仓库根 `version_json_deploy.md`。

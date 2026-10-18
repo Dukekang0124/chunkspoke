@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v1.4.2 模型外移（硬化⑤）：模型目录同时排除出 Android 12+ 的云备份与设备迁移。 -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="app_flutter/models/"/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="app_flutter/models/"/>
+    </device-transfer>
+</data-extraction-rules>

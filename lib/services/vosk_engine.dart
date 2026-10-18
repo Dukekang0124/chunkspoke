@@ -1,17 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:vosk_flutter/vosk_flutter.dart' as vosk;
 
-/// Vosk 离线模型资源（随包内置 zip，构建期由 tools/fetch_vosk_model.py 落位）。
-const String kVoskModelAsset = 'assets/vosk-model-small-en-us-0.15.zip';
-
-/// 模型解压目录名（与 ModelLoader 默认行为一致：<docsDir>/models/<此名>）。
-/// 仅用于设置页零资产状态检查，避免触发 41MB 资产加载。
-const String _kVoskModelDirName = 'vosk-model-small-en-us-0.15';
+import 'vosk_model.dart';
 
 /// Vosk 识别结果：文本 + 置信度。
 /// [confidence] = null 表示输出里**没有**置信度字段（Vosk 顶层默认不产出）——
@@ -73,6 +69,37 @@ List<String> voskGrammarWords(List<String> phrases) => <String>{
             .where((w) => w.isNotEmpty),
     }.toList();
 
+/// 从内置 version.json 读取模型清单（v1.4.2 模型外移：唯一事实源在 version.json 的 model 段）。
+///
+/// 调试覆写（模拟通道，仅 E2E 取证用）：构建时传
+/// `--dart-define=MODEL_BASE_URL=http://10.0.2.2:8899` 会把分块/整包 URL 重写到
+/// 本地 harness；报告中注明「模拟通道」，不用于真实分发包。
+Future<ModelManifest> loadDefaultModelManifest() async {
+  final raw = await rootBundle.loadString('assets/version.json');
+  final j = jsonDecode(raw) as Map<String, dynamic>;
+  final m = j['model'];
+  if (m is! Map) {
+    throw const FormatException('version.json 缺少 model 段');
+  }
+  final manifest = ModelManifest.fromJson(m);
+  if (!manifest.isValid) {
+    throw const FormatException('version.json 的 model 段无效');
+  }
+  const base = String.fromEnvironment('MODEL_BASE_URL');
+  if (base.isEmpty) return manifest;
+  return ModelManifest(
+    name: manifest.name,
+    modelVersion: manifest.modelVersion,
+    sha256: manifest.sha256,
+    size: manifest.size,
+    parts: [
+      for (var i = 0; i < manifest.parts.length; i++)
+        ModelPart('$base/model.part$i', manifest.parts[i].size),
+    ],
+    mirrorUrl: '$base/${manifest.name}.zip',
+  );
+}
+
 /// 真实 Vosk 转写实现（Android 走插件 MethodChannel 原生 libvosk）。
 class VoskTranscriber implements Transcriber {
   vosk.Model? _model;
@@ -88,12 +115,11 @@ class VoskTranscriber implements Transcriber {
   @override
   bool get failed => _failed;
 
-  @override
-  Future<bool> init() async {
+  /// 从外部解压目录加载模型（v1.4.2：模型已移出 assets，首启分块下载后落盘）。
+  /// [modelPath] 为已解压的模型根目录；返回是否加载成功。
+  Future<bool> loadModel(String modelPath) async {
     if (_ready) return true;
     try {
-      final loader = vosk.ModelLoader();
-      final modelPath = await loader.loadFromAssets(kVoskModelAsset);
       _model = await _plugin.createModel(modelPath);
       _ready = true;
       _failed = false;
@@ -103,6 +129,9 @@ class VoskTranscriber implements Transcriber {
     }
     return _ready;
   }
+
+  @override
+  Future<bool> init() async => _ready; // 兼容旧接口；实际编排由 SpeechEngine 完成
 
   @override
   Future<VoskResult> transcribe(String wavPath, List<String> phrases) async {
@@ -185,30 +214,57 @@ Future<double> wavDurationSec(String wavPath) async {
   }
 }
 
-/// 识别引擎生命周期状态（供 UI 可见化：就绪 / 失败 / 检测中）。
-enum EngineState { unknown, loading, ready, failed }
+/// 识别引擎生命周期状态（六态：缺缺失态由 failed/unknown 表达）。
+enum EngineState { unknown, downloading, extracting, loading, ready, failed }
 
-/// 全局识别引擎：单例共享一次模型加载，SAY / L4 / 设置页共用，避免重复解压 40MB 模型。
+/// 全局识别引擎：单例共享一次模型加载，SAY / L4 / 设置页共用，避免重复下载/解压 40MB 模型。
 /// 实现 [Transcriber]，可直接作为 SpeechService 的默认转写器。
 class SpeechEngine implements Transcriber {
-  SpeechEngine._();
+  SpeechEngine._({ModelManager? manager, Future<bool> Function(String)? createModel})
+      : _injectedManager = manager,
+        _injectedCreateModel = createModel;
+
+  /// 生产单例（真实 ModelManager + 真实 Vosk createModel）。
   static final SpeechEngine instance = SpeechEngine._();
+
+  /// 测试工厂：注入假 ModelManager / 假 createModel（宿主无法运行原生 libvosk）。
+  @visibleForTesting
+  SpeechEngine.forTesting({
+    ModelManager? manager,
+    Future<bool> Function(String)? createModel,
+  }) : this._(manager: manager, createModel: createModel);
+
+  final ModelManager? _injectedManager;
+  final Future<bool> Function(String)? _injectedCreateModel;
   final VoskTranscriber _impl = VoskTranscriber();
+
   EngineState _state = EngineState.unknown;
+  Future<bool>? _inFlight;
+  int _createModelFailures = 0;
+  String? _lastError;
+  ModelManifest? _manifest;
+  ModelManager? _manager;
 
   EngineState get state => _state;
 
   /// 是否已加载（内存标志，进程生命周期内只初始化一次）。
-  /// 设置页用它做零资产状态检查，不触发任何资产读取。
   bool get isLoaded => _state == EngineState.ready;
 
-  /// 轻量检查：模型是否已解压到磁盘（不读 41MB 资产，仅查目录存在）。
-  /// 供设置页状态展示，彻底移除 initState 触发模型加载 → 低端机内存尖峰退桌面（P0 根因）。
+  /// 最近一次失败原因（供 UI 展示可读提示）。
+  String? get lastError => _lastError;
+
+  /// 下载/解压进度流（供首启引导页展示 0.5% 节流进度 + 速度 + 剩余时间）。
+  /// 需在 [init] 前调用，以拿到与 init 同一个 manager 的流，避免错过事件。
+  Future<Stream<ModelProgress>> ensureProgressStream() async {
+    final m = await _ensureManager();
+    return m.progress;
+  }
+
+  /// 轻量检查：模型是否已解压到磁盘且 model.json 版本一致（不读 40MB 资产、不触发下载）。
   static Future<bool> modelOnDisk() async {
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      return Directory(path.join(dir.path, 'models', _kVoskModelDirName))
-          .existsSync();
+      final manifest = await loadDefaultModelManifest();
+      return await ModelManager(manifest: manifest).isReady();
     } catch (_) {
       return false;
     }
@@ -220,21 +276,66 @@ class SpeechEngine implements Transcriber {
   @override
   bool get failed => _state == EngineState.failed;
 
+  Future<ModelManager> _ensureManager() async {
+    if (_injectedManager != null) return _injectedManager;
+    if (_manager != null) return _manager!;
+    _manifest ??= await loadDefaultModelManifest();
+    _manager = ModelManager(manifest: _manifest!);
+    return _manager!;
+  }
+
+  /// 并发保护：同一时刻只有一次初始化在途；重复调用等待同一次结果。
   @override
-  Future<bool> init() async {
+  Future<bool> init() {
+    final inFlight = _inFlight;
+    if (inFlight != null) return inFlight;
+    final f = _run().whenComplete(() => _inFlight = null);
+    _inFlight = f;
+    return f;
+  }
+
+  Future<bool> _run() async {
     if (_state == EngineState.ready) return true;
-    // 加载中：等待在途的那次完成，避免 FTUE 与练习环节并发二次解压 41MB 资产。
-    if (_state == EngineState.loading) {
-      while (_state == EngineState.loading) {
-        await Future.delayed(const Duration(milliseconds: 50));
+    final manager = await _ensureManager();
+    StreamSubscription<ModelProgress>? sub;
+    try {
+      sub = manager.progress.listen((p) {
+        _state = p.phase == ModelPhase.downloading
+            ? EngineState.downloading
+            : EngineState.extracting;
+      });
+      _state = EngineState.downloading;
+      final modelPath = await manager.ensureModel();
+      await sub.cancel();
+      sub = null;
+
+      _state = EngineState.loading;
+      final ok = await (_injectedCreateModel ?? _impl.loadModel)(modelPath);
+      if (ok) {
+        _createModelFailures = 0;
+        _lastError = null;
+        _state = EngineState.ready;
+        return true;
       }
-      return _state == EngineState.ready;
+
+      _createModelFailures++;
+      if (_createModelFailures >= 2) {
+        // 硬化④：createModel 连续失败 ≥2 次 → 视为模型损坏 → 回「缺失」全量重下。
+        _createModelFailures = 0;
+        await manager.discard();
+        _lastError = '模型损坏，已重置，请重试下载';
+      } else {
+        _lastError = '模型加载失败，请重试';
+      }
+      _state = EngineState.failed;
+      return false;
+    } catch (e) {
+      _lastError = e is ModelDownloadException ? e.message : '$e';
+      _state = EngineState.failed;
+      return false;
+    } finally {
+      await sub?.cancel();
     }
-    if (_state == EngineState.failed) return false;
-    _state = EngineState.loading;
-    final ok = await _impl.init();
-    _state = ok ? EngineState.ready : EngineState.failed;
-    return ok;
   }
 
   @override
@@ -245,4 +346,3 @@ class SpeechEngine implements Transcriber {
   Future<VoskResult> transcribeFree(String wavPath) =>
       _impl.transcribeFree(wavPath);
 }
-

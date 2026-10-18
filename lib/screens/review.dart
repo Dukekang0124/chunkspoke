@@ -5,6 +5,7 @@ import '../services/loaders.dart';
 import '../services/session.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import '../ui/feedback.dart';
 import '../steps/practice_loop.dart';
 
 /// 复习页：展示到期复习词块（统一以 chunk.id 为键，与 chunks 表一致）。
@@ -53,7 +54,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
             level: PracticeSession.reviewLevel(content, due),
             chunks: due,
             reviewMode: true,
-            onDone: () => Navigator.of(context).maybePop(),
+            onDone: (_) => Navigator.of(context).maybePop(),
           ),
         ),
       ),
@@ -123,8 +124,10 @@ class _ReviewItem extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.volume_up, color: kPrimary),
-              onPressed: () => Provider.of<TtsService>(context, listen: false)
-                  .speak(chunk.text),
+              onPressed: () => speakOrHint(
+                  context,
+                  Provider.of<TtsService>(context, listen: false),
+                  chunk.text),
             ),
           ],
         ),

@@ -46,9 +46,9 @@ void main() {
       final plan = PracticeSession.buildPlan(due, all);
       expect(plan.length, 12);
     });
-    test('无到期复习 → 推新学且每日 ≤5', () {
+    test('无到期复习 → 推新学且每日 ≤6', () {
       final plan = PracticeSession.buildPlan([], all);
-      expect(plan.length, 5); // 每日新学 ≤5
+      expect(plan.length, 6); // 每日新学 ≤6
       expect(plan.first.id, 'c0');
     });
     test('hasContent', () {

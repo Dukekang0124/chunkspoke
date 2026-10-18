@@ -76,6 +76,36 @@ void main() {
           current: cur);
       expect(res.status, CheckStatus.error);
     });
+
+    test('清单源降级：raw 失败 → 自动切 jsDelivr 兜底（接受可能滞后）', () async {
+      final svc = UpdateService();
+      var rawHits = 0;
+      var cdnHits = 0;
+      final client = MockClient((req) async {
+        if (req.url.host.contains('raw.githubusercontent')) {
+          rawHits++;
+          return http.Response('', 500); // raw 主源不可用/被阻断
+        }
+        if (req.url.host.contains('jsdelivr')) {
+          cdnHits++;
+          return http.Response(latestJson, 200); // 兜底源可用（可能滞后）
+        }
+        return http.Response('', 404);
+      });
+      // 不传 overrideUrl：走内置 manifestUrls = [raw, jsDelivr]，验证降级顺序。
+      final res = await svc.check(client: client, current: cur);
+      expect(res.status, CheckStatus.update);
+      expect(res.info.versionCode, 2019);
+      expect(rawHits, greaterThan(0), reason: '应尝试过 raw 主源');
+      expect(cdnHits, greaterThan(0), reason: 'raw 失败后应落到 jsDelivr');
+    });
+
+    test('清单源全部失败 → error（不伪装「已最新」）', () async {
+      final svc = UpdateService();
+      final client = MockClient((_) async => http.Response('', 500));
+      final res = await svc.check(client: client, current: cur);
+      expect(res.status, CheckStatus.error);
+    });
   });
 
   group('下载进度总量（对齐弹窗显示，缺失 Content-Length 也能出进度）', () {
