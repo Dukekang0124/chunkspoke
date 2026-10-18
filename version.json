@@ -1,30 +1,30 @@
 {
-  "versionName": "1.2.11",
-  "versionCode": 2031,
+  "versionName": "1.2.12",
+  "versionCode": 2032,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
-  "sha256": "635c5ae2789534d7c9715062339b2823e860833d424cb110f8d0c74f99f03078",
-  "size": 69983958,
-  "notes": "v1.2.11（versionCode 2031）：下载提速——安装包改为 5 片分片下载（jsDelivr CDN，实测约为直连 GitHub 的 5 倍速），分片间与「分片→整包直链」之间自动断点续传、不从头下；速度 <100KB/s 持续 10 秒自动切换备用源；失败后仍可一键改用浏览器下载。修复连接停滞时的重试体验。",
+  "sha256": "36766956ee0f8992f7e53499b7432e67a87feff6e48b6fa58af635c2abb1e1c3",
+  "size": 70981116,
+  "notes": "v1.2.12：新增每日练习提醒——设置页可开关并选择提醒时间，帮助保持每天开口的节奏。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.11/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part0",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.11/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part1",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.11/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part2",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.11/parts/apk.part3",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part3",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.11/parts/apk.part4",
-      "size": 7069398
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part4",
+      "size": 8066556
     }
   ]
 }
