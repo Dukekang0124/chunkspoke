@@ -1,30 +1,30 @@
 {
-  "versionName": "1.2.12",
-  "versionCode": 2032,
+  "versionName": "1.3.0",
+  "versionCode": 2033,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
-  "sha256": "36766956ee0f8992f7e53499b7432e67a87feff6e48b6fa58af635c2abb1e1c3",
-  "size": 70981116,
-  "notes": "v1.2.12：新增每日练习提醒——设置页可开关并选择提醒时间，帮助保持每天开口的节奏。",
+  "sha256": "c143725a6481f7f5d2e6c0b8503e1fae222de89fe00bfe3260c7d8b9210a1fc1",
+  "size": 71046644,
+  "notes": "v1.3.0：新手引导、自由造句（离线 Vosk 识别）、进度展示优化与数据埋点",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.0/parts/apk.part0",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.0/parts/apk.part1",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.0/parts/apk.part2",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part3",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.0/parts/apk.part3",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.2.12/parts/apk.part4",
-      "size": 8066556
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.0/parts/apk.part4",
+      "size": 8132084
     }
   ]
 }
