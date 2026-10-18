@@ -122,6 +122,19 @@ class VoskTranscriber implements Transcriber {
     }
   }
 
+  /// 无约束识别（自由造句：用户自由开口，不限词表）。
+  Future<VoskResult> transcribeFree(String wavPath) async {
+    if (!_ready || _model == null) return const VoskResult('', null);
+    try {
+      final wav = await File(wavPath).readAsBytes();
+      final pcm = pcmFromWav(wav);
+      if (pcm.isEmpty) return const VoskResult('', null);
+      return await _runRecognizer(pcm, null);
+    } catch (_) {
+      return const VoskResult('', null);
+    }
+  }
+
   /// 用给定词表（null=无约束）跑一次识别，返回文本 + 置信度。
   Future<VoskResult> _runRecognizer(Uint8List pcm, List<String>? grammar) async {
     final rec = await _plugin.createRecognizer(
@@ -180,7 +193,7 @@ enum EngineState { unknown, loading, ready, failed }
 class SpeechEngine implements Transcriber {
   SpeechEngine._();
   static final SpeechEngine instance = SpeechEngine._();
-  final Transcriber _impl = VoskTranscriber();
+  final VoskTranscriber _impl = VoskTranscriber();
   EngineState _state = EngineState.unknown;
 
   EngineState get state => _state;
@@ -210,6 +223,13 @@ class SpeechEngine implements Transcriber {
   @override
   Future<bool> init() async {
     if (_state == EngineState.ready) return true;
+    // 加载中：等待在途的那次完成，避免 FTUE 与练习环节并发二次解压 41MB 资产。
+    if (_state == EngineState.loading) {
+      while (_state == EngineState.loading) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      return _state == EngineState.ready;
+    }
     if (_state == EngineState.failed) return false;
     _state = EngineState.loading;
     final ok = await _impl.init();
@@ -220,5 +240,9 @@ class SpeechEngine implements Transcriber {
   @override
   Future<VoskResult> transcribe(String wavPath, List<String> phrases) =>
       _impl.transcribe(wavPath, phrases);
+
+  /// 无约束识别（自由造句用，不限词表）。
+  Future<VoskResult> transcribeFree(String wavPath) =>
+      _impl.transcribeFree(wavPath);
 }
 

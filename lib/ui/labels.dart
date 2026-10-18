@@ -27,6 +27,7 @@ const Map<String, String> _sceneCN = {
   'eXclamations': '感叹语',
   'Yes & no': '是与否',
   'Sleep & rest': '睡眠与休息',
+  'Review': '复习',
 };
 
 String sceneCn(String theme) => _sceneCN[theme] ?? theme;

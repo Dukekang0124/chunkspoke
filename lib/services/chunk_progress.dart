@@ -1,6 +1,7 @@
 import 'database.dart';
 import 'state_machine.dart';
 import 'review_scheduler.dart';
+import 'session.dart'; // Sm2Scheduler：SRS 阶梯推进/回退
 
 /// Structured, per-chunk progress store. Wraps AppDatabase and applies the
 /// state-machine + scheduler rules, including:
@@ -13,7 +14,9 @@ import 'review_scheduler.dart';
 ///     and is routed into the review queue (review level) to loop — no skip path.
 class ChunkProgressStore {
   final AppDatabase db;
-  ChunkProgressStore(this.db);
+  /// 词块「当日新学」计数钩子（P0-一.1）：新掌握一个词块时回调。
+  final void Function()? onNewMastery;
+  ChunkProgressStore(this.db, {this.onNewMastery});
 
   Future<ChunkRow> get(String key) async {
     final row = await db.getChunk(key);
@@ -50,14 +53,37 @@ class ChunkProgressStore {
       {int accuracy = 0, bool selfEval = false}) async {
     final p = await get(key);
     // 主动跳过/延期：置复习队列 + 次日到期（兑现“明天回来找你”真实出口）。
+    // SRS 阶梯归零：从 +1 天档重新计起。
     if (event == ChunkEvent.scheduleReview) {
       await db.upsertChunk(p.copyWith(
         level: ChunkLevel.review,
+        reviewStage: 0,
         dueDate: ReviewScheduler.nextDue(DateTime.now(), 0).millisecondsSinceEpoch,
       ));
       await db.insertSession(key, event.name, 0);
       return;
     }
+
+    // 复习态失败：回退 SRS 阶梯（间隔缩短），其余环节失败仅记录。
+    if (event == ChunkEvent.speakFail) {
+      int rs = p.reviewStage;
+      int due = p.dueDate;
+      if (p.level == ChunkLevel.review) {
+        rs = Sm2Scheduler.advanceStage(p.reviewStage, false);
+        due = ReviewScheduler.nextDue(DateTime.now(), rs).millisecondsSinceEpoch;
+      }
+      final next = ChunkStateMachine.transition(p.level, event);
+      await db.upsertChunk(p.copyWith(
+        level: next,
+        reviewStage: rs,
+        dueDate: due,
+        failCount: p.failCount + 1,
+        lastScore: p.lastScore,
+      ));
+      await db.insertSession(key, event.name, p.lastScore);
+      return;
+    }
+
     ChunkLevel next = ChunkStateMachine.transition(p.level, event);
 
     // L2 one-try tracking（§4.3 修复“拖错一次永不掌握”毒块）：
@@ -85,13 +111,18 @@ class ChunkProgressStore {
     // 离线无 Key 路径没有 STT 分，改用 selfEval 替代。
     if (event == ChunkEvent.speakSuccess) {
       final l4SelfEval = p.l4SelfEval || selfEval;
-      if (isMasteredWith(l2OneTry, accuracy, l4SelfEval)) {
-        next = ChunkLevel.mastered;
-      } else {
-        next = ChunkLevel.review; // loop — never skip
-      }
+      // 掌握门槛只看「本次 L4 开口」命中率(accuracy)；不沿用 L3 照读分。
+      // 离线无 Key 路径没有 STT 分，改用 selfEval 替代。
+      final willMaster = isMasteredWith(l2OneTry, accuracy, l4SelfEval);
+      next = willMaster ? ChunkLevel.mastered : ChunkLevel.review; // loop — never skip
+      // 仅当「本次由非 mastered 进入 mastered」时触发「当日新学」计数钩子。
+      final newlyMastered = willMaster && p.level != ChunkLevel.mastered;
       final enteringReview =
           next == ChunkLevel.review && p.level != ChunkLevel.review;
+      // SRS 阶梯：本次说对 → 升级一档（间隔变长）；首次进入复习从 +1 天档起。
+      final newStage = enteringReview
+          ? 0
+          : Sm2Scheduler.advanceStage(p.reviewStage, true);
       await db.upsertChunk(p.copyWith(
         level: next,
         failCount: p.failCount,
@@ -99,17 +130,21 @@ class ChunkProgressStore {
         lastScore: accuracy > 0 ? accuracy : p.lastScore,
         l2OneTry: l2OneTry,
         l4SelfEval: l4SelfEval,
-        dueDate: enteringReview
-            ? ReviewScheduler.nextDue(DateTime.now(), 0).millisecondsSinceEpoch
+        reviewStage: newStage,
+        dueDate: next == ChunkLevel.review
+            ? ReviewScheduler.nextDue(DateTime.now(), newStage).millisecondsSinceEpoch
             : p.dueDate,
       ));
       await db.insertSession(key, event.name, accuracy > 0 ? accuracy : p.lastScore);
+      if (newlyMastered) onNewMastery?.call(); // P0-一.1 今日新学计数
       return;
     }
 
+    int failCount = p.failCount;
+    if (event == ChunkEvent.speakFail) failCount++;
     await db.upsertChunk(p.copyWith(
       level: next,
-      failCount: p.failCount,
+      failCount: failCount,
       lastScore: lastScore,
       l2OneTry: l2OneTry,
       l4SelfEval: p.l4SelfEval,

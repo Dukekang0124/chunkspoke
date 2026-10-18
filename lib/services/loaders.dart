@@ -255,6 +255,90 @@ class ProgressService {
   int get dailyGoal => int.tryParse(_kv('dailyGoal') ?? '') ?? 5;
   Future<void> setDailyGoal(int n) async => await _put('dailyGoal', n.toString());
 
+  /// 今日已开口句数（跨日自动归零，供每日目标进度展示）。
+  int get todaySpoken {
+    if (_kv('todaySpokenDate') != _dateKey(DateTime.now())) return 0;
+    return int.tryParse(_kv('todaySpoken') ?? '') ?? 0;
+  }
+
+  /// 记一次「开口成功」：今日计数 +1，并顺带完成当日打卡
+  /// （streak 同日只记一次，故任意一次开口都算打卡，不再只认「掌握」）。
+  Future<void> noteSpoken() async {
+    final today = _dateKey(DateTime.now());
+    final same = _kv('todaySpokenDate') == today;
+    final cur = same ? (int.tryParse(_kv('todaySpoken') ?? '') ?? 0) : 0;
+    await _put('todaySpokenDate', today);
+    await _put('todaySpoken', (cur + 1).toString());
+    await bumpStreak();
+  }
+
+  // —— 留存通知设置（默认关；默认 20:00）——
+  bool get notifEnabled => _kv('notifEnabled') == 'true';
+  Future<void> setNotifEnabled(bool v) => _put('notifEnabled', v.toString());
+
+  int get notifHour => int.tryParse(_kv('notifHour') ?? '') ?? 20;
+  int get notifMinute => int.tryParse(_kv('notifMinute') ?? '') ?? 0;
+  Future<void> setNotifTime(int h, int m) async {
+    await _put('notifHour', h.toString());
+    await _put('notifMinute', m.toString());
+  }
+
+  // —— 新手引导（P0-二）：复用 seenFtue 语义（首次启动 3 屏引导）——
+  bool get onboardingDone => seenFtue;
+  Future<void> setOnboardingDone() => setSeenFtue(true);
+
+  // —— 今日新学词块数（P0-一.1）：当日「新掌握」的词块计数 ——
+  int get dailyNewCount {
+    if (_kv('dailyNewDate') != _dateKey(DateTime.now())) return 0;
+    return int.tryParse(_kv('dailyNewCount') ?? '') ?? 0;
+  }
+
+  Future<void> bumpDailyNew() async {
+    final today = _dateKey(DateTime.now());
+    final same = _kv('dailyNewDate') == today;
+    final cur = same ? (int.tryParse(_kv('dailyNewCount') ?? '') ?? 0) : 0;
+    await _put('dailyNewDate', today);
+    await _put('dailyNewCount', (cur + 1).toString());
+  }
+
+  // —— 自由造句（P0-四）——
+  int get freeBuildCount => int.tryParse(_kv('freeBuildCount') ?? '') ?? 0;
+  Future<void> incFreeBuild() =>
+      _put('freeBuildCount', (freeBuildCount + 1).toString());
+  bool get freeBuildBadge => _kv('freeBuildBadge') == 'true';
+  Future<void> awardFreeBuildBadge() => _put('freeBuildBadge', 'true');
+
+  // —— 首次练习漏斗标记（P0-七）——
+  bool get firstPracticeStarted => _kv('firstPracticeStarted') == 'true';
+  Future<void> setFirstPracticeStarted() =>
+      _put('firstPracticeStarted', 'true');
+  bool get firstPracticeDone => _kv('firstPracticeDone') == 'true';
+  Future<void> setFirstPracticeDone() => _put('firstPracticeDone', 'true');
+
+  // —— 数据埋点（P0-七）：本地事件日志，无服务端成本 ——
+  List<Map<String, dynamic>> get analyticsEvents =>
+      (jsonDecode(_kv('analytics_events') ?? '[]') as List)
+          .cast<Map<String, dynamic>>()
+          .toList();
+
+  Future<void> logEvent(String name, [Map<String, dynamic>? params]) async {
+    final list = analyticsEvents;
+    list.add({
+      'n': name,
+      'ts': DateTime.now().millisecondsSinceEpoch,
+      if (params != null) 'p': params,
+    });
+    if (list.length > 500) list.removeRange(0, list.length - 500);
+    await _put('analytics_events', jsonEncode(list));
+  }
+
+  /// 一次性事件（P0-七）：如 day2/day7 回访，只记首次。
+  Future<void> logOnce(String name, [Map<String, dynamic>? params]) async {
+    if (_kv('evt_$name') == '1') return;
+    await _put('evt_$name', '1');
+    await logEvent(name, params);
+  }
+
   String _dateKey(DateTime d) => '${d.year}-${d.month}-${d.day}';
 
   // —— 发音分数（用于 Accuracy average） ——
@@ -282,7 +366,9 @@ class ProgressService {
   }
 
   // 结构化进度存储（M1 状态机/调度后端），与 ProgressService 共享同一 SQLite 库。
-  ChunkProgressStore get chunkStore => ChunkProgressStore(_db);
+  // onNewMastery：词块「当日新学」计数钩子（P0-一.1）。
+  ChunkProgressStore get chunkStore =>
+      ChunkProgressStore(_db, onNewMastery: () { bumpDailyNew(); });
 }
 
 class TtsService {

@@ -24,13 +24,37 @@ class MeScreen extends StatelessWidget {
         FutureBuilder<int>(
           future: progress.chunksMastered(content),
           builder: (c, s) {
-            final total = content.levels.fold<int>(0, (n, l) => n + l.chunks.length);
-            return _stat('已掌握词块', '${s.data ?? 0}/$total', 'L2一次过+L4≥80%');
+            final n = s.data ?? 0;
+            final combo = n > 1 ? n * (n - 1) ~/ 2 : 0;
+            return Column(
+              children: [
+                _stat('已掌握词块', '$n 个',
+                    help: () => _showMasteryHelp(context)),
+                _stat('累计可组合句子', '${combo}+', sub: '越学越强大'),
+              ],
+            );
           },
         ),
-        _stat('连续打卡', '$streak', '连续天数'),
-        _stat('中文提示率', '$hintRate%', '越低越好'),
-        _stat('平均准确度', '$acc', '文本匹配 / 发音评分'),
+        _stat('连续打卡', '$streak', sub: '连续天数'),
+        _stat('中文提示率', '$hintRate%', sub: '越低说明你越脱稿，继续加油'),
+        FutureBuilder<int>(
+          future: _unlockedScenes(progress, content),
+          builder: (c, s) {
+            final unlockedScenes = s.data ?? 0;
+            final avgText = progress.firstPracticeDone
+                ? '$acc'
+                : '完成首次练习后显示';
+            return Column(
+              children: [
+                _stat('平均准确度', avgText, sub: '文本匹配 / 发音评分'),
+                _stat('自由造句次数', '${progress.freeBuildCount} 次',
+                    sub: '用已掌握词块自由开口'),
+                _stat('已解锁场景', '$unlockedScenes 个',
+                    sub: '掌握度≥60% 可自由造句'),
+              ],
+            );
+          },
+        ),
         _GoalCard(progress: progress),
         const SizedBox(height: 20),
         SizedBox(
@@ -46,7 +70,39 @@ class MeScreen extends StatelessWidget {
     );
   }
 
-  Widget _stat(String label, String value, [String sub = '']) => Container(
+  /// 掌握度 ≥60% 的场景数（自由造句解锁门槛，P0-四）。
+  Future<int> _unlockedScenes(ProgressService p, ContentPack content) async {
+    final mastered = (await p.chunkStore.allMasteredKeys()).toSet();
+    int n = 0;
+    for (final lv in content.levels) {
+      final m = lv.chunks.where((c) => mastered.contains(c.id)).length;
+      if (lv.chunks.isNotEmpty && m / lv.chunks.length >= 0.6) n++;
+    }
+    return n;
+  }
+
+  void _showMasteryHelp(BuildContext context) => showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          backgroundColor: kCard,
+          title: const Text('掌握标准',
+              style: TextStyle(color: Colors.white)),
+          content: const Text(
+            '连续两次练习全部正确，且发音评分 ≥ 80 分。',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('知道了', style: TextStyle(color: kPrimary)),
+            ),
+          ],
+        ),
+      );
+
+  Widget _stat(String label, String value,
+          {String sub = '', VoidCallback? help}) =>
+      Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -59,57 +115,116 @@ class MeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                  Row(
+                    children: [
+                      Text(label,
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 14)),
+                      if (help != null) ...[
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: help,
+                          child: const Icon(Icons.help_outline,
+                              size: 14, color: Colors.white38),
+                        ),
+                      ],
+                    ],
+                  ),
                   if (sub.isNotEmpty)
-                    Text(sub, style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                    Text(sub,
+                        style: const TextStyle(
+                            color: Colors.white38, fontSize: 11)),
                 ],
               ),
             ),
             Text(value,
-                style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold)),
           ],
         ),
       );
 }
 
-class _GoalCard extends StatelessWidget {
+class _GoalCard extends StatefulWidget {
   final ProgressService progress;
   const _GoalCard({required this.progress});
 
   @override
+  State<_GoalCard> createState() => _GoalCardState();
+}
+
+class _GoalCardState extends State<_GoalCard> {
+  /// 同步 getter 直接读内存缓存，无需 FutureBuilder：
+  /// 旧实现每次 build 都新建 Future，先渲染一帧旧值再跳新值，
+  /// 且 setDailyGoal 不触发上层重建，导致「点了没反应、离开页面才变」。
+  late int _goal = widget.progress.dailyGoal;
+
+  @override
+  void didUpdateWidget(covariant _GoalCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final cur = widget.progress.dailyGoal;
+    if (cur != _goal) _goal = cur;
+  }
+
+  void _select(int n) {
+    if (n == _goal) return;
+    setState(() => _goal = n); // 点击即时反馈
+    widget.progress.setDailyGoal(n); // 落库（异步，不阻塞交互）
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<int>(
-      future: Future.value(progress.dailyGoal),
-      builder: (c, s) {
-        final g = s.data ?? 5;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-              color: kCard, borderRadius: BorderRadius.circular(12)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: kCard, borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('每日目标',
+              style: TextStyle(color: Colors.white70, fontSize: 14)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            children: [5, 10, 20]
+                .map((n) => ChoiceChip(
+                      label: Text('$n 句'),
+                      selected: _goal == n,
+                      selectedColor: kPrimary,
+                      labelStyle: TextStyle(
+                          color: _goal == n ? Colors.black87 : Colors.white70),
+                      onSelected: (_) => _select(n),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 12),
+          Row(
             children: [
-              const Text('每日目标',
-                  style: TextStyle(color: Colors.white70, fontSize: 14)),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                children: [5, 10, 20]
-                    .map((n) => ChoiceChip(
-                          label: Text('$n 句'),
-                          selected: g == n,
-                          selectedColor: kPrimary,
-                          labelStyle: TextStyle(
-                              color: g == n ? Colors.black87 : Colors.white70),
-                          onSelected: (_) => progress.setDailyGoal(n),
-                        ))
-                    .toList(),
-              ),
+              Text('今日已开口 ${widget.progress.todaySpoken} / $_goal 句',
+                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              const Spacer(),
+              if (widget.progress.todaySpoken >= _goal)
+                const Text('已达成 ✓',
+                    style: TextStyle(color: kUnlocked, fontSize: 12)),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: _goal > 0
+                  ? (widget.progress.todaySpoken / _goal).clamp(0.0, 1.0)
+                  : 0.0,
+              minHeight: 8,
+              backgroundColor: Colors.white12,
+              valueColor: const AlwaysStoppedAnimation(kUnlocked),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

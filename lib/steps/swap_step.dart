@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
-import '../services/loaders.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'say_widget.dart';
@@ -34,6 +32,29 @@ class _SwapStepState extends State<SwapStep> {
     final parts = _slots.map((s) => s.text).toList();
     parts[_swapIndex] = option;
     return parts.join(' ');
+  }
+
+  Future<void> _confirmSkip(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Text('跳过本题？', style: TextStyle(color: Colors.white)),
+        content: const Text('跳过替换练习，本题不计入掌握度。',
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('确定跳过', style: TextStyle(color: kPrimary)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) widget.onDone();
   }
 
   @override

@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:chunkspoke_flutter/services/session.dart';
 import 'package:chunkspoke_flutter/services/review_scheduler.dart';
-import 'package:chunkspoke_flutter/services/state_machine.dart';
 import 'package:chunkspoke_flutter/models/content_pack.dart';
 
 // 测试用最小 Chunk

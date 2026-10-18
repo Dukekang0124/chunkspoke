@@ -2,9 +2,11 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 
 /// 计算文件 SHA-256（小写十六进制）。
+///
+/// 流式计算：66MB 安装包若一次性 readAsBytes，低内存机型有 OOM 风险。
 Future<String> fileSha256(String path) async {
-  final bytes = await File(path).readAsBytes();
-  return sha256.convert(bytes).toString();
+  final digest = await sha256.bind(File(path).openRead()).first;
+  return digest.toString();
 }
 
 /// 比对期望哈希：忽略大小写与首尾空白；expected 为空视为“不校验”。

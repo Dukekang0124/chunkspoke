@@ -21,27 +21,42 @@ class LevelScreen extends StatefulWidget {
 
 class _LevelScreenState extends State<LevelScreen> {
   bool _done = false;
+  List<bool> _dims = const [true, true, true, true];
 
   Future<void> _finish() async {
     final progress = Provider.of<ProgressService>(context, listen: false);
     await progress.markCompleted(widget.level.id);
-    for (final d in const ['recognize', 'build', 'say', 'swap']) {
-      await progress.recordDim(widget.level.id, d);
-    }
-    // 将本关仍未掌握的块放入到期复习队列：写 chunks 表 due_date（与首页到期读取同源），
-    // 修正旧 kv 'review' 键格式错配导致「完成关卡→排复习」失效的问题（S5）。
+    // 将本关仍未掌握的块放入到期复习队列：写 chunks 表 due_date（与首页到期读取同源）。
+    // 去双写：跳过路径已经在练习中落过 scheduleReview，这里只对「仍未掌握且尚未进复习」的块兜底，
+    // 避免 sessions 表 scheduleReview 事件翻倍（实测 12 块 → 24 条）。
     final store = progress.chunkStore;
     for (final c in widget.level.chunks) {
       try {
         final row = await store.get(c.id);
-        if (!ChunkProgressStore.isMastered(row)) {
+        if (!ChunkProgressStore.isMastered(row) &&
+            row.level != ChunkLevel.review) {
           await store.applyEvent(c.id, ChunkEvent.scheduleReview);
         }
       } catch (e, st) {
         CrashLog.write('Level.finish review(${c.id}): $e', st);
       }
     }
+    // 诚实统计四步达成：用本关各块的最新进度行判读，未达标的星置灰。
+    List<bool> dims = const [true, true, true, true];
+    try {
+      final rows = await Future.wait(
+          widget.level.chunks.map((c) => store.get(c.id)));
+      dims = [
+        rows.every((r) => r.level.index >= ChunkLevel.l2.index), // 听辨：都已过听音识块
+        rows.every((r) => r.l2OneTry == 1), // 说块：一次过（拖对首试）
+        rows.every((r) => r.level.index >= ChunkLevel.l3.index), // 拼句：都已块拼句
+        rows.every((r) => r.lastScore >= 80 || r.l4SelfEval), // 开口：命中≥80 或自评
+      ];
+    } catch (e, st) {
+      CrashLog.write('Level.finish dims: $e', st);
+    }
     if (mounted) setState(() => _done = true);
+    if (mounted) _dims = dims;
   }
 
   @override
@@ -66,7 +81,7 @@ class _LevelScreenState extends State<LevelScreen> {
         ),
       ),
       body: _done
-          ? _Completion(level: widget.level)
+          ? _Completion(level: widget.level, dims: _dims)
           : PracticeLoop(level: widget.level, onDone: _finish),
     );
   }
@@ -74,11 +89,12 @@ class _LevelScreenState extends State<LevelScreen> {
 
 class _Completion extends StatelessWidget {
   final Level level;
-  const _Completion({required this.level});
+  final List<bool> dims; // 顺序：听辨 / 说块 / 拼句 / 开口（按真实达成置灰/点亮）
+  const _Completion({required this.level, required this.dims});
 
   @override
   Widget build(BuildContext context) {
-    const dims = ['识别', '组装', '开口', '重组'];
+    const labels = ['听辨', '说块', '拼句', '开口'];
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
@@ -90,25 +106,31 @@ class _Completion extends StatelessWidget {
             const Text('关卡完成！',
                 style: TextStyle(
                     fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
+            const Text('星 = 本次真实达成，未达标的留给你补练',
+                style: TextStyle(fontSize: 13, color: Colors.white54)),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: dims
-                  .map((d) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Column(
-                          children: [
-                            const Icon(Icons.star, color: kUnlocked, size: 28),
-                            const SizedBox(height: 4),
-                            Text(d,
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 12)),
-                          ],
-                        ),
-                      ))
-                  .toList(),
+              children: List.generate(labels.length, (i) {
+                final ok = i < dims.length && dims[i];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Column(
+                    children: [
+                      Icon(ok ? Icons.star : Icons.star_border,
+                          color: ok ? kUnlocked : Colors.white24, size: 28),
+                      const SizedBox(height: 4),
+                      Text(labels[i],
+                          style: TextStyle(
+                              color: ok ? Colors.white70 : Colors.white38,
+                              fontSize: 12)),
+                    ],
+                  ),
+                );
+              }),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -122,6 +144,12 @@ class _Completion extends StatelessWidget {
                 child: const Text('返回地图',
                     style: TextStyle(color: Colors.white, fontSize: 16)),
               ),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('补练没拿到的星（回场景再练一遍）',
+                  style: TextStyle(color: Colors.white38, fontSize: 13)),
             ),
           ],
         ),

@@ -55,26 +55,54 @@ int _levenshtein(String a, String b) {
   return dp[m][n];
 }
 
-/// 单字/词发音容错：完全相等 / 编辑距离≤1 / 词干近似（短词为长词前缀且长度差≤1）。
+/// 小模型高频混淆词表：这些对在 wordClose 中按同词处理（清晰 TTS 也有系统性丢/混）。
+const Set<Set<String>> kConfusionPairs = {
+  {'a', 'an'},
+  {'the', 'this'},
+  {'to', 'too'},
+  {'on', 'in'},
+};
+
+/// 单字/词发音容错：完全相等 / 编辑距离≤1 / 词干近似（短词为长词前缀且长度差≤1）/ 混淆词表。
 bool wordClose(String a, String b) {
   a = normalizeSpeech(a);
   b = normalizeSpeech(b);
   if (a.isEmpty || b.isEmpty) return false;
   if (a == b) return true;
+  if (kConfusionPairs.any((p) => p.contains(a) && p.contains(b))) return true;
   if (_levenshtein(a, b) <= 1) return true;
   final shorter = a.length <= b.length ? a : b;
   final longer = a.length <= b.length ? b : a;
   return longer.startsWith(shorter) && (longer.length - shorter.length) <= 1;
 }
 
+/// 虚词（function words）集合：这些词的丢失/重复/混淆不应一票否决，
+/// 核心词（实词）的失配才是「没听清/说错」的信号。
+const Set<String> _functionWords = {
+  'a', 'an', 'the', 'to', 'of', 'for', 'and', 'or', 'but', 'so', 'if', 'as',
+  'in', 'on', 'at', 'by', 'with', 'from', 'up', 'down', 'out', 'off', 'over',
+  'under', 'about', 'into', 'onto',
+  'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+  'my', 'your', 'his', 'its', 'our', 'their', 'mine', 'yours', 'hers',
+  'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'do', 'does', 'did',
+  'have', 'has', 'had', 'will', 'would', 'shall', 'should', 'can', 'could',
+  'may', 'might', 'must', 'not', 'no', 'yes', 'ok', 'okay', 'please',
+  'this', 'that', 'these', 'those', 'here', 'there',
+  'what', 'when', 'where', 'who', 'whom', 'why', 'how', 'which',
+};
+
+bool _isFunction(String w) => _functionWords.contains(w);
+
 /// 判定结果。
 /// [layer]：命中的漏斗层 —— 'exact'（完全匹配快速通道）/ 'fuzzy'（模糊层）/ 'reject'。
 /// [targetMatched] 与目标逐词对齐后，该目标词是否被识别命中（用于错词标红）。
 class JudgeOutcome {
   final bool pass;
-  final double similarity; // 0..1，词级序列相似度
+  final double similarity; // 0..1，词级序列相似度（未加权，供展示/兼容）
+  final double weightedSimilarity; // 0..1，内容词加权的相似度（实词失配代价高）
+  final double coreHitRate; // 0..1，目标内容词命中率
   final double? confidence; // 来自 Vosk；null = 字段缺失（不参与拒判）
-  final String reason; // 'ok' | 'empty' | 'tooShort' | 'lowConf' | 'lowSim'
+  final String reason; // 'ok' | 'empty' | 'tooShort' | 'lowCore' | 'lowSim' | 'lowConf'
   final String layer; // 'exact' | 'fuzzy' | 'reject'
   final List<String> targetWords;
   final List<String> recognizedWords;
@@ -83,6 +111,8 @@ class JudgeOutcome {
   JudgeOutcome({
     required this.pass,
     required this.similarity,
+    required this.weightedSimilarity,
+    required this.coreHitRate,
     required this.confidence,
     required this.reason,
     required this.layer,
@@ -97,6 +127,8 @@ JudgeOutcome _reject(String reason, List<String> tgt, List<String> rec, double? 
     JudgeOutcome(
       pass: false,
       similarity: sim,
+      weightedSimilarity: sim,
+      coreHitRate: 0,
       confidence: conf,
       reason: reason,
       layer: 'reject',
@@ -135,6 +167,8 @@ JudgeOutcome judgeSpeech({
     return JudgeOutcome(
       pass: true,
       similarity: 1.0,
+      weightedSimilarity: 1.0,
+      coreHitRate: 1.0,
       confidence: confidence,
       reason: 'ok',
       layer: 'exact',
@@ -144,13 +178,19 @@ JudgeOutcome judgeSpeech({
     );
   }
 
-  // L3 模糊匹配层：词级序列比对（substitution 代价用 wordClose，含单字/词干容错）。
+  // L3 模糊匹配层：
+  //  - [similarity]（未加权）仅供展示/兼容；是否通过改看「内容词加权」两指标——
+  //    核心词命中率 ≥70% 且 加权相似度 ≥0.8。虚词丢/混/重复不再一票否决，
+  //    核心词错音（如 snack→snake）仍被拦。
   final align = _align(rec, tgt);
-  final sim = align.similarity;
+  final weighted = _weightedAlign(rec, tgt);
 
   String reason = 'ok';
   bool pass;
-  if (sim < simThreshold) {
+  if (weighted.coreHitRate < 0.7) {
+    pass = false;
+    reason = 'lowCore';
+  } else if (weighted.weightedSim < 0.8) {
     pass = false;
     reason = 'lowSim';
   } else if (confidence != null && confidence < confThreshold) {
@@ -158,18 +198,20 @@ JudgeOutcome judgeSpeech({
     pass = false;
     reason = 'lowConf';
   } else {
-    pass = true; // 相似度达标 且（置信度缺失 或 达标）
+    pass = true;
   }
 
   return JudgeOutcome(
     pass: pass,
-    similarity: sim,
+    similarity: align.similarity,
+    weightedSimilarity: weighted.weightedSim,
+    coreHitRate: weighted.coreHitRate,
     confidence: confidence,
     reason: reason,
     layer: pass ? 'fuzzy' : 'reject',
     targetWords: tgt,
     recognizedWords: rec,
-    targetMatched: align.matched,
+    targetMatched: weighted.matched,
   );
 }
 
@@ -227,6 +269,79 @@ _Alignment _align(List<String> rec, List<String> tgt) {
     }
   }
   return _Alignment(sim, matched);
+}
+
+class _WeightedAlignment {
+  final double weightedSim;
+  final double coreHitRate;
+  final List<bool> matched;
+  _WeightedAlignment(this.weightedSim, this.coreHitRate, this.matched);
+}
+
+/// 内容词加权的词级比对。
+/// 代价设计（针对「短句丢一个虚词就判死」的病灶）：
+///   - 虚词 删除 0.3 / 插入 0.2 / 失配 0.3：丢/多/混 a/the/to 等几乎不扣分；
+///   - 实词 删除 2.0 / 插入 1.0 / 失配 2.0：核心词错音/漏说仍是硬伤；
+///   - 匹配 0。
+/// 指标：
+///   - weightedSim = 1 - dist / Σ(目标词删除代价)，clip 到 [0,1]；
+///   - coreHitRate = 命中的目标实词数 / 目标实词数（无实词时为 1.0）。
+_WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
+  const inf = 1e9;
+  final n = rec.length;
+  final m = tgt.length;
+
+  double del(String w) => _isFunction(w) ? 0.3 : 2.0;
+  double ins(String w) => _isFunction(w) ? 0.2 : 0.5;
+  double sub(String r, String t) =>
+      wordClose(r, t) ? 0.0 : (_isFunction(r) && _isFunction(t) ? 0.3 : 2.0);
+
+  final dp = List.generate(n + 1, (_) => List.filled(m + 1, inf));
+  dp[0][0] = 0;
+  for (var i = 1; i <= n; i++) {
+    dp[i][0] = dp[i - 1][0] + ins(rec[i - 1]);
+  }
+  for (var j = 1; j <= m; j++) {
+    dp[0][j] = dp[0][j - 1] + del(tgt[j - 1]);
+  }
+  for (var i = 1; i <= n; i++) {
+    for (var j = 1; j <= m; j++) {
+      dp[i][j] = [
+        dp[i - 1][j] + ins(rec[i - 1]),
+        dp[i][j - 1] + del(tgt[j - 1]),
+        dp[i - 1][j - 1] + sub(rec[i - 1], tgt[j - 1]),
+      ].reduce((a, b) => a < b ? a : b);
+    }
+  }
+
+  final dist = dp[n][m];
+  final denom = tgt.fold<double>(0, (sum, w) => sum + del(w));
+  final weightedSim = denom == 0 ? 1.0 : (1 - dist / denom).clamp(0.0, 1.0);
+
+  // 回溯逐词命中标记（只标记真正的匹配项）。
+  final matched = List.filled(m, false);
+  var i = n, j = m;
+  while (i > 0 && j > 0) {
+    if (dp[i][j] == dp[i - 1][j - 1] + sub(rec[i - 1], tgt[j - 1])) {
+      if (wordClose(rec[i - 1], tgt[j - 1])) matched[j - 1] = true;
+      i--;
+      j--;
+    } else if (dp[i][j] == dp[i - 1][j] + ins(rec[i - 1])) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+
+  var contentCount = 0, contentHit = 0;
+  for (var k = 0; k < m; k++) {
+    if (_isFunction(tgt[k])) continue;
+    contentCount++;
+    if (matched[k]) contentHit++;
+  }
+  final coreHitRate = contentCount == 0 ? 1.0 : contentHit / contentCount;
+
+  return _WeightedAlignment(weightedSim, coreHitRate, matched);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

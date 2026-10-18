@@ -180,7 +180,7 @@ class _BuildStepState extends State<BuildStep> {
                           ),
                   ),
                   onWillAccept: (data) => data == _expected[i] && _filled[i] == null,
-                  onAccept: (data) => _place(i, data!),
+                  onAccept: (data) => _place(i, data),
                 );
               }),
             ),

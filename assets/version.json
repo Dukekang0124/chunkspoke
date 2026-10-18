@@ -1,8 +1,30 @@
 {
-  "versionName": "1.2.5",
-  "versionCode": 2020,
+  "versionName": "1.3.1",
+  "versionCode": 2034,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
-  "sha256": "a643b25634cd94ddb806caaa454231e78ad478bc1c5c716bcead2e1b4027341e",
-  "size": 69846018,
-  "notes": "v1.2.5（versionCode 2020）：修复五步掌握判定/说块重复事件/拼句准确度/毒块/复习排程/首页刷新/设置回滚等缺陷，并为 9 个场景补充目标句。"
+  "sha256": "e1c6d5a3593463c02aae85cb191006ee6802131b29ccf564642e057aa9cfcb79",
+  "size": 71112156,
+  "notes": "v1.3.1：自由造句接入 AI 实时评判（智谱 GLM-4-Flash），云端失败自动回退离线规则",
+  "parts": [
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.1/parts/apk.part0",
+      "size": 15728640
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.1/parts/apk.part1",
+      "size": 15728640
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.1/parts/apk.part2",
+      "size": 15728640
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.1/parts/apk.part3",
+      "size": 15728640
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.3.1/parts/apk.part4",
+      "size": 8197596
+    }
+  ]
 }

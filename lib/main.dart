@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'models/content_pack.dart';
 import 'services/crash_log.dart';
 import 'services/loaders.dart';
+import 'services/notification_service.dart';
 import 'ui/theme.dart';
 import 'ui/error_page.dart';
 import 'screens/ftue.dart';
 import 'screens/nav.dart';
+import 'screens/onboarding_screen.dart';
 
 void main() {
   // 全局错误拦截（P0 加固）：任何页面/异步异常都不允许灰屏或闪退退桌面。
@@ -38,6 +40,20 @@ Future<void> bootstrap() async {
     final content = await loadContentPack();
     final tts = TtsService();
     await tts.init();
+    // 留存通知：初始化 + 已开启时复挂每日提醒（进程重启/系统清闹钟后自愈）。
+    // 全程非致命：通知失败绝不阻塞启动。
+    try {
+      await NotificationService.instance.init();
+      if (progress.notifEnabled) {
+        await NotificationService.instance
+            .scheduleDaily(progress.notifHour, progress.notifMinute);
+      }
+    } catch (_) {}
+    // 回访漏斗埋点（P0-七）：连续打卡 2 天 / 7 天各记一次。
+    try {
+      if (progress.streak >= 2) await progress.logOnce('day2_return');
+      if (progress.streak >= 7) await progress.logOnce('day7_return');
+    } catch (_) {}
     runApp(
       MultiProvider(
         providers: [
@@ -72,7 +88,9 @@ class ChunkSpokeApp extends StatelessWidget {
       // 防御：根节点铺满应用底色，任何时刻（含栈空/过渡）都不会露系统黑底。
       builder: (context, child) =>
           ColoredBox(color: kBg, child: child ?? const SizedBox.shrink()),
-      home: progress.seenFtue ? const AppNav() : const FtueScreen(),
+      home: !progress.onboardingDone
+          ? const OnboardingScreen()
+          : (progress.seenFtue ? const AppNav() : const FtueScreen()),
     );
   }
 }

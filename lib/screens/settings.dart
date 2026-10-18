@@ -6,6 +6,7 @@ import '../services/update/update_flow.dart';
 import '../services/llm_provider.dart';
 import '../services/builtin_llm.dart';
 import '../services/vosk_engine.dart';
+import '../services/notification_service.dart';
 import '../ui/theme.dart';
 import 'ai_coach_screen.dart';
 
@@ -28,6 +29,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool? _testOk;
   String _ver = '1.0.0';
   EngineState _engineState = EngineState.unknown;
+  bool _notifOn = false;
+  int _notifHour = 20;
+  int _notifMinute = 0;
 
   @override
   void initState() {
@@ -39,6 +43,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _customUrl = TextEditingController(text: p.customLlmUrl ?? '');
     _customModel = TextEditingController(text: p.customLlmModel ?? '');
     _customKey = TextEditingController(text: p.customLlmKey ?? '');
+    _notifOn = p.notifEnabled;
+    _notifHour = p.notifHour;
+    _notifMinute = p.notifMinute;
     // 异步初始化全部兜底：失败不阻塞设置页渲染，更不允许未捕获异常（P0 加固）。
     UpdateService().local().then((v) {
       if (mounted) setState(() => _ver = v.versionName);
@@ -144,6 +151,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await runUpdateFlow(context);
   }
 
+  Future<void> _toggleNotif(bool v) async {
+    final p = Provider.of<ProgressService>(context, listen: false);
+    if (v) {
+      final ok = await NotificationService.instance.requestPermission();
+      if (!ok) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('通知权限被拒绝，请在系统设置中开启'),
+              duration: Duration(seconds: 2)),
+        );
+      }
+      await NotificationService.instance.scheduleDaily(_notifHour, _notifMinute);
+    } else {
+      await NotificationService.instance.cancelDaily();
+    }
+    await p.setNotifEnabled(v);
+    if (!mounted) return;
+    setState(() => _notifOn = v);
+  }
+
+  Future<void> _pickNotifTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: _notifHour, minute: _notifMinute),
+    );
+    if (picked == null) return;
+    final p = Provider.of<ProgressService>(context, listen: false);
+    await p.setNotifTime(picked.hour, picked.minute);
+    if (_notifOn) {
+      await NotificationService.instance.scheduleDaily(picked.hour, picked.minute);
+    }
+    if (!mounted) return;
+    setState(() {
+      _notifHour = picked.hour;
+      _notifMinute = picked.minute;
+    });
+  }
+
   /// AI 助手入口：常驻显示，依据当前生效服务展示状态（不再因无 Key 隐藏）。
   Widget _aiCoachEntry(BuildContext context) {
     final p = Provider.of<ProgressService>(context, listen: false);
@@ -225,6 +271,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 留存通知卡片：开关 + 提醒时间选择。
+  Widget _notificationCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          children: [
+            SwitchListTile(
+              title: const Text('每日练习提醒', style: TextStyle(color: kText)),
+              subtitle: const Text('每天固定时间提醒开口练习（本地通知）',
+                  style: TextStyle(color: Colors.white54, fontSize: 12)),
+              value: _notifOn,
+              activeColor: kPrimary,
+              onChanged: _toggleNotif,
+            ),
+            if (_notifOn)
+              ListTile(
+                leading: const Icon(Icons.schedule, color: kPrimary),
+                title: const Text('提醒时间', style: TextStyle(color: kText)),
+                trailing: Text(
+                  '${_notifHour.toString().padLeft(2, '0')}:${_notifMinute.toString().padLeft(2, '0')}',
+                  style: const TextStyle(
+                      color: kPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600),
+                ),
+                onTap: _pickNotifTime,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _label(String t) =>
       Text(t, style: const TextStyle(color: Colors.white70, fontSize: 14));
 
@@ -263,6 +348,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 16),
             _engineRow(),
+            const SizedBox(height: 16),
+            _notificationCard(context),
             const SizedBox(height: 20),
 
             // —— AI 助手：常驻入口 ——

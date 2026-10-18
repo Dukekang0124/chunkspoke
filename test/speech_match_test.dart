@@ -75,17 +75,80 @@ void main() {
       expect(r.pass, isFalse);
       expect(r.reason, 'lowSim');
     });
-    test('乱说（无关词）→ 不通过（lowSim）', () {
+    test('乱说（无关词）→ 不通过（核心词全丢）', () {
       final r = judgeSpeech(
           target: 'I need to finish this report today',
           recognized: 'blah blah pizza monkey');
       expect(r.pass, isFalse);
-      expect(r.reason, 'lowSim');
+      expect(r.reason, 'lowCore');
+      expect(r.coreHitRate, 0.0);
     });
     test('错词标红：targetMatched 标记未命中词', () {
       final r = judgeSpeech(target: 'cat dog bird', recognized: 'cat bird');
       expect(r.pass, isFalse);
       expect(r.targetMatched, [true, false, true]);
+    });
+  });
+
+  group('内容词加权判定（P0 判定脆弱性修复）', () {
+    test('丢冠词 a（核心词全中）→ 通过', () {
+      final r = judgeSpeech(
+          target: 'Grab a snack, okay?', recognized: 'grab snack okay');
+      expect(r.pass, isTrue);
+      expect(r.layer, 'fuzzy');
+      expect(r.coreHitRate, 1.0);
+    });
+
+    test('核心词错音 snack→snake → 不通过', () {
+      final r = judgeSpeech(target: 'grab a snack', recognized: 'grab a snake');
+      expect(r.pass, isFalse);
+      expect(r.reason, 'lowCore');
+    });
+
+    test('丢实词 today（核心词命中率 75% 但加权相似度不足）→ 仍不通过', () {
+      final r = judgeSpeech(
+          target: 'I need to finish this report today',
+          recognized: 'i need to finish this report');
+      expect(r.pass, isFalse);
+      expect(r.reason, 'lowSim');
+      expect(r.coreHitRate, 0.75);
+    });
+
+    test('虚词混淆 the→this 按同词处理 → 通过', () {
+      final r = judgeSpeech(
+          target: 'I have the menu', recognized: 'i have this menu');
+      expect(r.pass, isTrue);
+    });
+
+    test('虚词 to→too 混淆 → 通过', () {
+      final r = judgeSpeech(
+          target: 'I need to finish', recognized: 'i need too finish');
+      expect(r.pass, isTrue);
+    });
+
+    test('多说一个虚词（重复 a）→ 仍通过', () {
+      final r = judgeSpeech(
+          target: 'grab a snack', recognized: 'grab a a snack');
+      expect(r.pass, isTrue);
+    });
+
+    test('语法限定识别致代词误为实词（me→meet 重复）→ 通过', () {
+      final r = judgeSpeech(
+          target: 'meet me at the station',
+          recognized: 'meet meet at the station');
+      expect(r.pass, isTrue);
+    });
+
+    test('多说一个实词（sec 重复）→ 通过（多说词轻罚）', () {
+      final r = judgeSpeech(
+          target: 'just a sec please', recognized: 'just a sec sec please');
+      expect(r.pass, isTrue);
+    });
+
+    test('核心词错音（snack→snake）在放宽后仍被拒', () {
+      final r = judgeSpeech(target: 'grab a snack', recognized: 'grab a snake');
+      expect(r.pass, isFalse);
+      expect(r.reason, 'lowCore');
     });
   });
 

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:chunkspoke_flutter/services/glm_client.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
 import 'package:chunkspoke_flutter/services/llm_provider.dart';
 import 'package:chunkspoke_flutter/models/content_pack.dart';

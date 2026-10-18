@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
+import '../services/recording.dart';
+import '../services/vosk_engine.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'level.dart';
@@ -15,6 +17,8 @@ class FtueScreen extends StatefulWidget {
 
 class _FtueScreenState extends State<FtueScreen> {
   bool s1 = false, s2 = false, s3 = false, showStart = false;
+  bool _micOk = false;
+  EngineState _engine = EngineState.unknown;
 
   @override
   void initState() {
@@ -30,6 +34,23 @@ class _FtueScreenState extends State<FtueScreen> {
         () { if (mounted) tts.speak("I'd like a cup of coffee."); });
     Future.delayed(const Duration(milliseconds: 2200),
         () { if (mounted) setState(() => showStart = true); });
+    // P0-2.2 前置：首次开口的两道前置关（麦克风权限 + 41MB 语音引擎）提前到引导页完成，
+    // 练习环节不再被这两步打断（报告实测的「连闯三关」最大流失点）。
+    // 权限是系统级、全局生效；引擎是单例、预热后练习直接可用，且不在 initState 阻塞「开始学习」。
+    _prep();
+  }
+
+  Future<void> _prep() async {
+    try {
+      final perm = await RecordingService().ensurePermission();
+      if (mounted) setState(() => _micOk = perm == MicPerm.granted);
+    } catch (_) {}
+    if (mounted) setState(() => _engine = EngineState.loading);
+    SpeechEngine.instance.init().then((ok) {
+      if (mounted) {
+        setState(() => _engine = ok ? EngineState.ready : EngineState.failed);
+      }
+    });
   }
 
   Future<void> _start() async {
@@ -89,7 +110,39 @@ class _FtueScreenState extends State<FtueScreen> {
                     style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
               const Spacer(),
-              if (showStart)
+              if (showStart) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(_micOk ? Icons.check_circle : Icons.mic,
+                        size: 15,
+                        color: _micOk ? kUnlocked : Colors.white54),
+                    const SizedBox(width: 4),
+                    Text(_micOk ? '麦克风已授权' : '麦克风待授权',
+                        style: const TextStyle(fontSize: 12, color: Colors.white54)),
+                    const SizedBox(width: 16),
+                    Icon(
+                        _engine == EngineState.ready
+                            ? Icons.check_circle
+                            : _engine == EngineState.failed
+                                ? Icons.warning
+                                : Icons.hourglass_bottom,
+                        size: 15,
+                        color: _engine == EngineState.ready
+                            ? kUnlocked
+                            : _engine == EngineState.failed
+                                ? Colors.orange
+                                : Colors.white54),
+                    const SizedBox(width: 4),
+                    Text(_engine == EngineState.ready
+                        ? '语音引擎就绪'
+                        : _engine == EngineState.failed
+                            ? '引擎不可用(可降级)'
+                            : '引擎准备中…',
+                        style: const TextStyle(fontSize: 12, color: Colors.white54)),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -103,6 +156,7 @@ class _FtueScreenState extends State<FtueScreen> {
                         style: TextStyle(fontSize: 18, color: Colors.white)),
                   ),
                 ),
+              ],
             ],
           ),
         ),

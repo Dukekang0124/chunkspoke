@@ -35,13 +35,15 @@ void main() {
     expect((await store.get('k')).level, ChunkLevel.l4);
     expect((await store.get('k')).lastScore, 80);
 
-    // 失败不再自动降级：保持 L4（单一出口=跳过/答案），failCount 不递增。
+    // 失败不再自动降级：保持 L4（单一出口=跳过/答案）。
+    // failCount 记录失败次数，供 AI 周报 top-fail 统计（M7），与「是否降级」解耦。
     await store.applyEvent('k', ChunkEvent.speakFail);
     expect((await store.get('k')).level, ChunkLevel.l4);
-    expect((await store.get('k')).failCount, 0);
+    expect((await store.get('k')).failCount, 1);
 
     await store.applyEvent('k', ChunkEvent.speakFail);
     expect((await store.get('k')).level, ChunkLevel.l4);
+    expect((await store.get('k')).failCount, 2);
 
     // 重新走通 → speakSuccess 达标即 mastered（逾期日期 0）。
     await store.applyEvent('k', ChunkEvent.accuracyPass, accuracy: 90);

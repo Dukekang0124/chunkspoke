@@ -1,5 +1,5 @@
 {
- "version": "1.1.0",
+ "version": "1.1.1",
  "levels": [
   {
    "id": "A",
@@ -81,8 +81,8 @@
    ],
    "sentences": [
     {
-     "id": "s01",
-     "text": "Good morning everyone",
+     "id": "a_s01",
+     "text": "Good morning, everyone.",
      "meaningCN": "大家早上好",
      "chunkIds": [
       "a01",
@@ -90,8 +90,8 @@
      ]
     },
     {
-     "id": "s02",
-     "text": "Good evening everyone",
+     "id": "a_s02",
+     "text": "Good evening, everyone.",
      "meaningCN": "大家晚上好",
      "chunkIds": [
       "a02",
@@ -99,8 +99,8 @@
      ]
     },
     {
-     "id": "s03",
-     "text": "I'm fine thank you",
+     "id": "a_s03",
+     "text": "I'm fine, thank you.",
      "meaningCN": "我很好，谢谢",
      "chunkIds": [
       "a03",
@@ -108,26 +108,40 @@
      ]
     },
     {
-     "id": "s04",
-     "text": "Excuse me thank you",
-     "meaningCN": "打扰一下，谢谢",
+     "id": "a_s04",
+     "text": "Thank you so much.",
+     "meaningCN": "非常感谢",
      "chunkIds": [
-      "a10",
       "a04"
      ]
     },
     {
-     "id": "s05",
-     "text": "nice to meet you thank you",
-     "meaningCN": "很高兴认识你，谢谢",
+     "id": "a_s05",
+     "text": "My name is Lily.",
+     "meaningCN": "我叫莉莉",
      "chunkIds": [
-      "a07",
-      "a04"
+      "a05"
      ]
     },
     {
-     "id": "s06",
-     "text": "see you tomorrow",
+     "id": "a_s06",
+     "text": "What's your name, please?",
+     "meaningCN": "请问你叫什么名字",
+     "chunkIds": [
+      "a06"
+     ]
+    },
+    {
+     "id": "a_s07",
+     "text": "Nice to meet you, too.",
+     "meaningCN": "我也很高兴认识你",
+     "chunkIds": [
+      "a07"
+     ]
+    },
+    {
+     "id": "a_s08",
+     "text": "See you tomorrow.",
      "meaningCN": "明天见",
      "chunkIds": [
       "a08",
@@ -135,8 +149,8 @@
      ]
     },
     {
-     "id": "s07",
-     "text": "take care everyone",
+     "id": "a_s09",
+     "text": "Take care, everyone.",
      "meaningCN": "大家保重",
      "chunkIds": [
       "a09",
@@ -144,66 +158,29 @@
      ]
     },
     {
-     "id": "s08",
-     "text": "Good morning I'm fine",
-     "meaningCN": "早上好，我很好",
+     "id": "a_s10",
+     "text": "Excuse me, please.",
+     "meaningCN": "不好意思，打扰一下",
      "chunkIds": [
-      "a01",
-      "a03"
+      "a10"
      ]
     },
     {
-     "id": "s09",
-     "text": "Good evening I'm fine",
-     "meaningCN": "晚上好，我很好",
+     "id": "a_s11",
+     "text": "Nice to meet you, everyone.",
+     "meaningCN": "很高兴认识大家",
      "chunkIds": [
-      "a02",
-      "a03"
+      "a07",
+      "a11"
      ]
     },
     {
-     "id": "s10",
-     "text": "what's your name my name is",
-     "meaningCN": "你叫什么名字，我的名字是",
+     "id": "a_s12",
+     "text": "See you again, everyone.",
+     "meaningCN": "大家回头见",
      "chunkIds": [
-      "a06",
-      "a05"
-     ]
-    },
-    {
-     "id": "s11",
-     "text": "Excuse me see you",
-     "meaningCN": "打扰一下，再见",
-     "chunkIds": [
-      "a10",
-      "a08"
-     ]
-    },
-    {
-     "id": "s12",
-     "text": "take care see you",
-     "meaningCN": "保重，再见",
-     "chunkIds": [
-      "a09",
-      "a08"
-     ]
-    },
-    {
-     "id": "s13",
-     "text": "Good morning take care",
-     "meaningCN": "早上好，保重",
-     "chunkIds": [
-      "a01",
-      "a09"
-     ]
-    },
-    {
-     "id": "s14",
-     "text": "Good evening thank you",
-     "meaningCN": "晚上好，谢谢",
-     "chunkIds": [
-      "a02",
-      "a04"
+      "a08",
+      "a11"
      ]
     }
    ]
@@ -1343,40 +1320,206 @@
    ],
    "sentences": [
     {
-     "id": "s_b1",
-     "text": "I'd like a cup of coffee",
-     "meaningCN": "我想要一杯咖啡",
+     "id": "b_s01",
+     "text": "I'd like the menu, please.",
+     "meaningCN": "我想要（礼貌）",
      "chunkIds": [
       "b01",
-      "b07"
-     ]
-    },
-    {
-     "id": "s_b2",
-     "text": "could I have the menu",
-     "meaningCN": "能给我菜单吗",
-     "chunkIds": [
-      "b11",
       "b03"
      ]
     },
     {
-     "id": "s_b3",
-     "text": "I need a table for two",
-     "meaningCN": "我需要一张两人桌",
+     "id": "b_s02",
+     "text": "I'd like a glass of water.",
+     "meaningCN": "一杯（饮品）",
+     "chunkIds": [
+      "b01",
+      "b02"
+     ]
+    },
+    {
+     "id": "b_s03",
+     "text": "Can I see the menu?",
+     "meaningCN": "菜单",
+     "chunkIds": [
+      "b03"
+     ]
+    },
+    {
+     "id": "b_s04",
+     "text": "I need some help, thanks.",
+     "meaningCN": "一些帮助",
      "chunkIds": [
       "b13",
+      "b04"
+     ]
+    },
+    {
+     "id": "b_s05",
+     "text": "We want a table for two.",
+     "meaningCN": "两人桌",
+     "chunkIds": [
       "b05"
      ]
     },
     {
-     "id": "s_b4",
-     "text": "can you bring me the bill",
-     "meaningCN": "能把账单拿给我吗",
+     "id": "b_s06",
+     "text": "Could we have the bill?",
+     "meaningCN": "（餐）账单",
      "chunkIds": [
-      "b19",
-      "b16",
       "b06"
+     ]
+    },
+    {
+     "id": "b_s07",
+     "text": "I'll have a cup of coffee.",
+     "meaningCN": "一杯咖啡",
+     "chunkIds": [
+      "b07"
+     ]
+    },
+    {
+     "id": "b_s08",
+     "text": "Bring a bottle of wine.",
+     "meaningCN": "一瓶",
+     "chunkIds": [
+      "b08"
+     ]
+    },
+    {
+     "id": "b_s09",
+     "text": "I ate a piece of cake.",
+     "meaningCN": "一块／一片",
+     "chunkIds": [
+      "b09"
+     ]
+    },
+    {
+     "id": "b_s10",
+     "text": "I bought a pair of shoes.",
+     "meaningCN": "一双／一对",
+     "chunkIds": [
+      "b10"
+     ]
+    },
+    {
+     "id": "b_s11",
+     "text": "Could I have some water?",
+     "meaningCN": "能给我…吗（礼貌）",
+     "chunkIds": [
+      "b11"
+     ]
+    },
+    {
+     "id": "b_s12",
+     "text": "Do you have a map?",
+     "meaningCN": "你们有…吗",
+     "chunkIds": [
+      "b12"
+     ]
+    },
+    {
+     "id": "b_s13",
+     "text": "I need a taxi, please.",
+     "meaningCN": "我需要",
+     "chunkIds": [
+      "b13"
+     ]
+    },
+    {
+     "id": "b_s14",
+     "text": "Give me the red one.",
+     "meaningCN": "给我",
+     "chunkIds": [
+      "b14"
+     ]
+    },
+    {
+     "id": "b_s15",
+     "text": "Pass me the salt, please.",
+     "meaningCN": "递给我",
+     "chunkIds": [
+      "b15"
+     ]
+    },
+    {
+     "id": "b_s16",
+     "text": "Bring me the check, thanks.",
+     "meaningCN": "拿给我",
+     "chunkIds": [
+      "b16"
+     ]
+    },
+    {
+     "id": "b_s17",
+     "text": "I'm looking for the bank.",
+     "meaningCN": "我在找",
+     "chunkIds": [
+      "b17"
+     ]
+    },
+    {
+     "id": "b_s18",
+     "text": "Where can I sit down?",
+     "meaningCN": "我在哪能…",
+     "chunkIds": [
+      "b18"
+     ]
+    },
+    {
+     "id": "b_s19",
+     "text": "Can you help me?",
+     "meaningCN": "你能…吗",
+     "chunkIds": [
+      "b19"
+     ]
+    },
+    {
+     "id": "b_s20",
+     "text": "Just a little, thanks.",
+     "meaningCN": "一点点",
+     "chunkIds": [
+      "b20"
+     ]
+    },
+    {
+     "id": "b_s21",
+     "text": "We have a lot of time.",
+     "meaningCN": "许多",
+     "chunkIds": [
+      "b21"
+     ]
+    },
+    {
+     "id": "b_s22",
+     "text": "I want some more, please.",
+     "meaningCN": "再多一些",
+     "chunkIds": [
+      "b22"
+     ]
+    },
+    {
+     "id": "b_s23",
+     "text": "Make it a little less.",
+     "meaningCN": "稍微少点",
+     "chunkIds": [
+      "b23"
+     ]
+    },
+    {
+     "id": "b_s24",
+     "text": "I'll take another one.",
+     "meaningCN": "另一个（再一）",
+     "chunkIds": [
+      "b24"
+     ]
+    },
+    {
+     "id": "b_s25",
+     "text": "I'll have the same.",
+     "meaningCN": "同样的",
+     "chunkIds": [
+      "b25"
      ]
     }
    ]
@@ -2433,39 +2576,203 @@
    ],
    "sentences": [
     {
-     "id": "s_c1",
-     "text": "a coffee with milk",
-     "meaningCN": "一杯加奶咖啡",
+     "id": "c_s01",
+     "text": "I'll get a coffee.",
+     "meaningCN": "来杯咖啡",
      "chunkIds": [
-      "c01",
+      "c01"
+     ]
+    },
+    {
+     "id": "c_s02",
+     "text": "Coffee with milk, please.",
+     "meaningCN": "加奶",
+     "chunkIds": [
       "c02"
      ]
     },
     {
-     "id": "s_c2",
-     "text": "a latte with milk",
-     "meaningCN": "一杯加奶拿铁",
+     "id": "c_s03",
+     "text": "Tea, no sugar.",
+     "meaningCN": "不加糖",
      "chunkIds": [
-      "c06",
-      "c02"
+      "c03"
      ]
     },
     {
-     "id": "s_c3",
-     "text": "a medium iced tea",
-     "meaningCN": "一杯中杯冰茶",
+     "id": "c_s04",
+     "text": "One latte to go.",
+     "meaningCN": "带走",
      "chunkIds": [
-      "c12",
+      "c04"
+     ]
+    },
+    {
+     "id": "c_s05",
+     "text": "Two espressos for here.",
+     "meaningCN": "堂食",
+     "chunkIds": [
+      "c05"
+     ]
+    },
+    {
+     "id": "c_s06",
+     "text": "She ordered a latte.",
+     "meaningCN": "拿铁",
+     "chunkIds": [
+      "c06"
+     ]
+    },
+    {
+     "id": "c_s07",
+     "text": "I drank an espresso.",
+     "meaningCN": "意式浓缩",
+     "chunkIds": [
+      "c07"
+     ]
+    },
+    {
+     "id": "c_s08",
+     "text": "Iced tea sounds good.",
+     "meaningCN": "冰茶",
+     "chunkIds": [
       "c08"
      ]
     },
     {
-     "id": "s_c4",
-     "text": "a coffee to go",
-     "meaningCN": "一杯咖啡带走",
+     "id": "c_s09",
+     "text": "Add a muffin, please.",
+     "meaningCN": "玛芬蛋糕",
      "chunkIds": [
-      "c01",
-      "c04"
+      "c09"
+     ]
+    },
+    {
+     "id": "c_s10",
+     "text": "I ate a croissant.",
+     "meaningCN": "可颂",
+     "chunkIds": [
+      "c10"
+     ]
+    },
+    {
+     "id": "c_s11",
+     "text": "What size do you want?",
+     "meaningCN": "什么杯型",
+     "chunkIds": [
+      "c11"
+     ]
+    },
+    {
+     "id": "c_s12",
+     "text": "A medium, please.",
+     "meaningCN": "要中杯",
+     "chunkIds": [
+      "c12"
+     ]
+    },
+    {
+     "id": "c_s13",
+     "text": "A large, please.",
+     "meaningCN": "要大杯",
+     "chunkIds": [
+      "c13"
+     ]
+    },
+    {
+     "id": "c_s14",
+     "text": "A small is enough.",
+     "meaningCN": "要小杯",
+     "chunkIds": [
+      "c14"
+     ]
+    },
+    {
+     "id": "c_s15",
+     "text": "Any flavor is fine.",
+     "meaningCN": "任意口味",
+     "chunkIds": [
+      "c15"
+     ]
+    },
+    {
+     "id": "c_s16",
+     "text": "This one is a refill.",
+     "meaningCN": "免费续杯",
+     "chunkIds": [
+      "c16"
+     ]
+    },
+    {
+     "id": "c_s17",
+     "text": "We sat by the window.",
+     "meaningCN": "靠窗坐",
+     "chunkIds": [
+      "c17"
+     ]
+    },
+    {
+     "id": "c_s18",
+     "text": "Do you have free wifi?",
+     "meaningCN": "免费 wifi",
+     "chunkIds": [
+      "c18"
+     ]
+    },
+    {
+     "id": "c_s19",
+     "text": "Keep the receipt, please.",
+     "meaningCN": "（咖啡）小票",
+     "chunkIds": [
+      "c19"
+     ]
+    },
+    {
+     "id": "c_s20",
+     "text": "Where is my order?",
+     "meaningCN": "我的订单",
+     "chunkIds": [
+      "c20"
+     ]
+    },
+    {
+     "id": "c_s21",
+     "text": "Wait a moment, please.",
+     "meaningCN": "稍等",
+     "chunkIds": [
+      "c21"
+     ]
+    },
+    {
+     "id": "c_s22",
+     "text": "I'll bring it right away.",
+     "meaningCN": "立刻",
+     "chunkIds": [
+      "c22"
+     ]
+    },
+    {
+     "id": "c_s23",
+     "text": "This one is on the house.",
+     "meaningCN": "店家请客",
+     "chunkIds": [
+      "c23"
+     ]
+    },
+    {
+     "id": "c_s24",
+     "text": "Leave a tip, please.",
+     "meaningCN": "给小费",
+     "chunkIds": [
+      "c24"
+     ]
+    },
+    {
+     "id": "c_s25",
+     "text": "The cafe is closed.",
+     "meaningCN": "现已打烊",
+     "chunkIds": [
+      "c25"
      ]
     }
    ]
@@ -3495,30 +3802,203 @@
    ],
    "sentences": [
     {
-     "id": "s_d1",
-     "text": "I recommend the special",
-     "meaningCN": "我推荐今日特餐",
+     "id": "d_s01",
+     "text": "I have a reservation.",
+     "meaningCN": "预订",
      "chunkIds": [
-      "d15",
+      "d01"
+     ]
+    },
+    {
+     "id": "d_s02",
+     "text": "Can we book a table?",
+     "meaningCN": "订位",
+     "chunkIds": [
+      "d02"
+     ]
+    },
+    {
+     "id": "d_s03",
+     "text": "Call the waiter, please.",
+     "meaningCN": "服务员",
+     "chunkIds": [
+      "d03"
+     ]
+    },
+    {
+     "id": "d_s04",
+     "text": "I'll have a starter.",
+     "meaningCN": "前菜",
+     "chunkIds": [
+      "d04"
+     ]
+    },
+    {
+     "id": "d_s05",
+     "text": "The main course was great.",
+     "meaningCN": "主菜",
+     "chunkIds": [
+      "d05"
+     ]
+    },
+    {
+     "id": "d_s06",
+     "text": "Save room for dessert.",
+     "meaningCN": "甜点",
+     "chunkIds": [
+      "d06"
+     ]
+    },
+    {
+     "id": "d_s07",
+     "text": "What is the special?",
+     "meaningCN": "今日特餐",
+     "chunkIds": [
       "d07"
      ]
     },
     {
-     "id": "s_d2",
-     "text": "today's soup tastes good",
-     "meaningCN": "今天的汤很好喝",
+     "id": "d_s08",
+     "text": "I'll take today's soup.",
+     "meaningCN": "今日汤品",
      "chunkIds": [
-      "d08",
+      "d08"
+     ]
+    },
+    {
+     "id": "d_s09",
+     "text": "Cook it rare, please.",
+     "meaningCN": "做成三分熟",
+     "chunkIds": [
+      "d09"
+     ]
+    },
+    {
+     "id": "d_s10",
+     "text": "Cook it well done.",
+     "meaningCN": "全熟",
+     "chunkIds": [
+      "d10"
+     ]
+    },
+    {
+     "id": "d_s11",
+     "text": "Medium rare, please.",
+     "meaningCN": "五分熟",
+     "chunkIds": [
+      "d11"
+     ]
+    },
+    {
+     "id": "d_s12",
+     "text": "Make it spicy, please.",
+     "meaningCN": "做得辣一点",
+     "chunkIds": [
+      "d12"
+     ]
+    },
+    {
+     "id": "d_s13",
+     "text": "I will go vegetarian.",
+     "meaningCN": "吃素（素食）",
+     "chunkIds": [
+      "d13"
+     ]
+    },
+    {
+     "id": "d_s14",
+     "text": "I have food allergies.",
+     "meaningCN": "食物过敏",
+     "chunkIds": [
+      "d14"
+     ]
+    },
+    {
+     "id": "d_s15",
+     "text": "I recommend the fish.",
+     "meaningCN": "我推荐你",
+     "chunkIds": [
+      "d15"
+     ]
+    },
+    {
+     "id": "d_s16",
+     "text": "This tastes good.",
+     "meaningCN": "味道不错",
+     "chunkIds": [
       "d16"
      ]
     },
     {
-     "id": "s_d3",
-     "text": "I recommend a starter",
-     "meaningCN": "我推荐一份前菜",
+     "id": "d_s17",
+     "text": "It's too salty.",
+     "meaningCN": "太咸",
      "chunkIds": [
-      "d15",
-      "d04"
+      "d17"
+     ]
+    },
+    {
+     "id": "d_s18",
+     "text": "Bring the check, please.",
+     "meaningCN": "买单",
+     "chunkIds": [
+      "d18"
+     ]
+    },
+    {
+     "id": "d_s19",
+     "text": "Let's split the bill.",
+     "meaningCN": "分单",
+     "chunkIds": [
+      "d19"
+     ]
+    },
+    {
+     "id": "d_s20",
+     "text": "Dinner is on me.",
+     "meaningCN": "我请客",
+     "chunkIds": [
+      "d20"
+     ]
+    },
+    {
+     "id": "d_s21",
+     "text": "I need a fork.",
+     "meaningCN": "叉子",
+     "chunkIds": [
+      "d21"
+     ]
+    },
+    {
+     "id": "d_s22",
+     "text": "Pass the knife, please.",
+     "meaningCN": "刀",
+     "chunkIds": [
+      "d22"
+     ]
+    },
+    {
+     "id": "d_s23",
+     "text": "Where is my napkin?",
+     "meaningCN": "餐巾",
+     "chunkIds": [
+      "d23"
+     ]
+    },
+    {
+     "id": "d_s24",
+     "text": "Enjoy your meal!",
+     "meaningCN": "请慢用",
+     "chunkIds": [
+      "d24"
+     ]
+    },
+    {
+     "id": "d_s25",
+     "text": "Pack the leftovers, please.",
+     "meaningCN": "留剩菜",
+     "chunkIds": [
+      "d25"
      ]
     }
    ]
@@ -4550,6 +5030,208 @@
       ]
      }
     }
+   ],
+   "sentences": [
+    {
+     "id": "e_s01",
+     "text": "We eat out a lot.",
+     "meaningCN": "下馆子",
+     "chunkIds": [
+      "e01"
+     ]
+    },
+    {
+     "id": "e_s02",
+     "text": "I love fast food.",
+     "meaningCN": "快餐",
+     "chunkIds": [
+      "e02"
+     ]
+    },
+    {
+     "id": "e_s03",
+     "text": "Grab a snack, okay?",
+     "meaningCN": "小吃／零食",
+     "chunkIds": [
+      "e03"
+     ]
+    },
+    {
+     "id": "e_s04",
+     "text": "I feel hungry now.",
+     "meaningCN": "感到饿",
+     "chunkIds": [
+      "e04"
+     ]
+    },
+    {
+     "id": "e_s05",
+     "text": "I feel full, thanks.",
+     "meaningCN": "觉得饱了",
+     "chunkIds": [
+      "e05"
+     ]
+    },
+    {
+     "id": "e_s06",
+     "text": "Just a bite, please.",
+     "meaningCN": "一口",
+     "chunkIds": [
+      "e06"
+     ]
+    },
+    {
+     "id": "e_s07",
+     "text": "This tastes tasty.",
+     "meaningCN": "尝起来美味",
+     "chunkIds": [
+      "e07"
+     ]
+    },
+    {
+     "id": "e_s08",
+     "text": "The fish stays fresh.",
+     "meaningCN": "保持新鲜",
+     "chunkIds": [
+      "e08"
+     ]
+    },
+    {
+     "id": "e_s09",
+     "text": "This is too sweet.",
+     "meaningCN": "太甜了",
+     "chunkIds": [
+      "e09"
+     ]
+    },
+    {
+     "id": "e_s10",
+     "text": "This is very sour.",
+     "meaningCN": "很酸",
+     "chunkIds": [
+      "e10"
+     ]
+    },
+    {
+     "id": "e_s11",
+     "text": "Coffee is so bitter.",
+     "meaningCN": "很苦",
+     "chunkIds": [
+      "e11"
+     ]
+    },
+    {
+     "id": "e_s12",
+     "text": "Let's order food.",
+     "meaningCN": "点餐",
+     "chunkIds": [
+      "e12"
+     ]
+    },
+    {
+     "id": "e_s13",
+     "text": "Can I get a refill?",
+     "meaningCN": "续杯（加）",
+     "chunkIds": [
+      "e13"
+     ]
+    },
+    {
+     "id": "e_s14",
+     "text": "I'll get takeaway.",
+     "meaningCN": "外带带走",
+     "chunkIds": [
+      "e14"
+     ]
+    },
+    {
+     "id": "e_s15",
+     "text": "Show me the menu card.",
+     "meaningCN": "菜单卡",
+     "chunkIds": [
+      "e15"
+     ]
+    },
+    {
+     "id": "e_s16",
+     "text": "I pay by card.",
+     "meaningCN": "刷卡付",
+     "chunkIds": [
+      "e16"
+     ]
+    },
+    {
+     "id": "e_s17",
+     "text": "Leave a tip, please.",
+     "meaningCN": "留小费",
+     "chunkIds": [
+      "e17"
+     ]
+    },
+    {
+     "id": "e_s18",
+     "text": "Where is the restroom?",
+     "meaningCN": "洗手间",
+     "chunkIds": [
+      "e18"
+     ]
+    },
+    {
+     "id": "e_s19",
+     "text": "We need a high chair.",
+     "meaningCN": "宝宝高脚椅",
+     "chunkIds": [
+      "e19"
+     ]
+    },
+    {
+     "id": "e_s20",
+     "text": "Do you have a kids menu?",
+     "meaningCN": "儿童菜单",
+     "chunkIds": [
+      "e20"
+     ]
+    },
+    {
+     "id": "e_s21",
+     "text": "No peanuts, please.",
+     "meaningCN": "不要花生",
+     "chunkIds": [
+      "e21"
+     ]
+    },
+    {
+     "id": "e_s22",
+     "text": "I eat gluten free.",
+     "meaningCN": "无麸质",
+     "chunkIds": [
+      "e22"
+     ]
+    },
+    {
+     "id": "e_s23",
+     "text": "Give me a straw.",
+     "meaningCN": "吸管",
+     "chunkIds": [
+      "e23"
+     ]
+    },
+    {
+     "id": "e_s24",
+     "text": "What's the wifi password?",
+     "meaningCN": "wifi 密码",
+     "chunkIds": [
+      "e24"
+     ]
+    },
+    {
+     "id": "e_s25",
+     "text": "This place opens late.",
+     "meaningCN": "营业到很晚",
+     "chunkIds": [
+      "e25"
+     ]
+    }
    ]
   },
   {
@@ -5558,12 +6240,203 @@
    ],
    "sentences": [
     {
-     "id": "s_f1",
-     "text": "try on something cheaper",
-     "meaningCN": "试穿更便宜的",
+     "id": "f_s01",
+     "text": "How much is this?",
+     "meaningCN": "问价多少",
      "chunkIds": [
-      "f06",
+      "f01"
+     ]
+    },
+    {
+     "id": "f_s02",
+     "text": "This is too expensive.",
+     "meaningCN": "太贵",
+     "chunkIds": [
+      "f02"
+     ]
+    },
+    {
+     "id": "f_s03",
+     "text": "Can I get a discount?",
+     "meaningCN": "折扣",
+     "chunkIds": [
+      "f03"
+     ]
+    },
+    {
+     "id": "f_s04",
+     "text": "It is on sale.",
+     "meaningCN": "在打折",
+     "chunkIds": [
+      "f04"
+     ]
+    },
+    {
+     "id": "f_s05",
+     "text": "What size do you wear?",
+     "meaningCN": "尺码",
+     "chunkIds": [
+      "f05"
+     ]
+    },
+    {
+     "id": "f_s06",
+     "text": "Can I try it on?",
+     "meaningCN": "试穿",
+     "chunkIds": [
+      "f06"
+     ]
+    },
+    {
+     "id": "f_s07",
+     "text": "Where is the fitting room?",
+     "meaningCN": "试衣间",
+     "chunkIds": [
+      "f07"
+     ]
+    },
+    {
+     "id": "f_s08",
+     "text": "These are too tight.",
+     "meaningCN": "太紧",
+     "chunkIds": [
+      "f08"
+     ]
+    },
+    {
+     "id": "f_s09",
+     "text": "This is too loose.",
+     "meaningCN": "太松",
+     "chunkIds": [
+      "f09"
+     ]
+    },
+    {
+     "id": "f_s10",
+     "text": "Keep the receipt, please.",
+     "meaningCN": "收据",
+     "chunkIds": [
+      "f10"
+     ]
+    },
+    {
+     "id": "f_s11",
+     "text": "We are cash only.",
+     "meaningCN": "只收现金",
+     "chunkIds": [
+      "f11"
+     ]
+    },
+    {
+     "id": "f_s12",
+     "text": "Do you take credit card?",
+     "meaningCN": "信用卡",
+     "chunkIds": [
+      "f12"
+     ]
+    },
+    {
+     "id": "f_s13",
+     "text": "I need a bag.",
+     "meaningCN": "购物袋",
+     "chunkIds": [
+      "f13"
+     ]
+    },
+    {
+     "id": "f_s14",
+     "text": "Is this in stock?",
+     "meaningCN": "有货",
+     "chunkIds": [
+      "f14"
+     ]
+    },
+    {
+     "id": "f_s15",
+     "text": "This size is sold out.",
+     "meaningCN": "售罄",
+     "chunkIds": [
+      "f15"
+     ]
+    },
+    {
+     "id": "f_s16",
+     "text": "I want a refund.",
+     "meaningCN": "退款",
+     "chunkIds": [
+      "f16"
+     ]
+    },
+    {
+     "id": "f_s17",
+     "text": "Can I exchange it?",
+     "meaningCN": "换货（调换）",
+     "chunkIds": [
+      "f17"
+     ]
+    },
+    {
+     "id": "f_s18",
+     "text": "The price is fair.",
+     "meaningCN": "价格",
+     "chunkIds": [
+      "f18"
+     ]
+    },
+    {
+     "id": "f_s19",
+     "text": "Something cheaper, please.",
+     "meaningCN": "更便宜的",
+     "chunkIds": [
       "f19"
+     ]
+    },
+    {
+     "id": "f_s20",
+     "text": "What color do you like?",
+     "meaningCN": "颜色",
+     "chunkIds": [
+      "f20"
+     ]
+    },
+    {
+     "id": "f_s21",
+     "text": "This style suits you.",
+     "meaningCN": "款式",
+     "chunkIds": [
+      "f21"
+     ]
+    },
+    {
+     "id": "f_s22",
+     "text": "Which brand is this?",
+     "meaningCN": "品牌",
+     "chunkIds": [
+      "f22"
+     ]
+    },
+    {
+     "id": "f_s23",
+     "text": "Does it have a warranty?",
+     "meaningCN": "保修",
+     "chunkIds": [
+      "f23"
+     ]
+    },
+    {
+     "id": "f_s24",
+     "text": "I'm just looking around.",
+     "meaningCN": "随便看看",
+     "chunkIds": [
+      "f24"
+     ]
+    },
+    {
+     "id": "f_s25",
+     "text": "We went window shopping.",
+     "meaningCN": "逛橱窗",
+     "chunkIds": [
+      "f25"
      ]
     }
    ]
@@ -6598,6 +7471,208 @@
        "bill"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "g_s01",
+     "text": "How much do I owe?",
+     "meaningCN": "结账多少钱",
+     "chunkIds": [
+      "g01"
+     ]
+    },
+    {
+     "id": "g_s02",
+     "text": "It costs a dollar.",
+     "meaningCN": "一美元",
+     "chunkIds": [
+      "g02"
+     ]
+    },
+    {
+     "id": "g_s03",
+     "text": "That is a euro.",
+     "meaningCN": "一欧元",
+     "chunkIds": [
+      "g03"
+     ]
+    },
+    {
+     "id": "g_s04",
+     "text": "It is ten yuan.",
+     "meaningCN": "十元",
+     "chunkIds": [
+      "g04"
+     ]
+    },
+    {
+     "id": "g_s05",
+     "text": "What is the total?",
+     "meaningCN": "总额",
+     "chunkIds": [
+      "g05"
+     ]
+    },
+    {
+     "id": "g_s06",
+     "text": "I will pay cash.",
+     "meaningCN": "付现金",
+     "chunkIds": [
+      "g06"
+     ]
+    },
+    {
+     "id": "g_s07",
+     "text": "I paid by card.",
+     "meaningCN": "刷卡",
+     "chunkIds": [
+      "g07"
+     ]
+    },
+    {
+     "id": "g_s08",
+     "text": "I have a coin.",
+     "meaningCN": "硬币",
+     "chunkIds": [
+      "g08"
+     ]
+    },
+    {
+     "id": "g_s09",
+     "text": "Keep the change.",
+     "meaningCN": "留着找零",
+     "chunkIds": [
+      "g09"
+     ]
+    },
+    {
+     "id": "g_s10",
+     "text": "Add a tip, please.",
+     "meaningCN": "餐费小费",
+     "chunkIds": [
+      "g10"
+     ]
+    },
+    {
+     "id": "g_s11",
+     "text": "Split the bill, okay?",
+     "meaningCN": "分摊账单",
+     "chunkIds": [
+      "g11"
+     ]
+    },
+    {
+     "id": "g_s12",
+     "text": "Print the receipt, please.",
+     "meaningCN": "收据小票",
+     "chunkIds": [
+      "g12"
+     ]
+    },
+    {
+     "id": "g_s13",
+     "text": "That is ten yuan.",
+     "meaningCN": "十元整",
+     "chunkIds": [
+      "g13"
+     ]
+    },
+    {
+     "id": "g_s14",
+     "text": "That is twenty total.",
+     "meaningCN": "一共二十",
+     "chunkIds": [
+      "g14"
+     ]
+    },
+    {
+     "id": "g_s15",
+     "text": "Give me fifty back.",
+     "meaningCN": "找回五十",
+     "chunkIds": [
+      "g15"
+     ]
+    },
+    {
+     "id": "g_s16",
+     "text": "A hundred is enough.",
+     "meaningCN": "一百",
+     "chunkIds": [
+      "g16"
+     ]
+    },
+    {
+     "id": "g_s17",
+     "text": "You are first in line.",
+     "meaningCN": "排第一",
+     "chunkIds": [
+      "g17"
+     ]
+    },
+    {
+     "id": "g_s18",
+     "text": "The second one is mine.",
+     "meaningCN": "第二个",
+     "chunkIds": [
+      "g18"
+     ]
+    },
+    {
+     "id": "g_s19",
+     "text": "Cut it in half.",
+     "meaningCN": "分成两半",
+     "chunkIds": [
+      "g19"
+     ]
+    },
+    {
+     "id": "g_s20",
+     "text": "Make it double, please.",
+     "meaningCN": "加倍（双份）",
+     "chunkIds": [
+      "g20"
+     ]
+    },
+    {
+     "id": "g_s21",
+     "text": "This one is free.",
+     "meaningCN": "这是免费的",
+     "chunkIds": [
+      "g21"
+     ]
+    },
+    {
+     "id": "g_s22",
+     "text": "Read the price tag.",
+     "meaningCN": "价签",
+     "chunkIds": [
+      "g22"
+     ]
+    },
+    {
+     "id": "g_s23",
+     "text": "This feels too pricey.",
+     "meaningCN": "太贵了",
+     "chunkIds": [
+      "g23"
+     ]
+    },
+    {
+     "id": "g_s24",
+     "text": "I have a budget.",
+     "meaningCN": "预算",
+     "chunkIds": [
+      "g24"
+     ]
+    },
+    {
+     "id": "g_s25",
+     "text": "The drinks are on me.",
+     "meaningCN": "我买单",
+     "chunkIds": [
+      "g25"
+     ]
     }
    ]
   },
@@ -7686,39 +8761,204 @@
    ],
    "sentences": [
     {
-     "id": "s_h1",
-     "text": "where is the exit",
-     "meaningCN": "出口在哪",
+     "id": "h_s01",
+     "text": "Where is the station?",
+     "meaningCN": "…在哪里",
      "chunkIds": [
-      "h01",
-      "h19"
+      "h01"
      ]
     },
     {
-     "id": "s_h2",
-     "text": "where is the subway",
-     "meaningCN": "地铁在哪",
+     "id": "h_s02",
+     "text": "Go straight ahead.",
+     "meaningCN": "直走",
      "chunkIds": [
-      "h01",
+      "h02"
+     ]
+    },
+    {
+     "id": "h_s03",
+     "text": "Turn left at the corner.",
+     "meaningCN": "左转",
+     "chunkIds": [
+      "h03",
+      "h05"
+     ]
+    },
+    {
+     "id": "h_s04",
+     "text": "Turn right after the bridge.",
+     "meaningCN": "右转",
+     "chunkIds": [
+      "h04"
+     ]
+    },
+    {
+     "id": "h_s05",
+     "text": "It is at the corner.",
+     "meaningCN": "在拐角",
+     "chunkIds": [
+      "h05"
+     ]
+    },
+    {
+     "id": "h_s06",
+     "text": "It is next to the bank.",
+     "meaningCN": "在…旁边",
+     "chunkIds": [
+      "h06"
+     ]
+    },
+    {
+     "id": "h_s07",
+     "text": "Across from the school.",
+     "meaningCN": "在…对面",
+     "chunkIds": [
+      "h07"
+     ]
+    },
+    {
+     "id": "h_s08",
+     "text": "The car is behind it.",
+     "meaningCN": "在它后面",
+     "chunkIds": [
+      "h08"
+     ]
+    },
+    {
+     "id": "h_s09",
+     "text": "In front of the gate.",
+     "meaningCN": "在…前面",
+     "chunkIds": [
+      "h09"
+     ]
+    },
+    {
+     "id": "h_s10",
+     "text": "How far is the beach?",
+     "meaningCN": "多远",
+     "chunkIds": [
+      "h10"
+     ]
+    },
+    {
+     "id": "h_s11",
+     "text": "The shop is on the left.",
+     "meaningCN": "在左侧",
+     "chunkIds": [
+      "h11"
+     ]
+    },
+    {
+     "id": "h_s12",
+     "text": "The bus stop is on the right.",
+     "meaningCN": "在右侧",
+     "chunkIds": [
+      "h12"
+     ]
+    },
+    {
+     "id": "h_s13",
+     "text": "Walk a block, then stop.",
+     "meaningCN": "一个街区",
+     "chunkIds": [
+      "h13"
+     ]
+    },
+    {
+     "id": "h_s14",
+     "text": "Wait at the crossroad.",
+     "meaningCN": "十字路口",
+     "chunkIds": [
+      "h14"
+     ]
+    },
+    {
+     "id": "h_s15",
+     "text": "Take the subway, please.",
+     "meaningCN": "地铁",
+     "chunkIds": [
       "h15"
      ]
     },
     {
-     "id": "s_h3",
-     "text": "where is a bus stop",
-     "meaningCN": "公交站在哪",
+     "id": "h_s16",
+     "text": "The bus stop is near.",
+     "meaningCN": "公交站",
      "chunkIds": [
-      "h01",
       "h16"
      ]
     },
     {
-     "id": "s_h4",
-     "text": "where is a map",
-     "meaningCN": "地图在哪",
+     "id": "h_s17",
+     "text": "I lost my map.",
+     "meaningCN": "地图",
      "chunkIds": [
-      "h01",
       "h17"
+     ]
+    },
+    {
+     "id": "h_s18",
+     "text": "I am lost, help me.",
+     "meaningCN": "我迷路了",
+     "chunkIds": [
+      "h18"
+     ]
+    },
+    {
+     "id": "h_s19",
+     "text": "Follow the exit sign.",
+     "meaningCN": "出口",
+     "chunkIds": [
+      "h19"
+     ]
+    },
+    {
+     "id": "h_s20",
+     "text": "The entrance is here.",
+     "meaningCN": "入口",
+     "chunkIds": [
+      "h20"
+     ]
+    },
+    {
+     "id": "h_s21",
+     "text": "Take a detour, please.",
+     "meaningCN": "绕路",
+     "chunkIds": [
+      "h21"
+     ]
+    },
+    {
+     "id": "h_s22",
+     "text": "We came on foot.",
+     "meaningCN": "步行",
+     "chunkIds": [
+      "h22"
+     ]
+    },
+    {
+     "id": "h_s23",
+     "text": "Let's go by taxi.",
+     "meaningCN": "打车",
+     "chunkIds": [
+      "h23"
+     ]
+    },
+    {
+     "id": "h_s24",
+     "text": "It is a minute away.",
+     "meaningCN": "一分钟",
+     "chunkIds": [
+      "h24"
+     ]
+    },
+    {
+     "id": "h_s25",
+     "text": "This way, please.",
+     "meaningCN": "这边走",
+     "chunkIds": [
+      "h25"
      ]
     }
    ]
@@ -8759,6 +9999,208 @@
        "meet"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "i_s01",
+     "text": "Where is the bank?",
+     "meaningCN": "银行",
+     "chunkIds": [
+      "i01"
+     ]
+    },
+    {
+     "id": "i_s02",
+     "text": "I booked a hotel.",
+     "meaningCN": "酒店",
+     "chunkIds": [
+      "i02"
+     ]
+    },
+    {
+     "id": "i_s03",
+     "text": "Meet me at the station.",
+     "meaningCN": "车站",
+     "chunkIds": [
+      "i03"
+     ]
+    },
+    {
+     "id": "i_s04",
+     "text": "The airport is far.",
+     "meaningCN": "机场",
+     "chunkIds": [
+      "i04"
+     ]
+    },
+    {
+     "id": "i_s05",
+     "text": "Is there a hospital?",
+     "meaningCN": "医院",
+     "chunkIds": [
+      "i05"
+     ]
+    },
+    {
+     "id": "i_s06",
+     "text": "Find a pharmacy, please.",
+     "meaningCN": "药房",
+     "chunkIds": [
+      "i06"
+     ]
+    },
+    {
+     "id": "i_s07",
+     "text": "I shop at the supermarket.",
+     "meaningCN": "超市",
+     "chunkIds": [
+      "i07"
+     ]
+    },
+    {
+     "id": "i_s08",
+     "text": "Let's meet at the mall.",
+     "meaningCN": "商场",
+     "chunkIds": [
+      "i08"
+     ]
+    },
+    {
+     "id": "i_s09",
+     "text": "The park is quiet.",
+     "meaningCN": "公园",
+     "chunkIds": [
+      "i09"
+     ]
+    },
+    {
+     "id": "i_s10",
+     "text": "We visited a museum.",
+     "meaningCN": "博物馆",
+     "chunkIds": [
+      "i10"
+     ]
+    },
+    {
+     "id": "i_s11",
+     "text": "The beach is empty.",
+     "meaningCN": "海滩",
+     "chunkIds": [
+      "i11"
+     ]
+    },
+    {
+     "id": "i_s12",
+     "text": "The library is open.",
+     "meaningCN": "图书馆",
+     "chunkIds": [
+      "i12"
+     ]
+    },
+    {
+     "id": "i_s13",
+     "text": "The school is nearby.",
+     "meaningCN": "学校",
+     "chunkIds": [
+      "i13"
+     ]
+    },
+    {
+     "id": "i_s14",
+     "text": "The church is old.",
+     "meaningCN": "教堂",
+     "chunkIds": [
+      "i14"
+     ]
+    },
+    {
+     "id": "i_s15",
+     "text": "The market is busy.",
+     "meaningCN": "市场",
+     "chunkIds": [
+      "i15"
+     ]
+    },
+    {
+     "id": "i_s16",
+     "text": "Stop at a gas station.",
+     "meaningCN": "加油站",
+     "chunkIds": [
+      "i16"
+     ]
+    },
+    {
+     "id": "i_s17",
+     "text": "Where is the post office?",
+     "meaningCN": "邮局",
+     "chunkIds": [
+      "i17"
+     ]
+    },
+    {
+     "id": "i_s18",
+     "text": "Call the police station.",
+     "meaningCN": "警察局",
+     "chunkIds": [
+      "i18"
+     ]
+    },
+    {
+     "id": "i_s19",
+     "text": "I like this restaurant.",
+     "meaningCN": "餐厅",
+     "chunkIds": [
+      "i19"
+     ]
+    },
+    {
+     "id": "i_s20",
+     "text": "We sat in a cafe.",
+     "meaningCN": "咖啡馆",
+     "chunkIds": [
+      "i20"
+     ]
+    },
+    {
+     "id": "i_s21",
+     "text": "I go to the gym.",
+     "meaningCN": "健身房",
+     "chunkIds": [
+      "i21"
+     ]
+    },
+    {
+     "id": "i_s22",
+     "text": "The bar is loud.",
+     "meaningCN": "酒吧",
+     "chunkIds": [
+      "i22"
+     ]
+    },
+    {
+     "id": "i_s23",
+     "text": "We saw a play at the theater.",
+     "meaningCN": "剧院",
+     "chunkIds": [
+      "i23"
+     ]
+    },
+    {
+     "id": "i_s24",
+     "text": "The temple is ancient.",
+     "meaningCN": "寺庙",
+     "chunkIds": [
+      "i24"
+     ]
+    },
+    {
+     "id": "i_s25",
+     "text": "Let's go downtown.",
+     "meaningCN": "去市中心",
+     "chunkIds": [
+      "i25"
+     ]
     }
    ]
   },
@@ -9801,6 +11243,208 @@
       ]
      }
     }
+   ],
+   "sentences": [
+    {
+     "id": "j_s01",
+     "text": "What time is it?",
+     "meaningCN": "几点",
+     "chunkIds": [
+      "j01"
+     ]
+    },
+    {
+     "id": "j_s02",
+     "text": "I am free right now.",
+     "meaningCN": "现在",
+     "chunkIds": [
+      "j02"
+     ]
+    },
+    {
+     "id": "j_s03",
+     "text": "Call me a bit later.",
+     "meaningCN": "稍晚一点",
+     "chunkIds": [
+      "j03"
+     ]
+    },
+    {
+     "id": "j_s04",
+     "text": "See you tomorrow, friend.",
+     "meaningCN": "明天见",
+     "chunkIds": [
+      "j04"
+     ]
+    },
+    {
+     "id": "j_s05",
+     "text": "I leave next week.",
+     "meaningCN": "下周",
+     "chunkIds": [
+      "j05"
+     ]
+    },
+    {
+     "id": "j_s06",
+     "text": "I ran this morning.",
+     "meaningCN": "今早",
+     "chunkIds": [
+      "j06"
+     ]
+    },
+    {
+     "id": "j_s07",
+     "text": "We eat this evening.",
+     "meaningCN": "今晚",
+     "chunkIds": [
+      "j07"
+     ]
+    },
+    {
+     "id": "j_s08",
+     "text": "The class is on Monday.",
+     "meaningCN": "周一",
+     "chunkIds": [
+      "j08"
+     ]
+    },
+    {
+     "id": "j_s09",
+     "text": "Let's meet at noon.",
+     "meaningCN": "中午",
+     "chunkIds": [
+      "j09"
+     ]
+    },
+    {
+     "id": "j_s10",
+     "text": "The city sleeps at night.",
+     "meaningCN": "夜里",
+     "chunkIds": [
+      "j10"
+     ]
+    },
+    {
+     "id": "j_s11",
+     "text": "I wake early daily.",
+     "meaningCN": "早起",
+     "chunkIds": [
+      "j11"
+     ]
+    },
+    {
+     "id": "j_s12",
+     "text": "Sorry I arrive late.",
+     "meaningCN": "迟到（晚到）",
+     "chunkIds": [
+      "j12"
+     ]
+    },
+    {
+     "id": "j_s13",
+     "text": "The train is on time.",
+     "meaningCN": "准时",
+     "chunkIds": [
+      "j13"
+     ]
+    },
+    {
+     "id": "j_s14",
+     "text": "I am in a hurry.",
+     "meaningCN": "赶时间",
+     "chunkIds": [
+      "j14"
+     ]
+    },
+    {
+     "id": "j_s15",
+     "text": "Let's make plans.",
+     "meaningCN": "做计划",
+     "chunkIds": [
+      "j15"
+     ]
+    },
+    {
+     "id": "j_s16",
+     "text": "I must cancel today.",
+     "meaningCN": "必须取消",
+     "chunkIds": [
+      "j16"
+     ]
+    },
+    {
+     "id": "j_s17",
+     "text": "Let's reschedule, okay?",
+     "meaningCN": "我们改期",
+     "chunkIds": [
+      "j17"
+     ]
+    },
+    {
+     "id": "j_s18",
+     "text": "Are you free today?",
+     "meaningCN": "你有空吗",
+     "chunkIds": [
+      "j18"
+     ]
+    },
+    {
+     "id": "j_s19",
+     "text": "I am busy now.",
+     "meaningCN": "我很忙",
+     "chunkIds": [
+      "j19"
+     ]
+    },
+    {
+     "id": "j_s20",
+     "text": "I have an appointment.",
+     "meaningCN": "预约",
+     "chunkIds": [
+      "j20"
+     ]
+    },
+    {
+     "id": "j_s21",
+     "text": "The deadline is near.",
+     "meaningCN": "截止日",
+     "chunkIds": [
+      "j21"
+     ]
+    },
+    {
+     "id": "j_s22",
+     "text": "Wait for a while.",
+     "meaningCN": "一会儿",
+     "chunkIds": [
+      "j22"
+     ]
+    },
+    {
+     "id": "j_s23",
+     "text": "I read every day.",
+     "meaningCN": "每天",
+     "chunkIds": [
+      "j23"
+     ]
+    },
+    {
+     "id": "j_s24",
+     "text": "See you soon, friend.",
+     "meaningCN": "很快见",
+     "chunkIds": [
+      "j24"
+     ]
+    },
+    {
+     "id": "j_s25",
+     "text": "I'll be there in a minute.",
+     "meaningCN": "一分钟内",
+     "chunkIds": [
+      "j25"
+     ]
+    }
    ]
   },
   {
@@ -10819,6 +12463,208 @@
        "calm"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "k_s01",
+     "text": "It is sunny today.",
+     "meaningCN": "天气晴朗",
+     "chunkIds": [
+      "k01"
+     ]
+    },
+    {
+     "id": "k_s02",
+     "text": "It is rainy again.",
+     "meaningCN": "下雨天",
+     "chunkIds": [
+      "k02"
+     ]
+    },
+    {
+     "id": "k_s03",
+     "text": "The sky is cloudy.",
+     "meaningCN": "天阴了",
+     "chunkIds": [
+      "k03"
+     ]
+    },
+    {
+     "id": "k_s04",
+     "text": "It is windy outside.",
+     "meaningCN": "有风",
+     "chunkIds": [
+      "k04"
+     ]
+    },
+    {
+     "id": "k_s05",
+     "text": "It is snowy in winter.",
+     "meaningCN": "下雪了",
+     "chunkIds": [
+      "k05"
+     ]
+    },
+    {
+     "id": "k_s06",
+     "text": "It is hot today.",
+     "meaningCN": "天气热",
+     "chunkIds": [
+      "k06"
+     ]
+    },
+    {
+     "id": "k_s07",
+     "text": "I feel cold now.",
+     "meaningCN": "觉得冷",
+     "chunkIds": [
+      "k07"
+     ]
+    },
+    {
+     "id": "k_s08",
+     "text": "The room is warm.",
+     "meaningCN": "房间暖",
+     "chunkIds": [
+      "k08"
+     ]
+    },
+    {
+     "id": "k_s09",
+     "text": "A storm is coming.",
+     "meaningCN": "暴风雨",
+     "chunkIds": [
+      "k09"
+     ]
+    },
+    {
+     "id": "k_s10",
+     "text": "It is foggy now.",
+     "meaningCN": "有雾",
+     "chunkIds": [
+      "k10"
+     ]
+    },
+    {
+     "id": "k_s11",
+     "text": "What is the temperature?",
+     "meaningCN": "温度",
+     "chunkIds": [
+      "k11"
+     ]
+    },
+    {
+     "id": "k_s12",
+     "text": "It is ten degrees.",
+     "meaningCN": "十度",
+     "chunkIds": [
+      "k12"
+     ]
+    },
+    {
+     "id": "k_s13",
+     "text": "Bring an umbrella.",
+     "meaningCN": "雨伞",
+     "chunkIds": [
+      "k13"
+     ]
+    },
+    {
+     "id": "k_s14",
+     "text": "Wear a coat, please.",
+     "meaningCN": "外套",
+     "chunkIds": [
+      "k14"
+     ]
+    },
+    {
+     "id": "k_s15",
+     "text": "I wore rain boots.",
+     "meaningCN": "雨靴",
+     "chunkIds": [
+      "k15"
+     ]
+    },
+    {
+     "id": "k_s16",
+     "text": "Check the forecast.",
+     "meaningCN": "查天气预报",
+     "chunkIds": [
+      "k16"
+     ]
+    },
+    {
+     "id": "k_s17",
+     "text": "It will clear up.",
+     "meaningCN": "放晴",
+     "chunkIds": [
+      "k17"
+     ]
+    },
+    {
+     "id": "k_s18",
+     "text": "It started to pour down.",
+     "meaningCN": "倾盆大雨",
+     "chunkIds": [
+      "k18"
+     ]
+    },
+    {
+     "id": "k_s19",
+     "text": "Feel the breeze.",
+     "meaningCN": "微风",
+     "chunkIds": [
+      "k19"
+     ]
+    },
+    {
+     "id": "k_s20",
+     "text": "The air is humid here.",
+     "meaningCN": "空气潮湿",
+     "chunkIds": [
+      "k20"
+     ]
+    },
+    {
+     "id": "k_s21",
+     "text": "The air is dry.",
+     "meaningCN": "空气干",
+     "chunkIds": [
+      "k21"
+     ]
+    },
+    {
+     "id": "k_s22",
+     "text": "Winter is my season.",
+     "meaningCN": "季节",
+     "chunkIds": [
+      "k22"
+     ]
+    },
+    {
+     "id": "k_s23",
+     "text": "I like the climate.",
+     "meaningCN": "气候",
+     "chunkIds": [
+      "k23"
+     ]
+    },
+    {
+     "id": "k_s24",
+     "text": "Let's sit in the shade.",
+     "meaningCN": "在阴凉处",
+     "chunkIds": [
+      "k24"
+     ]
+    },
+    {
+     "id": "k_s25",
+     "text": "The weather is nice.",
+     "meaningCN": "这天气",
+     "chunkIds": [
+      "k25"
+     ]
     }
    ]
   },
@@ -11867,6 +13713,208 @@
       ]
      }
     }
+   ],
+   "sentences": [
+    {
+     "id": "l_s01",
+     "text": "I am happy today.",
+     "meaningCN": "我开心",
+     "chunkIds": [
+      "l01"
+     ]
+    },
+    {
+     "id": "l_s02",
+     "text": "She looks sad now.",
+     "meaningCN": "看上去难过",
+     "chunkIds": [
+      "l02"
+     ]
+    },
+    {
+     "id": "l_s03",
+     "text": "I am so tired.",
+     "meaningCN": "好累",
+     "chunkIds": [
+      "l03"
+     ]
+    },
+    {
+     "id": "l_s04",
+     "text": "He is angry now.",
+     "meaningCN": "生气了",
+     "chunkIds": [
+      "l04"
+     ]
+    },
+    {
+     "id": "l_s05",
+     "text": "I am excited!",
+     "meaningCN": "我很兴奋",
+     "chunkIds": [
+      "l05"
+     ]
+    },
+    {
+     "id": "l_s06",
+     "text": "I feel nervous now.",
+     "meaningCN": "感到紧张",
+     "chunkIds": [
+      "l06"
+     ]
+    },
+    {
+     "id": "l_s07",
+     "text": "I am bored, honestly.",
+     "meaningCN": "我觉得无聊",
+     "chunkIds": [
+      "l07"
+     ]
+    },
+    {
+     "id": "l_s08",
+     "text": "Stay calm, please.",
+     "meaningCN": "保持冷静",
+     "chunkIds": [
+      "l08"
+     ]
+    },
+    {
+     "id": "l_s09",
+     "text": "I am worried, honestly.",
+     "meaningCN": "我担心",
+     "chunkIds": [
+      "l09"
+     ]
+    },
+    {
+     "id": "l_s10",
+     "text": "I am proud of you.",
+     "meaningCN": "我骄傲",
+     "chunkIds": [
+      "l10"
+     ]
+    },
+    {
+     "id": "l_s11",
+     "text": "I feel lonely here.",
+     "meaningCN": "感到孤独",
+     "chunkIds": [
+      "l11"
+     ]
+    },
+    {
+     "id": "l_s12",
+     "text": "I am grateful, truly.",
+     "meaningCN": "我很感激",
+     "chunkIds": [
+      "l12"
+     ]
+    },
+    {
+     "id": "l_s13",
+     "text": "I am confused now.",
+     "meaningCN": "我困惑",
+     "chunkIds": [
+      "l13"
+     ]
+    },
+    {
+     "id": "l_s14",
+     "text": "I feel relaxed at last.",
+     "meaningCN": "感到放松",
+     "chunkIds": [
+      "l14"
+     ]
+    },
+    {
+     "id": "l_s15",
+     "text": "I am still hungry.",
+     "meaningCN": "还饿着",
+     "chunkIds": [
+      "l15"
+     ]
+    },
+    {
+     "id": "l_s16",
+     "text": "I feel thirsty, get water.",
+     "meaningCN": "感到渴",
+     "chunkIds": [
+      "l16"
+     ]
+    },
+    {
+     "id": "l_s17",
+     "text": "I feel sick today.",
+     "meaningCN": "感到不适",
+     "chunkIds": [
+      "l17"
+     ]
+    },
+    {
+     "id": "l_s18",
+     "text": "I am fine, thanks.",
+     "meaningCN": "我还行",
+     "chunkIds": [
+      "l18"
+     ]
+    },
+    {
+     "id": "l_s19",
+     "text": "I feel great!",
+     "meaningCN": "感觉很棒",
+     "chunkIds": [
+      "l19"
+     ]
+    },
+    {
+     "id": "l_s20",
+     "text": "I feel awful.",
+     "meaningCN": "感觉糟糕",
+     "chunkIds": [
+      "l20"
+     ]
+    },
+    {
+     "id": "l_s21",
+     "text": "I miss you a lot.",
+     "meaningCN": "想你",
+     "chunkIds": [
+      "l21"
+     ]
+    },
+    {
+     "id": "l_s22",
+     "text": "Cheer up, it's okay.",
+     "meaningCN": "振作",
+     "chunkIds": [
+      "l22"
+     ]
+    },
+    {
+     "id": "l_s23",
+     "text": "No worries, I'm fine.",
+     "meaningCN": "别担心",
+     "chunkIds": [
+      "l23"
+     ]
+    },
+    {
+     "id": "l_s24",
+     "text": "Take it easy today.",
+     "meaningCN": "放轻松",
+     "chunkIds": [
+      "l24"
+     ]
+    },
+    {
+     "id": "l_s25",
+     "text": "I hope you feel better.",
+     "meaningCN": "感觉好些",
+     "chunkIds": [
+      "l25"
+     ]
+    }
    ]
   },
   {
@@ -12898,30 +14946,204 @@
    ],
    "sentences": [
     {
-     "id": "s_m1",
-     "text": "I think it's good",
-     "meaningCN": "我觉得不错",
+     "id": "m_s01",
+     "text": "I think it is good.",
+     "meaningCN": "我认为",
      "chunkIds": [
-      "m01",
+      "m01"
+     ]
+    },
+    {
+     "id": "m_s02",
+     "text": "In my view, it works.",
+     "meaningCN": "依我看",
+     "chunkIds": [
+      "m02"
+     ]
+    },
+    {
+     "id": "m_s03",
+     "text": "I agree with you.",
+     "meaningCN": "我同意",
+     "chunkIds": [
+      "m03"
+     ]
+    },
+    {
+     "id": "m_s04",
+     "text": "I disagree, sorry.",
+     "meaningCN": "我不同意",
+     "chunkIds": [
+      "m04"
+     ]
+    },
+    {
+     "id": "m_s05",
+     "text": "Maybe we can go.",
+     "meaningCN": "也许我们",
+     "chunkIds": [
+      "m05"
+     ]
+    },
+    {
+     "id": "m_s06",
+     "text": "It will probably rain.",
+     "meaningCN": "大概会下雨",
+     "chunkIds": [
+      "m06"
+     ]
+    },
+    {
+     "id": "m_s07",
+     "text": "I prefer tea.",
+     "meaningCN": "我更喜欢",
+     "chunkIds": [
+      "m07"
+     ]
+    },
+    {
+     "id": "m_s08",
+     "text": "I like this one.",
+     "meaningCN": "我喜欢",
+     "chunkIds": [
+      "m08"
+     ]
+    },
+    {
+     "id": "m_s09",
+     "text": "I don't like that.",
+     "meaningCN": "我不喜欢",
+     "chunkIds": [
+      "m09"
+     ]
+    },
+    {
+     "id": "m_s10",
+     "text": "It's good, I guess.",
+     "meaningCN": "挺好的",
+     "chunkIds": [
       "m10"
      ]
     },
     {
-     "id": "s_m2",
-     "text": "I think it's bad",
-     "meaningCN": "我觉得不好",
+     "id": "m_s11",
+     "text": "It's bad, honestly.",
+     "meaningCN": "不太好",
      "chunkIds": [
-      "m01",
       "m11"
      ]
     },
     {
-     "id": "s_m3",
-     "text": "I think it is important",
-     "meaningCN": "我觉得这很重要",
+     "id": "m_s12",
+     "text": "This is the best.",
+     "meaningCN": "最好的",
      "chunkIds": [
-      "m01",
+      "m12"
+     ]
+    },
+    {
+     "id": "m_s13",
+     "text": "That was the worst.",
+     "meaningCN": "最差的",
+     "chunkIds": [
+      "m13"
+     ]
+    },
+    {
+     "id": "m_s14",
+     "text": "This is important.",
+     "meaningCN": "这很重要",
+     "chunkIds": [
       "m14"
+     ]
+    },
+    {
+     "id": "m_s15",
+     "text": "That is useless.",
+     "meaningCN": "那没用",
+     "chunkIds": [
+      "m15"
+     ]
+    },
+    {
+     "id": "m_s16",
+     "text": "This tip is useful.",
+     "meaningCN": "这有用",
+     "chunkIds": [
+      "m16"
+     ]
+    },
+    {
+     "id": "m_s17",
+     "text": "I doubt it works.",
+     "meaningCN": "我怀疑（它）",
+     "chunkIds": [
+      "m17"
+     ]
+    },
+    {
+     "id": "m_s18",
+     "text": "For sure, I'll go.",
+     "meaningCN": "肯定",
+     "chunkIds": [
+      "m18"
+     ]
+    },
+    {
+     "id": "m_s19",
+     "text": "Not really, thanks.",
+     "meaningCN": "不算／不太",
+     "chunkIds": [
+      "m19"
+     ]
+    },
+    {
+     "id": "m_s20",
+     "text": "To be honest, no.",
+     "meaningCN": "说实话",
+     "chunkIds": [
+      "m20"
+     ]
+    },
+    {
+     "id": "m_s21",
+     "text": "I suppose so.",
+     "meaningCN": "我想是",
+     "chunkIds": [
+      "m21"
+     ]
+    },
+    {
+     "id": "m_s22",
+     "text": "No way, that's silly.",
+     "meaningCN": "不可能",
+     "chunkIds": [
+      "m22"
+     ]
+    },
+    {
+     "id": "m_s23",
+     "text": "Of course I agree.",
+     "meaningCN": "当然（我同意）",
+     "chunkIds": [
+      "m23",
+      "m03"
+     ]
+    },
+    {
+     "id": "m_s24",
+     "text": "I'm not sure yet.",
+     "meaningCN": "我不确定",
+     "chunkIds": [
+      "m24"
+     ]
+    },
+    {
+     "id": "m_s25",
+     "text": "What a pity, indeed.",
+     "meaningCN": "真遗憾",
+     "chunkIds": [
+      "m25"
      ]
     }
    ]
@@ -13974,21 +16196,203 @@
    ],
    "sentences": [
     {
-     "id": "s_n1",
-     "text": "would you like a gift",
-     "meaningCN": "你想要一份礼物吗",
+     "id": "n_s01",
+     "text": "Would you like some tea?",
+     "meaningCN": "你想…吗",
      "chunkIds": [
-      "n01",
+      "n01"
+     ]
+    },
+    {
+     "id": "n_s02",
+     "text": "Come with me, please.",
+     "meaningCN": "跟我来",
+     "chunkIds": [
+      "n02"
+     ]
+    },
+    {
+     "id": "n_s03",
+     "text": "Join us for dinner.",
+     "meaningCN": "加入我们",
+     "chunkIds": [
+      "n03"
+     ]
+    },
+    {
+     "id": "n_s04",
+     "text": "Be my guest tonight.",
+     "meaningCN": "请随意",
+     "chunkIds": [
+      "n04"
+     ]
+    },
+    {
+     "id": "n_s05",
+     "text": "Save a seat for me.",
+     "meaningCN": "留个位",
+     "chunkIds": [
+      "n05"
+     ]
+    },
+    {
+     "id": "n_s06",
+     "text": "I host a dinner party.",
+     "meaningCN": "晚宴",
+     "chunkIds": [
+      "n06"
+     ]
+    },
+    {
+     "id": "n_s07",
+     "text": "It is my birthday.",
+     "meaningCN": "生日",
+     "chunkIds": [
+      "n07"
+     ]
+    },
+    {
+     "id": "n_s08",
+     "text": "Let's celebrate tonight.",
+     "meaningCN": "我们庆祝",
+     "chunkIds": [
+      "n08"
+     ]
+    },
+    {
+     "id": "n_s09",
+     "text": "You're invited, friend.",
+     "meaningCN": "你被邀请了",
+     "chunkIds": [
+      "n09"
+     ]
+    },
+    {
+     "id": "n_s10",
+     "text": "Count me in, sure.",
+     "meaningCN": "算我一个",
+     "chunkIds": [
+      "n10"
+     ]
+    },
+    {
+     "id": "n_s11",
+     "text": "Maybe next time.",
+     "meaningCN": "也许下次",
+     "chunkIds": [
+      "n11"
+     ]
+    },
+    {
+     "id": "n_s12",
+     "text": "I'd love to, thanks.",
+     "meaningCN": "我很乐意",
+     "chunkIds": [
+      "n12"
+     ]
+    },
+    {
+     "id": "n_s13",
+     "text": "I can't, sorry.",
+     "meaningCN": "我去不了",
+     "chunkIds": [
+      "n13"
+     ]
+    },
+    {
+     "id": "n_s14",
+     "text": "Bring a friend along.",
+     "meaningCN": "带个朋友",
+     "chunkIds": [
+      "n14"
+     ]
+    },
+    {
+     "id": "n_s15",
+     "text": "I'll pick you up.",
+     "meaningCN": "接你",
+     "chunkIds": [
+      "n15"
+     ]
+    },
+    {
+     "id": "n_s16",
+     "text": "I'll drop you off.",
+     "meaningCN": "送你",
+     "chunkIds": [
+      "n16"
+     ]
+    },
+    {
+     "id": "n_s17",
+     "text": "See you there at eight.",
+     "meaningCN": "那边见",
+     "chunkIds": [
+      "n17"
+     ]
+    },
+    {
+     "id": "n_s18",
+     "text": "You are on the list.",
+     "meaningCN": "在名单上",
+     "chunkIds": [
+      "n18"
+     ]
+    },
+    {
+     "id": "n_s19",
+     "text": "Please RSVP by Friday.",
+     "meaningCN": "请回复邀约",
+     "chunkIds": [
+      "n19"
+     ]
+    },
+    {
+     "id": "n_s20",
+     "text": "Bring a gift, maybe.",
+     "meaningCN": "礼物",
+     "chunkIds": [
       "n20"
      ]
     },
     {
-     "id": "s_n2",
-     "text": "let's celebrate a birthday",
-     "meaningCN": "我们庆祝生日吧",
+     "id": "n_s21",
+     "text": "What is the dress code?",
+     "meaningCN": "着装要求",
      "chunkIds": [
-      "n08",
-      "n07"
+      "n21"
+     ]
+    },
+    {
+     "id": "n_s22",
+     "text": "Casual is fine.",
+     "meaningCN": "休闲就好",
+     "chunkIds": [
+      "n22"
+     ]
+    },
+    {
+     "id": "n_s23",
+     "text": "Formal tonight, sadly.",
+     "meaningCN": "今晚正式",
+     "chunkIds": [
+      "n23"
+     ]
+    },
+    {
+     "id": "n_s24",
+     "text": "Can I bring a plus one?",
+     "meaningCN": "带一人",
+     "chunkIds": [
+      "n24"
+     ]
+    },
+    {
+     "id": "n_s25",
+     "text": "Meet the host, please.",
+     "meaningCN": "主人",
+     "chunkIds": [
+      "n25"
      ]
     }
    ]
@@ -15080,30 +17484,203 @@
    ],
    "sentences": [
     {
-     "id": "s_o1",
-     "text": "could you help me please",
-     "meaningCN": "能请你帮帮我吗",
+     "id": "o_s01",
+     "text": "Could you open the window?",
+     "meaningCN": "您能…吗",
      "chunkIds": [
-      "o01",
+      "o01"
+     ]
+    },
+    {
+     "id": "o_s02",
+     "text": "Would you mind waiting?",
+     "meaningCN": "您介意…吗",
+     "chunkIds": [
+      "o02"
+     ]
+    },
+    {
+     "id": "o_s03",
+     "text": "Help me please, sir.",
+     "meaningCN": "请帮帮我",
+     "chunkIds": [
       "o03"
      ]
     },
     {
-     "id": "s_o2",
-     "text": "could you hold on",
-     "meaningCN": "能稍等一下吗",
+     "id": "o_s04",
+     "text": "If you don't mind, I'll sit.",
+     "meaningCN": "若不介意",
      "chunkIds": [
-      "o01",
+      "o04"
+     ]
+    },
+    {
+     "id": "o_s05",
+     "text": "Call when you can.",
+     "meaningCN": "方便时",
+     "chunkIds": [
+      "o05"
+     ]
+    },
+    {
+     "id": "o_s06",
+     "text": "No rush, take your time.",
+     "meaningCN": "不急",
+     "chunkIds": [
+      "o06"
+     ]
+    },
+    {
+     "id": "o_s07",
+     "text": "Bear with me, please.",
+     "meaningCN": "请包涵",
+     "chunkIds": [
+      "o07"
+     ]
+    },
+    {
+     "id": "o_s08",
+     "text": "I'd like to make a request.",
+     "meaningCN": "提个请求",
+     "chunkIds": [
+      "o08"
+     ]
+    },
+    {
+     "id": "o_s09",
+     "text": "Do me a favor, okay?",
+     "meaningCN": "帮个忙",
+     "chunkIds": [
+      "o09"
+     ]
+    },
+    {
+     "id": "o_s10",
+     "text": "Lend me a pen.",
+     "meaningCN": "借我",
+     "chunkIds": [
+      "o10"
+     ]
+    },
+    {
+     "id": "o_s11",
+     "text": "Spare a moment, please.",
+     "meaningCN": "抽空",
+     "chunkIds": [
+      "o11"
+     ]
+    },
+    {
+     "id": "o_s12",
+     "text": "I was wondering if you help.",
+     "meaningCN": "我想请教",
+     "chunkIds": [
+      "o12"
+     ]
+    },
+    {
+     "id": "o_s13",
+     "text": "It's not urgent, relax.",
+     "meaningCN": "暂不紧急",
+     "chunkIds": [
+      "o13"
+     ]
+    },
+    {
+     "id": "o_s14",
+     "text": "Reply at your convenience.",
+     "meaningCN": "您方便时",
+     "chunkIds": [
+      "o14"
+     ]
+    },
+    {
+     "id": "o_s15",
+     "text": "Thank you in advance.",
+     "meaningCN": "先谢过",
+     "chunkIds": [
+      "o15"
+     ]
+    },
+    {
+     "id": "o_s16",
+     "text": "I appreciate it, truly.",
+     "meaningCN": "我感激你",
+     "chunkIds": [
+      "o16"
+     ]
+    },
+    {
+     "id": "o_s17",
+     "text": "Excuse me, one question.",
+     "meaningCN": "打扰一下",
+     "chunkIds": [
+      "o17"
+     ]
+    },
+    {
+     "id": "o_s18",
+     "text": "Sorry to bother you.",
+     "meaningCN": "抱歉打扰",
+     "chunkIds": [
+      "o18"
+     ]
+    },
+    {
+     "id": "o_s19",
+     "text": "May I sit here?",
+     "meaningCN": "我可以…吗",
+     "chunkIds": [
+      "o19"
+     ]
+    },
+    {
+     "id": "o_s20",
+     "text": "After you, please.",
+     "meaningCN": "您先请",
+     "chunkIds": [
+      "o20"
+     ]
+    },
+    {
+     "id": "o_s21",
+     "text": "Go ahead, I'm listening.",
+     "meaningCN": "请便／继续",
+     "chunkIds": [
+      "o21"
+     ]
+    },
+    {
+     "id": "o_s22",
+     "text": "Be careful on the stairs.",
+     "meaningCN": "小心",
+     "chunkIds": [
+      "o22"
+     ]
+    },
+    {
+     "id": "o_s23",
+     "text": "Mind the step, please.",
+     "meaningCN": "注意脚下",
+     "chunkIds": [
+      "o23"
+     ]
+    },
+    {
+     "id": "o_s24",
+     "text": "Hold on a second.",
+     "meaningCN": "稍等一下",
+     "chunkIds": [
       "o24"
      ]
     },
     {
-     "id": "s_o3",
-     "text": "may I go ahead",
-     "meaningCN": "我可以先走吗",
+     "id": "o_s25",
+     "text": "Let me help you.",
+     "meaningCN": "让我来帮你",
      "chunkIds": [
-      "o19",
-      "o21"
+      "o25"
      ]
     }
    ]
@@ -16185,6 +18762,209 @@
        "ready"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "p_s01",
+     "text": "Yes I will, thanks.",
+     "meaningCN": "好我愿意",
+     "chunkIds": [
+      "p01"
+     ]
+    },
+    {
+     "id": "p_s02",
+     "text": "No thanks, I'm set.",
+     "meaningCN": "婉拒：不了",
+     "chunkIds": [
+      "p02"
+     ]
+    },
+    {
+     "id": "p_s03",
+     "text": "Sure no problem at all.",
+     "meaningCN": "当然没问题",
+     "chunkIds": [
+      "p03"
+     ]
+    },
+    {
+     "id": "p_s04",
+     "text": "Okay I see now.",
+     "meaningCN": "好的明白了",
+     "chunkIds": [
+      "p04"
+     ]
+    },
+    {
+     "id": "p_s05",
+     "text": "Got it, thanks.",
+     "meaningCN": "明白了",
+     "chunkIds": [
+      "p05"
+     ]
+    },
+    {
+     "id": "p_s06",
+     "text": "I see what you mean.",
+     "meaningCN": "我懂了（理解）",
+     "chunkIds": [
+      "p06"
+     ]
+    },
+    {
+     "id": "p_s07",
+     "text": "No problem at all.",
+     "meaningCN": "没问题（小事）",
+     "chunkIds": [
+      "p07"
+     ]
+    },
+    {
+     "id": "p_s08",
+     "text": "Of course I can.",
+     "meaningCN": "当然（我能）",
+     "chunkIds": [
+      "p08"
+     ]
+    },
+    {
+     "id": "p_s09",
+     "text": "Wait a moment, please.",
+     "meaningCN": "等一下",
+     "chunkIds": [
+      "p09"
+     ]
+    },
+    {
+     "id": "p_s10",
+     "text": "Never mind, it's fine.",
+     "meaningCN": "算了",
+     "chunkIds": [
+      "p10"
+     ]
+    },
+    {
+     "id": "p_s11",
+     "text": "Let's go now.",
+     "meaningCN": "走吧",
+     "chunkIds": [
+      "p11"
+     ]
+    },
+    {
+     "id": "p_s12",
+     "text": "Good idea, let's do it.",
+     "meaningCN": "好主意",
+     "chunkIds": [
+      "p12"
+     ]
+    },
+    {
+     "id": "p_s13",
+     "text": "That works for me.",
+     "meaningCN": "那样行",
+     "chunkIds": [
+      "p13"
+     ]
+    },
+    {
+     "id": "p_s14",
+     "text": "Not yet, almost.",
+     "meaningCN": "还没",
+     "chunkIds": [
+      "p14"
+     ]
+    },
+    {
+     "id": "p_s15",
+     "text": "I'll do it right away.",
+     "meaningCN": "马上",
+     "chunkIds": [
+      "p15"
+     ]
+    },
+    {
+     "id": "p_s16",
+     "text": "Just a sec, please.",
+     "meaningCN": "稍等一秒",
+     "chunkIds": [
+      "p16"
+     ]
+    },
+    {
+     "id": "p_s17",
+     "text": "Me too, exactly.",
+     "meaningCN": "我也是",
+     "chunkIds": [
+      "p17"
+     ]
+    },
+    {
+     "id": "p_s18",
+     "text": "Me neither, sadly.",
+     "meaningCN": "我也不",
+     "chunkIds": [
+      "p18"
+     ]
+    },
+    {
+     "id": "p_s19",
+     "text": "Why not give it a try?",
+     "meaningCN": "为何不",
+     "chunkIds": [
+      "p19"
+     ]
+    },
+    {
+     "id": "p_s20",
+     "text": "No thanks, I'm full.",
+     "meaningCN": "不用了",
+     "chunkIds": [
+      "p20"
+     ]
+    },
+    {
+     "id": "p_s21",
+     "text": "You're welcome, friend.",
+     "meaningCN": "不客气",
+     "chunkIds": [
+      "p21"
+     ]
+    },
+    {
+     "id": "p_s22",
+     "text": "My pleasure, truly.",
+     "meaningCN": "我的荣幸",
+     "chunkIds": [
+      "p22"
+     ]
+    },
+    {
+     "id": "p_s23",
+     "text": "Exactly right, you got it.",
+     "meaningCN": "完全正确",
+     "chunkIds": [
+      "p23",
+      "p05"
+     ]
+    },
+    {
+     "id": "p_s24",
+     "text": "Perhaps another time.",
+     "meaningCN": "或许另一次",
+     "chunkIds": [
+      "p24"
+     ]
+    },
+    {
+     "id": "p_s25",
+     "text": "Definitely yes, count me in.",
+     "meaningCN": "绝对是",
+     "chunkIds": [
+      "p25"
+     ]
     }
    ]
   },
@@ -17307,6 +20087,208 @@
       ]
      }
     }
+   ],
+   "sentences": [
+    {
+     "id": "q_s01",
+     "text": "Yes please, I'd love one.",
+     "meaningCN": "好的（接受）",
+     "chunkIds": [
+      "q01"
+     ]
+    },
+    {
+     "id": "q_s02",
+     "text": "No thank you, I'm set.",
+     "meaningCN": "不用了谢谢",
+     "chunkIds": [
+      "q02"
+     ]
+    },
+    {
+     "id": "q_s03",
+     "text": "I guess so, maybe.",
+     "meaningCN": "我想是吧",
+     "chunkIds": [
+      "q03"
+     ]
+    },
+    {
+     "id": "q_s04",
+     "text": "Absolutely agree, I do.",
+     "meaningCN": "绝对同意",
+     "chunkIds": [
+      "q04"
+     ]
+    },
+    {
+     "id": "q_s05",
+     "text": "Not at all, it's fine.",
+     "meaningCN": "一点也不",
+     "chunkIds": [
+      "q05"
+     ]
+    },
+    {
+     "id": "q_s06",
+     "text": "By all means, go ahead.",
+     "meaningCN": "当然可以",
+     "chunkIds": [
+      "q06"
+     ]
+    },
+    {
+     "id": "q_s07",
+     "text": "I'm afraid not, sorry.",
+     "meaningCN": "恐怕不行",
+     "chunkIds": [
+      "q07"
+     ]
+    },
+    {
+     "id": "q_s08",
+     "text": "That's right, you got it.",
+     "meaningCN": "没错",
+     "chunkIds": [
+      "q08"
+     ]
+    },
+    {
+     "id": "q_s09",
+     "text": "That's wrong, sorry.",
+     "meaningCN": "错了",
+     "chunkIds": [
+      "q09"
+     ]
+    },
+    {
+     "id": "q_s10",
+     "text": "Are you sure, really?",
+     "meaningCN": "你确定吗",
+     "chunkIds": [
+      "q10"
+     ]
+    },
+    {
+     "id": "q_s11",
+     "text": "I'm certain, yes.",
+     "meaningCN": "我确定",
+     "chunkIds": [
+      "q11"
+     ]
+    },
+    {
+     "id": "q_s12",
+     "text": "Doubt it, honestly.",
+     "meaningCN": "我表示怀疑",
+     "chunkIds": [
+      "q12"
+     ]
+    },
+    {
+     "id": "q_s13",
+     "text": "No way, that's false.",
+     "meaningCN": "没门",
+     "chunkIds": [
+      "q13"
+     ]
+    },
+    {
+     "id": "q_s14",
+     "text": "Sure thing, I'm in.",
+     "meaningCN": "没问题（包了）",
+     "chunkIds": [
+      "q14"
+     ]
+    },
+    {
+     "id": "q_s15",
+     "text": "Not exactly, but close.",
+     "meaningCN": "不全是",
+     "chunkIds": [
+      "q15"
+     ]
+    },
+    {
+     "id": "q_s16",
+     "text": "Sort of, I suppose.",
+     "meaningCN": "算是",
+     "chunkIds": [
+      "q16"
+     ]
+    },
+    {
+     "id": "q_s17",
+     "text": "On the contrary, no.",
+     "meaningCN": "恰恰相反",
+     "chunkIds": [
+      "q17"
+     ]
+    },
+    {
+     "id": "q_s18",
+     "text": "I suppose not, no.",
+     "meaningCN": "我想不是",
+     "chunkIds": [
+      "q18"
+     ]
+    },
+    {
+     "id": "q_s19",
+     "text": "Quite good, I agree.",
+     "meaningCN": "相当好",
+     "chunkIds": [
+      "q19"
+     ]
+    },
+    {
+     "id": "q_s20",
+     "text": "Hardly any, not really.",
+     "meaningCN": "几乎没",
+     "chunkIds": [
+      "q20"
+     ]
+    },
+    {
+     "id": "q_s21",
+     "text": "Maybe yes, who knows.",
+     "meaningCN": "也许是",
+     "chunkIds": [
+      "q21"
+     ]
+    },
+    {
+     "id": "q_s22",
+     "text": "Definitely not, no.",
+     "meaningCN": "绝对不",
+     "chunkIds": [
+      "q22"
+     ]
+    },
+    {
+     "id": "q_s23",
+     "text": "Could be, I guess.",
+     "meaningCN": "可能是",
+     "chunkIds": [
+      "q23"
+     ]
+    },
+    {
+     "id": "q_s24",
+     "text": "I'd say no, sorry.",
+     "meaningCN": "我会说不行",
+     "chunkIds": [
+      "q24"
+     ]
+    },
+    {
+     "id": "q_s25",
+     "text": "We agreed, let's move.",
+     "meaningCN": "我们同意",
+     "chunkIds": [
+      "q25"
+     ]
+    }
    ]
   },
   {
@@ -18350,21 +21332,203 @@
    ],
    "sentences": [
     {
-     "id": "s_r1",
-     "text": "say that again in English",
-     "meaningCN": "用英语再说一遍",
+     "id": "r_s01",
+     "text": "I don't understand, sorry.",
+     "meaningCN": "我没听懂",
      "chunkIds": [
-      "r02",
+      "r01"
+     ]
+    },
+    {
+     "id": "r_s02",
+     "text": "Say that again, please.",
+     "meaningCN": "再说一遍",
+     "chunkIds": [
+      "r02"
+     ]
+    },
+    {
+     "id": "r_s03",
+     "text": "Speak slowly, thanks.",
+     "meaningCN": "说慢点",
+     "chunkIds": [
+      "r03"
+     ]
+    },
+    {
+     "id": "r_s04",
+     "text": "What does this mean?",
+     "meaningCN": "…是什么意思",
+     "chunkIds": [
+      "r04"
+     ]
+    },
+    {
+     "id": "r_s05",
+     "text": "Say it in English.",
+     "meaningCN": "用英语",
+     "chunkIds": [
       "r05"
      ]
     },
     {
-     "id": "s_r2",
-     "text": "speak slowly in English",
-     "meaningCN": "用英语说慢点",
+     "id": "r_s06",
+     "text": "Please translate this.",
+     "meaningCN": "请翻译",
      "chunkIds": [
-      "r03",
-      "r05"
+      "r06"
+     ]
+    },
+    {
+     "id": "r_s07",
+     "text": "Speak louder, please.",
+     "meaningCN": "说大声点",
+     "chunkIds": [
+      "r07"
+     ]
+    },
+    {
+     "id": "r_s08",
+     "text": "Say it clearly.",
+     "meaningCN": "说清楚",
+     "chunkIds": [
+      "r08"
+     ]
+    },
+    {
+     "id": "r_s09",
+     "text": "I see, thank you.",
+     "meaningCN": "我明白了",
+     "chunkIds": [
+      "r09"
+     ]
+    },
+    {
+     "id": "r_s10",
+     "text": "Got it, I will.",
+     "meaningCN": "懂了",
+     "chunkIds": [
+      "r10"
+     ]
+    },
+    {
+     "id": "r_s11",
+     "text": "Say pardon, repeat that.",
+     "meaningCN": "请再说（抱歉）",
+     "chunkIds": [
+      "r11"
+     ]
+    },
+    {
+     "id": "r_s12",
+     "text": "Excuse me, repeat that.",
+     "meaningCN": "抱歉（没听清）",
+     "chunkIds": [
+      "r12"
+     ]
+    },
+    {
+     "id": "r_s13",
+     "text": "What do you mean by that?",
+     "meaningCN": "你什么意思",
+     "chunkIds": [
+      "r13"
+     ]
+    },
+    {
+     "id": "r_s14",
+     "text": "I'm confused, explain.",
+     "meaningCN": "我糊涂了",
+     "chunkIds": [
+      "r14"
+     ]
+    },
+    {
+     "id": "r_s15",
+     "text": "That makes sense now.",
+     "meaningCN": "说得通",
+     "chunkIds": [
+      "r15"
+     ]
+    },
+    {
+     "id": "r_s16",
+     "text": "I get it, thanks.",
+     "meaningCN": "我听明白了",
+     "chunkIds": [
+      "r16"
+     ]
+    },
+    {
+     "id": "r_s17",
+     "text": "Could you repeat that?",
+     "meaningCN": "能重复吗",
+     "chunkIds": [
+      "r17"
+     ]
+    },
+    {
+     "id": "r_s18",
+     "text": "In other words, slower.",
+     "meaningCN": "换句话说",
+     "chunkIds": [
+      "r18"
+     ]
+    },
+    {
+     "id": "r_s19",
+     "text": "I follow you now.",
+     "meaningCN": "我跟上（听懂）",
+     "chunkIds": [
+      "r19"
+     ]
+    },
+    {
+     "id": "r_s20",
+     "text": "I missed that, sorry.",
+     "meaningCN": "漏听了",
+     "chunkIds": [
+      "r20"
+     ]
+    },
+    {
+     "id": "r_s21",
+     "text": "What is that word?",
+     "meaningCN": "一个词",
+     "chunkIds": [
+      "r21"
+     ]
+    },
+    {
+     "id": "r_s22",
+     "text": "Teach me a phrase.",
+     "meaningCN": "一个短语",
+     "chunkIds": [
+      "r22"
+     ]
+    },
+    {
+     "id": "r_s23",
+     "text": "Tell me the meaning.",
+     "meaningCN": "意思",
+     "chunkIds": [
+      "r23"
+     ]
+    },
+    {
+     "id": "r_s24",
+     "text": "Please clarify that.",
+     "meaningCN": "请澄清",
+     "chunkIds": [
+      "r24"
+     ]
+    },
+    {
+     "id": "r_s25",
+     "text": "I'm listening, go on.",
+     "meaningCN": "我在听",
+     "chunkIds": [
+      "r25"
      ]
     }
    ]
@@ -19419,6 +22583,208 @@
       ]
      }
     }
+   ],
+   "sentences": [
+    {
+     "id": "s_s01",
+     "text": "I wake up at seven.",
+     "meaningCN": "醒来",
+     "chunkIds": [
+      "s01"
+     ]
+    },
+    {
+     "id": "s_s02",
+     "text": "I get up early.",
+     "meaningCN": "起床",
+     "chunkIds": [
+      "s02"
+     ]
+    },
+    {
+     "id": "s_s03",
+     "text": "I brush teeth daily.",
+     "meaningCN": "刷牙",
+     "chunkIds": [
+      "s03"
+     ]
+    },
+    {
+     "id": "s_s04",
+     "text": "I take a shower.",
+     "meaningCN": "洗澡",
+     "chunkIds": [
+      "s04"
+     ]
+    },
+    {
+     "id": "s_s05",
+     "text": "I get dressed fast.",
+     "meaningCN": "穿衣服",
+     "chunkIds": [
+      "s05"
+     ]
+    },
+    {
+     "id": "s_s06",
+     "text": "I make coffee first.",
+     "meaningCN": "煮咖啡",
+     "chunkIds": [
+      "s06"
+     ]
+    },
+    {
+     "id": "s_s07",
+     "text": "I have breakfast at home.",
+     "meaningCN": "吃早餐",
+     "chunkIds": [
+      "s07"
+     ]
+    },
+    {
+     "id": "s_s08",
+     "text": "I check phone in bed.",
+     "meaningCN": "看手机",
+     "chunkIds": [
+      "s08"
+     ]
+    },
+    {
+     "id": "s_s09",
+     "text": "I feed the cat.",
+     "meaningCN": "喂猫",
+     "chunkIds": [
+      "s09"
+     ]
+    },
+    {
+     "id": "s_s10",
+     "text": "I walk the dog.",
+     "meaningCN": "遛狗",
+     "chunkIds": [
+      "s10"
+     ]
+    },
+    {
+     "id": "s_s11",
+     "text": "I pack my bag.",
+     "meaningCN": "收拾包",
+     "chunkIds": [
+      "s11"
+     ]
+    },
+    {
+     "id": "s_s12",
+     "text": "I catch the bus.",
+     "meaningCN": "赶公交",
+     "chunkIds": [
+      "s12"
+     ]
+    },
+    {
+     "id": "s_s13",
+     "text": "I go to work now.",
+     "meaningCN": "去上班",
+     "chunkIds": [
+      "s13"
+     ]
+    },
+    {
+     "id": "s_s14",
+     "text": "Set the alarm, please.",
+     "meaningCN": "闹钟",
+     "chunkIds": [
+      "s14"
+     ]
+    },
+    {
+     "id": "s_s15",
+     "text": "I love my routine.",
+     "meaningCN": "日常",
+     "chunkIds": [
+      "s15"
+     ]
+    },
+    {
+     "id": "s_s16",
+     "text": "I work on weekdays.",
+     "meaningCN": "工作日",
+     "chunkIds": [
+      "s16"
+     ]
+    },
+    {
+     "id": "s_s17",
+     "text": "I am an early bird.",
+     "meaningCN": "早起的人",
+     "chunkIds": [
+      "s17"
+     ]
+    },
+    {
+     "id": "s_s18",
+     "text": "I want fresh air.",
+     "meaningCN": "新鲜空气",
+     "chunkIds": [
+      "s18"
+     ]
+    },
+    {
+     "id": "s_s19",
+     "text": "Make a to-do list.",
+     "meaningCN": "待办清单",
+     "chunkIds": [
+      "s19"
+     ]
+    },
+    {
+     "id": "s_s20",
+     "text": "This is a good habit.",
+     "meaningCN": "习惯",
+     "chunkIds": [
+      "s20"
+     ]
+    },
+    {
+     "id": "s_s21",
+     "text": "I slept well.",
+     "meaningCN": "睡得好",
+     "chunkIds": [
+      "s21"
+     ]
+    },
+    {
+     "id": "s_s22",
+     "text": "I stay in bed.",
+     "meaningCN": "赖床",
+     "chunkIds": [
+      "s22"
+     ]
+    },
+    {
+     "id": "s_s23",
+     "text": "Grab a quick bite.",
+     "meaningCN": "随便吃口",
+     "chunkIds": [
+      "s23"
+     ]
+    },
+    {
+     "id": "s_s24",
+     "text": "I head out at eight.",
+     "meaningCN": "出门",
+     "chunkIds": [
+      "s24"
+     ]
+    },
+    {
+     "id": "s_s25",
+     "text": "Let's start the day.",
+     "meaningCN": "开始一天",
+     "chunkIds": [
+      "s25"
+     ]
+    }
    ]
   },
   {
@@ -20472,6 +23838,208 @@
        "relaxed"
       ]
      }
+    }
+   ],
+   "sentences": [
+    {
+     "id": "t_s01",
+     "text": "I want to check in.",
+     "meaningCN": "办理入住",
+     "chunkIds": [
+      "t01"
+     ]
+    },
+    {
+     "id": "t_s02",
+     "text": "I need to check out.",
+     "meaningCN": "退房",
+     "chunkIds": [
+      "t02"
+     ]
+    },
+    {
+     "id": "t_s03",
+     "text": "I lost my room key.",
+     "meaningCN": "房卡",
+     "chunkIds": [
+      "t03"
+     ]
+    },
+    {
+     "id": "t_s04",
+     "text": "I booked a twin room.",
+     "meaningCN": "双床房",
+     "chunkIds": [
+      "t04"
+     ]
+    },
+    {
+     "id": "t_s05",
+     "text": "Give me a single room.",
+     "meaningCN": "单人间",
+     "chunkIds": [
+      "t05"
+     ]
+    },
+    {
+     "id": "t_s06",
+     "text": "Call room service.",
+     "meaningCN": "客房服务",
+     "chunkIds": [
+      "t06"
+     ]
+    },
+    {
+     "id": "t_s07",
+     "text": "Bring a towel, please.",
+     "meaningCN": "毛巾",
+     "chunkIds": [
+      "t07"
+     ]
+    },
+    {
+     "id": "t_s08",
+     "text": "What is the wifi code?",
+     "meaningCN": "无线网络",
+     "chunkIds": [
+      "t08"
+     ]
+    },
+    {
+     "id": "t_s09",
+     "text": "The elevator is there.",
+     "meaningCN": "电梯",
+     "chunkIds": [
+      "t09"
+     ]
+    },
+    {
+     "id": "t_s10",
+     "text": "The room has a balcony.",
+     "meaningCN": "阳台",
+     "chunkIds": [
+      "t10"
+     ]
+    },
+    {
+     "id": "t_s11",
+     "text": "Turn on the air conditioning.",
+     "meaningCN": "空调",
+     "chunkIds": [
+      "t11"
+     ]
+    },
+    {
+     "id": "t_s12",
+     "text": "I make the bed.",
+     "meaningCN": "铺床",
+     "chunkIds": [
+      "t12"
+     ]
+    },
+    {
+     "id": "t_s13",
+     "text": "I do the dishes.",
+     "meaningCN": "洗碗",
+     "chunkIds": [
+      "t13"
+     ]
+    },
+    {
+     "id": "t_s14",
+     "text": "Take out the trash.",
+     "meaningCN": "扔垃圾",
+     "chunkIds": [
+      "t14"
+     ]
+    },
+    {
+     "id": "t_s15",
+     "text": "Clean the room, please.",
+     "meaningCN": "打扫房间",
+     "chunkIds": [
+      "t15"
+     ]
+    },
+    {
+     "id": "t_s16",
+     "text": "We have a guest.",
+     "meaningCN": "客人",
+     "chunkIds": [
+      "t16"
+     ]
+    },
+    {
+     "id": "t_s17",
+     "text": "Call the landlord.",
+     "meaningCN": "房东",
+     "chunkIds": [
+      "t17"
+     ]
+    },
+    {
+     "id": "t_s18",
+     "text": "My neighbor is kind.",
+     "meaningCN": "邻居",
+     "chunkIds": [
+      "t18"
+     ]
+    },
+    {
+     "id": "t_s19",
+     "text": "The doorman helped me.",
+     "meaningCN": "门房",
+     "chunkIds": [
+      "t19"
+     ]
+    },
+    {
+     "id": "t_s20",
+     "text": "Swipe the key card.",
+     "meaningCN": "门禁卡",
+     "chunkIds": [
+      "t20"
+     ]
+    },
+    {
+     "id": "t_s21",
+     "text": "Turn on the heater.",
+     "meaningCN": "暖气",
+     "chunkIds": [
+      "t21"
+     ]
+    },
+    {
+     "id": "t_s22",
+     "text": "Switch off the lights.",
+     "meaningCN": "灯",
+     "chunkIds": [
+      "t22"
+     ]
+    },
+    {
+     "id": "t_s23",
+     "text": "Open the window, please.",
+     "meaningCN": "窗户",
+     "chunkIds": [
+      "t23"
+     ]
+    },
+    {
+     "id": "t_s24",
+     "text": "Mop the floor, please.",
+     "meaningCN": "地板",
+     "chunkIds": [
+      "t24"
+     ]
+    },
+    {
+     "id": "t_s25",
+     "text": "Make yourself at home.",
+     "meaningCN": "别客气（像在家）",
+     "chunkIds": [
+      "t25"
+     ]
     }
    ]
   }

@@ -19,6 +19,7 @@ class ChunkRow {
   final int lastScore; // 0..100 (L4 STT hit-rate or L3 accuracy)
   final int l2OneTry; // -1 unknown | 0 no | 1 yes
   final bool l4SelfEval;
+  final int reviewStage; // SRS 阶梯序号（0=+1天, 1=+3, 2=+7, 3=+14）；仅 review 态有意义
 
   const ChunkRow({
     required this.chunkKey,
@@ -28,6 +29,7 @@ class ChunkRow {
     required this.lastScore,
     this.l2OneTry = -1,
     this.l4SelfEval = false,
+    this.reviewStage = 0,
   });
 
   ChunkRow copyWith({
@@ -37,6 +39,7 @@ class ChunkRow {
     int? lastScore,
     int? l2OneTry,
     bool? l4SelfEval,
+    int? reviewStage,
   }) =>
       ChunkRow(
         chunkKey: chunkKey,
@@ -46,6 +49,7 @@ class ChunkRow {
         lastScore: lastScore ?? this.lastScore,
         l2OneTry: l2OneTry ?? this.l2OneTry,
         l4SelfEval: l4SelfEval ?? this.l4SelfEval,
+        reviewStage: reviewStage ?? this.reviewStage,
       );
 
   Map<String, Object> toMap() => {
@@ -56,6 +60,7 @@ class ChunkRow {
         'last_score': lastScore,
         'l2_one_try': l2OneTry,
         'l4_self_eval': l4SelfEval ? 1 : 0,
+        'review_stage': reviewStage,
       };
 
   factory ChunkRow.fromMap(Map<String, Object?> m) => ChunkRow(
@@ -66,6 +71,7 @@ class ChunkRow {
         lastScore: m['last_score'] as int,
         l2OneTry: (m['l2_one_try'] as int?) ?? -1,
         l4SelfEval: (m['l4_self_eval'] as int?) == 1,
+        reviewStage: (m['review_stage'] as int?) ?? 0,
       );
 }
 
@@ -83,7 +89,7 @@ class AppDatabase {
     if (_db != null) return _db!;
     final path = _path ?? await _defaultPath();
     _db = await openDatabase(path,
-        version: 2, onCreate: _onCreate, onUpgrade: _onUpgrade);
+        version: 3, onCreate: _onCreate, onUpgrade: _onUpgrade);
     return _db!;
   }
 
@@ -92,6 +98,10 @@ class AppDatabase {
     if (oldV < 2) {
       await db.execute('ALTER TABLE chunks ADD COLUMN l2_one_try INTEGER NOT NULL DEFAULT -1');
       await db.execute('ALTER TABLE chunks ADD COLUMN l4_self_eval INTEGER NOT NULL DEFAULT 0');
+    }
+    // SRS 阶梯：新增 review_stage 列（M9），失败升级、成功回退。
+    if (oldV < 3) {
+      await db.execute('ALTER TABLE chunks ADD COLUMN review_stage INTEGER NOT NULL DEFAULT 0');
     }
   }
 
@@ -114,7 +124,8 @@ class AppDatabase {
         fail_count INTEGER NOT NULL,
         last_score INTEGER NOT NULL,
         l2_one_try INTEGER NOT NULL DEFAULT -1,
-        l4_self_eval INTEGER NOT NULL DEFAULT 0
+        l4_self_eval INTEGER NOT NULL DEFAULT 0,
+        review_stage INTEGER NOT NULL DEFAULT 0
       )''');
     await db.execute('''
       CREATE TABLE IF NOT EXISTS sessions (
@@ -160,7 +171,9 @@ class AppDatabase {
   Future<List<ChunkRow>> dueChunks(int now) async {
     final rows = await (await db).query('chunks',
         where: 'due_date <= ? AND level = ?',
-        whereArgs: [now, ChunkLevel.review.index]);
+        whereArgs: [now, ChunkLevel.review.index],
+        // 错因驱动：错得多、久未练的优先（弱点先排）。
+        orderBy: 'fail_count DESC, due_date ASC');
     return rows.map(ChunkRow.fromMap).toList();
   }
 

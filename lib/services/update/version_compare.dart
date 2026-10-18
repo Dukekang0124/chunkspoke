@@ -1,4 +1,4 @@
-/// 版本比较（纯逻辑，可单测）：以 versionCode 数值为准，严禁字符串比较。
+// 版本比较（纯逻辑，可单测）：以 versionCode 数值为准，严禁字符串比较。
 
 /// 远端是否比本机更新：remoteCode > localCode。
 bool isNewerVersion(int localCode, int remoteCode) => remoteCode > localCode;

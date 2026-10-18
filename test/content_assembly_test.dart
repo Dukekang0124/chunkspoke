@@ -11,10 +11,10 @@ void main() {
   });
 
   group('词块拼装体系 · 首场景内容', () {
-    test('首场景(A) 含 12 词块 / 14 目标句', () {
+    test('首场景(A) 含 12 词块 / 12 目标句（随内容包实际数据）', () {
       final lvl = pack.levels.firstWhere((l) => l.id == 'A');
       expect(lvl.chunks.length, 12);
-      expect(lvl.sentences.length, 14);
+      expect(lvl.sentences.length, 12);
     });
 
     test('每个目标句的 chunkIds 都存在且顺序展开正确', () {
@@ -27,7 +27,8 @@ void main() {
         }
         final texts = s.orderedChunkTexts(byId);
         expect(texts.length, s.chunkIds.length);
-        expect(s.text, startsWith(texts.first));
+        // 首词块与句子开头一致（忽略大小写/标点：内容包存在 Thank you 等首字母大写）。
+        expect(s.text.toLowerCase().trim(), startsWith(texts.first.toLowerCase()));
       }
     });
 

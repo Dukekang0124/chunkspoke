@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- 外部存储（Android/data/.../files）下的更新包 -->
-    <external-files-path name="updates" path="." />
-    <!-- 内部 files/updates：UpdateService 实际落盘路径（getApplicationDocumentsDirectory） -->
-    <files-path name="updates" path="updates" />
+    <!-- 外部存储（Android/data/.../files）下的更新包（保留兼容） -->
+    <external-files-path name="updates_external" path="." />
+    <!-- 内部 files/updates：UpdateService 实际落盘路径（getApplicationSupportDirectory） -->
+    <!-- 注意：root 名称必须唯一，否则同名 root 会互相覆盖导致 FileProvider 找不到文件 -->
+    <files-path name="updates_internal" path="updates" />
 </paths>

@@ -64,6 +64,29 @@ class MainActivity : FlutterActivity() {
                             result.error("SETTINGS", e.message, null)
                         }
                     }
+                    "openUrl" -> {
+                        // 交给系统浏览器/下载器接管：国内直连 GitHub 慢，
+                        // 但浏览器可断点续传、可后台、可转给下载工具，比 App 内单线程稳。
+                        val url = call.arguments as? String
+                        if (url.isNullOrBlank()) {
+                            result.error("NO_URL", "url is null", null)
+                            return@setMethodCallHandler
+                        }
+                        val scheme = Uri.parse(url).scheme?.lowercase()
+                        if (scheme != "http" && scheme != "https") {
+                            result.error("BAD_URL", "only http(s) allowed: $url", null)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(intent)
+                            result.success(null)
+                        } catch (e: Exception) {
+                            result.error("OPEN_URL", e.message, null)
+                        }
+                    }
                     "installApk" -> {
                         val path = call.arguments as? String
                         if (path == null) {
@@ -72,6 +95,10 @@ class MainActivity : FlutterActivity() {
                         }
                         try {
                             val file = File(path)
+                            if (!file.exists()) {
+                                result.error("NO_FILE", "apk not found: $path", null)
+                                return@setMethodCallHandler
+                            }
                             val uri = FileProvider.getUriForFile(
                                 this, "$packageName.fileprovider", file
                             )

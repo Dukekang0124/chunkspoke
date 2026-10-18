@@ -46,7 +46,6 @@ class _SayWidgetState extends State<SayWidget> {
   bool _active = false; // 录音中
   bool _thinking = false;
   String? _recPath;
-  String _heard = '';
   SayOutcome? _outcome;
 
   double _level = 0; // 实时电平 0..1
@@ -149,7 +148,6 @@ class _SayWidgetState extends State<SayWidget> {
     setState(() {
       _recPath = path;
       _active = true;
-      _heard = '';
     });
     _subscribeLevels();
     _listenStart = DateTime.now();
@@ -211,7 +209,6 @@ class _SayWidgetState extends State<SayWidget> {
     final conf = r.confidence;
     setState(() {
       _thinking = false;
-      _heard = text;
       _recPath = recPath ?? _recPath;
     });
     if (text.trim().isEmpty) {
@@ -247,7 +244,6 @@ class _SayWidgetState extends State<SayWidget> {
       _outcome = null;
       _active = false;
       _thinking = false;
-      _heard = '';
       _level = 0;
       _levelActive = false;
       _listenStart = null;

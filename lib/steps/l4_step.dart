@@ -9,8 +9,6 @@ import '../services/loaders.dart';
 import '../services/recording.dart';
 import '../services/speech.dart';
 import '../services/state_machine.dart';
-import '../services/chunk_progress.dart';
-import '../services/database.dart';
 import '../services/speech_judge.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
@@ -64,6 +62,14 @@ class _L4StepState extends State<L4Step> {
   bool _showAnswer = false; // 3 次未过 → 展示正确答案并给跳过入口
   bool _selfAssess = false;
   bool _engineFailed = false; // Vosk 加载失败（无 Azure）→ 明确报错
+  // 跟读软着陆：首次识别失败后出现，不评分、自己对比，不计掌握。
+  bool _followAlong = false;
+  bool _followListening = false;
+  bool _followPlaying = false;
+  String? _followPath;
+  Timer? _followPlayTimer;
+  // P1-2 反向产出（轻量版）：隐藏英文、只给中文，逼用户从中文产出英文。
+  bool _reverse = false;
 
   double _level = 0;
   bool _levelActive = false;
@@ -120,12 +126,115 @@ class _L4StepState extends State<L4Step> {
   void dispose() {
     _levelSub?.cancel();
     _playTimer?.cancel();
+    _followPlayTimer?.cancel();
     if (_listening) {
+      _rec.stop();
+    }
+    if (_followListening) {
       _rec.stop();
     }
     _rec.stopPlay();
     super.dispose();
   }
+
+  // —— 跟读软着陆：TTS 逐词慢读 + 录音跟读 + 回放自评（不评分，不计掌握）——
+  Future<void> _startFollow() async {
+    if (_followPlaying) {
+      _followPlayTimer?.cancel();
+      await _rec.stopPlay();
+      if (mounted) setState(() => _followPlaying = false);
+    }
+    final path = await _rec.start();
+    if (!mounted) return;
+    setState(() {
+      _followPath = path;
+      _followListening = true;
+    });
+  }
+
+  Future<void> _stopFollow() async {
+    final path = await _rec.stop();
+    if (path != null && mounted) setState(() => _followPath = path);
+    if (mounted) setState(() => _followListening = false);
+  }
+
+  Future<void> _toggleFollowReplay() async {
+    final path = _followPath;
+    if (path == null) return;
+    if (_followPlaying) {
+      _followPlayTimer?.cancel();
+      await _rec.stopPlay();
+      if (mounted) setState(() => _followPlaying = false);
+      return;
+    }
+    await _rec.play(path);
+    if (!mounted) return;
+    setState(() => _followPlaying = true);
+    _followPlayTimer?.cancel();
+    _followPlayTimer = Timer(const Duration(seconds: 8), () {
+      if (mounted && _followPlaying) setState(() => _followPlaying = false);
+    });
+  }
+
+  /// 跟读自评“我说对了”：仅推进，不写掌握事件（软着陆，不污染掌握统计）。
+  void _followConfirm() => widget.onPass();
+
+  void _exitFollow() {
+    _followListening = false;
+    _followPlaying = false;
+    _followPath = null;
+    setState(() => _followAlong = false);
+  }
+
+  Widget _followAlongCard() => Column(
+        children: [
+          const Text('跟读模式：不评分，自己对比',
+              style: TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: widget.targetText.split(' ').map((w) {
+              return OutlinedButton(
+                onPressed: () =>
+                    Provider.of<TtsService>(context, listen: false).speak(w),
+                child: Text(w, style: const TextStyle(color: kPrimary)),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: _followListening ? _stopFollow : _startFollow,
+            child: Text(
+              _followListening ? '🎤 停止录音' : '🎤 录一句跟读',
+              style: const TextStyle(color: kPrimary),
+            ),
+          ),
+          if (_followPath != null)
+            TextButton(
+              onPressed: _toggleFollowReplay,
+              child: Text(_followPlaying ? '停止回放' : '回放我的录音',
+                  style: const TextStyle(color: kPrimary)),
+            ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
+                onPressed: _followPath == null ? null : _followConfirm,
+                child: const Text('我说对了', style: TextStyle(color: Colors.white)),
+              ),
+              OutlinedButton(
+                onPressed: _exitFollow,
+                child: const Text('还是想被识别',
+                    style: TextStyle(color: Colors.white70)),
+              ),
+            ],
+          ),
+        ],
+      );
 
   void _applyLevel(double v) {
     if (!mounted) return;
@@ -218,6 +327,8 @@ class _L4StepState extends State<L4Step> {
       {int accuracy = 0, bool selfEval = false}) async {
     final store = _p.chunkStore;
     if (passed) {
+      // 每日目标：任意一次开口成功都计入今日进度（含句子闯关 persist=false），并完成当日打卡。
+      _p.noteSpoken().catchError((_) {});
       if (widget.persist) {
         try {
           await store.applyEvent(widget.chunk.id, ChunkEvent.speakSuccess,
@@ -230,10 +341,14 @@ class _L4StepState extends State<L4Step> {
       widget.onPass();
       return;
     }
-    try {
-      await store.applyEvent(widget.chunk.id, ChunkEvent.speakFail);
-    } catch (e, st) {
-      CrashLog.write('L4.speakFail: $e', st);
+    // persist=false（句子闯关模式）只推进流程，失败不得写词块 speakFail——
+    // 否则「照着句子闯关失败」会污染该词块的失败计数（报告 §4 第 7 条）。
+    if (widget.persist) {
+      try {
+        await store.applyEvent(widget.chunk.id, ChunkEvent.speakFail);
+      } catch (e, st) {
+        CrashLog.write('L4.speakFail: $e', st);
+      }
     }
     if (!mounted) return;
     _attempts++;
@@ -464,14 +579,30 @@ class _L4StepState extends State<L4Step> {
               color: kBg.withOpacity(0.5),
               border: Border.all(color: Colors.white24),
             ),
-            child: CnText(
-              widget.targetText,
-              widget.chunk.meaningCN,
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
-            ),
+            child: _reverse
+                ? Text(widget.chunk.meaningCN,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        color: kPrimary, fontSize: 18, fontWeight: FontWeight.w600))
+                : CnText(
+                    widget.targetText,
+                    widget.chunk.meaningCN,
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
           ),
-          const SizedBox(height: 16),
-          const Text('开口说出来', style: TextStyle(color: Colors.white70)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => setState(() => _reverse = !_reverse),
+                child: Text(_reverse ? '显示英文' : '看中文练 →',
+                    style: const TextStyle(color: kPrimary, fontSize: 13)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(_reverse ? '看中文，说出英文' : '开口说出来',
+              style: const TextStyle(color: Colors.white70)),
           const SizedBox(height: 10),
           if (_judge != null && !_selfAssess) _targetSentence(),
           const Spacer(),
@@ -483,6 +614,8 @@ class _L4StepState extends State<L4Step> {
             _answerCard()
           else if (_selfAssess)
             _selfAssessCard()
+          else if (_followAlong)
+            _followAlongCard()
           else if (_thinking)
             const CircularProgressIndicator(color: kPrimary)
           else if (_listening)
@@ -528,6 +661,13 @@ class _L4StepState extends State<L4Step> {
                         style: TextStyle(color: Colors.white38)),
                   ),
                 const SizedBox(height: 10),
+                if (!_followAlong)
+                  TextButton(
+                    onPressed: () => setState(() => _followAlong = true),
+                    child: const Text('先跟着读，不评分也可以 →',
+                        style: TextStyle(color: kPrimary)),
+                  ),
+                const SizedBox(height: 6),
                 _micButton(),
               ],
             )

@@ -77,40 +77,6 @@ Set<String> _coreWords(String sentence) => _normalize(sentence)
     .where((w) => w.isNotEmpty && !_stopwords.contains(w))
     .toSet();
 
-int _levenshtein(String a, String b) {
-  a = a.toLowerCase();
-  b = b.toLowerCase();
-  final m = a.length, n = b.length;
-  if (m == 0) return n;
-  if (n == 0) return m;
-  final dp = List.generate(m + 1, (_) => List.filled(n + 1, 0));
-  for (var i = 0; i <= m; i++) dp[i][0] = i;
-  for (var j = 0; j <= n; j++) dp[0][j] = j;
-  for (var i = 1; i <= m; i++) {
-    for (var j = 1; j <= n; j++) {
-      final cost = a[i - 1] == b[j - 1] ? 0 : 1;
-      dp[i][j] = [
-        dp[i - 1][j] + 1,
-        dp[i][j - 1] + 1,
-        dp[i - 1][j - 1] + cost
-      ].reduce((x, y) => x < y ? x : y);
-    }
-  }
-  return dp[m][n];
-}
-
-/// 词级容错：完全相等 / 编辑距离≤1 / 词干近似（短词为长词前缀且长度差≤1）。
-bool _wordClose(String target, String cand) {
-  target = _normalize(target);
-  cand = _normalize(cand);
-  if (target.isEmpty || cand.isEmpty) return false;
-  if (target == cand) return true;
-  if (_levenshtein(target, cand) <= 1) return true;
-  final shorter = target.length <= cand.length ? target : cand;
-  final longer = target.length <= cand.length ? cand : target;
-  return longer.startsWith(shorter) && (longer.length - shorter.length) <= 1;
-}
-
 /// 口语判定已迁移到 `speech_judge.dart` 的 [judgeSpeech]（P0-1 收紧：规范化 +
 /// 词级序列比对 + 置信度门槛 + 空/静音拒绝），L4 开口与 SAY 照读共用。
 

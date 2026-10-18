@@ -135,6 +135,14 @@ class _PracticeLoopState extends State<PracticeLoop> {
       CrashLog.write('PracticeLoop._init: $e', st);
     }
     if (!mounted) return;
+    try {
+      if (!_p.firstPracticeStarted) {
+        await _p.setFirstPracticeStarted();
+        await _p.logEvent('first_practice_start');
+      }
+    } catch (e, st) {
+      CrashLog.write('firstPracticeStart log: $e', st);
+    }
     setState(() {
       _resumeIndex = start >= _total ? 0 : start;
       _ci = _resumeIndex;
@@ -225,6 +233,14 @@ class _PracticeLoopState extends State<PracticeLoop> {
         await _p.bumpStreak();
       } catch (e, st) {
         CrashLog.write('bumpStreak: $e', st);
+      }
+      try {
+        if (!_p.firstPracticeDone) {
+          await _p.setFirstPracticeDone();
+          await _p.logEvent('first_practice_done');
+        }
+      } catch (e, st) {
+        CrashLog.write('firstPracticeDone log: $e', st);
       }
       _mastered++;
     }
