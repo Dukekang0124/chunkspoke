@@ -2,6 +2,7 @@
   "versionName": "1.4.2",
   "versionCode": 2043,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
+  "pageUrl": "https://github.com/Dukekang0124/chunkspoke/releases/latest",
   "sha256": "d4434bba4332c064e6ef435f23eb4f94a42a97ae836c9cf6e33bf066d8334319",
   "size": 30449991,
   "notes": "v1.4.2：离线语音模型外移（首启分块下载，APK 瘦身至 30MB 内）；更新清单标题动态化",
