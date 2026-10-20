@@ -1,19 +1,19 @@
 {
-  "versionName": "1.4.2",
-  "versionCode": 2043,
+  "versionName": "1.4.3",
+  "versionCode": 2044,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
   "pageUrl": "https://github.com/Dukekang0124/chunkspoke/releases/latest",
-  "sha256": "d4434bba4332c064e6ef435f23eb4f94a42a97ae836c9cf6e33bf066d8334319",
-  "size": 30449991,
-  "notes": "v1.4.2：离线语音模型外移（首启分块下载，APK 瘦身至 30MB 内）；更新清单标题动态化",
+  "sha256": "41f5d7805d7379985f2a88aa65f6dceefdc4f267e9f81da37ab5d4cadb6ded05",
+  "size": 30450043,
+  "notes": "v1.4.3：修复小米/华为 TTS 无法播放（引擎枚举兜底）；修复离线模型下载 Connection reset（多 CDN 镜像 + 断点续传重试）；更新清单标题动态化",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.2/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.3/parts/apk.part0",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.2/parts/apk.part1",
-      "size": 14721351
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.3/parts/apk.part1",
+      "size": 14721403
     }
   ],
   "model": {
