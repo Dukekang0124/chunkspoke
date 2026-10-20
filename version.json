@@ -1,19 +1,19 @@
 {
-  "versionName": "1.4.3",
-  "versionCode": 2044,
-  "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
-  "pageUrl": "https://github.com/Dukekang0124/chunkspoke/releases/latest",
-  "sha256": "41f5d7805d7379985f2a88aa65f6dceefdc4f267e9f81da37ab5d4cadb6ded05",
-  "size": 30450043,
-  "notes": "v1.4.3：修复小米/华为 TTS 无法播放（引擎枚举兜底）；修复离线模型下载 Connection reset（多 CDN 镜像 + 断点续传重试）；更新清单标题动态化",
+  "versionName": "1.4.4",
+  "versionCode": 2045,
+  "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.4/chunkspoke-latest.apk",
+  "pageUrl": "https://github.com/Dukekang0124/chunkspoke/releases/tag/v1.4.4",
+  "sha256": "108837528bf0302d1f909b70f4f7b6056804b84f44ce32286ab06b65394beb60",
+  "size": 30450099,
+  "notes": "v1.4.4：优化应用内「检查更新」源顺序（jsDelivr 国内优先，raw 兜底）；修正内嵌 assets/version.json 版本陈旧的构建顺序问题",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.3/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.4/parts/apk.part0",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.3/parts/apk.part1",
-      "size": 14721403
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.4/parts/apk.part1",
+      "size": 14721459
     }
   ],
   "model": {
