@@ -196,11 +196,13 @@ class UpdateService {
   );
 
   /// 远端清单候选源：按顺序尝试，任一可用即返回（避免单源失败直接「检查失败」）。
-  /// - jsDelivr：国内可达性最好，放在首位（分支引用有缓存约 12h，发布后需 purge，见发布流程）；
-  /// - raw：内容即时生效，但国内真机常不可达，仅作兜底；
-  /// - 自有 CDN/对象存储：最稳，建议补充为第一优先级（见下方注释示例）。
+  /// - jsDelivr @latest：跟随最新 tag，国内可达。不能用 @main——仓库历史上
+  ///   提交过 71MB 分片，触发 jsDelivr 50MB 包体上限，@main 会永久 403；
+  /// - 官网同源副本：tag 解析缓存异常时的即时兜底（GitHub Pages）；
+  /// - raw：内容即时生效，但国内真机常不可达，仅作最后兜底。
   static const List<String> manifestUrls = <String>[
-    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/version.json',
+    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@latest/version.json',
+    'https://dukekang0124.github.io/chunkspoke/version.json',
     defaultRemoteUrl,
     // 'https://<你的OSS或CDN域名>/chunkspoke/version.json', // 建议补充为第一优先级
   ];

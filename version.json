@@ -1,22 +1,22 @@
 {
-  "versionName": "1.4.5",
-  "versionCode": 4046,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.5/chunkspoke-latest.apk",
+  "versionName": "1.4.6",
+  "versionCode": 4047,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.6/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.5/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.6/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "e9a61e3d5492f70af6ec14eae7b448546040c5751c0424384815e1c0a75fde95",
-  "size": 30450123,
-  "notes": "v1.4.5：修复部分机型（小米/华为）系统语音无声、冷启动初始化失败；模型下载支持多 CDN 自动重试与断点续传；设置新增「AI 联网点评」开关，关闭后不发送任何文本；修正更新清单 versionCode，旧版可正常收到更新。",
+  "sha256": "9a25c85469cd7145a66d4178eb5435db0fd1de3b92858f5220ae9d3f1fb9b1e7",
+  "size": 30450059,
+  "notes": "v1.4.6：修复应用内「检查更新」在部分网络下拿不到新版本（改用 jsDelivr @latest + 官网双源）；同步 v1.4.5 的系统语音无声、模型下载重试、AI 联网点评开关等修复。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.5/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.6/parts/apk.part0",
       "size": 15728640
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.5/parts/apk.part1",
-      "size": 14721483
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.6/parts/apk.part1",
+      "size": 14721419
     }
   ],
   "model": {

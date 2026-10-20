@@ -358,6 +358,12 @@ def check_urls(m):
 
 def check_github(m):
     print('== 5/7 Release 资产真的存在 ==')
+    # 下载通道以清单为准：v1.4.5 起主通道是 GitHub Pages 镜像，
+    # 若清单根本没写 Release 地址，就不该因为「没传 Release 资产」判红。
+    download = [m.get('url', '')] + list(m.get('urls') or [])
+    if not any('github.com' in u and '/releases/' in u for u in download):
+        warn('清单未使用 GitHub Release 下载通道（主通道为 Pages 镜像），跳过资产检查')
+        return
     tag = f'v{m["versionName"]}'
     try:
         rel = get_json(f'https://api.github.com/repos/{OWNER}/{REPO}/releases/tags/{tag}')
@@ -405,11 +411,16 @@ def check_site():
 
 
 def check_remote_manifests(m):
-    """两个清单源必须给出同一份内容：jsDelivr 有约 12h 缓存，发布后不 purge 就会长期发旧清单。"""
+    """两个清单源必须给出同一份内容。
+
+    注意用 @latest（跟随最新 tag）而不是 @main：仓库历史上提交过 71MB 分片，
+    @main 会触发 jsDelivr 50MB 包体上限并永久 403（v1.4.5 实测），
+    而 tag 指向清理后的小树，@latest 正常。
+    """
     print('== 7/7 远端两个清单源内容一致 ==')
     srcs = {
         'raw': f'https://raw.githubusercontent.com/{OWNER}/{REPO}/main/version.json',
-        'jsDelivr': f'https://cdn.jsdelivr.net/gh/{OWNER}/{REPO}@main/version.json',
+        'jsDelivr@latest': f'https://cdn.jsdelivr.net/gh/{OWNER}/{REPO}@latest/version.json',
     }
     got = {}
     for label, url in srcs.items():

@@ -6,14 +6,14 @@
   // 同源副本由 tools/publish_release.py 在每次发版时自动刷新，不会陈旧。
   var VERSION_URLS = [
     './version.json',
-    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/version.json',
+    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@latest/version.json',
     'https://raw.githubusercontent.com/Dukekang0124/chunkspoke/main/version.json'
   ];
 
   // 全部清单源都失败时的兜底直链（GitHub Pages 镜像，无 20MB 限制、支持断点续传）。
   var FALLBACK_DOWNLOAD_URL =
-    'https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.5/chunkspoke-latest.apk';
-  var FALLBACK_VERSION = 'v1.4.5';
+    'https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.6/chunkspoke-latest.apk';
+  var FALLBACK_VERSION = 'v1.4.6';
 
   var downloadUrl = FALLBACK_DOWNLOAD_URL;
 
