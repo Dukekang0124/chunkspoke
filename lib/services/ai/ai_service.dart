@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'ai_models.dart';
 
-/// baseUrl / appToken 通过编译期 --dart-define 注入（见 chunkspoke-ai/README.md），
-/// 不要硬编码真实值到源码或注释里。
+/// baseUrl / appToken 可用编译期 --dart-define 覆盖（见 chunkspoke-ai/README.md）。
+/// 这里的默认值就是线上实际值，且 APK 里可被提取 —— 该 token 是「应用识别符」，
+/// 不是秘密，也不是安全边界；防滥用的是后端的两层配额（按 IP + 全局）。
+/// 真正需要保密的只有 Cloudflare Secret 里的 ZHIPU_API_KEY，它绝不进包。
 const String _kDefaultBaseUrl = String.fromEnvironment(
   'AI_BASE_URL',
   defaultValue: 'https://chunkspoke-ai.pages.dev',

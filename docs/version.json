@@ -1,0 +1,42 @@
+{
+  "versionName": "1.4.5",
+  "versionCode": 4046,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.5/chunkspoke-latest.apk",
+  "urls": [
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.5/chunkspoke-latest.apk"
+  ],
+  "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
+  "sha256": "e9a61e3d5492f70af6ec14eae7b448546040c5751c0424384815e1c0a75fde95",
+  "size": 30450123,
+  "notes": "v1.4.5：修复部分机型（小米/华为）系统语音无声、冷启动初始化失败；模型下载支持多 CDN 自动重试与断点续传；设置新增「AI 联网点评」开关，关闭后不发送任何文本；修正更新清单 versionCode，旧版可正常收到更新。",
+  "parts": [
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.5/parts/apk.part0",
+      "size": 15728640
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.5/parts/apk.part1",
+      "size": 14721483
+    }
+  ],
+  "model": {
+    "name": "vosk-model-small-en-us-0.15",
+    "modelVersion": "0.15",
+    "sha256": "30f26242c4eb449f948e42cb302dd7a686cb29a3423a8367f99ff41780942498",
+    "size": 41205931,
+    "parts": [
+      {
+        "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/models/vosk-model-small-en-us-0.15/parts/model.part0",
+        "size": 15728640
+      },
+      {
+        "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/models/vosk-model-small-en-us-0.15/parts/model.part1",
+        "size": 15728640
+      },
+      {
+        "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/models/vosk-model-small-en-us-0.15/parts/model.part2",
+        "size": 9748651
+      }
+    ]
+  }
+}

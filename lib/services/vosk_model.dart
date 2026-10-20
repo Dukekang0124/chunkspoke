@@ -249,8 +249,44 @@ class ModelManager {
     await _download(zip, [(manifest.mirrorUrl, startAt)], startAt);
   }
 
+  /// jsDelivr 多 CDN 域名：国内不同运营商/地区可达性差异大，逐域名重试。
+  static const List<String> _cdnHosts = [
+    'cdn.jsdelivr.net',
+    'fastly.jsdelivr.net',
+    'gcore.jsdelivr.net',
+    'testingcf.jsdelivr.net',
+  ];
+
+  /// 单段最多尝试次数（走完一轮镜像域名再重来一轮）。
+  static const int _maxSegmentAttempts = 8;
+
+  /// 把 jsDelivr URL 换成指定镜像域名；非 jsDelivr 源原样返回。
+  static String _mirrorUrl(String url, int attempt) {
+    final u = Uri.tryParse(url);
+    if (u == null || !u.host.endsWith('jsdelivr.net')) return url;
+    return u.replace(host: _cdnHosts[attempt % _cdnHosts.length]).toString();
+  }
+
+  /// 把底层网络异常转成用户可读文案（避免 SocketException 原样弹到 UI）。
+  static String _friendlyNetError(Object e) {
+    final s = e.toString();
+    if (s.contains('Connection reset') || s.contains('Connection refused')) {
+      return '网络连接被中断，请检查网络后重试';
+    }
+    if (s.contains('SocketException') || s.contains('ClientException')) {
+      return '无法连接下载服务器，请检查网络后重试';
+    }
+    if (s.contains('TimeoutException') || s.contains('timeout')) {
+      return '下载超时，请检查网络后重试';
+    }
+    return _brief(e);
+  }
+
   /// 顺序下载若干 (url, 片内起始偏移) 片段，append 到 <zip>.part，全程 0.5% 节流报进度。
-  Future<void> _download(File zip, List<(String, int)> segments, int startAt) async {
+  /// 加固：每段失败自动换 jsDelivr 镜像域名 + Range 断点续传重试（最多 8 次），
+  /// 把「Connection reset by peer」这类单次抖动挡在下载层，不直接弹给用户。
+  Future<void> _download(
+      File zip, List<(String, int)> segments, int startAt) async {
     final part = File('${zip.path}.part');
     final total = manifest.size;
     final sink = part.openWrite(mode: FileMode.append);
@@ -276,33 +312,59 @@ class ModelManager {
 
     try {
       emit();
-      for (final (url, inStart) in segments) {
-        final req = http.Request('GET', Uri.parse(url));
-        req.headers['accept-encoding'] = 'identity';
-        if (inStart > 0) req.headers['range'] = 'bytes=$inStart-';
-        final resp =
-            await _client.send(req).timeout(const Duration(seconds: 30));
-        if (resp.statusCode != 200 && resp.statusCode != 206) {
-          throw ModelDownloadException('下载失败（HTTP ${resp.statusCode}）');
-        }
-        var skip = (resp.statusCode == 200 && inStart > 0) ? inStart : 0;
-        await for (final chunk in resp.stream) {
-          if (skip > 0) {
-            if (chunk.length <= skip) {
-              skip -= chunk.length;
-              continue;
+      for (final (rawUrl, segStart) in segments) {
+        var written = 0; // 本段已写入字节数（失败后据此 Range 续传）
+        var attempt = 0;
+        while (true) {
+          final url = _mirrorUrl(rawUrl, attempt);
+          final reqStart = segStart + written;
+          try {
+            final req = http.Request('GET', Uri.parse(url));
+            req.headers['accept-encoding'] = 'identity';
+            if (reqStart > 0) req.headers['range'] = 'bytes=$reqStart-';
+            final resp = await _client
+                .send(req)
+                .timeout(const Duration(seconds: 20));
+            if (resp.statusCode != 200 && resp.statusCode != 206) {
+              if (resp.statusCode >= 500) {
+                // 5xx 多为 CDN 抖动，值得换域名重试。
+                throw Exception('HTTP ${resp.statusCode}');
+              }
+              // 4xx（404 等）换域名也无济于事，直接给出明确原因。
+              throw ModelDownloadException('下载失败（HTTP ${resp.statusCode}）');
             }
-            final rest = chunk.sublist(skip);
-            skip = 0;
-            sink.add(rest);
-            received += rest.length;
-          } else {
-            sink.add(chunk);
-            received += chunk.length;
-          }
-          if (received - lastEmitted >= step) {
-            lastEmitted = received;
-            emit();
+            var skip = (resp.statusCode == 200 && reqStart > 0) ? reqStart : 0;
+            await for (final chunk in resp.stream) {
+              if (skip > 0) {
+                if (chunk.length <= skip) {
+                  skip -= chunk.length;
+                  continue;
+                }
+                final rest = chunk.sublist(skip);
+                skip = 0;
+                sink.add(rest);
+                received += rest.length;
+                written += rest.length;
+              } else {
+                sink.add(chunk);
+                received += chunk.length;
+                written += chunk.length;
+              }
+              if (received - lastEmitted >= step) {
+                lastEmitted = received;
+                emit();
+              }
+            }
+            break; // 本段完成
+          } on ModelDownloadException {
+            rethrow; // 业务异常（HTTP 4xx 等）不重试
+          } catch (e) {
+            attempt++;
+            if (attempt >= _maxSegmentAttempts) {
+              throw ModelDownloadException(_friendlyNetError(e));
+            }
+            // 已写入字节保留，换镜像域名后从断点 Range 续传。
+            await Future<void>.delayed(Duration(milliseconds: 400 * attempt));
           }
         }
       }

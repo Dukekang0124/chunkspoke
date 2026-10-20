@@ -38,6 +38,8 @@ img{max-width:100%;display:block}
 .version-badge{display:inline-block;margin-left:12px;padding:6px 12px;border:1px solid var(--line);
   border-radius:999px;color:var(--muted);font-size:.85rem;vertical-align:middle}
 .mobile-hint{margin-top:12px;color:var(--orange);font-size:.9rem;max-width:420px}
+.abi-note{margin-top:12px;color:var(--muted);font-size:.9rem;max-width:460px}
+.abi-note strong{color:var(--orange);font-weight:600}
 
 /* Hero */
 .hero{display:grid;grid-template-columns:1fr;gap:28px;padding:54px 20px 40px;align-items:center}

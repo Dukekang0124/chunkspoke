@@ -227,14 +227,18 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
       return;
     }
     JudgeResult? ai;
-    try {
-      ai = await _ai.judgeFreeBuild(BuildData(
-        scenario: '自由造句',
-        chinesePrompt: '用已掌握的词块自由拼一句',
-        availableChunks: _selected.map((c) => c.text).toList(),
-        userSpeech: text,
-      ));
-    } catch (_) {}
+    // 隐私门：设置内关闭「AI 联网点评」后不发任何请求，直接走下方本机规则判定。
+    final aiNet = Provider.of<ProgressService>(context, listen: false).aiNetOn;
+    if (aiNet) {
+      try {
+        ai = await _ai.judgeFreeBuild(BuildData(
+          scenario: '自由造句',
+          chinesePrompt: '用已掌握的词块自由拼一句',
+          availableChunks: _selected.map((c) => c.text).toList(),
+          userSpeech: text,
+        ));
+      } catch (_) {}
+    }
     String tier;
     if (ai != null) {
       tier = ai.score >= 5

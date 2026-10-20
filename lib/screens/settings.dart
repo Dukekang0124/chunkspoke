@@ -34,6 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _notifHour = 20;
   int _notifMinute = 0;
   bool _soundOn = true; // B7：音效开关（震动跟随系统，无独立开关）
+  bool _aiNetOn = true; // 隐私：AI 联网点评开关（关闭后自由造句只用本机规则引擎）
 
   @override
   void initState() {
@@ -49,6 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _notifHour = p.notifHour;
     _notifMinute = p.notifMinute;
     _soundOn = p.soundOn;
+    _aiNetOn = p.aiNetOn;
     // 异步初始化全部兜底：失败不阻塞设置页渲染，更不允许未捕获异常（P0 加固）。
     UpdateService().local().then((v) {
       if (mounted) setState(() => _ver = v.versionName);
@@ -343,6 +345,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _toggleAiNet(bool v) async {
+    final p = Provider.of<ProgressService>(context, listen: false);
+    await p.setAiNetOn(v);
+    if (mounted) setState(() => _aiNetOn = v);
+  }
+
+  /// 隐私开关：关闭后「自由造句」不再向云端发送识别文本，改由本机规则引擎判定。
+  Widget _aiNetCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: SwitchListTile(
+          title: const Text('AI 联网点评', style: TextStyle(color: kText)),
+          subtitle: Text(
+            _aiNetOn
+                ? '开启：自由造句会把识别出的句子文本发送到开发者代理生成点评（不含录音与设备信息）'
+                : '已关闭：自由造句仅用本机规则判定，不发送任何数据',
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
+          ),
+          value: _aiNetOn,
+          activeColor: kPrimary,
+          onChanged: _toggleAiNet,
+        ),
+      ),
+    );
+  }
+
   /// A7：反馈入口（发邮件 / 复制邮箱）。
   Widget _feedbackEntry(BuildContext context) {
     return Container(
@@ -414,6 +448,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             // —— AI 助手：常驻入口 ——
             _aiCoachEntry(context),
+            const SizedBox(height: 12),
+            _aiNetCard(context),
             const SizedBox(height: 14),
             _advancedCard(context),
             const SizedBox(height: 20),

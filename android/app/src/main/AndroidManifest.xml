@@ -59,5 +59,12 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Android 11+ 包可见性：与系统 TTS 引擎交互必须声明 TTS_SERVICE，否则
+             TextToSpeech 无法发现/绑定引擎（getDefaultEngine 返回 null、
+             isLanguageAvailable 恒 false），点喇叭即报「无法播放语音」。
+             参考 https://developer.android.com/training/package-visibility/use-cases#text-to-speech -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
     </queries>
 </manifest>

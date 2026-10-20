@@ -349,6 +349,10 @@ class ProgressService {
   bool get soundOn => _kv('soundOn') != 'false'; // 默认开
   Future<void> setSoundOn(bool v) => _put('soundOn', v.toString());
 
+  // —— 隐私开关：AI 联网点评。关闭后「自由造句」只用本机规则引擎判定，不发任何请求 ——
+  bool get aiNetOn => _kv('aiNetOn') != 'false'; // 默认开
+  Future<void> setAiNetOn(bool v) => _put('aiNetOn', v.toString());
+
   // —— 首次练习漏斗标记（P0-七）——
   bool get firstPracticeStarted => _kv('firstPracticeStarted') == 'true';
   Future<void> setFirstPracticeStarted() =>
@@ -428,6 +432,7 @@ class TtsService {
   String? _language;
   String? _lastError;
   bool _available = false;
+  Future<void>? _initInFlight; // 并发保护：同一时刻只跑一次初始化
 
   /// 实际选用的 TTS 语言（en-US 不可用时自动回退到其他英语变体）。
   String? get language => _language;
@@ -438,52 +443,112 @@ class TtsService {
   /// 最近一次播放失败原因（供诊断 / UI 提示「无法播放」）。
   String? get lastError => _lastError;
 
-  /// 初始化：检测英语语音可用性，en-US 不可用则回退到其他英语变体。
+  /// 初始化（幂等，可重复调用）：检测英语语音可用性，en-US 不可用则回退到其他英语变体。
   /// 全程非致命：任何异常都记为不可用，绝不阻塞启动。
-  Future<void> init() async {
+  Future<void> init() {
+    final inFlight = _initInFlight;
+    if (inFlight != null) return inFlight;
+    final f = _doInit().whenComplete(() => _initInFlight = null);
+    _initInFlight = f;
+    return f;
+  }
+
+  Future<void> _doInit() async {
+    String engine = 'unknown';
     try {
-      for (final lang in _enVariants) {
-        final ok = await _tts.isLanguageAvailable(lang);
-        if (ok == true) {
-          await _tts.setLanguage(lang);
-          await _tts.setSpeechRate(0.9);
-          await _tts.setPitch(1.0);
-          _language = lang;
-          _available = true;
-          _lastError = null;
-          return;
+      try {
+        final de = await _tts.getDefaultEngine; // getter，非方法
+        engine = de?.toString() ?? 'unknown';
+      } catch (_) {}
+      // 1) 先用系统默认引擎尝试各英语变体。
+      if (await _tryLanguageVariants()) return;
+      // 2) 默认引擎不支持英文 → 枚举已安装引擎逐个切换再试。
+      //    小米（小爱语音引擎）/ 华为（智慧语音）默认引擎常无英文语音数据，
+      //    但设备上可能另装了 Google TTS / 讯飞等可用引擎。
+      try {
+        final engines = await _tts.getEngines;
+        if (engines is List) {
+          for (final e in engines) {
+            final name = e.toString();
+            if (name == engine) continue;
+            try {
+              await _tts.setEngine(name);
+              if (await _tryLanguageVariants()) {
+                _lastError = null;
+                return;
+              }
+            } catch (_) {}
+          }
         }
-      }
+      } catch (_) {}
       _available = false;
-      _lastError = 'no-english-tts';
+      _lastError = 'no-english-tts (engine=$engine)';
     } catch (e, st) {
       _available = false;
       _lastError = '$e';
-      CrashLog.write('TtsService.init: $e', st);
+      CrashLog.write('TtsService.init(engine=$engine): $e', st);
     }
+  }
+
+  /// 依次尝试英语变体，命中即设为可用并返回 true。
+  Future<bool> _tryLanguageVariants() async {
+    for (final lang in _enVariants) {
+      var ok = false;
+      try {
+        ok = await _tts.isLanguageAvailable(lang) == true;
+      } catch (_) {}
+      if (!ok) {
+        // 兜底：部分引擎（小米「小爱语音引擎」等）isLanguageAvailable 会误报
+        // false，但 setLanguage 实际成功——用返回码（1=成功）再验证一次。
+        try {
+          final r = await _tts.setLanguage(lang);
+          ok = r == 1 || r == true;
+        } catch (_) {}
+      }
+      if (ok) {
+        try {
+          await _tts.setSpeechRate(0.9);
+          await _tts.setPitch(1.0);
+        } catch (_) {}
+        _language = lang;
+        _available = true;
+        _lastError = null;
+        return true;
+      }
+    }
+    return false;
   }
 
   /// 播放文本。成功返回 true；引擎不可用或播放失败返回 false，
   /// 并记录 lastError（供 UI 提示「无法播放」，避免点喇叭无声且无任何反馈）。
+  /// 加固：冷启动时系统 TTS 服务尚未绑定完成会让一次性 init 失败（小米
+  /// HyperOS 常见），这里在真正播放时按需重初始化；播放失败再重试一轮。
   Future<bool> speak(String text) async {
     if (!_available) {
-      _lastError ??= 'tts-unavailable';
-      return false;
-    }
-    try {
-      final r = await _tts.speak(text);
-      // flutter_tts 的 speak 返回 1（成功）或 0（失败）。
-      if (r == 0) {
-        _lastError = 'tts-speak-returned-0';
+      await init(); // 现场重试：此刻引擎大概率已就绪
+      if (!_available) {
+        _lastError ??= 'tts-unavailable';
         return false;
       }
-      _lastError = null;
-      return true;
-    } catch (e, st) {
-      _lastError = '$e';
-      CrashLog.write('TtsService.speak: $e', st);
-      return false;
     }
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        final r = await _tts.speak(text);
+        // flutter_tts 的 speak 返回 1（已入队）或 0（失败）。
+        if (r != 0) {
+          _lastError = null;
+          return true;
+        }
+        _lastError = 'tts-speak-returned-0';
+      } catch (e, st) {
+        _lastError = '$e';
+        CrashLog.write('TtsService.speak: $e', st);
+      }
+      // 失败后重初始化再试一次（引擎服务被系统回收 / 首次绑定未完成）。
+      await init();
+      if (!_available) return false;
+    }
+    return false;
   }
 
   Future<void> stop() async {

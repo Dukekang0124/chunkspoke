@@ -10,16 +10,29 @@
 
 用法：
   推荐直接双击/运行 tools/publish.bat（自动切目录 + 交互式要 Token）。
-  手动执行（在 chunkspoke-flutter/ 下，路径用 / 避免转义问题）：
+  手动执行（在仓库根 D:\\cs_flutter 下，路径用 / 避免转义问题）：
   set GITHUB_TOKEN=ghp_xxx            # PowerShell: $env:GITHUB_TOKEN="ghp_xxx"
   python tools/publish_release.py --apk ../chunkspoke-v1.2.8-arm64.apk --dry-run
   python tools/publish_release.py --apk ../chunkspoke-v1.2.8-arm64.apk
 
+  只修清单不动 APK（例如下面 v1.4.4 的补发布）：
+  python tools/publish_release.py --apk build/app/outputs/flutter-apk/app-arm64-v8a-release.apk --manifest-only
+
+本脚本一次写全四处，缺一不可：
+  version.json（远端 main，App 首选源）
+  docs/version.json（官网同源首选源，GitHub Pages 直接对外发）
+  assets/version.json（打进 APK 的离线兜底，必须在 flutter build 之前写好）
+  GitHub Release 资产 chunkspoke-latest.apk（缺了它 releases/latest/download/… 就是 404）
+
 可选：
-  --mirror-url https://cdn.example.com/chunkspoke-latest.apk   # 写进 version.json 的 urls（可重复）
-  --skip-manifest                     # 只发 APK，不动 version.json
-  --skip-verify                       # 跳过最后的线上自检
-  --token XXX                         # 也可直接传（会留在 shell 历史里，不推荐）
+  --mirror-url https://mirror.example.com/chunkspoke-latest.apk   # 追加进 version.json 的 urls（可重复）
+  --skip-manifest    # 只发 APK，不动 version.json
+  --manifest-only    # 只推清单（含 docs/version.json），不重传 APK
+  --skip-verify      # 跳过线上自检与链路体检：只在调试时用，它正是拦住 404 的那道闸
+  --token XXX        # 也可直接传（会留在 shell 历史里，不推荐）
+
+发布后仍要单独确认的一件事：APK 分片（App 内更新的主通道）不在本脚本职责内，
+由 tools/split_apk.py 切分后推 chunkspoke-releases 仓库；verify_release.py 会逐条实测。
 
 Token 权限：经典 PAT 需 `repo`；细粒度 PAT 需该仓库的 Contents: Read/Write。
 """
@@ -42,10 +55,15 @@ try:
 except Exception:
     pass
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # chunkspoke-flutter/
-REPO_ROOT = os.path.dirname(ROOT)                                   # 仓库根（version.json 所在）
-MANIFEST = os.path.join(REPO_ROOT, 'version.json')
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # 仓库根 = Flutter 工程根
+# 注意：这里不能再往上一层找「仓库根」。旧结构是 仓库根/chunkspoke-flutter/，
+# 现在工程本身就是仓库根（构建用的 ASCII 联结 D:\cs_flutter 也指向它）。
+# 曾经 REPO_ROOT=dirname(ROOT) 会把清单写到工程外面（历史镜像副本里），
+# 于是 version.json 与 assets/version.json 各说各话、v1.4.4 的 404 也没人拦。
+REPO_ROOT = ROOT
+MANIFEST = os.path.join(ROOT, 'version.json')
 ASSET_MANIFEST = os.path.join(ROOT, 'assets', 'version.json')
+SITE_MANIFEST = os.path.join(ROOT, 'docs', 'version.json')  # 官网同源首选源
 OWNER = 'Dukekang0124'
 REPO = 'chunkspoke'
 ASSET_NAME = 'chunkspoke-latest.apk'
@@ -221,37 +239,45 @@ def update_manifest(token, manifest, mirrors, apk_ok):
         log(f'  写入备用下载源：{dedup[1:]}')
     text = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
 
-    # 同步包内副本（下次构建打进 assets，保证展示信息一致）
-    for path in (ASSET_MANIFEST, MANIFEST):
+    # 同步三份本地副本：远端清单、包内清单、官网同源清单（下次构建/部署打进去了）
+    for path in (ASSET_MANIFEST, SITE_MANIFEST, MANIFEST):
         with open(path, 'w', encoding='utf-8', newline='\n') as f:
             f.write(text)
         log(f'  本地写入：{os.path.relpath(path, REPO_ROOT)}')
 
-    remote = api('GET', f'/repos/{OWNER}/{REPO}/contents/version.json?ref=main', token)
-    if not remote:
-        die('读不到远端 version.json（token 权限不足或路径不对）')
-    resp = api('PUT', f'/repos/{OWNER}/{REPO}/contents/version.json', token, data={
-        'message': f'chore(release): version.json → v{data["versionName"]} ({data["versionCode"]})',
-        'content': base64.b64encode(text.encode('utf-8')).decode('ascii'),
-        'sha': remote['sha'],
-        'branch': 'main',
-    })
-    if not resp:
-        die('提交 version.json 失败')
-    log(f'  已提交：{resp["commit"]["sha"][:10]} {resp["commit"]["html_url"]}')
+    for remote_path in ('version.json', 'docs/version.json'):
+        remote = api('GET', f'/repos/{OWNER}/{REPO}/contents/{remote_path}?ref=main', token)
+        if not remote:
+            # 官网同源副本可能从未提交过：没有 sha 就是新建文件。
+            resp = api('PUT', f'/repos/{OWNER}/{REPO}/contents/{remote_path}', token, data={
+                'message': f'chore(release): {remote_path} → v{data["versionName"]} ({data["versionCode"]})',
+                'content': base64.b64encode(text.encode('utf-8')).decode('ascii'),
+                'branch': 'main',
+            })
+        else:
+            resp = api('PUT', f'/repos/{OWNER}/{REPO}/contents/{remote_path}', token, data={
+                'message': f'chore(release): {remote_path} → v{data["versionName"]} ({data["versionCode"]})',
+                'content': base64.b64encode(text.encode('utf-8')).decode('ascii'),
+                'sha': remote['sha'],
+                'branch': 'main',
+            })
+        if not resp:
+            die(f'提交 {remote_path} 失败')
+        log(f'  已提交 {remote_path}：{resp["commit"]["sha"][:10]} {resp["commit"]["html_url"]}')
 
 
 def purge_jsdelivr():
     """兜底源 jsDelivr 对 @main 有约 12h 缓存；不清会长期返回旧清单。"""
-    log('  刷新 jsDelivr 缓存（兜底源）…')
-    url = f'https://purge.jsdelivr.net/gh/{OWNER}/{REPO}@main/version.json'
-    try:
-        req = urllib.request.Request(url, headers={'User-Agent': UA})
-        with urllib.request.urlopen(req, timeout=30) as r:
-            data = json.loads(r.read())
-        log(f'  purge 状态：{data.get("status")}（若显示 throttled，等 1 分钟再访问一次即可）')
-    except Exception as e:
-        log(f'  purge 失败，不影响发布（可手动打开 {url}）：{e}')
+    for path in ('version.json', 'docs/version.json'):
+        log(f'  刷新 jsDelivr 缓存（兜底源）：{path} …')
+        url = f'https://purge.jsdelivr.net/gh/{OWNER}/{REPO}@main/{path}'
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': UA})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                data = json.loads(r.read())
+            log(f'  purge 状态：{data.get("status")}（若显示 throttled，等 1 分钟再访问一次即可）')
+        except Exception as e:
+            log(f'  purge 失败，不影响发布（可手动打开 {url}）：{e}')
 
 
 def http_get(url, head=False, extra=None, timeout=40):
@@ -308,8 +334,23 @@ def verify(manifest):
         ok = False
 
     log('\n' + ('[完成] 线上校验全部通过，旧版本客户端下次冷启动即可收到更新弹窗。'
-                if ok else '[注意] 有校验项未通过，见上面日志；raw 缓存可等 5 分钟后再验。'))
+                if ok else '[失败] 有校验项未通过，见上面日志。'))
+    if not ok:
+        die('线上自检未通过：清单或 APK 直链不可用，用户会下到坏包')
     return ok
+
+
+def run_gate(apk):
+    """发布后硬闸：任何一条对外地址断了就让整条流水线红掉。
+
+    v1.4.4 就是栽在这里——旧 verify() 只把失败打进日志、退出码仍是 0，
+    所以「下载按钮 404」这种事故既不会拦住发布，也不会出现在任何告警里。
+    """
+    log('== 附加：线上链路体检（tools/verify_release.py）==')
+    cmd = [sys.executable, os.path.join(ROOT, 'tools', 'verify_release.py'), '--apk', apk]
+    if subprocess.run(cmd).returncode != 0:
+        die('链路体检未通过：有对外地址不可用或清单不同步，禁止就此收工')
+    log('  链路体检通过 ✓')
 
 
 def main():
@@ -342,6 +383,7 @@ def main():
         purge_jsdelivr()
         if not args.skip_verify:
             verify(manifest)
+            run_gate(apk)
         return
 
     _release, asset = publish_apk(args.token, apk, manifest)
@@ -352,6 +394,7 @@ def main():
         purge_jsdelivr()
     if not args.skip_verify:
         verify(manifest)
+        run_gate(apk)
 
 
 if __name__ == '__main__':

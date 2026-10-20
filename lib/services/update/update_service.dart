@@ -195,16 +195,14 @@ class UpdateService {
         'https://raw.githubusercontent.com/Dukekang0124/chunkspoke/main/version.json',
   );
 
-  /// 远端清单候选源：按顺序尝试，任一可用即返回（解决 raw 在国内被阻断 →
-  /// 单源失败直接「检查失败」的问题）。
-  /// - raw：内容即时生效，但国内真机常不可达（放在首位，能通就最快）；
-  /// - jsDelivr：国内可达性明显更好，但分支引用有缓存（约 12h），
-  ///   发布后可能短时拿到旧清单，故仅作兜底；
+  /// 远端清单候选源：按顺序尝试，任一可用即返回（避免单源失败直接「检查失败」）。
+  /// - jsDelivr：国内可达性最好，放在首位（分支引用有缓存约 12h，发布后需 purge，见发布流程）；
+  /// - raw：内容即时生效，但国内真机常不可达，仅作兜底；
   /// - 自有 CDN/对象存储：最稳，建议补充为第一优先级（见下方注释示例）。
   static const List<String> manifestUrls = <String>[
-    defaultRemoteUrl,
     'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/version.json',
-    // 'https://<你的OSS或CDN域名>/chunkspoke/version.json',
+    defaultRemoteUrl,
+    // 'https://<你的OSS或CDN域名>/chunkspoke/version.json', // 建议补充为第一优先级
   ];
 
   /// 下载落盘文件名（固定；供「本地已有完整包则直接安装」复用）。

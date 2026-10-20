@@ -35,13 +35,17 @@ Future<void> copyFeedbackEmail() async {
 }
 
 /// 播放 TTS，失败时弹 SnackBar 提示：把「点喇叭无声」从静默失败变为可见反馈。
+/// 附带 lastError（含失败码 / 当前默认 TTS 引擎包名），便于真机定位引擎问题。
 Future<void> speakOrHint(
     BuildContext context, TtsService tts, String text) async {
   final ok = await tts.speak(text);
   if (!ok && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('无法播放语音，请检查系统 TTS 设置'),
-      duration: Duration(seconds: 2),
+    final why = tts.lastError;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(why == null || why.isEmpty
+          ? '无法播放语音，请检查系统 TTS 设置'
+          : '无法播放语音（$why），请检查系统 TTS 设置'),
+      duration: const Duration(seconds: 2),
     ));
   }
 }
