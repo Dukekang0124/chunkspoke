@@ -2,10 +2,13 @@
   "versionName": "1.4.4",
   "versionCode": 2045,
   "url": "https://github.com/Dukekang0124/chunkspoke/releases/latest/download/chunkspoke-latest.apk",
+  "urls": [
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.4/chunkspoke-latest.apk"
+  ],
   "pageUrl": "https://github.com/Dukekang0124/chunkspoke/releases/tag/v1.4.4",
   "sha256": "108837528bf0302d1f909b70f4f7b6056804b84f44ce32286ab06b65394beb60",
   "size": 30450099,
-  "notes": "v1.4.4：优化应用内「检查更新」源顺序（jsDelivr 国内优先，raw 兜底）；修正内嵌 assets/version.json 版本陈旧的构建顺序问题",
+  "notes": "v1.4.4：优化应用内「检查更新」源顺序（jsDelivr 国内优先，raw 兜底）；修正内嵌 assets/version.json 版本陈旧；新增 GitHub Pages 完整包镜像（无需手动上传、无 20MB 限制）",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.4/parts/apk.part0",
