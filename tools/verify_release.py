@@ -128,6 +128,7 @@ def _curl_probe(url, timeout):
     cmd.append(url)
     try:
         out = subprocess.run(cmd, capture_output=True, text=True,
+                             encoding='utf-8', errors='replace',
                              timeout=timeout + 10).stdout or ''
     except Exception:
         return None, None
@@ -441,11 +442,11 @@ def check_remote_manifests(m):
             fail(f'{label} 的 url 与本地不同：{j.get("url")}')
         else:
             ok(f'{label} = v{j.get("versionName")}，url 一致')
-    if len(got) == 2:
-        if (got['jsDelivr'].get('urls') or []) != (got['raw'].get('urls') or []):
+    if 'raw' in got and 'jsDelivr@latest' in got:
+        if (got['jsDelivr@latest'].get('urls') or []) != (got['raw'].get('urls') or []):
             fail('jsDelivr 与 raw 的 urls 备用源不一致（jsDelivr 缓存未刷新）：'
                  'App 首选 jsDelivr，用户在缓存期内拿不到备用源 → 打开 '
-                 f'https://purge.jsdelivr.net/gh/{OWNER}/{REPO}@main/version.json 后重跑')
+                 f'https://purge.jsdelivr.net/gh/{OWNER}/{REPO}@latest/version.json 后重跑')
         else:
             ok('jsDelivr 与 raw 内容一致')
 
