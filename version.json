@@ -6,8 +6,8 @@
     "https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.8/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "ab66ed863664f9b9b79cce7e1ebcf941950808618a81f41614b8daf3a3d59060",
-  "size": 30452055,
+  "sha256": "a096a6a4b751a2e777ddb7972d132a198a990c6563834e5264af8f2ebf16a25d",
+  "size": 30452059,
   "notes": "v1.4.8：修复部分机型语音包反复「模型校验失败」——分块逐块校验、断点续传按落盘偏移对齐、坏包自动重下并支持多源兜底；修复通关战报页首次进入崩溃。",
   "parts": [
     {
@@ -16,7 +16,7 @@
     },
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.8/parts/apk.part1",
-      "size": 14723415
+      "size": 14723419
     }
   ],
   "model": {
