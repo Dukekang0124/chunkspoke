@@ -7,8 +7,8 @@
     "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.4.9/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "96115c2a1588fd482671cee5cc0051c141be3d1043eaba69ea84c4c177e3073e",
-  "size": 58078769,
+  "sha256": "eec2095f242535b6cda6909a68c32915eac0ddffd9cc1378f40ff4073b8da5d9",
+  "size": 58079029,
   "notes": "v1.4.9：朗读语速修正为真人节奏（约 154 wpm，旧版快近 3 倍）；新增「高清发音包（离线 · 美式）」——真人质感美音，约 60MB，建议 Wi-Fi、移动网络也可，下载后自动启用，可随时切回系统发音并逐个试听；系统只有英式等非美式英文时会自动选用并标注「英式」，同时提示可下载高清美音包；更新下载更抗断（跨版本残片自动作废，不再出现「校验失败」白下一次）。",
   "parts": [
     {
@@ -25,7 +25,7 @@
     },
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.4.9/parts/apk.part3",
-      "size": 10892849
+      "size": 10893109
     }
   ],
   "model": {
