@@ -15,7 +15,7 @@ class Sm2Scheduler {
       ReviewScheduler.nextDue(from, stage);
 }
 
-/// 每日会话编排（M7 / v1.2.2 五步；v1.4.0 瘦身）：新块 ≤6 个（五步闭环）+ 旧块复习（②④两步）。
+/// 每日会话编排（v1.5.2 六步）：新块 ≤6 个（六步闭环）+ 旧块复习（后四步）。
 class PracticeSession {
   /// 返回当日应练词块：
   ///  - 有到期复习 → 先练复习（最多 [maxDue]），不插入新学；
@@ -31,7 +31,7 @@ class PracticeSession {
     return allChunks.take(maxNew).toList(); // 每日新学 ≤6
   }
 
-  /// 每日会话 = 新块（≤[maxNew]，各走五步）+ 到期复习块（≤[maxReview]，各走②④两步）。
+  /// 每日会话 = 新块（≤[maxNew]，各走六步）+ 到期复习块（≤[maxReview]，各走后四步）。
   static DailyPlan dailyPlan({
     required List<Chunk> dueChunks,
     required List<Chunk> newChunks,
@@ -75,7 +75,7 @@ class PracticeSession {
   static bool hasContent(int practicedCount) => practicedCount > 0;
 }
 
-/// 每日会话计划：新块（五步）+ 到期复习块（②④两步）。
+/// 每日会话计划：新块（六步）+ 到期复习块（后四步）。
 class DailyPlan {
   final List<Chunk> newChunks;
   final List<Chunk> reviewChunks;

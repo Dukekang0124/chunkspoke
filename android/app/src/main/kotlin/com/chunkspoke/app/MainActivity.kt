@@ -1,6 +1,7 @@
 package com.chunkspoke.app
 
 import android.content.Intent
+import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaPlayer
@@ -27,6 +28,8 @@ class MainActivity : FlutterActivity() {
     private val REC_CH = "chunkspoke/recorder"
     private val LEVEL_CH = "chunkspoke/recorder_level"
     private val POWER_CH = "chunkspoke/power"
+    private val TTS_CH = "chunkspoke/tts"
+    private val VOICE_CH = "chunkspoke/voice"
     private val mainHandler = Handler(Looper.getMainLooper())
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
@@ -34,6 +37,7 @@ class MainActivity : FlutterActivity() {
     private var recOut: FileOutputStream? = null
     private var levelSink: EventChannel.EventSink? = null
     private var player: MediaPlayer? = null
+    private var voicePlayer: MediaPlayer? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -136,6 +140,59 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
+        // —— TTS 修复引导：系统语音设置 / 应用商店 ——
+        // 引导页与「无法播放语音」对话框共用；失败返回 false 由 Dart 侧给可见提示。
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, TTS_CH)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "openSettings" -> {
+                        try {
+                            // 标准 TTS 设置页（Android 11+ 也可直达首选引擎/语音数据）。
+                            val intent = Intent("com.android.settings.TTS_SETTINGS").apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            try {
+                                val fallback = Intent(Settings.ACTION_SETTINGS).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(fallback)
+                                result.success(true)
+                            } catch (e2: Exception) {
+                                result.success(false)
+                            }
+                        }
+                    }
+                    "openStore" -> {
+                        val q = (call.arguments as? String)?.takeIf { it.isNotBlank() }
+                            ?: "text to speech engine"
+                        // 先交给设备自带应用商店（国内机型为厂商商店），失败再走浏览器。
+                        try {
+                            val market = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("market://search?q=" + Uri.encode(q))
+                            ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                            startActivity(market)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            try {
+                                val web = Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://play.google.com/store/search?q=" + Uri.encode(q))
+                                ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                                startActivity(web)
+                                result.success(true)
+                            } catch (e2: Exception) {
+                                result.success(false)
+                            }
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
         // —— 录音通道（16k 单声道 PCM → WAV） ——
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, REC_CH)
             .setMethodCallHandler { call, result ->
@@ -176,6 +233,30 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
+        // —— 高清发音包播放通道（VITS 合成 WAV → MediaPlayer） ——
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, VOICE_CH)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "playWav" -> {
+                        try {
+                            playVoice(call.argument<String>("path"))
+                            result.success(null)
+                        } catch (e: Exception) {
+                            result.error("VOICE", e.message, null)
+                        }
+                    }
+                    "stop" -> {
+                        try {
+                            stopVoice()
+                            result.success(null)
+                        } catch (e: Exception) {
+                            result.error("VOICE", e.message, null)
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
         // —— 采集电平通道（录音期间实时 RMS/峰值 0..1，供 UI 电平反馈自检） ——
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, LEVEL_CH)
             .setStreamHandler(object : EventChannel.StreamHandler {
@@ -193,8 +274,39 @@ class MainActivity : FlutterActivity() {
         mainHandler.post { levelSink?.success(level) }
     }
 
+    private fun playVoice(path: String?) {
+        if (path == null) throw IllegalArgumentException("path null")
+        stopVoice()
+        stopPlayback()
+        voicePlayer = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build()
+            )
+            setDataSource(path)
+            setOnCompletionListener { stopVoice() }
+            prepare()
+            start()
+        }
+    }
+
+    private fun stopVoice() {
+        try {
+            voicePlayer?.stop()
+        } catch (_: Exception) {
+        }
+        try {
+            voicePlayer?.release()
+        } catch (_: Exception) {
+        }
+        voicePlayer = null
+    }
+
     private fun playRecording(path: String?) {
         if (path == null) throw IllegalArgumentException("path null")
+        stopVoice()
         stopPlayback()
         player = MediaPlayer().apply {
             setDataSource(path)

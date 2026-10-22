@@ -7,17 +7,18 @@ import '../services/speech.dart';
 import '../services/vosk_engine.dart';
 import '../services/ai/ai_service.dart';
 import '../services/ai/ai_models.dart';
+import '../ui/feedback.dart';
 import '../ui/theme.dart';
 
 /// 自由拼句沙盒（v1.4.0 / A1）：
-///   - 从「全局已掌握块池」选块拼句（不再限定单场景）；
+///   - 从「全局已学词块池」选块拼句（不再限定单场景）；
 ///   - 预置 3 句推荐组合，一键套用；
 ///   - 拼好必须「开口判定通过」才计入自由造句次数（并计入今日开口，A2② 同源）；
 ///   - 支持重拼 + 一键听示范；本期不做保存。
 class FreeBuildScreen extends StatefulWidget {
-  /// 全局已掌握词块池（由首页入口传入）。
-  final List<Chunk> masteredChunks;
-  const FreeBuildScreen({required this.masteredChunks, super.key});
+  /// 全局已学词块池（由首页入口传入）。
+  final List<Chunk> learnedChunks;
+  const FreeBuildScreen({required this.learnedChunks, super.key});
 
   @override
   State<FreeBuildScreen> createState() => _FreeBuildScreenState();
@@ -59,13 +60,16 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
   }
 
   Future<void> _prepare() async {
-    try {
-      await SpeechEngine.instance.init();
-    } catch (_) {}
-    final ready = SpeechEngine.instance.isReady;
-    final failed = SpeechEngine.instance.failed;
+    final useOverride = SpeechService.debugTranscriberOverride != null;
+    if (!useOverride) {
+      try {
+        await SpeechEngine.instance.init();
+      } catch (_) {}
+    }
+    final ready = useOverride || SpeechEngine.instance.isReady;
+    final failed = !useOverride && SpeechEngine.instance.failed;
     final content = Provider.of<ContentPack>(context, listen: false);
-    final rec = _genRecommended(content, widget.masteredChunks);
+    final rec = _genRecommended(content, widget.learnedChunks);
     if (!mounted) return;
     setState(() {
       _engineReady = ready;
@@ -73,10 +77,10 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
       _recommended = rec;
     });
     await _p.logEvent('freebuild_sandbox_open',
-        {'pool': widget.masteredChunks.length});
+        {'pool': widget.learnedChunks.length});
   }
 
-  /// 生成 3 句推荐组合：优先取「其组成块全部已掌握」的整句，不足用已掌握块拼接补足。
+  /// 生成 3 句推荐组合：优先取「其组成块全部已学」的整句，不足用已学块拼接补足。
   List<String> _genRecommended(ContentPack content, List<Chunk> chunks) {
     final byId = {for (final c in chunks) c.id: c};
     final sentences = <String>[];
@@ -127,7 +131,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
     if (_judging || _recording) return;
     setState(() {
       _selected.clear();
-      // 按整句文本反查已掌握块，逐词块回填（找不到则整句作为不可拆目标）。
+      // 按整句文本反查已学块，逐词块回填（找不到则整句作为不可拆目标）。
       _tier = null;
       _recognized = null;
       _aiFeedback = null;
@@ -152,7 +156,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
   void _listenDemo() {
     final t = _targetText;
     if (t.isEmpty) return;
-    Provider.of<TtsService>(context, listen: false).speak(t);
+    speakOrHint(context, Provider.of<TtsService>(context, listen: false), t);
   }
 
   Future<void> _toggleRecord() async {
@@ -211,7 +215,11 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
     final target = _targetText;
     String text = '';
     try {
-      if (_engineReady) {
+      final override = SpeechService.debugTranscriberOverride;
+      if (override != null) {
+        final res = await override.transcribe(path, [target]);
+        text = res.text.trim();
+      } else if (_engineReady) {
         final res = await SpeechEngine.instance.transcribeFree(path);
         text = res.text.trim();
       }
@@ -233,7 +241,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
       try {
         ai = await _ai.judgeFreeBuild(BuildData(
           scenario: '自由造句',
-          chinesePrompt: '用已掌握的词块自由拼一句',
+          chinesePrompt: '用已学的词块自由拼一句',
           availableChunks: _selected.map((c) => c.text).toList(),
           userSpeech: text,
         ));
@@ -378,14 +386,14 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
             ),
           const SizedBox(height: 12),
         ],
-        // 已掌握块池
-        const Text('已掌握块池（点选拼句）',
+        // 已学词块池
+        const Text('已学词块池（点选拼句）',
             style: TextStyle(color: Colors.white70, fontSize: 14)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: widget.masteredChunks.map((c) {
+          children: widget.learnedChunks.map((c) {
             final on = _selected.contains(c);
             return GestureDetector(
               onTap: () => _toggleChunk(c),

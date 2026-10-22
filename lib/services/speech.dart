@@ -84,10 +84,14 @@ Set<String> _coreWords(String sentence) => _normalize(sentence)
 /// 已移除系统 SpeechRecognizer（speech_to_text）路径——无 GMS 国行机上是空壳，永不产出。
 /// 保留：L1 Azure 发音评测（REST）、Azure STT 转写（增强）、文本匹配/开口命中计分。
 class SpeechService {
+  /// 仅 E2E 入口 main_e2e.dart 设置（脚本化识别）；生产入口保持 null，走真实 Vosk。
+  static Transcriber? debugTranscriberOverride;
+
   final Transcriber _transcriber;
 
   SpeechService({Transcriber? transcriber})
-      : _transcriber = transcriber ?? SpeechEngine.instance;
+      : _transcriber =
+            transcriber ?? debugTranscriberOverride ?? SpeechEngine.instance;
 
   /// 加载 Vosk 离线识别引擎（默认必通）。成功/失败据此决定降级或报错。
   Future<bool> initVosk() => _transcriber.init();

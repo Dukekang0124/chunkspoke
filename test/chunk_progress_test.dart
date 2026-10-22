@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_common_ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:chunkspoke_flutter/services/chunk_asset.dart';
 import 'package:chunkspoke_flutter/services/database.dart';
 import 'package:chunkspoke_flutter/services/chunk_progress.dart';
 import 'package:chunkspoke_flutter/services/state_machine.dart';
@@ -45,12 +46,13 @@ void main() {
     expect((await store.get('k')).level, ChunkLevel.l4);
     expect((await store.get('k')).failCount, 2);
 
-    // 重新走通 → speakSuccess 达标即 mastered（逾期日期 0）。
+    // 重新走通 → speakSuccess 达标即 mastered（关卡轴），同时资产进入巩固中，次日复访。
     await store.applyEvent('k', ChunkEvent.accuracyPass, accuracy: 90);
     await store.applyEvent('k', ChunkEvent.speakSuccess, accuracy: 95);
     final row = await store.get('k');
     expect(row.level, ChunkLevel.mastered);
-    expect(row.dueDate, 0);
+    expect(row.assetState, ChunkAssetState.consolidating);
+    expect(row.dueDate, greaterThan(DateTime.now().millisecondsSinceEpoch));
   });
 
   test('P0-2 集成：掌握状态落盘，重开后仍保留（顶/底圆环同源）', () async {

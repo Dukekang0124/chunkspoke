@@ -31,6 +31,24 @@ class L4Step extends StatefulWidget {
   final VoidCallback onSkip;
   /// 是否落盘掌握事件：句子闯关模式下传 false（仅推进，不影响词块掌握）。
   final bool persist;
+
+  /// 复习会话：通过/失败走词块资产状态机（升档/降档），而非学习完成判定。
+  final bool review;
+
+  /// 识别词表（默认只含当前目标）。闯关时传全关句子+词块，
+  /// 避免“只认识目标句”把其他句子强制拼成目标词。
+  final List<String>? recognitionPhrases;
+
+  /// 命中后延迟推进；null = 立即推进（旧行为）。
+  /// 闯关传 1.5s：先展示“命中”结果，用户可点“下一句”提前推进。
+  final Duration? passAdvanceDelay;
+
+  /// 命中态按钮文案（闯关最后一句为“查看闯关结果”）。
+  final String passActionLabel;
+
+  /// 初始态跳过按钮文案（闯关不排复习，不能沿用“明天复习见”）。
+  final String skipHint;
+
   const L4Step(
       {required this.chunk,
       required this.levelId,
@@ -39,6 +57,11 @@ class L4Step extends StatefulWidget {
       required this.onPass,
       required this.onSkip,
       this.persist = true,
+      this.review = false,
+      this.recognitionPhrases,
+      this.passAdvanceDelay,
+      this.passActionLabel = '下一句',
+      this.skipHint = '先跳过，明天复习见',
       super.key});
 
   @override
@@ -59,7 +82,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   String _transcript = '';
   JudgeOutcome? _judge;
   int _attempts = 0; // 开口尝试次数（满 3 次展示正确答案 + 跳过入口）
-  bool _showAnswer = false; // 3 次未过 → 展示正确答案并给跳过入口
+  bool _showAnswer = false; // 3 次未过/主动看答案 → 展示正确答案并给跳过入口
+  bool _passPending = false; // 已命中，等待“下一句”或自动推进
   bool _selfAssess = false;
   bool _engineFailed = false; // Vosk 加载失败（无 Azure）→ 明确报错
   // 跟读软着陆：首次识别失败后出现，不评分、自己对比，不计掌握。
@@ -78,13 +102,17 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   late final AnimationController _breathCtrl;
   DateTime? _listenStart;
   Timer? _playTimer;
+  Timer? _passTimer;
 
   static const double _levelThreshold = 0.08;
 
   ProgressService get _p => Provider.of<ProgressService>(context, listen: false);
 
-  /// 限定 Vosk 识别范围（提升命中与评分精度）。
-  List<String> get _phrases => [widget.targetText];
+  /// 限定 Vosk 识别范围（提升精度）；闯关传入全关短语，避免只认目标句。
+  List<String> get _phrases => <String>{
+        widget.targetText,
+        ...?widget.recognitionPhrases,
+      }.toList(growable: false);
 
   @override
   void initState() {
@@ -116,6 +144,47 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     Provider.of<TtsService>(context, listen: false).speak(widget.targetText);
   }
 
+  /// 目标句切换时清空上一句的识别结果/尝试次数/答案态。
+  /// 调用方必须用 sentence id 作 key（双保险）；这里兜住未换 key 的调用场景。
+  @override
+  void didUpdateWidget(covariant L4Step oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.targetText == widget.targetText &&
+        oldWidget.chunk.id == widget.chunk.id) {
+      return;
+    }
+    _passTimer?.cancel();
+    _passTimer = null;
+    _playTimer?.cancel();
+    _followPlayTimer?.cancel();
+    _levelSub?.cancel();
+    _levelSub = null;
+    _breathCtrl.stop();
+    _breathCtrl.value = 0;
+    if (_listening) _rec.stop();
+    if (_followListening) _rec.stop();
+    _rec.stopPlay();
+    _listening = false;
+    _thinking = false;
+    _playing = false;
+    _recPath = null;
+    _transcript = '';
+    _judge = null;
+    _attempts = 0;
+    _showAnswer = false;
+    _passPending = false;
+    _selfAssess = false;
+    _followAlong = false;
+    _followListening = false;
+    _followPlaying = false;
+    _followPath = null;
+    _reverse = false;
+    _level = 0;
+    _levelActive = false;
+    _listenStart = null;
+    Provider.of<TtsService>(context, listen: false).speak(widget.targetText);
+  }
+
   Future<void> _loadEngine() async {
     setState(() => _engineFailed = false);
     final ok = await _speech.initVosk();
@@ -131,6 +200,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     _levelSub?.cancel();
     _playTimer?.cancel();
     _followPlayTimer?.cancel();
+    _passTimer?.cancel();
     if (_listening) {
       _rec.stop();
     }
@@ -263,10 +333,19 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       _enterSelfAssess();
       return;
     }
+    if (!mounted) {
+      await _rec.stop();
+      return;
+    }
+    _passTimer?.cancel();
     setState(() {
       _recPath = path;
       _listening = true;
+      _thinking = false;
       _transcript = '';
+      _judge = null;
+      _showAnswer = false;
+      _passPending = false;
     });
     if (!MediaQuery.of(context).disableAnimations) {
       _breathCtrl.repeat(reverse: true); // B3 呼吸脉动（尊重系统减弱动画）
@@ -351,20 +430,28 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       if (widget.persist) {
         try {
           await store.applyEvent(widget.chunk.id, ChunkEvent.speakSuccess,
-              accuracy: accuracy, selfEval: selfEval);
+              accuracy: accuracy, selfEval: selfEval, review: widget.review);
         } catch (e, st) {
           CrashLog.write('L4.speakSuccess: $e', st);
         }
       }
       if (!mounted) return;
-      widget.onPass();
+      final delay = widget.passAdvanceDelay;
+      if (delay == null) {
+        widget.onPass();
+        return;
+      }
+      setState(() => _passPending = true);
+      _passTimer?.cancel();
+      _passTimer = Timer(delay, _emitPass);
       return;
     }
     // persist=false（句子闯关模式）只推进流程，失败不得写词块 speakFail——
     // 否则「照着句子闯关失败」会污染该词块的失败计数（报告 §4 第 7 条）。
     if (widget.persist) {
       try {
-        await store.applyEvent(widget.chunk.id, ChunkEvent.speakFail);
+        await store.applyEvent(widget.chunk.id, ChunkEvent.speakFail,
+            review: widget.review);
       } catch (e, st) {
         CrashLog.write('L4.speakFail: $e', st);
       }
@@ -376,6 +463,34 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     } else {
       setState(() {});
     }
+  }
+
+  /// 命中后唯一推进出口：按钮与 1.5s 定时器共用，防重复推进。
+  void _emitPass() {
+    if (!mounted || !_passPending) return;
+    _passPending = false;
+    _passTimer?.cancel();
+    _passTimer = null;
+    widget.onPass();
+  }
+
+  /// 跳过/看答案后跳过也走同一出口，先取消待触发的自动推进。
+  void _emitSkip() {
+    _passTimer?.cancel();
+    _passTimer = null;
+    if (_passPending) {
+      setState(() => _passPending = false);
+    }
+    widget.onSkip();
+  }
+
+  void _openAnswer() {
+    setState(() {
+      _showAnswer = true;
+      _passPending = false;
+    });
+    _passTimer?.cancel();
+    _passTimer = null;
   }
 
   void _enterSelfAssess() {
@@ -551,23 +666,44 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
         ),
       );
 
-  /// 3 次未通过：展示正确答案 + 跳过入口（不计入掌握，置复习队列）。
+  /// 看答案/3 次未过：展示正确答案，保留“再试一次”与“跳过”两条路。
   Widget _answerCard() => Column(
         children: [
-          const Text('正确答案：', style: TextStyle(color: Colors.white70), textAlign: TextAlign.center),
+          const Text('正确答案 · 可听一遍',
+              style: TextStyle(color: Colors.white70), textAlign: TextAlign.center),
           const SizedBox(height: 8),
           _targetSentence(),
-          const SizedBox(height: 12),
-          const Text('已试 3 次未通过，可跳过本句（不计入掌握）',
-              style: TextStyle(color: Colors.white54, fontSize: 13), textAlign: TextAlign.center),
+          TextButton(
+            onPressed: () => speakOrHint(
+                context,
+                Provider.of<TtsService>(context, listen: false),
+                widget.targetText),
+            child: const Text('🔊 听标准发音',
+                style: TextStyle(color: kPrimary, fontSize: 13)),
+          ),
+          const Text('看答案不计入命中；可再试一次，或跳过本句',
+              style: TextStyle(color: Colors.white54, fontSize: 13),
+              textAlign: TextAlign.center),
           const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
-              onPressed: () => widget.onSkip(),
-              child: const Text('跳过本句（不计入掌握）', style: TextStyle(color: Colors.white)),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
+                  onPressed: _ready ? _start : null,
+                  child: const Text('再试一次',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _emitSkip,
+                  child: const Text('跳过本句',
+                      style: TextStyle(color: Colors.white70)),
+                ),
+              ),
+            ],
           ),
         ],
       );
@@ -670,14 +806,23 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
           else if (_followAlong)
             _followAlongCard()
           else if (_thinking)
-            const CircularProgressIndicator(color: kPrimary)
+            const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: kPrimary),
+                SizedBox(height: 10),
+                Text('识别中…', style: TextStyle(color: Colors.white54)),
+              ],
+            )
           else if (_listening)
             Column(
               children: [
                 LevelMeter(level: _level),
                 const SizedBox(height: 10),
                 Text(
-                  _levelActive ? '麦克风在采集 ● 正常' : '等待声音…（波形不动=麦克风异常）',
+                  _levelActive
+                      ? '正在录音 ● 点圆形按钮结束'
+                      : '正在录音 · 等待声音…（波形不动=麦克风异常）',
                   style: TextStyle(
                       color: _levelActive ? kUnlocked : Colors.white54, fontSize: 13),
                 ),
@@ -707,25 +852,77 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white54, fontSize: 13),
                 ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+                        onPressed: _ready ? _start : null,
+                        child: const Text('再试一次',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _openAnswer,
+                        child: const Text('看答案',
+                            style: TextStyle(color: Colors.white70)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _emitSkip,
+                        child: const Text('跳过',
+                            style: TextStyle(color: Colors.white70)),
+                      ),
+                    ),
+                  ],
+                ),
                 if (!_levelActive)
                   TextButton(
                     onPressed: () => _rec.openSettings(),
                     child: const Text('去设置检查麦克风权限',
                         style: TextStyle(color: Colors.white38)),
                   ),
-                const SizedBox(height: 10),
                 if (!_followAlong)
                   TextButton(
                     onPressed: () => setState(() => _followAlong = true),
                     child: const Text('先跟着读，不评分也可以 →',
                         style: TextStyle(color: kPrimary)),
                   ),
-                const SizedBox(height: 6),
-                _micButton(),
               ],
             )
           else if (_judge != null && _judge!.pass)
-            const Text('命中！', style: TextStyle(color: kUnlocked, fontSize: 20))
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('命中！',
+                    style: TextStyle(color: kUnlocked, fontSize: 20)),
+                if (_transcript.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text("听到：'$_transcript'",
+                        style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                  ),
+                if (_passPending) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    '${(widget.passAdvanceDelay!.inMilliseconds / 1000).toStringAsFixed(1)} 秒后自动进入下一句',
+                    style: const TextStyle(color: Colors.white54, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
+                    onPressed: _emitPass,
+                    child: Text(widget.passActionLabel,
+                        style: const TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ],
+            )
           else if (waiting)
             const Column(
               children: [
@@ -736,11 +933,15 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
             )
           else
             _micButton(),
-          if (!_showAnswer)
+          if (!_showAnswer &&
+              !_passPending &&
+              !(_judge?.pass ?? false) &&
+              !_listening &&
+              !_thinking)
             TextButton(
-              onPressed: () => widget.onSkip(),
-              child: const Text('先跳过，明天复习见',
-                  style: TextStyle(color: Colors.white38)),
+              onPressed: _emitSkip,
+              child: Text(widget.skipHint,
+                  style: const TextStyle(color: Colors.white38)),
             ),
           const SizedBox(height: 16),
         ],

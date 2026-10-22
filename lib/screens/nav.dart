@@ -6,10 +6,11 @@ import '../services/loaders.dart';
 import '../ui/theme.dart';
 import 'map.dart';
 import 'me.dart';
+import 'library.dart';
 import 'settings.dart';
 import '../services/update/update_flow.dart';
 
-/// M5 两栏导航：[练习][进度] + 齿轮（设置）。
+/// M5 三栏导航：[练习][词块库][进度] + 齿轮（设置）。
 class AppNav extends StatefulWidget {
   const AppNav({super.key});
   @override
@@ -18,7 +19,6 @@ class AppNav extends StatefulWidget {
 
 class _AppNavState extends State<AppNav> {
   int _index = 0;
-  final List<Widget> _tabs = const [MapScreen(), MeScreen()];
 
   @override
   void initState() {
@@ -65,6 +65,11 @@ class _AppNavState extends State<AppNav> {
 
   @override
   Widget build(BuildContext context) {
+    final tabs = [
+      const MapScreen(),
+      LibraryScreen(onGoPractice: () => setState(() => _index = 0)),
+      const MeScreen(),
+    ];
     return Scaffold(
       appBar: AppBar(
         title: const Text('ChunkSpoke'),
@@ -77,7 +82,7 @@ class _AppNavState extends State<AppNav> {
           ),
         ],
       ),
-      body: _tabs[_index],
+      body: tabs[_index],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
         onTap: (i) => setState(() => _index = i),
@@ -86,6 +91,8 @@ class _AppNavState extends State<AppNav> {
         unselectedItemColor: Colors.white54,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.school), label: '练习'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.library_books), label: '词块库'),
           BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: '进度'),
         ],
       ),

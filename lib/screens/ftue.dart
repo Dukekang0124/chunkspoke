@@ -8,6 +8,7 @@ import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'level.dart';
 import 'nav.dart';
+import 'tts_gate.dart';
 
 class FtueScreen extends StatefulWidget {
   const FtueScreen({super.key});
@@ -63,7 +64,7 @@ class _FtueScreenState extends State<FtueScreen> {
     // P0 修复：先把「场景列表(AppNav)」作为栈底落地，再在其上进入练习页。
     // 修复前用 pushReplacement 会替换掉唯一的地图路由，练习页 ✕ pop() 后栈空 → 整屏黑。
     nav.pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const AppNav()),
+      MaterialPageRoute(builder: (_) => TtsGate(child: const AppNav())),
       (r) => false,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {

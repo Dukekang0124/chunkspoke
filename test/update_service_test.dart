@@ -77,27 +77,27 @@ void main() {
       expect(res.status, CheckStatus.error);
     });
 
-    test('清单源降级：raw 失败 → 自动切 jsDelivr 兜底（接受可能滞后）', () async {
+    test('清单源降级：官网同源失败 → jsDelivr → raw 兜底（不误报已最新）', () async {
       final svc = UpdateService();
-      var rawHits = 0;
       var cdnHits = 0;
+      var rawHits = 0;
       final client = MockClient((req) async {
-        if (req.url.host.contains('raw.githubusercontent')) {
-          rawHits++;
-          return http.Response('', 500); // raw 主源不可用/被阻断
-        }
         if (req.url.host.contains('jsdelivr')) {
           cdnHits++;
-          return http.Response(latestJson, 200); // 兜底源可用（可能滞后）
+          return http.Response('', 500); // 主源 CDN 抖动/不可达
+        }
+        if (req.url.host.contains('raw.githubusercontent')) {
+          rawHits++;
+          return http.Response(latestJson, 200); // 最后兜底可用
         }
         return http.Response('', 404);
       });
-      // 不传 overrideUrl：走内置 manifestUrls = [raw, jsDelivr]，验证降级顺序。
+      // 不传 overrideUrl：走内置 manifestUrls（Pages → jsDelivr → raw）。
       final res = await svc.check(client: client, current: cur);
       expect(res.status, CheckStatus.update);
       expect(res.info.versionCode, 2019);
-      expect(rawHits, greaterThan(0), reason: '应尝试过 raw 主源');
-      expect(cdnHits, greaterThan(0), reason: 'raw 失败后应落到 jsDelivr');
+      expect(cdnHits, greaterThan(0), reason: '官网同源失败后应尝试 jsDelivr');
+      expect(rawHits, greaterThan(0), reason: '主源/官网失败后应落到 raw');
     });
 
     test('清单源全部失败 → error（不伪装「已最新」）', () async {
@@ -228,6 +228,41 @@ void main() {
 
     test('断点超出总长（脏分段）：返回空，由上层按损坏重下', () {
       expect(partPlan([10, 20, 5], 40), isEmpty);
+    });
+  });
+
+  group('APK 断点按版本隔离（E2E 复现：1.4.8 残片不得续进 1.4.9）', () {
+    const name = 'chunkspoke_update.apk';
+    const sha149 = 'e05c19f53a31bc5e842d435c113d5e2a4e71b3d6e3e0abe0f401364ab3dee265';
+    const sha148 = 'a096a6a4b751a2e777ddb7972d132a198a990c6563834e5264af8f2ebf16a25d';
+
+    test('标签取 SHA 前 8 位；空/过短 SHA 退回旧命名', () {
+      expect(apkPartTag(sha149), 'e05c19f5');
+      expect(apkPartTag(''), '');
+      expect(apkPartTag('abc'), '');
+      expect(apkPartName(name, 'e05c19f5'), 'chunkspoke_update.apk.e05c19f5.part');
+      expect(apkPartName(name, ''), 'chunkspoke_update.apk.part');
+    });
+
+    test('不同版本的残片互不复用：旧标签与无标签残片都列入清理', () {
+      final keep = apkPartTag(sha149);
+      final stale = staleApkParts([
+        apkPartName(name, keep), // 本次断点：保留
+        apkPartName(name, apkPartTag(sha148)), // 上一版断点：清理
+        '$name.part', // 旧的无标签命名：清理
+        'chunkspoke_update.apk', // 完整包：不动
+        'vosk.zip.part', // 别的下载器：不动
+      ], name, keep);
+      expect(stale, [
+        'chunkspoke_update.apk.a096a6a4.part',
+        'chunkspoke_update.apk.part',
+      ]);
+    });
+
+    test('同版本换源：断点保留（字节相同，续传成立）', () {
+      final tag = apkPartTag(sha149);
+      expect(
+          staleApkParts([apkPartName(name, tag)], name, tag), isEmpty);
     });
   });
 }

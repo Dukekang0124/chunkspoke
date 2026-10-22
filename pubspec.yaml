@@ -1,7 +1,7 @@
 name: chunkspoke_flutter
 description: "Think in chunks. Speak in English."
 publish_to: 'none'
-version: 1.4.6+2047
+version: 1.5.2+2053
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -23,10 +23,14 @@ dependencies:
   flutter_local_notifications: ^17.2.4
   timezone: ^0.9.4
   url_launcher: ^6.2.5
+  sherpa_onnx: 1.13.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_driver:
+    sdk: flutter
+  test: ^1.24.0
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.13.1
   sqflite_common_ffi: ^2.3.2
@@ -38,12 +42,18 @@ dependency_overrides:
   http: ^1.2.0
   permission_handler: ^11.3.0
   sqflite_common_ffi: ^2.4.4
+  # 3.7.1 的 Android 预编译资产需从 GitHub Releases 拉取，离线/受限网络构建失败；
+  # 3.5.2 为 1.4.9 构建期实际使用版本，本地缓存齐全，仅测试用 FFI 依赖。
+  sqlite3: 3.5.2
 
 flutter:
   uses-material-design: true
   assets:
     - assets/content_pack.json
     - assets/version.json
+    - assets/legal/LICENSE-GPLv3.txt
+    - assets/legal/SOURCE-OFFER.txt
+    - assets/legal/VOICE-PACK-NOTICE.txt
     - assets/icon/icon.png
     - assets/icon/icon_foreground.png
 

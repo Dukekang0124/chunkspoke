@@ -28,7 +28,8 @@ ModelManifest _manifest(List<int> zip, int chunks) {
   var off = 0;
   for (var i = 0; i < chunks; i++) {
     final end = i == chunks - 1 ? size : off + (size ~/ chunks);
-    parts.add(ModelPart('https://x/m.part$i', end - off));
+    parts.add(ModelPart('https://x/m.part$i', end - off,
+        sha256: sha256.convert(zip.sublist(off, end)).toString()));
     off = end;
   }
   return ModelManifest(
@@ -65,7 +66,7 @@ void main() {
       final tmp = Directory.systemTemp.createTempSync('model_ok_');
       addTearDown(() => tmp.deleteSync(recursive: true));
 
-      final mgr = ModelManager(manifest: manifest, client: client, baseDir: () async => tmp);
+      final mgr = ModelManager(manifest: manifest, client: client, baseDir: () async => tmp, retryDelay: Duration.zero, autoRetryRounds: 0);
       final modelPath = await mgr.ensureModel();
 
       expect(modelPath, p.join(tmp.path, 'mymodel'));
@@ -96,7 +97,7 @@ void main() {
       );
       final tmp = Directory.systemTemp.createTempSync('model_bad_');
       addTearDown(() => tmp.deleteSync(recursive: true));
-      final mgr = ModelManager(manifest: bad, client: _chunkClient(zip, 2), baseDir: () async => tmp);
+      final mgr = ModelManager(manifest: bad, client: _chunkClient(zip, 2), baseDir: () async => tmp, retryDelay: Duration.zero, autoRetryRounds: 0);
 
       await expectLater(mgr.ensureModel(), throwsA(isA<ModelDownloadException>()));
       expect(File('${tmp.path}/mymodel.zip').existsSync(), isFalse);
@@ -123,7 +124,7 @@ void main() {
       });
       final tmp = Directory.systemTemp.createTempSync('model_mirror_');
       addTearDown(() => tmp.deleteSync(recursive: true));
-      final mgr = ModelManager(manifest: withMirror, client: client, baseDir: () async => tmp);
+      final mgr = ModelManager(manifest: withMirror, client: client, baseDir: () async => tmp, retryDelay: Duration.zero, autoRetryRounds: 0);
 
       final path = await mgr.ensureModel();
       expect(path, p.join(tmp.path, 'mymodel'));
@@ -135,7 +136,7 @@ void main() {
       final manifest = _manifest(zip, 2);
       final tmp = Directory.systemTemp.createTempSync('model_discard_');
       addTearDown(() => tmp.deleteSync(recursive: true));
-      final mgr = ModelManager(manifest: manifest, client: _chunkClient(zip, 2), baseDir: () async => tmp);
+      final mgr = ModelManager(manifest: manifest, client: _chunkClient(zip, 2), baseDir: () async => tmp, retryDelay: Duration.zero, autoRetryRounds: 0);
       await mgr.ensureModel();
       expect(await mgr.isReady(), isTrue);
 

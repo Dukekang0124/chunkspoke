@@ -163,6 +163,32 @@ bool looksLikeHtmlPage(String? contentType) {
   return ct.contains('text/html') || ct.contains('application/json');
 }
 
+/// 断点标签：取目标包 SHA-256 前 8 位。断点文件按标签隔离，跨版本绝不互相续传
+/// （上一版的残片拼进新版会得到「大小正好但 SHA 不符」的坏包，用户只能重下一次）。
+String apkPartTag(String sha256) =>
+    sha256.length >= 8 ? sha256.substring(0, 8) : '';
+
+/// 断点文件名：无标签时沿用旧命名 `x.part`，有标签时 `x.<tag>.part`。
+String apkPartName(String fileName, String tag) =>
+    tag.isEmpty ? '$fileName.part' : '$fileName.$tag.part';
+
+/// 目录内属于该包、但不属于当前标签的残片（含旧的无标签命名）。
+List<String> staleApkParts(
+  Iterable<String> entries,
+  String fileName,
+  String keepTag,
+) {
+  final keep = apkPartName(fileName, keepTag);
+  final prefix = '$fileName.';
+  final legacy = '$fileName.part';
+  return [
+    for (final e in entries)
+      if (e != keep &&
+          (e == legacy || (e.startsWith(prefix) && e.endsWith('.part'))))
+        e,
+  ];
+}
+
 /// 下载失败（携带可直接展示给用户的原因）。
 class UpdateDownloadException implements Exception {
   final String message;
@@ -196,13 +222,12 @@ class UpdateService {
   );
 
   /// 远端清单候选源：按顺序尝试，任一可用即返回（避免单源失败直接「检查失败」）。
-  /// - jsDelivr @latest：跟随最新 tag，国内可达。不能用 @main——仓库历史上
-  ///   提交过 71MB 分片，触发 jsDelivr 50MB 包体上限，@main 会永久 403；
-  /// - 官网同源副本：tag 解析缓存异常时的即时兜底（GitHub Pages）；
+  /// - 官网同源副本：发版即生效，不受 jsDelivr tag 别名缓存滞后影响；
+  /// - jsDelivr @latest：国内可达，但新 tag 的别名解析可能滞后，降为第二源；
   /// - raw：内容即时生效，但国内真机常不可达，仅作最后兜底。
   static const List<String> manifestUrls = <String>[
-    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@latest/version.json',
     'https://dukekang0124.github.io/chunkspoke/version.json',
+    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@latest/version.json',
     defaultRemoteUrl,
     // 'https://<你的OSS或CDN域名>/chunkspoke/version.json', // 建议补充为第一优先级
   ];
@@ -309,13 +334,38 @@ class UpdateService {
     return '${dir.path}/updates/$apkFileName';
   }
 
-  /// 丢弃未完成的分段文件。
+  /// 丢弃未完成的分段文件（含旧的无标签命名与全部标签变体）。
   /// 切换到备用下载源时必须调用：不同源的字节不能拼接，否则 SHA-256 必挂。
   Future<void> discardPartial(String fileName) async {
     try {
       final dir = await getApplicationSupportDirectory();
-      final part = File('${dir.path}/updates/$fileName.part');
-      if (await part.exists()) await part.delete();
+      for (final name in staleApkParts(_updateDirEntries(dir), fileName, '')) {
+        await File('${dir.path}/updates/$name').delete();
+      }
+    } catch (_) {}
+  }
+
+  List<String> _updateDirEntries(Directory dir) {
+    try {
+      if (!dir.existsSync()) return const [];
+      final sep = Platform.pathSeparator;
+      return dir
+          .listSync()
+          .map((f) => f.path.split(sep).last)
+          .toList(growable: false);
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// 清掉「别的版本」留下的残片：只保留本次标签对应的断点。
+  Future<void> _dropStaleParts(String dirPath, String fileName, String keepTag) async {
+    try {
+      final dir = Directory('$dirPath/updates');
+      for (final name in staleApkParts(_updateDirEntries(dir), fileName, keepTag)) {
+        await File('${dir.path}/$name').delete();
+        debugPrint('[update] 丢弃跨版本残片 $name（保留 ${apkPartName(fileName, keepTag)}）');
+      }
     } catch (_) {}
   }
 
@@ -366,12 +416,14 @@ class UpdateService {
   ///  1. 等响应头有 connectTimeout、无数据有 idleTimeout → 不再永久挂在 0%；
   ///  2. 校验状态码与 Content-Type → 404 网页不会被当成 APK 写盘；
   ///  3. 先写 `.part`，完成后 rename；中断/取消保留 `.part`，重试走 Range 续传；
+  ///     断点按 [partTag]（目标包 SHA 前 8 位）隔离，跨版本残片直接丢弃；
   ///  4. 用 version.json 的 size 兜底总进度（服务端不给 Content-Length 时也能出进度）。
   DownloadHandle downloadApkCancellable(
     String url,
     String fileName,
     void Function(int received, int total) onProgress, {
     int expectedSize = 0,
+    String partTag = '',
   }) {
     final client = http.Client();
     final completer = Completer<String>();
@@ -390,7 +442,9 @@ class UpdateService {
       try {
         final dir = await getApplicationSupportDirectory();
         final dest = File('${dir.path}/updates/$fileName');
-        final part = File('${dest.path}.part');
+        await _dropStaleParts(dir.path, fileName, partTag);
+        final part = File(
+            '${dir.path}/updates/${apkPartName(fileName, partTag)}');
         await dest.parent.create(recursive: true);
         if (stopped) return;
 
@@ -560,6 +614,7 @@ class UpdateService {
     String fileName,
     void Function(int received, int total) onProgress, {
     int expectedSize = 0,
+    String partTag = '',
   }) {
     final client = http.Client();
     final completer = Completer<String>();
@@ -592,7 +647,9 @@ class UpdateService {
       try {
         final dir = await getApplicationSupportDirectory();
         final dest = File('${dir.path}/updates/$fileName');
-        final part = File('${dest.path}.part');
+        await _dropStaleParts(dir.path, fileName, partTag);
+        final part = File(
+            '${dir.path}/updates/${apkPartName(fileName, partTag)}');
         await dest.parent.create(recursive: true);
         if (stopped) return;
 

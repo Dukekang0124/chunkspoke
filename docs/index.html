@@ -29,9 +29,9 @@
         <p class="hero-sub">离线 · 免费 · 语音识别逐句判定</p>
         <div class="hero-actions">
           <button id="downloadBtn" class="btn btn-primary">立即下载 APK</button>
-          <span class="version-badge">v1.4.6</span>
+          <span class="version-badge">v1.5.2</span>
         </div>
-        <p class="abi-note">仅支持 <strong>64 位（arm64-v8a）</strong>机型，Android 7.0 及以上 · <span id="heroSize">约 29 MB</span></p>
+        <p class="abi-note">仅支持 <strong>64 位（arm64-v8a）</strong>机型，Android 7.0 及以上 · <span id="heroSize">约 55.5 MB</span></p>
         <p id="mobileHint" class="mobile-hint" hidden>下载完成后点击安装，首次安装需允许“安装未知应用”（见下方 FAQ 步骤）。</p>
       </div>
       <div class="hero-media">
@@ -112,6 +112,22 @@
             <summary>支持哪些 Android 版本与机型？</summary>
             <div class="faq-body"><p>支持 Android 7.0（API 24）及以上，但<strong>仅 64 位（arm64-v8a）机型</strong>：包内只带 arm64 原生库。32 位老机型、部分模拟器与 x86 设备无法安装，点击安装会提示「解析软件包时出现问题 / 与设备不兼容」。如不确定，可在「设置 → 关于手机」查看，或安装后用应用内「检查更新」验证。</p></div>
           </details>
+          <details id="tts-faq">
+            <summary>朗读没有声音 / 提示「未检测到语音引擎」怎么办？</summary>
+            <div class="faq-body">
+              <p><strong>v1.4.7 起</strong>，ChunkSpoke 会在启动时检测系统语音引擎；没有引擎或没有英文语音时，会先展示修复引导页，不再等到点喇叭才报错。</p>
+              <p class="faq-shot"><img src="assets/tts-guide.png" alt="ChunkSpoke 语音修复引导页：未检测到 TTS 引擎" loading="lazy" /></p>
+              <ol>
+                <li><strong>去下载语音引擎</strong>：在引导页点「去下载语音引擎」，安装「讯飞语记」或「Google 语音合成」（二选一）。国内机型优先讯飞语记；Google 语音合成需 Google Play 或浏览器搜索安装。</li>
+                <li><strong>设为系统首选引擎</strong>：安装后点「打开系统语音设置」（或手动进入 设置 → 系统 → 语言和输入法 → 文字转语音输出），把「首选引擎」切换为刚安装的引擎。</li>
+                <li><strong>补装英文语音</strong>：如果提示「缺少英文语音数据」，在首选引擎里点「安装语音数据」，勾选 English / 英语，等下载完成。</li>
+                <li><strong>重新检测</strong>：回到引导页点「重新检测」，状态变为正常后朗读恢复。</li>
+              </ol>
+              <p class="faq-shot"><img src="assets/tts-system-settings.png" alt="系统文字转语音输出设置" loading="lazy" /></p>
+              <p>在练习中点喇叭才发现时，App 会弹出可操作的对话框，可选「去设置」「去下载」或「取消」。语音问题不影响听辨、拼句和录音判定，也可以点「先继续使用」，之后从「设置 → 语音朗读（TTS）」再检测。</p>
+              <p class="muted">小米 / 红米（HyperOS / MIUI）的「小爱语音引擎」、华为 / 荣耀的「智慧语音」可能未预装英文语音；按第 3 步补装，或改用讯飞语记 / Google 语音合成。装完仍无声时，重启手机后再检测一次。</p>
+            </div>
+          </details>
           <details>
             <summary>我的学习数据会上传吗？</summary>
             <div class="faq-body"><p>学习进度、掌握度、复习排程、录音全部只保存在本机，不上传、不要求注册账号。仅两处会走网络：①「自由造句」的 AI 点评（发送识别出的句子文本，可在设置关闭）；②「检查更新」时读取版本清单。除此之外没有任何数据上报。</p></div>
@@ -125,7 +141,7 @@
       <div class="container">
         <h2>现在就开始，说你的第一句英语</h2>
         <button id="downloadBtn2" class="btn btn-primary">立即下载 APK</button>
-        <p class="version-badge">v1.4.6</p>
+        <p class="version-badge">v1.5.2</p>
         <p class="abi-note">仅支持 64 位（arm64-v8a）机型 · Android 7.0 及以上</p>
       </div>
     </section>
@@ -133,9 +149,10 @@
 
   <footer class="site-footer">
     <p>联系 / 反馈：<a href="https://github.com/Dukekang0124/chunkspoke/issues" target="_blank" rel="noopener">GitHub Issues</a>
-      · 备用直链：<a href="https://dukekang0124.github.io/chunkspoke-releases/apk/1.4.6/chunkspoke-latest.apk" target="_blank" rel="noopener">GitHub Pages 镜像</a></p>
+      · 备用直链：<a href="https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.2/chunkspoke-latest.apk" target="_blank" rel="noopener">GitHub Pages 镜像</a></p>
+    <p class="muted">三条下载链（同一个文件，SHA-256 一致）：<a href="https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.2/chunkspoke-latest.apk" target="_blank" rel="noopener">① 官网镜像直链</a> · <a href="https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.5.2/chunkspoke-latest.apk" target="_blank" rel="noopener">② raw 直链</a> · <a href="https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.2/parts/apk.part0" target="_blank" rel="noopener">③ 分片链（part0…3，慢网逐片下完按顺序拼接）</a>　<a href="https://github.com/Dukekang0124/chunkspoke/issues" target="_blank" rel="noopener">遇到问题？</a></p>
     <p class="muted">学习进度与录音只存本机；「自由造句」的 AI 点评需联网，可在设置内关闭。</p>
-    <p class="muted">当前版本：<span id="footerVersion">v1.4.6</span> · <span id="footerSize"></span></p>
+    <p class="muted">当前版本：<span id="footerVersion">v1.5.2</span> · <span id="footerSize"></span></p>
   </footer>
 
   <!-- 桌面端二维码弹窗 -->

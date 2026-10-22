@@ -21,7 +21,8 @@ enum ChunkEvent {
   accuracyFail, // L3 fail (retry)
   speakSuccess, // L4 -> review
   speakFail, // L4 fail (counts toward fail x2)
-  scheduleReview, // 主动跳过/延期 -> review（次日到期）
+  scheduleReview, // 学习阶段主动跳过/延期 -> review（次日到期）
+  deferReview, // 复习阶段主动跳过 -> 不改资产状态，仅次日再到期
 }
 
 class ChunkStateMachine {

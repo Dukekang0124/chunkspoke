@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/loaders.dart';
 import 'theme.dart';
+import 'tts_dialogs.dart';
 
 /// 最小反馈：对=轻快系统音（受设置页「音效」开关控制，B7）；错=中等振动（跟随系统）。
 void chimeCorrect([BuildContext? context]) {
@@ -34,19 +35,13 @@ Future<void> copyFeedbackEmail() async {
   await Clipboard.setData(const ClipboardData(text: kFeedbackEmail));
 }
 
-/// 播放 TTS，失败时弹 SnackBar 提示：把「点喇叭无声」从静默失败变为可见反馈。
-/// 附带 lastError（含失败码 / 当前默认 TTS 引擎包名），便于真机定位引擎问题。
+/// 播放 TTS，失败时弹可操作对话框（去设置 / 去下载 / 取消）。
+/// 旧版只用 SnackBar 报裸错误，用户无法修复；现按检测状态说明原因并给出入口。
 Future<void> speakOrHint(
     BuildContext context, TtsService tts, String text) async {
   final ok = await tts.speak(text);
   if (!ok && context.mounted) {
-    final why = tts.lastError;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(why == null || why.isEmpty
-          ? '无法播放语音，请检查系统 TTS 设置'
-          : '无法播放语音（$why），请检查系统 TTS 设置'),
-      duration: const Duration(seconds: 2),
-    ));
+    await showTtsFixDialog(context, tts);
   }
 }
 

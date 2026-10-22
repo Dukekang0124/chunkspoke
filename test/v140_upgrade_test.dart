@@ -5,6 +5,7 @@ import 'package:chunkspoke_flutter/services/database.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
 import 'package:chunkspoke_flutter/services/session.dart';
 import 'package:chunkspoke_flutter/services/state_machine.dart';
+import 'package:chunkspoke_flutter/services/chunk_asset.dart';
 import 'package:chunkspoke_flutter/services/session_report.dart';
 import 'package:chunkspoke_flutter/models/content_pack.dart';
 import 'package:chunkspoke_flutter/ui/motion.dart';
@@ -40,7 +41,7 @@ void main() {
       expect(freeBuildUnlocked(9), isFalse);
       expect(freeBuildUnlocked(10), isTrue);
       expect(freeBuildUnlocked(25), isTrue);
-      expect(kFreeBuildUnlockMastered, 10);
+      expect(kFreeBuildUnlockLearned, 10);
     });
   });
 
@@ -89,6 +90,7 @@ void main() {
           'due_date': 0,
           'fail_count': 0,
           'last_score': 90,
+          'asset_state': ChunkAssetState.mastered.index,
         });
       }
       expect(await ps.pendingMilestone(), 10);
@@ -96,6 +98,24 @@ void main() {
       expect(await ps.pendingMilestone(), 25);
       await ps.markMilestoneCelebrated(25);
       expect(await ps.pendingMilestone(), isNull); // 30 块未到 50
+    });
+
+    test('W2-1：里程碑只认资产轴，旧关卡轴不再触发', () async {
+      final db = _newDb();
+      final ps = ProgressService(db: db);
+      await ps.init();
+      final d = await db.db;
+      for (var i = 0; i < 60; i++) {
+        await d.insert('chunks', {
+          'chunk_key': 'legacy$i',
+          'level': ChunkLevel.mastered.index,
+          'due_date': 0,
+          'fail_count': 0,
+          'last_score': 90,
+          'asset_state': ChunkAssetState.learning.index,
+        });
+      }
+      expect(await ps.pendingMilestone(), isNull);
     });
 
     test('A0 升级兼容：连击/自由造句/掌握块/准确度全部无损', () async {

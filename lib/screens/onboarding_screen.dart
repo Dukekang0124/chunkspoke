@@ -4,6 +4,7 @@ import '../services/loaders.dart';
 import '../ui/theme.dart';
 import 'ftue.dart';
 import 'nav.dart';
+import 'tts_gate.dart';
 
 /// 新手引导（P0-二）：首次启动 3 屏滑动引导，可跳过。
 /// 完成 / 跳过 → 记录 onboardingDone，返回主流程。
@@ -27,7 +28,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     await p.setOnboardingDone();
     await p.logEvent(finished ? 'onboarding_complete' : 'onboarding_skip');
     if (!mounted) return;
-    final target = alreadyFtue ? const AppNav() : const FtueScreen();
+    // 首用即做 TTS 预检：缺失引擎/英文语音时先在引导页说明，不等到朗读时裸报错。
+    final target = TtsGate(
+      child: alreadyFtue ? const AppNav() : const FtueScreen(),
+    );
     Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => target));
   }

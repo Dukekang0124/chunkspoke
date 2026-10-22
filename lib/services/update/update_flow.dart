@@ -185,7 +185,7 @@ Future<void> _downloadAndInstall(
     baseBytes = 0;
     current = svc.downloadApkPartsCancellable(
         info.parts, UpdateService.apkFileName, report,
-        expectedSize: info.size);
+        expectedSize: info.size, partTag: apkPartTag(info.sha256));
     try {
       path = await current.future;
     } on UpdateCancelledException {
@@ -212,7 +212,7 @@ Future<void> _downloadAndInstall(
         : '切换备用下载源（${i + 1}/${candidates.length}）…';
     current = svc.downloadApkCancellable(
         candidates[i], UpdateService.apkFileName, report,
-        expectedSize: info.size);
+        expectedSize: info.size, partTag: apkPartTag(info.sha256));
     try {
       path = await current.future;
     } on UpdateCancelledException {

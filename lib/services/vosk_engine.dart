@@ -94,7 +94,8 @@ Future<ModelManifest> loadDefaultModelManifest() async {
     size: manifest.size,
     parts: [
       for (var i = 0; i < manifest.parts.length; i++)
-        ModelPart('$base/model.part$i', manifest.parts[i].size),
+        ModelPart('$base/model.part$i', manifest.parts[i].size,
+            sha256: manifest.parts[i].sha256),
     ],
     mirrorUrl: '$base/${manifest.name}.zip',
   );
@@ -282,6 +283,16 @@ class SpeechEngine implements Transcriber {
     _manifest ??= await loadDefaultModelManifest();
     _manager = ModelManager(manifest: _manifest!);
     return _manager!;
+  }
+
+  /// 用户点「重试」前调用：先删干净未完成分块/拼接临时文件/未就绪模型目录，
+  /// 保证坏模型兜底重下在真机路径生效（B3）。
+  Future<void> prepareRetry() async {
+    final manager = await _ensureManager();
+    await manager.resetIncomplete();
+    _lastError = null;
+    _createModelFailures = 0;
+    _state = EngineState.unknown;
   }
 
   /// 并发保护：同一时刻只有一次初始化在途；重复调用等待同一次结果。
