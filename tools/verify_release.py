@@ -214,14 +214,26 @@ def check_local_sync(m):
     for label, other in (('docs/version.json', docs), ('assets/version.json', assets)):
         if other is None:
             continue
-        same = (str(other.get('versionName')) == str(m.get('versionName'))
-                and int(other.get('versionCode') or 0) == int(m.get('versionCode') or 0)
-                and other.get('url') == m.get('url')
-                and other.get('sha256') == m.get('sha256'))
-        if same:
-            ok(f'{label} 与根清单一致（{tag}）')
+        # 身份字段必须三处一致：这正是 1.4.9→1.5.1 包内清单滞后的那种事故，硬失败。
+        ident = (str(other.get('versionName')) == str(m.get('versionName'))
+                 and int(other.get('versionCode') or 0) == int(m.get('versionCode') or 0)
+                 and other.get('url') == m.get('url'))
+        if not ident:
+            fail(f'{label} 与根清单的身份字段不一致（版本/号/url）：发版必须一次写全三处')
+            continue
+        # 指纹：官网同源必须逐字节同；包内副本描述的是「上一次构建」的 apk——
+        # 清单被打进它自己要描述的文件，自引用不可能自洽（见 DEPLOY/发版 SOP §3.0），
+        # 所以这里只告警并打印两代指纹，不再误报成断链。
+        fp_same = other.get('sha256') == m.get('sha256') and other.get('size') == m.get('size')
+        if fp_same or label == 'docs/version.json':
+            if not fp_same and label == 'docs/version.json':
+                fail(f'{label} 指纹与根清单不同：官网同源清单必须逐字节一致')
+                continue
+            ok(f'{label} 与根清单一致（{tag}，指纹{"同" if fp_same else "同"}）')
         else:
-            fail(f'{label} 与根清单不一致：发版必须一次写全三处')
+            warn(f'{label} 指纹为上一代构建（自引用必然滞后）：包内 '
+                 f'{str(other.get("sha256"))[:12]}…/{other.get("size")} vs 线上 '
+                 f'{str(m.get("sha256"))[:12]}…/{m.get("size")}；身份字段已核对一致')
     # 官网烘死版本号不应落后于清单
     idx = os.path.join(ROOT, 'docs', 'index.html')
     if os.path.isfile(idx):
@@ -412,14 +424,16 @@ def check_site():
 
 
 def check_remote_manifests(m):
-    """两个清单源必须给出同一份内容。
+    """三个清单源必须给出同一份内容（官网同源为 App 首选）。
 
     注意用 @latest（跟随最新 tag）而不是 @main：仓库历史上提交过 71MB 分片，
     @main 会触发 jsDelivr 50MB 包体上限并永久 403（v1.4.5 实测），
-    而 tag 指向清理后的小树，@latest 正常。
+    而 tag 指向清理后的小树，@latest 正常。新 tag 的别名解析可能滞后数小时，
+    因此 @latest 不一致只告警（App 已改为官网同源优先）。
     """
-    print('== 7/7 远端两个清单源内容一致 ==')
+    print('== 7/7 远端三个清单源内容一致 ==')
     srcs = {
+        '官网': f'{SITE}/version.json',
         'raw': f'https://raw.githubusercontent.com/{OWNER}/{REPO}/main/version.json',
         'jsDelivr@latest': f'https://cdn.jsdelivr.net/gh/{OWNER}/{REPO}@latest/version.json',
     }
@@ -436,19 +450,28 @@ def check_remote_manifests(m):
             warn(f'{label} 清单未读到（连接层失败，稍后重跑）：{e}')
     for label, j in got.items():
         if str(j.get('versionCode')) != str(m.get('versionCode')):
-            fail(f'{label} 仍是 {j.get("versionName")}({j.get("versionCode")})，本地是 '
-                 f'{m.get("versionName")}({m.get("versionCode")})：清单没推上去')
-        elif j.get('url') != m.get('url'):
+            if label == 'jsDelivr@latest':
+                warn(f'{label} 仍是 {j.get("versionName")}({j.get("versionCode")})，'
+                     '新 tag 别名缓存滞后；App 首选官网同源，不受影响')
+            else:
+                fail(f'{label} 仍是 {j.get("versionName")}({j.get("versionCode")})，本地是 '
+                     f'{m.get("versionName")}({m.get("versionCode")})：清单没推上去')
+            continue
+        if j.get('url') != m.get('url'):
             fail(f'{label} 的 url 与本地不同：{j.get("url")}')
         else:
             ok(f'{label} = v{j.get("versionName")}，url 一致')
-    if 'raw' in got and 'jsDelivr@latest' in got:
-        if (got['jsDelivr@latest'].get('urls') or []) != (got['raw'].get('urls') or []):
-            fail('jsDelivr 与 raw 的 urls 备用源不一致（jsDelivr 缓存未刷新）：'
-                 'App 首选 jsDelivr，用户在缓存期内拿不到备用源 → 打开 '
-                 f'https://purge.jsdelivr.net/gh/{OWNER}/{REPO}@latest/version.json 后重跑')
+    if 'raw' in got and '官网' in got:
+        if (got['raw'].get('urls') or []) != (got['官网'].get('urls') or []):
+            fail('raw 与官网的 urls 备用源不一致：用户会在不同源之间拿到不同下载地址')
         else:
-            ok('jsDelivr 与 raw 内容一致')
+            ok('raw 与官网内容一致')
+    jd = got.get('jsDelivr@latest')
+    if jd and str(jd.get('versionCode')) == str(m.get('versionCode')):
+        if (jd.get('urls') or []) != (m.get('urls') or []):
+            fail('jsDelivr 与本地清单的 urls 备用源不一致（缓存未刷新）')
+        else:
+            ok('jsDelivr 与本地清单一致')
 
 
 def main():

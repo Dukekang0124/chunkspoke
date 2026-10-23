@@ -59,3 +59,11 @@ app.*.map.json
 # 构建产物：分片/清单由发布流程生成并推到 chunkspoke-releases，不入源码库
 # 旧分片曾让仓库树达 75MB，触发 jsDelivr 50MB 上限，导致 @main 清单永久冻结
 dist/
+
+# 本地发版/取证工作区（不入库：体积大或含嵌套 git 仓）
+voice_pack/
+voice_src/
+voice_repo/
+shots/
+audit/
+chunkspoke-ai/

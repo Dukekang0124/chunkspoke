@@ -55,10 +55,9 @@ ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
   scaffoldBackgroundColor: kBg,
   primaryColor: kPrimary,
-  colorScheme: ColorScheme.dark(
+  colorScheme: const ColorScheme.dark(
     primary: kPrimary,
     secondary: kUnlocked,
-    background: kBg,
     surface: kCard,
     error: kError,
   ),
@@ -70,9 +69,9 @@ ThemeData darkTheme = ThemeData(
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ButtonStyle(
-      backgroundColor: MaterialStateProperty.all(kPrimary),
-      foregroundColor: MaterialStateProperty.all(Colors.black87),
-      shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+      backgroundColor: WidgetStateProperty.all(kPrimary),
+      foregroundColor: WidgetStateProperty.all(Colors.black87),
+      shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
     ),
   ),
 );

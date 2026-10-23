@@ -4,4 +4,6 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- E2E 模型下载故障注入走本地 HTTP harness，仅 debug 构建生效。 -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

@@ -23,7 +23,10 @@ ModelManifest _manifest(List<int> zip) {
     modelVersion: '0.1',
     sha256: sha256.convert(zip).toString(),
     size: zip.length,
-    parts: const [ModelPart('https://x/m.part0', 1000000)],
+    parts: [
+      ModelPart('https://x/m.part0', zip.length,
+          sha256: sha256.convert(zip).toString()),
+    ],
   );
 }
 
@@ -45,7 +48,11 @@ Future<(Directory, ModelManager)> _setup({int failTimes = 0}) async {
   final manifest = _manifest(zip);
   final tmp = Directory.systemTemp.createTempSync('engine_');
   final mgr = ModelManager(
-      manifest: manifest, client: _client(zip, failTimes: failTimes), baseDir: () async => tmp);
+      manifest: manifest,
+      client: _client(zip, failTimes: failTimes),
+      baseDir: () async => tmp,
+      retryDelay: Duration.zero,
+      autoRetryRounds: 0);
   addTearDown(() => tmp.deleteSync(recursive: true));
   return (tmp, mgr);
 }
@@ -68,6 +75,7 @@ void main() {
     });
 
     test('失败 → 重试 → 就绪（同 manager 复用进度）', () async {
+      // 首轮下载失败落到 failed，再验证第二次 init 成功。
       final (_, mgr) = await _setup(failTimes: 1);
       final engine = SpeechEngine.forTesting(manager: mgr, createModel: (_) async => true);
       expect(await engine.init(), isFalse);

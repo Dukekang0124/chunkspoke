@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -10,6 +13,11 @@ enum MicPerm { granted, denied, permanentlyDenied }
 class RecordingService {
   static const MethodChannel _ch = MethodChannel('chunkspoke/recorder');
   static const EventChannel _levelCh = EventChannel('chunkspoke/recorder_level');
+
+  /// 调试开关（默认关）：打开后每次停止录音都把 WAV 复制到应用文档目录
+  /// `asr_debug/last.wav`，供复现与走查取证；不写日志、不上传。
+  static bool keepLastWavForDebug = false;
+  static String? lastDebugWavPath;
 
   bool _available = false;
   MicPerm _perm = MicPerm.denied;
@@ -82,11 +90,23 @@ class RecordingService {
     try {
       final p = await _ch.invokeMethod('stop') as String?;
       _startedAt = null;
+      if (p != null && keepLastWavForDebug) await _copyDebugWav(p);
       return p;
     } catch (_) {
       _startedAt = null;
       return null;
     }
+  }
+
+  Future<void> _copyDebugWav(String path) async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final targetDir = Directory('${dir.path}/asr_debug');
+      if (!await targetDir.exists()) await targetDir.create(recursive: true);
+      final target = '${targetDir.path}/last.wav';
+      await File(path).copy(target);
+      lastDebugWavPath = target;
+    } catch (_) {}
   }
 
   /// 回放本地录音（降级路径“录音自听”）。
@@ -104,4 +124,53 @@ class RecordingService {
 
   /// 引导到系统设置页（永久拒绝时）。
   Future<void> openSettings() => openAppSettings();
+}
+
+/// 端点检测：检测到人声后，连续 [window] 静音自动触发 [onSilence]（只触发一次）。
+/// 用来把环境音/尾音裁掉，避免 Vosk 对静音段硬解码。UI 在停止录音时须 [detach]。
+class SilenceAutoStop {
+  SilenceAutoStop({
+    required this.onSilence,
+    this.threshold = 0.06,
+    this.window = const Duration(milliseconds: 1200),
+  });
+
+  final void Function() onSilence;
+  final double threshold;
+  final Duration window;
+
+  StreamSubscription<double>? _sub;
+  Timer? _timer;
+  DateTime? _lastVoiceAt;
+  bool _fired = false;
+
+  void attach(Stream<double> levels) {
+    detach();
+    _fired = false;
+    _sub = levels.listen(_onLevel, onError: (_) {});
+  }
+
+  void _onLevel(double v) {
+    if (v < threshold) return;
+    _lastVoiceAt = DateTime.now();
+    _timer ??= Timer.periodic(const Duration(milliseconds: 100), (_) => _tick());
+  }
+
+  void _tick() {
+    if (_fired) return;
+    final last = _lastVoiceAt;
+    if (last == null) return;
+    if (DateTime.now().difference(last) < window) return;
+    _fired = true;
+    detach();
+    onSilence();
+  }
+
+  void detach() {
+    _sub?.cancel();
+    _sub = null;
+    _timer?.cancel();
+    _timer = null;
+    _lastVoiceAt = null;
+  }
 }

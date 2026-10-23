@@ -40,7 +40,9 @@ class _RecognizeStepState extends State<RecognizeStep> {
         .toList()
       ..shuffle();
     _options = [_current.text];
-    for (final d in distractors.take(3)) _options.add(d.text);
+    for (final d in distractors.take(3)) {
+      _options.add(d.text);
+    }
     _options.shuffle();
     _tts.speak(_current.text);
   }
@@ -96,8 +98,8 @@ class _RecognizeStepState extends State<RecognizeStep> {
             ),
           ),
           const Spacer(),
-          Text('需要提示？稍后长按词块',
-              style: const TextStyle(color: Colors.white38, fontSize: 12)),
+          const Text('需要提示？稍后长按词块',
+              style: TextStyle(color: Colors.white38, fontSize: 12)),
         ],
       ),
     );

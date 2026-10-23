@@ -1,0 +1,44 @@
+ChunkSpoke 高清发音包 / APK — GPLv3 对应源码获取途径（书面要约）
+================================================================
+
+本发音包包含 espeak-ng-data（eSpeak NG 的运行时数据）；ChunkSpoke APK 内的
+libsherpa-onnx-c-api.so 还静态包含 eSpeak NG 代码。上述部分按
+GNU General Public License version 3 or later（GPL-3.0-or-later）分发。
+完整许可证全文见同目录 LICENSE-GPLv3.txt。
+
+涉及组件与来源
+--------------
+1) espeak-ng-data
+   - 随以下模型包原样分发，未做修改：
+     https://huggingface.co/csukuangfj/vits-piper-en_US-ljspeech-medium
+   - 上游项目（GPL-3.0-or-later）：
+     https://github.com/espeak-ng/espeak-ng
+
+2) libsherpa-onnx-c-api.so（静态包含 eSpeak NG 代码）
+   - 二进制来自 pub.dev 包 sherpa_onnx_android_arm64 / armeabi / x86_64
+     1.13.8 的官方预编译 jniLibs（sherpa-onnx 项目构建，启用了 espeak-ng）。
+   - sherpa-onnx 项目（Apache-2.0）：
+     https://github.com/k2-fsa/sherpa-onnx
+   - eSpeak NG 源码：https://github.com/espeak-ng/espeak-ng
+
+书面要约
+--------
+ChunkSpoke 开发者（本发音包与 APK 的发布者）自发布之日起 3 年内，
+向任何收到本发音包或 APK 的个人或组织提供上述 GPLv3 组件对应的完整源码，
+收费不超过我们实际执行源码分发的成本（本项目承诺免费提供下载地址）。
+
+对应源码范围：
+- eSpeak NG 完整源码（含 espeak-ng-data 的生成脚本与数据源）；
+- sherpa-onnx 完整源码，以及构建上述预编译库所用的构建配置/脚本
+  （上游 CMake 构建，启用 espeak-ng 文本前端）。
+
+获取方式：通过以下任一渠道提出请求，并注明“高清发音包源码”：
+- GitHub Issues：https://github.com/Dukekang0124/chunkspoke/issues
+- 应用内「设置 → 意见反馈」
+
+我们将在收到请求后提供与上游一致的源码压缩包下载地址；若无法确定
+模型包所对应的确切提交，将提供上游对应发布标签的完整源码，并说明
+数据/二进制由该版本生成的依据。
+
+日期：2026-10-21
+发音包版本：ljspeech-medium-2

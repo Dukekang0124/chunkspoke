@@ -84,7 +84,7 @@ class _SwapStepState extends State<SwapStep> {
                     color: highlight ? kPrimary : Colors.white24,
                     width: highlight ? 2 : 1,
                   ),
-                  color: highlight ? kPrimary.withOpacity(0.12) : Colors.transparent,
+                  color: highlight ? kPrimary.withValues(alpha: 0.12) : Colors.transparent,
                 ),
                 child: Text(s.text,
                     style: TextStyle(

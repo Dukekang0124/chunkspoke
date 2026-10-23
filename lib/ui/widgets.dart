@@ -22,11 +22,11 @@ class ChunkTile extends StatelessWidget {
       margin: margin,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: selected ? color.withOpacity(0.35) : color.withOpacity(0.16),
+        color: selected ? color.withValues(alpha: 0.35) : color.withValues(alpha: 0.16),
         border: Border.all(
           color: type == 'timeplace'
               ? color
-              : (selected ? color : color.withOpacity(0.5)),
+              : (selected ? color : color.withValues(alpha: 0.5)),
           width: type == 'timeplace' ? 1 : (selected ? 2 : 1),
         ),
         borderRadius: chunkRadius(type),
@@ -148,7 +148,7 @@ class LevelMeter extends StatelessWidget {
           width: 4,
           height: h,
           decoration: BoxDecoration(
-            color: kPrimary.withOpacity(0.45 + l * 0.55 * w),
+            color: kPrimary.withValues(alpha: 0.45 + l * 0.55 * w),
             borderRadius: BorderRadius.circular(2),
           ),
         );

@@ -8,10 +8,16 @@ class SessionReport {
   final int maxCombo;
   /// 本次复习的块数（复习会话 > 0）。
   final int reviewed;
+  /// 本次走完的块数（新学 + 复习，含跳过/存档）。
+  final int completed;
+  /// 本次四星全绿的块数（仅新学路径统计）。
+  final int starChunks;
   const SessionReport({
     this.newMastered = 0,
     this.spoken = 0,
     this.maxCombo = 0,
     this.reviewed = 0,
+    this.completed = 0,
+    this.starChunks = 0,
   });
 }

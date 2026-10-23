@@ -14,6 +14,8 @@ class NotificationService {
 
   static const int _dailyId = 1001;
   static const String _channelId = 'daily_reminder';
+  static const int _reviewId = 1002;
+  static const String _reviewChannelId = 'review_due';
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -83,6 +85,41 @@ class NotificationService {
     } catch (_) {}
   }
 
+  /// 到期复习提醒（一次性）：到点提醒一次，下次复习后由 [syncReviewReminder] 重排。
+  /// 已到期（dueMs 在过去）→ 5 分钟后提醒，避免静默错过。
+  Future<void> scheduleReviewDue(int dueMs) async {
+    if (!_inited) await init();
+    if (!_inited) return;
+    try {
+      final at = reviewReminderAt(DateTime.now(), dueMs);
+      final utc = at.subtract(DateTime.now().timeZoneOffset);
+      await _plugin.zonedSchedule(
+        _reviewId,
+        '复习到期',
+        '有词块到复习时间了，练 1 分钟巩固记忆。',
+        tz.TZDateTime.from(utc, tz.UTC),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _reviewChannelId,
+            '到期复习提醒',
+            channelDescription: '词块到期复习时提醒一次',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+        ),
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    } catch (_) {}
+  }
+
+  Future<void> cancelReviewDue() async {
+    try {
+      await _plugin.cancel(_reviewId);
+    } catch (_) {}
+  }
+
   /// 下一次 (hour:minute)。把本地墙上时间按设备偏移换算为 UTC 锚点。
   tz.TZDateTime _nextInstance(int hour, int minute) {
     final now = DateTime.now();
@@ -93,4 +130,10 @@ class NotificationService {
     final utc = local.subtract(now.timeZoneOffset);
     return tz.TZDateTime.from(utc, tz.UTC);
   }
+}
+
+/// 到期提醒时间（纯函数，供单测）：未来到期按原时刻；已过期则 5 分钟后。
+DateTime reviewReminderAt(DateTime now, int dueMs) {
+  final due = DateTime.fromMillisecondsSinceEpoch(dueMs);
+  return due.isAfter(now) ? due : now.add(const Duration(minutes: 5));
 }

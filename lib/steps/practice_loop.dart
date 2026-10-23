@@ -5,64 +5,55 @@ import 'package:provider/provider.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
+import '../services/chunk_asset.dart';
 import '../services/chunk_progress.dart';
 import '../services/database.dart';
 import '../services/crash_log.dart';
+import '../services/learning_flow.dart';
 import '../services/state_machine.dart';
 import '../services/session_report.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import 'anchor_step.dart';
+import 'breakdown_step.dart';
+import 'free_use_step.dart';
 import 'listen_pick_step.dart';
-import 'build_step.dart';
+import 'substitute_step.dart';
 import 'l4_step.dart';
 
-/// 练习阶段枚举（值即环节序号，供状态机在两种顺序间切换）。
-class Phase {
-  static const int listenPick = 0; // ① 听音识块
-  static const int speakChunk = 1; // ② 开口说块
-  static const int buildSentence = 2; // ③ 块拼句
-  static const int speakSentence = 3; // ④ 开口说句
-}
+/// 闯关切句的 State key：必须随句 id 变化，禁止复用上一句的判定/尝试次数。
+Key challengeStepKey(String sentenceId) => ValueKey('challenge_$sentenceId');
 
-/// 会话环节顺序（纯函数，供状态机与单测复用）：
-/// 新学 = ①→②→③→④；复习 = ②→④（跳过听辨块与块拼句）。
-List<int> phaseOrder({required bool reviewMode}) => reviewMode
-    ? const [Phase.speakChunk, Phase.speakSentence]
-    : const [
-        Phase.listenPick,
-        Phase.speakChunk,
-        Phase.buildSentence,
-        Phase.speakSentence
-      ];
+/// 闯关句索引推进：返回 -1 表示本关最后一句已完成。
+int nextChallengeIndex(int current, int total) =>
+    current < total - 1 ? current + 1 : -1;
 
-/// 五步状态机的「下一环节」：返回 -1 表示本块最后一步（结算掌握）。
-/// 新学：0→1→2→3→-1；复习：1→3→-1。
-int nextPhase(int cur, {required bool reviewMode}) {
-  final order = phaseOrder(reviewMode: reviewMode);
-  final i = order.indexOf(cur);
-  if (i < 0 || i >= order.length - 1) return -1;
-  return order[i + 1];
-}
-
-/// 词块拼装练习闭环（v1.2.2·五步）：
-///   新学块：① 听音识块 → ② 开口说块 → ③ 块拼句 → ④ 开口说句 → ⑤ 掌握判定
-///   复习块（reviewMode）：只走 ② 开口说块 → ④ 开口说句 两步（间隔复习，轻量）。
-/// ②④ 双达标 → 绿勾 / 进度 +1 跳动 / 鼓励语 → 进下一块。
-/// 块全部完成后（新学模式）进入「句子闯关」（目标句逐句开口说对即过）。
-/// 掌握计数：通过即 +1，落盘由 ChunkProgressStore 完成；顶/底圆环读同一数据源（P0-2）。
+/// 六步学习闭环：
+///   新学：⓪锚定 → ①拆解 → ②听辨 → ③影子跟读 → ④定向替换 → ⑤自由造句
+///   复习：②听辨 → ③跟读 → ④替换 → ⑤开口（四星复用，不重走锚定/拆解）
+///
+/// 单块 8 分钟预算：超时自动存档并暂停，可「继续这一块」或「先到这里」；
+/// 每过一步写断点，杀进程后可从未完成的那一步继续。
 class PracticeLoop extends StatefulWidget {
+  /// 仅 E2E 入口设置：直接进入句子闯关，跳过六步（生产入口恒为 false）。
+  static bool debugStartChallenge = false;
+
   final Level level;
 
   /// 指定要练的词块序列；缺省为 level.chunks。复习会话用到期块列表传入。
   final List<Chunk>? chunks;
 
-  /// 复习模式：只走 ② 开口说块 + ④ 开口说句 两步。
+  /// 复习模式：后四步全走，结果写入词块资产状态机。
   final bool reviewMode;
+
+  /// 收听收词的单块六步不进句子闯关：六步完成即返回文章。
+  final bool sentenceChallenge;
   final void Function(SessionReport report) onDone;
   const PracticeLoop(
       {required this.level,
       this.chunks,
       this.reviewMode = false,
+      this.sentenceChallenge = true,
       required this.onDone,
       super.key});
 
@@ -70,51 +61,57 @@ class PracticeLoop extends StatefulWidget {
   State<PracticeLoop> createState() => _PracticeLoopState();
 }
 
-class _PracticeLoopState extends State<PracticeLoop> {
-  int _ci = 0; // 当前词块索引
-  int _phase = Phase.listenPick; // 当前环节序号
-  int _mastered = 0; // 本次会话已掌握/已完成块数（进度环）
+class _PracticeLoopState extends State<PracticeLoop>
+    with WidgetsBindingObserver {
+  int _ci = 0;
+  int _phase = LearnPhase.anchor;
+  StarBoard _stars = StarBoard.empty;
+  int _completed = 0; // 本次完成块数（进度环；不再标「已掌握」）
+  int _reviewed = 0;
   bool _ready = false;
   bool _showResume = false;
+  bool _finished = false;
+  LearnResume? _resume;
   int _resumeIndex = 0;
-  bool _challenge = false; // 句子闯关模式
-  int _si = 0; // 当前目标句索引
+  bool _challenge = false;
+  bool _challengeDone = false;
+  int _si = 0;
+  int _challengeSpoken = 0;
+  int _challengeSkipped = 0;
 
   bool _chunkDone = false;
   bool _justMastered = false;
+  bool _paused = false;
   String _encourage = '';
   Timer? _doneTimer;
+  Timer? _timeoutTimer;
 
-  // —— B1 / B6：连对与战报统计（本会话内累计）——
-  int _combo = 0; // 连续掌握块数（断连重计）
-  int _maxCombo = 0; // 本次最高连对
-  int _newMastered = 0; // 本次新掌握块数
-  int _spoken = 0; // 本次开口判定通过次数
+  // —— 本次会话真实统计（战报与连对）——
+  int _combo = 0;
+  int _maxCombo = 0;
+  int _newMastered = 0;
+  int _spoken = 0;
+  int _starChunks = 0;
+
+  ProgressService? _progress;
 
   List<Chunk> get _chunks => widget.chunks ?? widget.level.chunks;
   Chunk get _chunk => _chunks[_ci];
-  ProgressService get _p => Provider.of<ProgressService>(context, listen: false);
+  ProgressService get _p =>
+      _progress ?? Provider.of<ProgressService>(context, listen: false);
   int get _total => _chunks.length;
+  int get _progressCount => widget.reviewMode ? _reviewed : _completed;
   int get _challengeTotal => widget.level.sentences.length;
   List<String> get _keys => _chunks.map((c) => c.id).toList(growable: false);
 
-  /// 环节顺序：新学四步；复习两步；首场景前 3 块走加速档（跳过块拼句，A5）。
-  List<int> get _order {
-    if (widget.reviewMode) return phaseOrder(reviewMode: true);
-    if (_accel) {
-      return const [
-        Phase.listenPick,
-        Phase.speakChunk,
-        Phase.speakSentence
+  List<int> get _order => phaseOrder(reviewMode: widget.reviewMode);
+
+  /// B5：识别词表只服务 E2E 脚本化识别；生产路径走全模型（不传词表），
+  /// 避免小语法把无关语音强制解码成目标词。
+  List<String> get _recognitionPhrases => [
+        for (final s in widget.level.sentences) s.text,
+        for (final c in widget.level.chunks) c.text,
       ];
-    }
-    return phaseOrder(reviewMode: false);
-  }
-
-  /// A5 加速档：全新用户首场景前 3 块（听音识块→开口说块→开口说句），跳过块拼句。
-  bool get _accel => !widget.reviewMode && !_p.firstPracticeDone && _ci < 3;
-
-  int _nextPhaseOf(int cur) => nextPhase(cur, reviewMode: widget.reviewMode);
 
   final List<String> _cheers = const [
     '搞定！',
@@ -124,7 +121,6 @@ class _PracticeLoopState extends State<PracticeLoop> {
     '记住了！',
     '脱口而出了！',
     '肌肉记忆+1',
-    '再来一块！',
     '越来越顺了！',
     '一块到手！',
   ];
@@ -132,27 +128,57 @@ class _PracticeLoopState extends State<PracticeLoop> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _init();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _progress ??= Provider.of<ProgressService>(context, listen: false);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _writeResume();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _doneTimer?.cancel();
+    _timeoutTimer?.cancel();
+    _writeResume();
     super.dispose();
   }
 
-  /// 断点续练：找到「下一个未完成块」，并统计已掌握数。
-  /// 复习会话不走断点门（每次按到期列表从首个开始）。
   Future<void> _init() async {
-    int mastered = 0;
+    if (PracticeLoop.debugStartChallenge && !widget.reviewMode) {
+      _ready = true;
+      _challenge = true;
+      setState(() {});
+      return;
+    }
     int start = 0;
+    int mastered = 0;
+    LearnResume? resume;
     try {
       if (!widget.reviewMode) {
         start = await _p.chunkStore.nextUnmasteredIndex(_keys);
+        final raw = _p.learnResume(widget.level.id);
+        final decoded = LearnResume.tryDecode(raw);
+        if (decoded != null &&
+            decoded.chunkIndex < _total &&
+            _keys[decoded.chunkIndex] == decoded.chunkId) {
+          resume = decoded;
+        }
       }
       for (final c in _chunks) {
         final row = await _p.chunkStore.get(c.id);
-        if (ChunkProgressStore.isMastered(row)) mastered++;
+        if (row.level == ChunkLevel.mastered) mastered++;
       }
     } catch (e, st) {
       CrashLog.write('PracticeLoop._init: $e', st);
@@ -166,99 +192,241 @@ class _PracticeLoopState extends State<PracticeLoop> {
     } catch (e, st) {
       CrashLog.write('firstPracticeStart log: $e', st);
     }
+    final resumeIndex = resume?.chunkIndex ?? (start >= _total ? 0 : start);
     setState(() {
-      _resumeIndex = start >= _total ? 0 : start;
-      _ci = _resumeIndex;
+      _resume = resume;
+      _resumeIndex = resumeIndex;
+      _ci = resumeIndex;
       _phase = _order.first;
-      _mastered = mastered;
-      _showResume =
-          !widget.reviewMode && mastered > 0 && mastered < _total;
+      _stars = StarBoard.empty;
+      _showResume = !widget.reviewMode &&
+          (resume != null || (mastered > 0 && mastered < _total));
       _ready = true;
     });
-  }
-
-  /// 当前词块对应的「目标句」（块拼句 / 开口说句用）；无则回退为该词块自身。
-  TargetSentence _sentenceForChunk(Chunk c) {
-    for (final s in widget.level.sentences) {
-      if (s.chunkIds.contains(c.id)) return s;
+    if (!_showResume) {
+      _beginChunk(_ci, saveResume: resume == null);
     }
-    return TargetSentence(
-        id: c.id, text: c.text, meaningCN: c.meaningCN, chunkIds: [c.id]);
   }
 
-  /// 后台落盘（不阻塞 UI）：异常只记录，绝不抛回调用方导致卡死。
+  // —— 断点存档 ——
+
+  Future<void> _writeResume() async {
+    final p = _progress;
+    if (p == null || widget.reviewMode || _challenge || _finished) return;
+    if (!_ready || _ci >= _total) return;
+    try {
+      final data = LearnResume(
+        chunkIndex: _ci,
+        chunkId: _chunk.id,
+        phase: _phase,
+        stars: _stars,
+        savedAt: p.now.millisecondsSinceEpoch,
+      ).encode();
+      await p.setLearnResume(widget.level.id, data);
+    } catch (e, st) {
+      CrashLog.write('PracticeLoop.saveResume: $e', st);
+    }
+  }
+
+  Future<void> _clearResume() async {
+    try {
+      await _p.clearLearnResume(widget.level.id);
+    } catch (e, st) {
+      CrashLog.write('PracticeLoop.clearResume: $e', st);
+    }
+  }
+
+  // —— 阶段推进 ——
+
+  void _beginChunk(int index, {bool saveResume = true}) {
+    _timeoutTimer?.cancel();
+    setState(() {
+      _ci = index;
+      _phase = _order.first;
+      _stars = StarBoard.empty;
+    });
+    _startTimeout();
+    if (saveResume) _writeResume();
+    _logPhase();
+  }
+
+  void _startTimeout() {
+    _timeoutTimer?.cancel();
+    if (widget.reviewMode || _challenge) return;
+    _timeoutTimer = Timer(kLearnChunkTimeout, _onTimeout);
+  }
+
+  void _onTimeout() {
+    if (!mounted || widget.reviewMode || _challenge || _chunkDone) return;
+    _writeResume();
+    try {
+      Provider.of<TtsService>(context, listen: false).stop();
+    } catch (_) {}
+    setState(() => _paused = true);
+  }
+
+  void _logPhase() {
+    if (!mounted || _challenge) return;
+    _p
+        .logEvent('learn_phase', {
+          'phase': _phase,
+          'mode': widget.reviewMode ? 'review' : 'learn',
+          'chunk': _chunk.id,
+        })
+        .catchError((_) {});
+  }
+
+  void _setPhase(int next) {
+    if (!mounted) return;
+    setState(() => _phase = next);
+    _writeResume();
+    _logPhase();
+  }
+
+  void _advanceFromPhase(int next,
+      {int accuracy = 0,
+      bool selfEval = false,
+      bool fourStarsGreen = false,
+      bool enforceFourStars = false,
+      ChunkEvent? event}) {
+    if (event != null) {
+      _persist(event,
+          accuracy: accuracy,
+          selfEval: selfEval,
+          fourStarsGreen: fourStarsGreen,
+          enforceFourStars: enforceFourStars);
+    }
+    if (next < 0) {
+      _finishChunk();
+    } else {
+      _setPhase(next);
+    }
+  }
+
+  /// 后台落盘（不阻塞 UI）：异常只记录，绝不抛回导致卡死。
   Future<void> _persist(ChunkEvent event,
-      {int accuracy = 0, bool selfEval = false}) async {
+      {int accuracy = 0,
+      bool selfEval = false,
+      bool fourStarsGreen = false,
+      bool enforceFourStars = false}) async {
     try {
       await _p.chunkStore.applyEvent(_chunk.id, event,
-          accuracy: accuracy, selfEval: selfEval);
+          accuracy: accuracy,
+          selfEval: selfEval,
+          review: widget.reviewMode,
+          fourStarsGreen: fourStarsGreen,
+          enforceFourStars: enforceFourStars);
     } catch (e, st) {
       CrashLog.write('applyEvent($event) 失败（已乐观推进，不阻塞）: $e', st);
     }
   }
 
-  /// 通过当前环节 → 按顺序切到下一环节并后台落盘。
-  /// 若已是本会话最后一步（新学=开口说句 / 复习=开口说句），则结算掌握。
-  void _passPhase(ChunkEvent event,
-      {int accuracy = 0, bool selfEval = false}) {
-    if (!mounted) return;
-    final next = _nextPhaseOf(_phase);
-    if (next < 0) {
-      _onChunkComplete();
+  // —— 各步完成 ——
+
+  void _onListenDone(ListenPickResult r) {
+    setState(() => _stars = _stars.copyWith(listen: r.star));
+    _advanceFromPhase(
+      nextPhase(LearnPhase.listen, reviewMode: widget.reviewMode),
+      event: widget.reviewMode ? null : ChunkEvent.assembleCorrect,
+    );
+  }
+
+  void _onShadowDone(bool passed) {
+    if (!passed && widget.reviewMode) {
+      _deferReviewChunk('已跳过这块，明天再来');
       return;
     }
-    setState(() => _phase = next);
-    _persist(event, accuracy: accuracy, selfEval: selfEval);
+    setState(() => _stars = _stars.copyWith(speak: passed));
+    if (passed) _spoken++;
+    _advanceFromPhase(
+      nextPhase(LearnPhase.shadow, reviewMode: widget.reviewMode),
+      event: (!widget.reviewMode && passed) ? ChunkEvent.dragCorrect : null,
+    );
   }
 
-  void _advance() {
-    if (_ci < _total - 1) {
-      setState(() {
-        _ci++;
-        _phase = _order.first;
-      });
-    } else {
-      widget.onDone(_report());
-    }
-  }
-
-  SessionReport _report() => SessionReport(
-        newMastered: _newMastered,
-        spoken: _spoken,
-        maxCombo: _maxCombo,
-        reviewed: widget.reviewMode ? _total : 0,
-      );
-
-  void _enterChallenge() {
-    if (!mounted) return;
-    setState(() {
-      _challenge = true;
-      _si = 0;
-    });
-  }
-
-  void _challengeNext() {
-    if (_si < _challengeTotal - 1) {
-      setState(() => _si++);
-    } else {
-      widget.onDone(_report());
-    }
-  }
-
-  /// 一块完成 → ⑤ 掌握判定 + 反馈三件套（绿勾 / 进度跳动 / 鼓励语）。
-  Future<void> _onChunkComplete({bool? mastered, bool deferToReview = false}) async {
-    // 真实出口：主动跳过/延期 → 置复习队列 + 次日到期，推进到下一块。
-    if (deferToReview) {
-      await _scheduleReview(_chunk.id);
-      if (!mounted) return;
-      _advance();
+  void _onSubstituteDone(int? accuracy) {
+    if (accuracy == null && widget.reviewMode) {
+      _deferReviewChunk('已跳过这块，明天再来');
       return;
     }
-    final justMastered = mastered ??
-        ChunkProgressStore.isMastered(await _safeGet(_chunk.id));
+    setState(() => _stars = _stars.copyWith(substitute: accuracy != null));
+    if (accuracy != null) _spoken++;
+    _advanceFromPhase(
+      nextPhase(LearnPhase.substitute, reviewMode: widget.reviewMode),
+      accuracy: 100,
+      event: (!widget.reviewMode && accuracy != null)
+          ? ChunkEvent.accuracyPass
+          : null,
+    );
+  }
+
+  void _onFreeUseDone(int accuracy) {
+    setState(() => _stars = _stars.copyWith(free: true));
+    _spoken++;
+    _finishChunk();
+  }
+
+  void _onReviewSpoken(int accuracy) {
+    setState(() => _stars = _stars.copyWith(free: true));
+    _spoken++;
+    _finishChunk();
+  }
+
+  void _onFreeUseSkip() {
+    if (widget.reviewMode) {
+      _deferReviewChunk('已顺延到明天');
+      return;
+    }
+    _scheduleReview();
+    _completed++;
+    _combo = 0;
+    _showStamp(
+      mastered: false,
+      stamp: '已存档',
+      encourage: '这块先存着，明天再来巩固',
+      next: _afterChunkNext(),
+    );
+  }
+
+  void _deferReviewChunk(String encourage) {
+    _persist(ChunkEvent.deferReview);
+    _reviewed++;
+    _showStamp(
+      mastered: false,
+      stamp: '明天再来',
+      encourage: encourage,
+      next: _afterChunkNext(),
+    );
+  }
+
+  void _finishChunk() {
+    if (widget.reviewMode) {
+      _finishReviewChunk();
+      return;
+    }
+    _finishLearningChunk();
+  }
+
+  Future<void> _finishLearningChunk() async {
+    final allGreen = _stars.allGreen;
+    final before = await _safeGet(_chunk.id);
+    await _persist(
+      ChunkEvent.speakSuccess,
+      accuracy: 100,
+      fourStarsGreen: allGreen,
+      enforceFourStars: true,
+    );
+    final row = await _safeGet(_chunk.id);
     if (!mounted) return;
-    final remaining = _total - (_ci + 1);
-    if (justMastered) {
+    final mastered = row.level == ChunkLevel.mastered;
+    // 盖章文案跟资产轴走：关卡轴 mastered 只影响场景解锁，不代表词块已掌握。
+    final assetMastered = row.assetState == ChunkAssetState.mastered &&
+        ChunkProgressStore.isMastered(row);
+    final newlyMastered =
+        mastered && before.level != ChunkLevel.mastered;
+    _completed++;
+    if (allGreen) _starChunks++;
+    if (newlyMastered) {
       try {
         await _p.bumpStreak();
       } catch (e, st) {
@@ -272,37 +440,67 @@ class _PracticeLoopState extends State<PracticeLoop> {
       } catch (e, st) {
         CrashLog.write('firstPracticeDone log: $e', st);
       }
-      _mastered++;
       _combo++;
       if (_combo > _maxCombo) _maxCombo = _combo;
       _newMastered++;
-      _maybeCelebrateMilestone(); // 非阻塞：跨里程碑弹全屏庆祝（A4）
+      _maybeCelebrateMilestone();
     } else {
-      _combo = 0; // 断连重计（B1）
+      _combo = 0;
     }
+    if (!mounted) return;
+    final remaining = _total - (_ci + 1);
+    final dueText =
+        row.dueDate > 0 ? '下次 ${_md(row.dueDate)} 复习' : '已排进巩固复习';
+    _showStamp(
+      mastered: assetMastered,
+      stamp: assetMastered ? '已掌握' : '本块完成',
+      encourage: assetMastered
+          ? '${_cheers[_ci % _cheers.length]} 四星全绿 · 还剩 $remaining 个'
+          : '拿到 ${_stars.count}/4 星 · $dueText',
+      next: (widget.sentenceChallenge &&
+              mastered &&
+              _ci == _total - 1 &&
+              _challengeTotal > 0)
+          ? const WalkNext.challenge()
+          : _afterChunkNext(),
+    );
+  }
+
+  Future<void> _finishReviewChunk() async {
+    final row = await _safeGet(_chunk.id);
+    if (!mounted) return;
+    _reviewed++;
+    final assetMastered = row.assetState == ChunkAssetState.mastered &&
+        ChunkProgressStore.isMastered(row);
+    final nextDue = row.dueDate > 0 ? ' · 下次 ${_md(row.dueDate)}' : '';
+    _showStamp(
+      mastered: assetMastered,
+      stamp: assetMastered ? '已掌握' : '复习完成',
+      encourage:
+          assetMastered ? '复习通过 · 已进入长期记忆' : '复习完成$nextDue',
+      next: _afterChunkNext(),
+    );
+  }
+
+  void _showStamp({
+    required bool mastered,
+    required String stamp,
+    required String encourage,
+    required WalkNext next,
+  }) {
+    if (!mounted) return;
+    _timeoutTimer?.cancel();
     setState(() {
       _chunkDone = true;
-      _justMastered = justMastered;
-      _encourage = justMastered
-          ? '${_cheers[_ci % _cheers.length]} 还剩 $remaining 个'
-          : '没到 80%，现在再练一遍';
+      _justMastered = mastered;
+      _encourage = encourage;
+      _stampText = stamp;
     });
     _doneTimer?.cancel();
-    if (!justMastered) {
-      _doneTimer = Timer(const Duration(milliseconds: 1200), () {
-        if (!mounted) return;
-        setState(() {
-          _chunkDone = false;
-          _phase = _order.first;
-        });
-      });
-      return;
-    }
     _doneTimer = Timer(const Duration(milliseconds: 1300), () {
       if (!mounted) return;
       setState(() => _chunkDone = false);
-      // 新学模式最后一块掌握且本场景有目标句 → 进入「句子闯关」；复习模式直接结束。
-      if (!widget.reviewMode && _ci == _total - 1 && _challengeTotal > 0) {
+      if (next.challenge) {
         _enterChallenge();
       } else {
         _advance();
@@ -310,16 +508,79 @@ class _PracticeLoopState extends State<PracticeLoop> {
     });
   }
 
-  /// 主动跳过/延期：置复习队列 + 次日到期（容错，失败不阻断推进）。
-  Future<void> _scheduleReview(String key) async {
+  String _stampText = '本块完成';
+
+  WalkNext _afterChunkNext() =>
+      _ci < _total - 1 ? const WalkNext.chunk() : const WalkNext.finish();
+
+  void _advance() {
+    _timeoutTimer?.cancel();
+    if (_ci < _total - 1) {
+      _beginChunk(_ci + 1);
+    } else {
+      _finishAll();
+    }
+  }
+
+  Future<void> _finishAll() async {
+    _finished = true;
+    await _clearResume();
+    if (!mounted) return;
+    widget.onDone(_report());
+  }
+
+  SessionReport _report() => SessionReport(
+        newMastered: _newMastered,
+        spoken: _spoken,
+        maxCombo: _maxCombo,
+        reviewed: widget.reviewMode ? _reviewed : 0,
+        completed: _completed,
+        starChunks: _starChunks,
+      );
+
+  String _md(int ts) {
+    final d = DateTime.fromMillisecondsSinceEpoch(ts);
+    return '${d.month}月${d.day}日';
+  }
+
+  // —— 句子闯关（保持不变）——
+
+  void _enterChallenge() {
+    if (!mounted) return;
+    _clearResume();
+    setState(() {
+      _challenge = true;
+      _challengeDone = false;
+      _si = 0;
+      _challengeSpoken = 0;
+      _challengeSkipped = 0;
+    });
+  }
+
+  void _challengeNext() {
+    final next = nextChallengeIndex(_si, _challengeTotal);
+    if (next >= 0) {
+      setState(() => _si = next);
+    } else {
+      setState(() => _challengeDone = true);
+    }
+  }
+
+  void _challengeSkip() {
+    _challengeSkipped++;
+    _challengeNext();
+  }
+
+  Future<void> _scheduleReview() async {
     try {
-      await _p.chunkStore.applyEvent(key, ChunkEvent.scheduleReview);
+      await _p.chunkStore.applyEvent(_chunk.id, ChunkEvent.scheduleReview);
     } catch (e, st) {
-      CrashLog.write('scheduleReview($key): $e', st);
+      CrashLog.write('scheduleReview(${_chunk.id}): $e', st);
     }
   }
 
   /// A4：跨里程碑（10/25/50/100）弹全屏庆祝 + 可保存战报卡。
+  /// W2-1：里程碑按资产轴「已掌握」计数。
   Future<void> _maybeCelebrateMilestone() async {
     int? ms;
     try {
@@ -328,7 +589,7 @@ class _PracticeLoopState extends State<PracticeLoop> {
       CrashLog.write('pendingMilestone: $e', st);
     }
     if (ms == null || !mounted) return;
-    final milestone = ms; // 提升为非空，供闭包捕获
+    final milestone = ms;
     try {
       await _p.markMilestoneCelebrated(milestone);
     } catch (e, st) {
@@ -351,7 +612,7 @@ class _PracticeLoopState extends State<PracticeLoop> {
       final now = DateTime.now();
       await f.writeAsString(
         'ChunkSpoke 里程碑战报\n'
-        '累计掌握：$ms 块\n'
+        '已掌握（资产轴）：$ms 块\n'
         '连续打卡：${_p.streak} 天\n'
         '今日开口：${_p.todaySpoken} 句\n'
         '日期：${now.year}-${now.month}-${now.day}\n',
@@ -372,39 +633,54 @@ class _PracticeLoopState extends State<PracticeLoop> {
       return await _p.chunkStore.get(key);
     } catch (e, st) {
       CrashLog.write('PracticeLoop.get($key): $e', st);
-      return ChunkRow(chunkKey: key, level: ChunkLevel.l1, dueDate: 0,
-          failCount: 0, lastScore: 0);
+      return ChunkRow(
+          chunkKey: key,
+          level: ChunkLevel.l1,
+          dueDate: 0,
+          failCount: 0,
+          lastScore: 0);
     }
   }
 
-  String _phaseLabel() {
-    if (_challenge) return '句子闯关';
-    switch (_phase) {
-      case Phase.listenPick:
-        return '听音识块';
-      case Phase.speakChunk:
-        return widget.reviewMode ? '复习·开口说块' : '开口说块';
-      case Phase.buildSentence:
-        return '块拼句';
-      default:
-        return widget.reviewMode ? '复习·开口说句' : '开口说句';
+  /// 当前词块对应的「目标句」；无则回退为该词块自身。
+  TargetSentence _sentenceForChunk(Chunk c) {
+    for (final s in widget.level.sentences) {
+      if (s.chunkIds.contains(c.id)) return s;
     }
+    return TargetSentence(
+        id: c.id, text: c.text, meaningCN: c.meaningCN, chunkIds: [c.id]);
   }
+
+  List<Chunk> get _allChunks {
+    final content = Provider.of<ContentPack>(context, listen: false);
+    return [for (final lv in content.levels) ...lv.chunks];
+  }
+
+  // —— UI ——
 
   Widget _header() => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            MasteryRing(_total > 0 ? _mastered / _total : 0, size: 38),
+            MasteryRing(_total > 0 ? _progressCount / _total : 0, size: 38),
             const SizedBox(width: 8),
-            Text(widget.reviewMode ? '复习 $_mastered/$_total' : '已掌握 $_mastered/$_total',
-                style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            Text(
+                widget.reviewMode
+                    ? '复习 $_reviewed/$_total'
+                    : '本次完成 $_completed/$_total',
+                style:
+                    const TextStyle(color: Colors.white70, fontSize: 13)),
             const Spacer(),
-            Text(_phaseLabel(),
-                style: const TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
+            Text('${phaseLabel(_phase, reviewMode: widget.reviewMode)} · '
+                '⭐${_stars.count}/4',
+                style: const TextStyle(
+                    color: kPrimary, fontWeight: FontWeight.w600)),
             const SizedBox(width: 10),
             if (_challenge)
-              Text('第 ${_si + 1}/$_challengeTotal 句',
+              Text(
+                  _challengeDone
+                      ? '$_challengeTotal/$_challengeTotal 句'
+                      : '第 ${_si + 1}/$_challengeTotal 句',
                   style: const TextStyle(color: Colors.white54, fontSize: 13))
             else
               Text('第 ${_ci + 1}/$_total 块',
@@ -413,50 +689,134 @@ class _PracticeLoopState extends State<PracticeLoop> {
         ),
       );
 
-  Widget _resumeGate() => Center(
+  Widget _resumeGate() {
+    final r = _resume;
+    final from = r == null
+        ? '第 ${_resumeIndex + 1} 块'
+        : '第 ${r.chunkIndex + 1} 块 · ${phaseLabel(r.phase, reviewMode: false)}';
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            MasteryRing(_total > 0 ? _resumeIndex / _total : 0, size: 84),
+            const SizedBox(height: 16),
+            const Text('接着上次练',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Text('上次学到 $from',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, fontSize: 15)),
+            const SizedBox(height: 26),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: _continueResume,
+                child: Text(
+                    r == null
+                        ? '继续 · 第 ${_resumeIndex + 1} 块'
+                        : '继续 · ${phaseLabel(r.phase, reviewMode: false)}',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                _clearResume();
+                setState(() {
+                  _showResume = false;
+                  _resume = null;
+                });
+                _beginChunk(0);
+              },
+              child: const Text('从头开始',
+                  style: TextStyle(color: Colors.white54)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _continueResume() {
+    final r = _resume;
+    setState(() => _showResume = false);
+    if (r == null) {
+      _beginChunk(_resumeIndex, saveResume: false);
+      return;
+    }
+    _timeoutTimer?.cancel();
+    setState(() {
+      _ci = r.chunkIndex.clamp(0, _total - 1);
+      _phase = _order.contains(r.phase) ? r.phase : _order.first;
+      _stars = r.stars;
+    });
+    _startTimeout();
+    _writeResume();
+    _logPhase();
+  }
+
+  Widget _pauseView() => Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              MasteryRing(_total > 0 ? _mastered / _total : 0, size: 84),
-              const SizedBox(height: 16),
-              Text('已掌握 $_mastered/$_total',
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
+              const Icon(Icons.timer_outlined, color: kPrimary, size: 56),
+              const SizedBox(height: 14),
+              const Text('这一块练了 8 分钟',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              Text('上次学到第 ${_resumeIndex + 1} 块',
+              Text(
+                  '进度已保存：第 ${_ci + 1}/$_total 块 · '
+                  '${phaseLabel(_phase, reviewMode: false)}',
+                  textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70, fontSize: 15)),
+              const SizedBox(height: 6),
+              const Text('短时高频比一口气硬撑更记得住',
+                  style: TextStyle(color: Colors.white38, fontSize: 13)),
               const SizedBox(height: 26),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
-                  onPressed: () => setState(() {
-                    _showResume = false;
-                    _ci = _resumeIndex;
-                    _phase = _order.first;
-                  }),
-                  child: Text('继续 · 第 ${_resumeIndex + 1} 块',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
+                  onPressed: () {
+                    setState(() => _paused = false);
+                    _startTimeout();
+                  },
+                  child: const Text('继续这一块',
+                      style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700)),
                 ),
               ),
               const SizedBox(height: 10),
               TextButton(
-                onPressed: () => setState(() {
-                  _showResume = false;
-                  _ci = 0;
-                  _phase = _order.first;
-                }),
-                child: const Text('从头开始',
+                onPressed: () async {
+                  await _writeResume();
+                  if (mounted) Navigator.of(context).maybePop();
+                },
+                child: const Text('先到这里',
                     style: TextStyle(color: Colors.white54)),
               ),
             ],
@@ -468,106 +828,254 @@ class _PracticeLoopState extends State<PracticeLoop> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // B4 掌握盖章：已掌握时盖「已掌握」章，否则绿勾。
-            if (_justMastered)
+            Transform.rotate(
+              angle: -0.15,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      color: _justMastered ? kPrimary : Colors.white38,
+                      width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(_stampText,
+                    style: TextStyle(
+                        color: _justMastered ? kPrimary : Colors.white70,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(_encourage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: kUnlocked,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600)),
+            if (!widget.reviewMode && _combo >= 3) ...[
+              const SizedBox(height: 8),
+              Text('Combo x$_combo',
+                  style: const TextStyle(
+                      color: kPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700)),
+            ],
+            const SizedBox(height: 14),
+            MasteryRing(_total > 0 ? _progressCount / _total : 0, size: 60),
+            const SizedBox(height: 8),
+            Text(
+                widget.reviewMode
+                    ? '复习 $_reviewed/$_total'
+                    : '本次完成 $_completed/$_total',
+                style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+      );
+
+  Widget _statChip(String label, String value) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        decoration: BoxDecoration(
+          color: kCard,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label,
+                style: const TextStyle(color: Colors.white54, fontSize: 13)),
+            const SizedBox(width: 6),
+            Text(value,
+                style: const TextStyle(
+                    color: kPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700)),
+          ],
+        ),
+      );
+
+  Widget _challengeDoneView() => Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.45, end: 1),
+                duration: const Duration(milliseconds: 520),
+                curve: Curves.easeOutBack,
+                builder: (_, v, child) =>
+                    Transform.scale(scale: v, child: child),
+                child:
+                    const Icon(Icons.emoji_events, color: kPrimary, size: 84),
+              ),
+              const SizedBox(height: 10),
+              const Text('闯关完成！',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800)),
+              const SizedBox(height: 6),
+              Text('第 ${widget.level.id} 关 · $_challengeTotal/$_challengeTotal 句',
+                  style: const TextStyle(color: Colors.white70, fontSize: 15)),
+              const SizedBox(height: 18),
               Transform.rotate(
-                angle: -0.15,
+                angle: -0.12,
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   decoration: BoxDecoration(
                     border: Border.all(color: kPrimary, width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('已掌握',
+                  child: const Text('已通关',
                       style: TextStyle(
                           color: kPrimary,
-                          fontSize: 20,
+                          fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 2)),
+                          letterSpacing: 4)),
                 ),
-              )
-            else
-              const Icon(Icons.check_circle, color: kUnlocked, size: 72),
-            const SizedBox(height: 12),
-            Text(_encourage,
-                style: const TextStyle(
-                    color: kUnlocked, fontSize: 18, fontWeight: FontWeight.w600)),
-            // B1：连对 ≥3 显示 Combo xN（断连重计）。
-            if (_combo >= 3) ...[
-              const SizedBox(height: 8),
-              Text('Combo x$_combo',
-                  style: const TextStyle(
-                      color: kPrimary, fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _statChip('命中', '$_challengeSpoken 句'),
+                  const SizedBox(width: 12),
+                  _statChip('跳过', '$_challengeSkipped 句'),
+                ],
+              ),
+              const SizedBox(height: 26),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
+                  onPressed: () => widget.onDone(_report()),
+                  child: const Text('收下盖章 · 完成',
+                      style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700)),
+                ),
+              ),
             ],
-            const SizedBox(height: 14),
-            MasteryRing(_total > 0 ? _mastered / _total : 0, size: 60),
-            const SizedBox(height: 8),
-            Text(widget.reviewMode ? '复习 $_mastered/$_total' : '已掌握 $_mastered/$_total',
-                style: const TextStyle(color: Colors.white70)),
-          ],
+          ),
         ),
       );
 
   Widget _body() {
     if (_challenge) {
       final s = widget.level.sentences[_si];
+      final isLast = _si == _challengeTotal - 1;
       return L4Step(
+        key: challengeStepKey(s.id),
         chunk: _chunk,
         levelId: widget.level.id,
         theme: widget.level.theme,
         targetText: s.text,
         persist: false,
+        recognitionPhrases: _recognitionPhrases,
+        passAdvanceDelay: const Duration(milliseconds: 1500),
+        passActionLabel: isLast ? '查看闯关结果' : '下一句',
+        skipHint: '先跳过这一句',
         onPass: () {
           _spoken++;
+          _challengeSpoken++;
           _challengeNext();
         },
-        onSkip: _challengeNext,
+        onSkip: _challengeSkip,
       );
     }
+    final stepKey = ValueKey(
+        '${widget.reviewMode ? 'r' : 'l'}_${_ci}_${_phase}_${_chunk.id}');
     switch (_phase) {
-      case Phase.listenPick:
-        return ListenPickStep(
+      case LearnPhase.anchor:
+        return AnchorStep(
+          key: stepKey,
           chunk: _chunk,
           level: widget.level,
-          onDone: () => _passPhase(ChunkEvent.assembleCorrect),
+          chunkIndex: _ci,
+          chunkTotal: _total,
+          onDone: () => _setPhase(LearnPhase.breakdown),
         );
-      case Phase.speakChunk:
+      case LearnPhase.breakdown:
+        return BreakdownStep(
+          key: stepKey,
+          chunk: _chunk,
+          level: widget.level,
+          onDone: () => _setPhase(LearnPhase.listen),
+        );
+      case LearnPhase.listen:
+        return ListenPickStep(
+          key: stepKey,
+          chunk: _chunk,
+          level: widget.level,
+          rounds: widget.reviewMode ? 2 : 3,
+          onDone: _onListenDone,
+        );
+      case LearnPhase.shadow:
         return L4Step(
+          key: stepKey,
           chunk: _chunk,
           levelId: widget.level.id,
           theme: widget.level.theme,
           targetText: _chunk.text,
-          // 说块只推进到下一环节（dragCorrect），不再落 speakSuccess，
-          // 避免「说块」与「说句」重复写掌握事件（S2）。
+          // 跟读只推进流程，掌握事件统一在最后一步结算。
           persist: false,
-          onPass: () {
-            _spoken++;
-            _passPhase(ChunkEvent.dragCorrect);
-          },
-          onSkip: () => _onChunkComplete(deferToReview: true),
+          review: false,
+          recognitionPhrases: _recognitionPhrases,
+          skipHint: widget.reviewMode ? '先跳过这块，明天再来' : '先跳过这一步',
+          onPass: () => _onShadowDone(true),
+          onSkip: () => _onShadowDone(false),
         );
-      case Phase.buildSentence:
-        return BuildStep(
-          level: widget.level,
+      case LearnPhase.substitute:
+        final s = _sentenceForChunk(_chunk);
+        final plan = buildSubstitutionPlan(
           chunk: _chunk,
-          sentence: _sentenceForChunk(_chunk),
-          // 拼句正确完成 = 本步准确度满分，避免 lastScore 被冲成 0（S3）。
-          onDone: () => _passPhase(ChunkEvent.accuracyPass, accuracy: 100),
+          sentence: s,
+          allChunks: _allChunks,
+        );
+        return SubstituteStep(
+          key: stepKey,
+          chunk: _chunk,
+          level: widget.level,
+          plan: plan,
+          meaningCN: s.meaningCN,
+          review: widget.reviewMode,
+          onPass: (acc) => _onSubstituteDone(acc),
+          onSkip: () => _onSubstituteDone(null),
         );
       default:
         final s = _sentenceForChunk(_chunk);
-        return L4Step(
+        if (widget.reviewMode) {
+          return L4Step(
+            key: stepKey,
+            chunk: _chunk,
+            levelId: widget.level.id,
+            theme: widget.level.theme,
+            targetText: s.text,
+            review: true,
+            recognitionPhrases: _recognitionPhrases,
+            skipHint: '先跳过这块，明天再来',
+            onPass: () {
+              _onReviewSpoken(100);
+            },
+            onSkip: () => _deferReviewChunk('已顺延到明天'),
+          );
+        }
+        return FreeUseStep(
+          key: stepKey,
           chunk: _chunk,
-          levelId: widget.level.id,
-          theme: widget.level.theme,
-          targetText: s.text,
-          // 掌握与否以落盘后的 store 判定为准，不无条件 +1（S1）。
-          onPass: () {
-            _spoken++;
-            _onChunkComplete();
-          },
-          onSkip: () => _onChunkComplete(deferToReview: true),
+          level: widget.level,
+          referenceText: s.text,
+          meaningCN: s.meaningCN,
+          onPass: _onFreeUseDone,
+          onSkip: _onFreeUseSkip,
         );
     }
   }
@@ -578,13 +1086,25 @@ class _PracticeLoopState extends State<PracticeLoop> {
       return const Center(child: CircularProgressIndicator(color: kPrimary));
     }
     if (_showResume) return _resumeGate();
+    if (_paused) return _pauseView();
     return Column(
       children: [
         _header(),
-        Expanded(child: _chunkDone ? _chunkDoneView() : _body()),
+        Expanded(
+            child: _challengeDone
+                ? _challengeDoneView()
+                : (_chunkDone ? _chunkDoneView() : _body())),
       ],
     );
   }
+}
+
+/// 下一步去向：继续下一块 / 进句子闯关 / 收尾。
+class WalkNext {
+  final bool challenge;
+  const WalkNext.chunk() : challenge = false;
+  const WalkNext.finish() : challenge = false;
+  const WalkNext.challenge() : challenge = true;
 }
 
 /// A4：里程碑全屏庆祝弹窗 + 可保存战报卡（数字全部真实）。
@@ -612,9 +1132,11 @@ class _MilestoneDialog extends StatelessWidget {
                     fontSize: 24,
                     fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            Text('累计掌握 $milestone 块',
+            Text('已掌握 $milestone 块',
                 style: const TextStyle(
-                    color: kPrimary, fontSize: 18, fontWeight: FontWeight.w700)),
+                    color: kPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(14),
@@ -627,10 +1149,12 @@ class _MilestoneDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('连续打卡 ${p.streak} 天',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 14)),
                   const SizedBox(height: 6),
                   Text('今日开口 ${p.todaySpoken} 句',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 14)),
                 ],
               ),
             ),
@@ -642,7 +1166,8 @@ class _MilestoneDialog extends StatelessWidget {
                 onPressed: onSave,
                 child: const Text('保存战报卡',
                     style: TextStyle(
-                        color: Colors.black87, fontWeight: FontWeight.w700)),
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w700)),
               ),
             ),
             const SizedBox(height: 8),

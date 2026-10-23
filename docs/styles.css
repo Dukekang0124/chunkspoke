@@ -80,6 +80,8 @@ img{max-width:100%;display:block}
 .faq-body{padding:0 0 14px;color:var(--muted)}
 .faq-body ol{padding-left:20px;margin:8px 0}
 .faq-body strong{color:var(--text)}
+.faq-body .faq-shot{margin:12px 0 4px;text-align:center}
+.faq-body .faq-shot img{width:100%;max-width:300px;border-radius:12px;border:1px solid var(--line);background:var(--card)}
 
 /* CTA bottom */
 .cta-bottom{text-align:center}

@@ -5,7 +5,7 @@ import 'package:chunkspoke_flutter/services/database.dart';
 import 'package:chunkspoke_flutter/services/chunk_progress.dart';
 import 'package:chunkspoke_flutter/services/state_machine.dart';
 import 'package:chunkspoke_flutter/services/session.dart';
-import 'package:chunkspoke_flutter/steps/practice_loop.dart';
+import 'package:chunkspoke_flutter/services/learning_flow.dart';
 import 'package:chunkspoke_flutter/models/content_pack.dart';
 
 int _dbCounter = 0;
@@ -27,18 +27,27 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('五步状态机（纯函数）', () {
-    test('新学：①→②→③→④→结算', () {
-      expect(phaseOrder(reviewMode: false), [0, 1, 2, 3]);
+  group('六步状态机（纯函数）', () {
+    test('新学：锚定→拆解→听辨→跟读→替换→造句→结算', () {
+      expect(phaseOrder(reviewMode: false), [0, 1, 2, 3, 4, 5]);
       expect(nextPhase(0, reviewMode: false), 1);
       expect(nextPhase(1, reviewMode: false), 2);
       expect(nextPhase(2, reviewMode: false), 3);
-      expect(nextPhase(3, reviewMode: false), -1); // -1 = 结算掌握
+      expect(nextPhase(3, reviewMode: false), 4);
+      expect(nextPhase(4, reviewMode: false), 5);
+      expect(nextPhase(5, reviewMode: false), -1); // -1 = 结算掌握
     });
-    test('复习：②→④→结算（跳过听辨块与块拼句）', () {
-      expect(phaseOrder(reviewMode: true), [1, 3]);
-      expect(nextPhase(1, reviewMode: true), 3);
-      expect(nextPhase(3, reviewMode: true), -1);
+    test('复习：后四步（听辨→跟读→替换→开口），不重走锚定/拆解', () {
+      expect(phaseOrder(reviewMode: true), [2, 3, 4, 5]);
+      expect(nextPhase(2, reviewMode: true), 3);
+      expect(nextPhase(3, reviewMode: true), 4);
+      expect(nextPhase(4, reviewMode: true), 5);
+      expect(nextPhase(5, reviewMode: true), -1);
+      expect(nextPhase(0, reviewMode: true), -1); // 不在复习序列内
+    });
+    test('听辨语速：新学三档、复习两档', () {
+      expect(listenRates(reviewMode: false), [0.14, 0.22, 0.32]);
+      expect(listenRates(reviewMode: true), [0.14, 0.22]);
     });
   });
 

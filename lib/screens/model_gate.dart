@@ -1,5 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../services/loaders.dart';
 import '../services/vosk_engine.dart';
 import '../services/vosk_model.dart';
 import '../ui/theme.dart';
@@ -19,6 +23,7 @@ class _ModelGateState extends State<ModelGate> {
   EngineState _state = EngineState.unknown;
   ModelProgress? _progress;
   String? _error;
+  StreamSubscription<ModelProgress>? _sub;
 
   @override
   void initState() {
@@ -26,10 +31,24 @@ class _ModelGateState extends State<ModelGate> {
     _ensure();
   }
 
-  Future<void> _ensure() async {
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _ensure({bool retry = false}) async {
+    // 首启下载完成率（指令 H 观测口径）：一次尝试 + 一个结果，失败也记。
+    // context 必须在任何 await 之前取，避免跨异步间隙使用。
+    ProgressService? analytics;
+    try {
+      analytics = Provider.of<ProgressService>(context, listen: false);
+      analytics.logEvent('model_gate_try', {'retry': retry});
+    } catch (_) {}
+    await _sub?.cancel();
     try {
       final stream = await SpeechEngine.instance.ensureProgressStream();
-      stream.listen((p) {
+      _sub = stream.listen((p) {
         if (mounted) setState(() => _progress = p);
       });
     } catch (_) {
@@ -37,6 +56,8 @@ class _ModelGateState extends State<ModelGate> {
     }
     if (mounted) setState(() => _state = EngineState.loading);
     SpeechEngine.instance.init().then((ok) {
+      analytics?.logEvent('model_gate_result',
+          {'ok': ok, 'err': SpeechEngine.instance.lastError});
       if (!mounted) return;
       setState(() {
         _state = ok ? EngineState.ready : EngineState.failed;
@@ -45,13 +66,16 @@ class _ModelGateState extends State<ModelGate> {
     });
   }
 
-  void _retry() {
+  Future<void> _retry() async {
     setState(() {
-      _state = EngineState.unknown;
+      _state = EngineState.loading;
       _progress = null;
       _error = null;
     });
-    _ensure();
+    // 手动重试必须先清掉全部不完整分块与拼接临时文件，避免坏块继续续传。
+    await SpeechEngine.instance.prepareRetry();
+    if (!mounted) return;
+    await _ensure(retry: true);
   }
 
   @override
@@ -123,6 +147,12 @@ class _ModelGateState extends State<ModelGate> {
     final percent = total > 0 ? (received / total * 100).clamp(0.0, 100.0) : 0.0;
     return Column(
       children: [
+        if (p?.message != null) ...[
+          Text(p!.message!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: kPrimary, fontSize: 13)),
+          const SizedBox(height: 12),
+        ],
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(

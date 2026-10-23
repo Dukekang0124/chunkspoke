@@ -91,7 +91,7 @@ class _LearnStepState extends State<LearnStep> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: kBg.withOpacity(0.5),
+                          color: kBg.withValues(alpha: 0.5),
                           border: Border.all(color: Colors.white24),
                         ),
                         child: Text(c.meaningCN,

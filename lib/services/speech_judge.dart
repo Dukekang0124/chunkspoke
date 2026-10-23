@@ -18,6 +18,11 @@ const double kConfThreshold = 0.45;
 /// 完全匹配快速通道的防噪时长下限（秒）：短于此视为无效录音，不判。
 const double kMinDurationSec = 0.4;
 
+/// 模糊层的硬门槛（未加权词级相似度）：低于此值一律不通过。
+/// 内容词加权是“宽容层”，本门槛是“诚实底线”——跨句/无关语音即使因识别词表
+/// 被强制拼出若干目标词，也不能靠虚词容错混过。
+const double kMinSimilarity = 0.5;
+
 /// 规范化：转小写、去标点（保留撇号以兼容 don't / i'm）、压缩多空格、去首尾空白。
 /// 本项目所有文本比对都必须在调用它之后进行。
 String normalizeSpeech(String s) => s
@@ -70,6 +75,9 @@ bool wordClose(String a, String b) {
   if (a.isEmpty || b.isEmpty) return false;
   if (a == b) return true;
   if (kConfusionPairs.any((p) => p.contains(a) && p.contains(b))) return true;
+  // 单字母只认完全相同（含上方混淆对）：否则任意两个字母编辑距离都是 1，
+  // 会把 "x" 当成 "e"，让骨架/槽位校验虚高。
+  if (a.length == 1 || b.length == 1) return false;
   if (_levenshtein(a, b) <= 1) return true;
   final shorter = a.length <= b.length ? a : b;
   final longer = a.length <= b.length ? b : a;
@@ -91,7 +99,7 @@ const Set<String> _functionWords = {
   'what', 'when', 'where', 'who', 'whom', 'why', 'how', 'which',
 };
 
-bool _isFunction(String w) => _functionWords.contains(w);
+bool isFunctionWord(String w) => _functionWords.contains(w);
 
 /// 判定结果。
 /// [layer]：命中的漏斗层 —— 'exact'（完全匹配快速通道）/ 'fuzzy'（模糊层）/ 'reject'。
@@ -149,6 +157,7 @@ JudgeOutcome judgeSpeech({
   double confThreshold = kConfThreshold,
   double? durationSec,
   double minDurationSec = kMinDurationSec,
+  double minSimilarity = kMinSimilarity,
 }) {
   // L1 规范化层：所有比对在此之后。
   final tgt = tokenizeSpeech(target);
@@ -190,7 +199,7 @@ JudgeOutcome judgeSpeech({
   if (weighted.coreHitRate < 0.7) {
     pass = false;
     reason = 'lowCore';
-  } else if (weighted.weightedSim < 0.8) {
+  } else if (weighted.weightedSim < 0.8 || align.similarity < minSimilarity) {
     pass = false;
     reason = 'lowSim';
   } else if (confidence != null && confidence < confThreshold) {
@@ -291,10 +300,10 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
   final n = rec.length;
   final m = tgt.length;
 
-  double del(String w) => _isFunction(w) ? 0.3 : 2.0;
-  double ins(String w) => _isFunction(w) ? 0.2 : 0.5;
+  double del(String w) => isFunctionWord(w) ? 0.3 : 2.0;
+  double ins(String w) => isFunctionWord(w) ? 0.2 : 0.5;
   double sub(String r, String t) =>
-      wordClose(r, t) ? 0.0 : (_isFunction(r) && _isFunction(t) ? 0.3 : 2.0);
+      wordClose(r, t) ? 0.0 : (isFunctionWord(r) && isFunctionWord(t) ? 0.3 : 2.0);
 
   final dp = List.generate(n + 1, (_) => List.filled(m + 1, inf));
   dp[0][0] = 0;
@@ -335,7 +344,7 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
 
   var contentCount = 0, contentHit = 0;
   for (var k = 0; k < m; k++) {
-    if (_isFunction(tgt[k])) continue;
+    if (isFunctionWord(tgt[k])) continue;
     contentCount++;
     if (matched[k]) contentHit++;
   }

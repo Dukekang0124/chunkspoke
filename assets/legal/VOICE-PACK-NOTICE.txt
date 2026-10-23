@@ -1,0 +1,19 @@
+ChunkSpoke HD voice pack — ljspeech-medium-2
+============================================
+
+Model: vits-piper-en_US-ljspeech-medium
+  Source: https://huggingface.co/csukuangfj/vits-piper-en_US-ljspeech-medium
+  Voice: en-US female, 22050 Hz
+  Model card / license: see the Source URL above
+  Piper: MIT；sherpa-onnx: Apache-2.0；LJSpeech dataset: public domain
+
+espeak-ng-data / eSpeak NG
+  eSpeak NG runtime data in this pack and eSpeak NG code statically linked
+  into the APK's libsherpa-onnx-c-api.so are licensed GPL-3.0-or-later.
+  Full license text: LICENSE-GPLv3.txt (same directory).
+  Written offer for corresponding source: SOURCE-OFFER.txt (same directory).
+  Upstream source: https://github.com/espeak-ng/espeak-ng
+
+This pack is distributed as separate data for the ChunkSpoke application.
+See SOURCE-OFFER.txt for the GPLv3 corresponding-source offer covering both
+this pack and the APK binary.

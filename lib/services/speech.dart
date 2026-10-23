@@ -29,6 +29,7 @@ class SayOutcome {
   final PronunciationResult? azure;
   final bool wrong;
   final bool noSpeech;
+  final bool asrUnclear; // B5：识别不可信（空/低置信/垃圾堆叠），需重说
   final List<bool>? targetMatched; // 目标句逐词命中标记（用于错词标红）
   SayOutcome({
     required this.passed,
@@ -38,6 +39,7 @@ class SayOutcome {
     this.azure,
     this.wrong = false,
     this.noSpeech = false,
+    this.asrUnclear = false,
     this.targetMatched,
   });
 }
@@ -84,10 +86,14 @@ Set<String> _coreWords(String sentence) => _normalize(sentence)
 /// 已移除系统 SpeechRecognizer（speech_to_text）路径——无 GMS 国行机上是空壳，永不产出。
 /// 保留：L1 Azure 发音评测（REST）、Azure STT 转写（增强）、文本匹配/开口命中计分。
 class SpeechService {
+  /// 仅 E2E 入口 main_e2e.dart 设置（脚本化识别）；生产入口保持 null，走真实 Vosk。
+  static Transcriber? debugTranscriberOverride;
+
   final Transcriber _transcriber;
 
   SpeechService({Transcriber? transcriber})
-      : _transcriber = transcriber ?? SpeechEngine.instance;
+      : _transcriber =
+            transcriber ?? debugTranscriberOverride ?? SpeechEngine.instance;
 
   /// 加载 Vosk 离线识别引擎（默认必通）。成功/失败据此决定降级或报错。
   Future<bool> initVosk() => _transcriber.init();
@@ -99,6 +105,17 @@ class SpeechService {
   /// 返回文本 + 置信度（置信度可能为 null=字段缺失，判定层据此走文本相似度兜底）。
   Future<VoskResult> recognize(String wavPath, List<String> phrases) =>
       _transcriber.transcribe(wavPath, phrases);
+
+  /// B5：开放输出统一走全模型（不传场景词表），展示层只认这个原始文本。
+  /// [e2ePhrases] 仅供 debugTranscriberOverride 脚本化识别使用，生产路径忽略。
+  Future<VoskResult> recognizeOpen(String wavPath,
+      {List<String>? e2ePhrases}) {
+    final override = debugTranscriberOverride;
+    if (override != null && identical(_transcriber, override)) {
+      return override.transcribe(wavPath, e2ePhrases ?? const []);
+    }
+    return _transcriber.transcribeOpen(wavPath);
+  }
 
   /// 录音时长（秒），供判定管线的「过短录音无效」防噪兜底。
   Future<double> durationSec(String wavPath) => wavDurationSec(wavPath);

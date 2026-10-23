@@ -84,12 +84,12 @@ class AiCoach {
     return plans;
   }
 
-  /// 变式造句：取 2 个已掌握词块，让 LLM 生成新中文场景提示 + 目标英文句。
+  /// 变式造句：取 2 个已掌握（资产轴）词块，让 LLM 生成新中文场景提示 + 目标英文句。
   /// 返回 {cn_prompt, target, a, b} 或 null（无可用模型 / 不足 2 个已掌握 / 降级）。
   /// 注意：只发送词块自身文本（学习素材），绝不发送用户录音原文。
   Future<Map<String, String>?> variantTask(
       ProgressService p, ContentPack c) async {
-    final mastered = (await p.chunkStore.allMasteredKeys()).toSet();
+    final mastered = (await p.chunkStore.allAssetMasteredKeys()).toSet();
     final pool = c.levels
         .expand((l) => l.chunks)
         .where((ch) => mastered.contains(ch.id))

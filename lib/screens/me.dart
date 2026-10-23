@@ -30,7 +30,7 @@ class MeScreen extends StatelessWidget {
               children: [
                 _stat('已掌握词块', '$n 个',
                     help: () => _showMasteryHelp(context)),
-                _stat('累计可组合句子', '${combo}+', sub: '越学越强大'),
+                _stat('累计可组合句子', '$combo+', sub: '越学越强大'),
               ],
             );
           },
@@ -51,9 +51,9 @@ class MeScreen extends StatelessWidget {
                 _stat('发音评分', '—',
                     sub: progress.azureKey == null ? '未配置发音评分' : '已配置发音服务'),
                 _stat('自由造句次数', '${progress.freeBuildCount} 次',
-                    sub: '用已掌握词块自由开口'),
+                    sub: '用已学词块自由开口'),
                 _stat('已解锁场景', '$unlockedScenes 个',
-                    sub: '掌握度≥60%'),
+                    sub: '场景内达标块 ≥60%'),
               ],
             );
           },
@@ -91,7 +91,8 @@ class MeScreen extends StatelessWidget {
           title: const Text('掌握标准',
               style: TextStyle(color: Colors.white)),
           content: const Text(
-            '连续两次练习全部正确，且发音评分 ≥ 80 分。',
+            '学完六步后进入巩固周期；走完 1/3/7/14 天复习且每次通过，'
+            '即成为「已掌握」词块。',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [

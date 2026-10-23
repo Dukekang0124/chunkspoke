@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:vosk_flutter/vosk_flutter.dart' as vosk;
 
@@ -15,7 +15,11 @@ import 'vosk_model.dart';
 class VoskResult {
   final String text;
   final double? confidence;
-  const VoskResult(this.text, this.confidence);
+
+  /// 词级置信度（Vosk `result[].conf`，需 setWords(true)）。空 = 字段缺失。
+  final List<double> wordConfidences;
+
+  const VoskResult(this.text, this.confidence, {this.wordConfidences = const []});
 }
 
 /// 语音转写抽象：wav 音频 + 短语表 → 识别文本 + 置信度。
@@ -33,6 +37,11 @@ abstract class Transcriber {
 
   /// 将本地 wav（16k 单声道 PCM）转写为文本 + 置信度；phrases 限定识别范围。
   Future<VoskResult> transcribe(String wavPath, List<String> phrases);
+
+  /// 开放输出（B5）：不传场景词表，用模型默认动态词汇图。
+  /// 默认回退到 [transcribe]（桩实现可继续只实现 transcribe）。
+  Future<VoskResult> transcribeOpen(String wavPath) =>
+      transcribe(wavPath, const []);
 }
 
 /// 从 16 位单声道 WAV 提取 PCM 数据（跳过 RIFF 头，定位 'data' 子块）。
@@ -94,7 +103,8 @@ Future<ModelManifest> loadDefaultModelManifest() async {
     size: manifest.size,
     parts: [
       for (var i = 0; i < manifest.parts.length; i++)
-        ModelPart('$base/model.part$i', manifest.parts[i].size),
+        ModelPart('$base/model.part$i', manifest.parts[i].size,
+            sha256: manifest.parts[i].sha256),
     ],
     mirrorUrl: '$base/${manifest.name}.zip',
   );
@@ -140,8 +150,9 @@ class VoskTranscriber implements Transcriber {
       final wav = await File(wavPath).readAsBytes();
       final pcm = pcmFromWav(wav);
       if (pcm.isEmpty) return const VoskResult('', null);
-      // 限定词表（单词列表，见 voskGrammarWords）。
+      // 限定词表（单词列表，见 voskGrammarWords）；空表 = 无约束全模型。
       final words = voskGrammarWords(phrases);
+      if (words.isEmpty) return await _runRecognizer(pcm, null);
       final constrained = await _runRecognizer(pcm, words);
       // 词表过严导致零结果时，回退到无约束全模型识别，避免误判“没听到”。
       if (constrained.text.trim().isNotEmpty) return constrained;
@@ -151,7 +162,7 @@ class VoskTranscriber implements Transcriber {
     }
   }
 
-  /// 无约束识别（自由造句：用户自由开口，不限词表）。
+  /// 无约束识别（B5：开放输出禁用场景词表，不限词表）。
   Future<VoskResult> transcribeFree(String wavPath) async {
     if (!_ready || _model == null) return const VoskResult('', null);
     try {
@@ -164,6 +175,9 @@ class VoskTranscriber implements Transcriber {
     }
   }
 
+  @override
+  Future<VoskResult> transcribeOpen(String wavPath) => transcribeFree(wavPath);
+
   /// 用给定词表（null=无约束）跑一次识别，返回文本 + 置信度。
   Future<VoskResult> _runRecognizer(Uint8List pcm, List<String>? grammar) async {
     final rec = await _plugin.createRecognizer(
@@ -171,34 +185,51 @@ class VoskTranscriber implements Transcriber {
       sampleRate: 16000,
       grammar: grammar,
     );
+    // 词级时间/置信度：顶层 confidence 默认不产出，开启后 final JSON 的
+    // result[].conf 才可用（B5 置信度门槛的事实源）。
+    await rec.setWords(words: true);
     const chunk = 4000; // ~0.125s @16kHz×2B
     for (var i = 0; i < pcm.length; i += chunk) {
       final end = (i + chunk) < pcm.length ? i + chunk : pcm.length;
       await rec.acceptWaveformBytes(Uint8List.sublistView(pcm, i, end));
     }
-    final res = jsonDecode(await rec.getFinalResult()) as Map<String, dynamic>;
+    final rawJson = await rec.getFinalResult();
     await rec.dispose();
-    final text = (res['text'] as String?) ?? '';
-    return VoskResult(text, _parseConfidence(res));
+    if (kDebugMode) {
+      debugPrint(
+          'VOSK_RAW|grammar=${grammar == null ? 'free' : grammar.length}|$rawJson');
+    }
+    final parsed = parseVoskFinalJson(rawJson);
+    return VoskResult(parsed.text, parsed.confidence,
+        wordConfidences: parsed.wordConfidences);
   }
 }
 
-/// 解析 Vosk 结果里的置信度；**字段缺失返回 null**（而非 0），供判定层走文本相似度兜底。
-/// 优先取顶层 `confidence`；若无则取词级 `result[].conf` 的平均（词级置信度需识别器显式开启）。
-double? _parseConfidence(Map<String, dynamic> res) {
-  final top = res['confidence'];
-  if (top is num) return top.toDouble();
+/// Vosk `getFinalResult()` JSON 的纯解析结果（可单测，不依赖原生库）。
+class VoskParsedJson {
+  final String text;
+  final double? confidence;
+  final List<double> wordConfidences;
+  const VoskParsedJson(this.text, this.confidence, this.wordConfidences);
+}
+
+/// 解析 final JSON：文本原样取出（B5：一字不改）；词级 `result[].conf` 全量保留。
+/// 顶层 `confidence` 缺失时用词级均值；两者都缺失 → null（不当作 0 拒判）。
+VoskParsedJson parseVoskFinalJson(String rawJson) {
+  final res = jsonDecode(rawJson) as Map<String, dynamic>;
+  final text = (res['text'] as String?) ?? '';
+  final confs = <double>[];
   final arr = res['result'];
   if (arr is List) {
-    final confs = <double>[];
     for (final e in arr) {
       if (e is Map && e['conf'] is num) confs.add((e['conf'] as num).toDouble());
     }
-    if (confs.isNotEmpty) {
-      return confs.reduce((a, b) => a + b) / confs.length;
-    }
   }
-  return null;
+  final top = res['confidence'];
+  final double? mean = confs.isEmpty
+      ? null
+      : confs.reduce((a, b) => a + b) / confs.length;
+  return VoskParsedJson(text, top is num ? top.toDouble() : mean, confs);
 }
 
 /// 从 wav 文件估算录音时长（秒）：PCM 字节数 / 2 / 16000。
@@ -284,6 +315,16 @@ class SpeechEngine implements Transcriber {
     return _manager!;
   }
 
+  /// 用户点「重试」前调用：先删干净未完成分块/拼接临时文件/未就绪模型目录，
+  /// 保证坏模型兜底重下在真机路径生效（B3）。
+  Future<void> prepareRetry() async {
+    final manager = await _ensureManager();
+    await manager.resetIncomplete();
+    _lastError = null;
+    _createModelFailures = 0;
+    _state = EngineState.unknown;
+  }
+
   /// 并发保护：同一时刻只有一次初始化在途；重复调用等待同一次结果。
   @override
   Future<bool> init() {
@@ -341,6 +382,10 @@ class SpeechEngine implements Transcriber {
   @override
   Future<VoskResult> transcribe(String wavPath, List<String> phrases) =>
       _impl.transcribe(wavPath, phrases);
+
+  @override
+  Future<VoskResult> transcribeOpen(String wavPath) =>
+      _impl.transcribeOpen(wavPath);
 
   /// 无约束识别（自由造句用，不限词表）。
   Future<VoskResult> transcribeFree(String wavPath) =>

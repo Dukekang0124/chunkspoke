@@ -35,7 +35,9 @@ void main() {
     test('每个词块至少出现在 1 个目标句中（块拼句有靶句）', () {
       final lvl = pack.levels.firstWhere((l) => l.id == 'A');
       final used = <String>{};
-      for (final s in lvl.sentences) used.addAll(s.chunkIds);
+      for (final s in lvl.sentences) {
+        used.addAll(s.chunkIds);
+      }
       for (final c in lvl.chunks) {
         expect(used.contains(c.id), isTrue, reason: '词块 ${c.id} 无靶句');
       }

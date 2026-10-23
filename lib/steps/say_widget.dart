@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/asr_guard.dart';
 import '../services/loaders.dart';
 import '../services/crash_log.dart';
 import '../services/recording.dart';
@@ -47,6 +48,8 @@ class _SayWidgetState extends State<SayWidget> {
   bool _thinking = false;
   String? _recPath;
   SayOutcome? _outcome;
+  SilenceAutoStop? _silence;
+  bool _stopping = false;
 
   double _level = 0; // 实时电平 0..1
   bool _levelActive = false; // 本次采集是否出现过有效波动
@@ -58,6 +61,9 @@ class _SayWidgetState extends State<SayWidget> {
   @override
   void initState() {
     super.initState();
+    _silence = SilenceAutoStop(onSilence: () {
+      if (mounted && _active) _stop();
+    });
     final p = Provider.of<ProgressService>(context, listen: false);
     _hasAzure = p.azureKey != null &&
         p.azureKey!.isNotEmpty &&
@@ -69,6 +75,7 @@ class _SayWidgetState extends State<SayWidget> {
 
   @override
   void dispose() {
+    _silence?.detach();
     _levelSub?.cancel();
     // P0 加固：录音中退出必须停掉原生录音线程，避免麦克风/渲染树残留。
     if (_active) {
@@ -138,6 +145,9 @@ class _SayWidgetState extends State<SayWidget> {
     final p = Provider.of<ProgressService>(context, listen: false);
     _levelActive = false;
     setState(() => _level = 0);
+    // 防回声自吞：录音开始前先停掉 TTS / 本地回放。
+    await Provider.of<TtsService>(context, listen: false).stop();
+    await _rec.stopPlay();
     // 统一走原生 16k 单声道录音：L1（Azure 评测）与 L2（Vosk 识别）共用采集链路。
     final path = await _rec.start();
     if (path == null) {
@@ -150,7 +160,9 @@ class _SayWidgetState extends State<SayWidget> {
       _active = true;
     });
     _subscribeLevels();
+    _silence?.attach(_rec.levels);
     _listenStart = DateTime.now();
+    _stopping = false;
     p.incSay();
   }
 
@@ -165,6 +177,9 @@ class _SayWidgetState extends State<SayWidget> {
   }
 
   Future<void> _stop() async {
+    if (_stopping) return;
+    _stopping = true;
+    _silence?.detach();
     final p = Provider.of<ProgressService>(context, listen: false);
     await _graceTo2s();
     if (!mounted) return;
@@ -204,7 +219,7 @@ class _SayWidgetState extends State<SayWidget> {
     final recPath = path ?? _recPath;
     final r = recPath == null
         ? const VoskResult('', null)
-        : await _speech.recognize(recPath, [widget.sentence]);
+        : await _speech.recognizeOpen(recPath, e2ePhrases: [widget.sentence]);
     final text = r.text;
     final conf = r.confidence;
     setState(() {
@@ -223,9 +238,17 @@ class _SayWidgetState extends State<SayWidget> {
       });
       return;
     }
+    final targetTokens = tokenizeSpeech(widget.sentence);
+    final g = guardAsr(
+      raw: text,
+      wordConfidences: r.wordConfidences,
+      targetBlock: widget.sentence,
+      minWords: targetTokens.length <= 1 ? 1 : 2,
+    );
     final j = judgeSpeech(target: widget.sentence, recognized: text, confidence: conf);
+    // B5：命中 + 置信度达标 + 非垃圾，三者齐备才绿灯。
+    final passed = g.ok && j.pass;
     p.recordScore((j.similarity * 100).round());
-    final passed = j.pass;
     setState(() {
       _outcome = SayOutcome(
         passed: passed,
@@ -234,12 +257,14 @@ class _SayWidgetState extends State<SayWidget> {
         textMatchScore: (j.similarity * 100).round(),
         targetMatched: j.targetMatched,
         wrong: !passed,
+        asrUnclear: !g.ok,
       );
     });
   }
 
   void _retry() {
     _cancelLevels();
+    _stopping = false;
     setState(() {
       _outcome = null;
       _active = false;
@@ -392,7 +417,7 @@ class _SayWidgetState extends State<SayWidget> {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
             onPressed: () => widget.onDone(_scoreOf(o)),
-            child: const Text('下一句', style: const TextStyle(color: Colors.white)),
+            child: const Text('下一句', style: TextStyle(color: Colors.white)),
           ),
         ),
       ]);
@@ -413,7 +438,7 @@ class _SayWidgetState extends State<SayWidget> {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: _retry,
-            child: const Text('再试一次', style: const TextStyle(color: Colors.white)),
+            child: const Text('再试一次', style: TextStyle(color: Colors.white)),
           ),
         ),
         if (_diagIsPerm)
@@ -426,9 +451,16 @@ class _SayWidgetState extends State<SayWidget> {
     if (o.level == 'L2') {
       final failed = !o.passed;
       return _card(border: Colors.white24, children: [
-        const Text('听到：', style: TextStyle(color: Colors.white70, fontSize: 14)),
+        Text(o.asrUnclear ? '⚠ 没听清，再说一遍' : '你说：',
+            style: TextStyle(
+                color: o.asrUnclear ? kPrimary : Colors.white70,
+                fontSize: 14,
+                fontWeight:
+                    o.asrUnclear ? FontWeight.w700 : FontWeight.normal)),
         const SizedBox(height: 4),
-        Text("'${o.recognized}'", style: const TextStyle(color: Colors.white, fontSize: 16)),
+        Text("'${o.recognized}'",
+            key: const Key('sayAsrRaw'),
+            style: const TextStyle(color: Colors.white, fontSize: 16)),
         const SizedBox(height: 6),
         if (failed) _targetDiff(o),
         const SizedBox(height: 6),
@@ -440,7 +472,7 @@ class _SayWidgetState extends State<SayWidget> {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: _retry,
-            child: const Text('再试一次', style: const TextStyle(color: Colors.white)),
+            child: const Text('再试一次', style: TextStyle(color: Colors.white)),
           ),
         ),
         const SizedBox(height: 10),
@@ -464,7 +496,7 @@ class _SayWidgetState extends State<SayWidget> {
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
           onPressed: () => widget.onDone(0.0),
-          child: const Text('我说了', style: const TextStyle(color: Colors.white)),
+          child: const Text('我说了', style: TextStyle(color: Colors.white)),
         ),
       ),
     ]);
@@ -547,10 +579,12 @@ class _SayWidgetState extends State<SayWidget> {
               style: const TextStyle(color: Colors.white, fontSize: 20)),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: () => speakOrHint(
-                context,
-                Provider.of<TtsService>(context, listen: false),
-                widget.sentence),
+            onPressed: _active || _thinking
+                ? null
+                : () => speakOrHint(
+                    context,
+                    Provider.of<TtsService>(context, listen: false),
+                    widget.sentence),
             child: const Text('重听', style: TextStyle(color: Colors.white70)),
           ),
           const Spacer(),
@@ -582,7 +616,7 @@ class _SayWidgetState extends State<SayWidget> {
                     height: 96,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: kPrimary.withOpacity(0.2),
+                      color: kPrimary.withValues(alpha: 0.2),
                       border: Border.all(color: kPrimary, width: 2),
                     ),
                     child: const Icon(Icons.mic, color: kPrimary, size: 44),

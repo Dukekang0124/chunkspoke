@@ -1,17 +1,22 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'models/content_pack.dart';
+import 'models/listening_article.dart';
 import 'services/crash_log.dart';
+import 'services/hd_voice.dart';
 import 'services/loaders.dart';
 import 'services/notification_service.dart';
+import 'services/review_notify.dart';
 import 'ui/theme.dart';
 import 'ui/error_page.dart';
 import 'screens/ftue.dart';
 import 'screens/model_gate.dart';
 import 'screens/nav.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/tts_gate.dart';
 
 void main() {
   // 全局错误拦截（P0 加固）：任何页面/异步异常都不允许灰屏或闪退退桌面。
@@ -39,8 +44,40 @@ Future<void> bootstrap() async {
     final progress = ProgressService();
     await progress.init();
     final content = await loadContentPack();
-    final tts = TtsService();
+    final listening = await loadListeningPack();
+    if (kDebugMode) {
+      final errors = validateListeningPack(listening, content);
+      if (errors.isNotEmpty) {
+        throw StateError('收听文章内容校验失败：${errors.take(5).join('；')}');
+      }
+    }
+    final hdVoice = HdVoiceService(
+      isEnabled: () => progress.hdVoiceEnabled,
+      setEnabled: progress.setHdVoiceEnabled,
+      // 高清包下载完成率单独成口径（与 Vosk 模型分开），抛错不影响下载。
+      onEvent: (e, p) {
+        progress.logEvent(e, p);
+      },
+    );
+    await hdVoice.init();
+    final tts = TtsService(
+      preferredVoice: () => progress.ttsVoiceKey,
+      hdVoice: hdVoice,
+    );
     await tts.init();
+    // 音色分布（指令 H）：每次启动记一条当前实际生效的发声配置快照。
+    try {
+      final v = tts.selectedVoice;
+      progress.logEvent('voice_state', {
+        'hd': tts.hdActive,
+        'auto': tts.preferredVoiceKey == null,
+        'locale': v?.locale ?? '',
+        'accent': v?.accentLabel ?? '',
+        'quality': v?.quality ?? '',
+        'net': v?.networkRequired ?? false,
+        'status': tts.status.name,
+      });
+    } catch (_) {}
     // 留存通知：初始化 + 已开启时复挂每日提醒（进程重启/系统清闹钟后自愈）。
     // 全程非致命：通知失败绝不阻塞启动。
     try {
@@ -49,6 +86,8 @@ Future<void> bootstrap() async {
         await NotificationService.instance
             .scheduleDaily(progress.notifHour, progress.notifMinute);
       }
+      // 到期复习提醒：启动时按资产引擎的最早到期重排（关闭则取消）。
+      await syncReviewReminder(progress);
     } catch (_) {}
     // 回访漏斗埋点（P0-七）：连续打卡 2 天 / 7 天各记一次。
     try {
@@ -60,7 +99,9 @@ Future<void> bootstrap() async {
         providers: [
           Provider<ProgressService>.value(value: progress),
           Provider<ContentPack>.value(value: content),
+          Provider<ListeningPack>.value(value: listening),
           Provider<TtsService>.value(value: tts),
+          ChangeNotifierProvider<HdVoiceService>.value(value: hdVoice),
         ],
         child: const ChunkSpokeApp(),
       ),
@@ -92,7 +133,11 @@ class ChunkSpokeApp extends StatelessWidget {
       home: ModelGate(
         child: !progress.onboardingDone
             ? const OnboardingScreen()
-            : (progress.seenFtue ? const AppNav() : const FtueScreen()),
+            : TtsGate(
+                child: progress.seenFtue
+                    ? const AppNav()
+                    : const FtueScreen(),
+              ),
       ),
     );
   }
