@@ -73,7 +73,7 @@ class _BreakdownStepState extends State<BreakdownStep> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: kBg.withOpacity(0.5),
+              color: kBg.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white24),
             ),
@@ -93,8 +93,8 @@ class _BreakdownStepState extends State<BreakdownStep> {
                             horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
                           color: heard
-                              ? kUnlocked.withOpacity(0.14)
-                              : kPrimary.withOpacity(0.10),
+                              ? kUnlocked.withValues(alpha: 0.14)
+                              : kPrimary.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                               color: heard ? kUnlocked : kPrimary,

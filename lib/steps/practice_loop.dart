@@ -45,11 +45,15 @@ class PracticeLoop extends StatefulWidget {
 
   /// 复习模式：后四步全走，结果写入词块资产状态机。
   final bool reviewMode;
+
+  /// 收听收词的单块六步不进句子闯关：六步完成即返回文章。
+  final bool sentenceChallenge;
   final void Function(SessionReport report) onDone;
   const PracticeLoop(
       {required this.level,
       this.chunks,
       this.reviewMode = false,
+      this.sentenceChallenge = true,
       required this.onDone,
       super.key});
 
@@ -66,6 +70,7 @@ class _PracticeLoopState extends State<PracticeLoop>
   int _reviewed = 0;
   bool _ready = false;
   bool _showResume = false;
+  bool _finished = false;
   LearnResume? _resume;
   int _resumeIndex = 0;
   bool _challenge = false;
@@ -101,7 +106,8 @@ class _PracticeLoopState extends State<PracticeLoop>
 
   List<int> get _order => phaseOrder(reviewMode: widget.reviewMode);
 
-  /// 识别词表：全关句子 + 词块，避免 Vosk 把其他句子强行拼成目标词。
+  /// B5：识别词表只服务 E2E 脚本化识别；生产路径走全模型（不传词表），
+  /// 避免小语法把无关语音强制解码成目标词。
   List<String> get _recognitionPhrases => [
         for (final s in widget.level.sentences) s.text,
         for (final c in widget.level.chunks) c.text,
@@ -206,7 +212,7 @@ class _PracticeLoopState extends State<PracticeLoop>
 
   Future<void> _writeResume() async {
     final p = _progress;
-    if (p == null || widget.reviewMode || _challenge) return;
+    if (p == null || widget.reviewMode || _challenge || _finished) return;
     if (!_ready || _ci >= _total) return;
     try {
       final data = LearnResume(
@@ -451,7 +457,8 @@ class _PracticeLoopState extends State<PracticeLoop>
       encourage: assetMastered
           ? '${_cheers[_ci % _cheers.length]} 四星全绿 · 还剩 $remaining 个'
           : '拿到 ${_stars.count}/4 星 · $dueText',
-      next: (mastered &&
+      next: (widget.sentenceChallenge &&
+              mastered &&
               _ci == _total - 1 &&
               _challengeTotal > 0)
           ? const WalkNext.challenge()
@@ -516,6 +523,7 @@ class _PracticeLoopState extends State<PracticeLoop>
   }
 
   Future<void> _finishAll() async {
+    _finished = true;
     await _clearResume();
     if (!mounted) return;
     widget.onDone(_report());

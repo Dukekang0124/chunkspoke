@@ -312,14 +312,14 @@ class _CompletionViewState extends State<CompletionView>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.12),
+        color: kPrimary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: kPrimary.withOpacity(0.5)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.lock_open, color: kPrimary, size: 16),
+          const Icon(Icons.lock_open, color: kPrimary, size: 16),
           const SizedBox(width: 6),
           Text('下一场景已解锁：$name',
               style: const TextStyle(color: kPrimary, fontSize: 13)),
@@ -437,7 +437,7 @@ class _ConfettiPainter extends CustomPainter {
         RRect.fromRectAndRadius(
             Rect.fromCenter(center: Offset.zero, width: w, height: h),
             const Radius.circular(2)),
-        Paint()..color = c.withOpacity(1.0 - t * 0.25),
+        Paint()..color = c.withValues(alpha: 1.0 - t * 0.25),
       );
       canvas.restore();
     }

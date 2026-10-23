@@ -37,6 +37,10 @@ class FixtureTranscriber implements Transcriber {
     final name = wavPath.split(RegExp(r'[\\/]')).last;
     return VoskResult(expectedByFile[name] ?? '', 1.0);
   }
+
+  @override
+  Future<VoskResult> transcribeOpen(String wavPath) =>
+      transcribe(wavPath, const []);
 }
 
 /// 词级 Levenshtein 编辑距离。

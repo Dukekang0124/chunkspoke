@@ -29,6 +29,7 @@ class SayOutcome {
   final PronunciationResult? azure;
   final bool wrong;
   final bool noSpeech;
+  final bool asrUnclear; // B5：识别不可信（空/低置信/垃圾堆叠），需重说
   final List<bool>? targetMatched; // 目标句逐词命中标记（用于错词标红）
   SayOutcome({
     required this.passed,
@@ -38,6 +39,7 @@ class SayOutcome {
     this.azure,
     this.wrong = false,
     this.noSpeech = false,
+    this.asrUnclear = false,
     this.targetMatched,
   });
 }
@@ -103,6 +105,17 @@ class SpeechService {
   /// 返回文本 + 置信度（置信度可能为 null=字段缺失，判定层据此走文本相似度兜底）。
   Future<VoskResult> recognize(String wavPath, List<String> phrases) =>
       _transcriber.transcribe(wavPath, phrases);
+
+  /// B5：开放输出统一走全模型（不传场景词表），展示层只认这个原始文本。
+  /// [e2ePhrases] 仅供 debugTranscriberOverride 脚本化识别使用，生产路径忽略。
+  Future<VoskResult> recognizeOpen(String wavPath,
+      {List<String>? e2ePhrases}) {
+    final override = debugTranscriberOverride;
+    if (override != null && identical(_transcriber, override)) {
+      return override.transcribe(wavPath, e2ePhrases ?? const []);
+    }
+    return _transcriber.transcribeOpen(wavPath);
+  }
 
   /// 录音时长（秒），供判定管线的「过短录音无效」防噪兜底。
   Future<double> durationSec(String wavPath) => wavDurationSec(wavPath);

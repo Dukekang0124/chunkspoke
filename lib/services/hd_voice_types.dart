@@ -19,6 +19,14 @@ abstract class HdVoiceSpeaker {
   Future<void> stop();
 }
 
+/// 高清包的可导出合成能力（浸泡层缓存管线用）。
+/// 独立于 [HdVoiceSpeaker]，既有假实现无需新增方法即可继续编译。
+abstract class HdVoiceSynthesizer {
+  /// 模型版本标签：音色/模型升级后音频缓存须失效重合成。
+  String get modelTag;
+  Future<bool> synthesizeToFile(String text, String fullPath);
+}
+
 abstract class HdVoiceSynth {
   Future<void> init(String modelDir);
   Future<HdAudio> synthesize(String text, {required double speed});

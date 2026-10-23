@@ -5,6 +5,8 @@
 /// network_required("1"/"0") / features。这里只做解析与排序，
 /// 不触碰平台通道，宿主单测可直接覆盖。
 
+library;
+
 /// 已安装但未下载语音数据的声音会带 notInstalled 特性，选中即无声。
 const String _kNotInstalled = 'notInstalled';
 

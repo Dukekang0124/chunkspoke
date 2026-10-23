@@ -55,7 +55,9 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
         .toList()
       ..shuffle();
     _tray = [..._expected];
-    for (final d in distractors.take(2)) _tray.add(d);
+    for (final d in distractors.take(2)) {
+      _tray.add(d);
+    }
     _tray.shuffle();
   }
 
@@ -127,7 +129,7 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: kBg.withOpacity(0.5),
+              color: kBg.withValues(alpha: 0.5),
               border: Border.all(color: Colors.white24),
             ),
             child: Text(
@@ -174,12 +176,12 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
                       width: 2,
                     ),
                     color: shaking
-                        ? Colors.redAccent.withOpacity(0.12)
+                        ? Colors.redAccent.withValues(alpha: 0.12)
                         : (_built
-                            ? kUnlocked.withOpacity(0.08)
+                            ? kUnlocked.withValues(alpha: 0.08)
                             : Colors.transparent),
                     boxShadow: _built
-                        ? [BoxShadow(color: kUnlocked.withOpacity(0.4), blurRadius: 14)]
+                        ? [BoxShadow(color: kUnlocked.withValues(alpha: 0.4), blurRadius: 14)]
                         : null,
                   ),
                   child: Wrap(
@@ -224,9 +226,10 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
                                   ),
                           ),
                         ),
-                        onWillAccept: (data) =>
-                            data == _expected[i] && _filled[i] == null,
-                        onAccept: (data) => _place(i, data),
+                        onWillAcceptWithDetails: (details) =>
+                            details.data == _expected[i] && _filled[i] == null,
+                        onAcceptWithDetails: (details) =>
+                            _place(i, details.data),
                       );
                     }),
                   ),

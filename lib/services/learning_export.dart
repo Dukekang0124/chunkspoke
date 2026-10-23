@@ -6,6 +6,10 @@ import '../models/content_pack.dart';
 import 'chunk_asset.dart';
 import 'loaders.dart';
 
+/// 导出头部的版本号：发版时与 pubspec.yaml 同 bump。
+/// library_export_test 里有一条用例把它和 pubspec 对齐，漏改会让回归变红。
+const String kExportAppVersion = '1.5.4';
+
 /// 学习数据导出（波 2 · 模块 D）：只生成本机文本，不上报、不联网。
 /// 内容：资产分组、六步漏斗、复习保持率、节奏指标。
 class LearningExport {
@@ -37,7 +41,8 @@ Future<LearningExport> buildLearningExport({
   stateCount[ChunkAssetState.learning] =
       (stateCount[ChunkAssetState.learning] ?? 0) +
           (contentIds.length - rows.length);
-  final learned = rows.where((r) => r.assetState != ChunkAssetState.learning).length;
+  final learned =
+      rows.where((r) => r.assetState != ChunkAssetState.learning).length;
 
   final all = await progress.chunkStore.sessionOutcomeCounts();
   final learn = await progress.chunkStore.sessionOutcomeCounts(review: false);
@@ -48,13 +53,30 @@ Future<LearningExport> buildLearningExport({
   final reviewFail = n(review, 'speakFail');
   final reviewSkip = n(review, 'deferReview');
   final reviewDone = reviewPass + reviewFail;
-  final retention =
-      reviewDone == 0 ? '—' : '${(reviewPass / reviewDone * 100).toStringAsFixed(1)}%';
+  final retention = reviewDone == 0
+      ? '—'
+      : '${(reviewPass / reviewDone * 100).toStringAsFixed(1)}%';
 
+  final sandbox = progress.sandbox.stats;
+  // 本周起点（周一 00:00）：浸泡层按「实际播放秒数」独立计量，不进会话轴。
+  final weekStart = DateTime(at.year, at.month, at.day)
+      .subtract(Duration(days: at.weekday - 1));
+  final listenSeconds = progress.listening.secondsSince(weekStart);
+  final listenMinutes = (listenSeconds / 60).round();
+  final listenCompleted =
+      progress.listening.completedSince(weekStart.millisecondsSinceEpoch);
+  final listen = progress.listening.stats;
+  final listenCollected = listen.collected;
+  final listenSixStarted = listen.sixStarted;
+  final listenConverted = listen.converted;
+  final listenWishes = listen.wishes;
+  final listenPromotion = listenCollected == 0
+      ? '—'
+      : '${(listenConverted / listenCollected * 100).toStringAsFixed(1)}%';
   final b = StringBuffer()
     ..writeln('ChunkSpoke 学习数据导出')
     ..writeln('生成时间：${_dateTime(at)}')
-    ..writeln('版本：1.5.2')
+    ..writeln('版本：$kExportAppVersion')
     ..writeln('说明：仅含聚合计数，不含录音、文本原文或账号信息；是否分享由你决定。')
     ..writeln()
     ..writeln('一、词块资产（资产轴）')
@@ -85,7 +107,24 @@ Future<LearningExport> buildLearningExport({
     ..writeln('平均相似度（最近 50 次开口）：'
         '${progress.firstPracticeDone ? progress.avgScore.round() : '—'}')
     ..writeln()
-    ..writeln('五、事件总量（校验用）')
+    ..writeln('五、浸泡（磨耳朵）')
+    ..writeln('本周浸泡：$listenMinutes 分钟（实际播放秒数，暂停不计）')
+    ..writeln('本周完听：$listenCompleted 篇')
+    ..writeln('收词：$listenCollected 块（累计，按块去重）')
+    ..writeln('收词后开始六步：$listenSixStarted 块')
+    ..writeln('收词后完成六步：$listenConverted 块（推动率 $listenPromotion）')
+    ..writeln('候选块想学：$listenWishes 条（文章 + 块文本，按篇去重；不建词块）')
+    ..writeln('说明：浸泡本身只计时长与完听，不产出学习资产；'
+        '收词与立即复习是用户主动学习动作，走既有会话轴。')
+    ..writeln()
+    ..writeln('六、沙盒（自由造句）')
+    ..writeln('沙盒访问：${sandbox.visits} 次')
+    ..writeln('句子产出：${sandbox.sentences.length} 句（通过校验才入库）')
+    ..writeln('串联使用：${sandbox.chainCount} 次（一句含 ≥2 个不同已掌握块）')
+    ..writeln('搜索使用：${_rate(sandbox.searchUsed, sandbox.visits)}')
+    ..writeln('筛选使用：${_rate(sandbox.filterUsed, sandbox.visits)}')
+    ..writeln()
+    ..writeln('七、事件总量（校验用）')
     ..writeln('会话事件合计：${all.values.fold<int>(0, (s, v) => s + v)} 条');
 
   final stamp = '${at.year}'
@@ -102,6 +141,10 @@ Future<File> saveLearningExport(LearningExport export) async {
   final f = File('${dir.path}/${export.filename}');
   return f.writeAsString(export.text, flush: true);
 }
+
+String _rate(int used, int visits) => visits == 0
+    ? '—（还没进过沙盒）'
+    : '$used / $visits 次访问（${(used / visits * 100).toStringAsFixed(0)}%）';
 
 String _dateTime(DateTime d) {
   String two(int n) => n.toString().padLeft(2, '0');

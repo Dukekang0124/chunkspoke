@@ -221,7 +221,7 @@ class _SentenceVisual extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: kPrimary.withOpacity(0.5)),
+          border: Border.all(color: kPrimary.withValues(alpha: 0.5)),
         ),
         child: Wrap(
           spacing: 8,
@@ -231,9 +231,9 @@ class _SentenceVisual extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.18),
+                  color: kPrimary.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: kPrimary.withOpacity(0.6)),
+                  border: Border.all(color: kPrimary.withValues(alpha: 0.6)),
                 ),
                 child: Text(w,
                     style: const TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
@@ -250,9 +250,9 @@ class _RocketVisual extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: 96,
         height: 96,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
               colors: [kPrimary, kUnlocked],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight),

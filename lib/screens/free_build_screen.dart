@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../models/content_pack.dart';
+import '../services/asr_guard.dart';
 import '../services/loaders.dart';
 import '../services/recording.dart';
+import '../services/sandbox_store.dart';
 import '../services/speech.dart';
 import '../services/vosk_engine.dart';
 import '../services/ai/ai_service.dart';
@@ -10,11 +13,11 @@ import '../services/ai/ai_models.dart';
 import '../ui/feedback.dart';
 import '../ui/theme.dart';
 
-/// 自由拼句沙盒（v1.4.0 / A1）：
-///   - 从「全局已学词块池」选块拼句（不再限定单场景）；
-///   - 预置 3 句推荐组合，一键套用；
-///   - 拼好必须「开口判定通过」才计入自由造句次数（并计入今日开口，A2② 同源）；
-///   - 支持重拼 + 一键听示范；本期不做保存。
+/// 自由造句沙盒（指令 O 重构，1.5.3）：词块资产生命周期「用」的终点站。
+///
+/// 布局铁律：页面高度恒定，**块池是唯一的滚动区**，mic 永远固定在底栏拇指区；
+/// 200 块与 20 块的骨架完全一致（顶部句子卡 / 中部筛选条 / 中间块池 / 底栏推荐+mic）。
+/// 视觉沿用暗金主题，本轮只动布局与信息架构。
 class FreeBuildScreen extends StatefulWidget {
   /// 全局已学词块池（由首页入口传入）。
   final List<Chunk> learnedChunks;
@@ -27,141 +30,293 @@ class FreeBuildScreen extends StatefulWidget {
 class _FreeBuildScreenState extends State<FreeBuildScreen> {
   final RecordingService _rec = RecordingService();
   final SpeechService _speech = SpeechService();
-  final AIService _ai = AIServiceImpl(); // 云端 AI 评判（失败回退规则引擎）
+  final AIService _ai = AIServiceImpl();
+
   bool _engineReady = false;
   bool _engineFailed = false;
 
-  final List<Chunk> _selected = []; // 已选块（按选择顺序）
-  List<String> _recommended = const []; // 3 句推荐组合（整句文本）
+  /// 已选块（按选择顺序）。
+  final List<Chunk> _selected = [];
+
+  /// 重录旧句时，块可能已不在池里——此时以整句为判定目标。
+  String? _targetOverride;
+
+  String _query = '';
+  String? _scene; // null = 全部场景
+  List<MergedChunk> _pool = const [];
+  Map<String, String> _sceneOf = const {};
+  List<SceneTag> _tags = const [];
+  List<String> _recentIds = const [];
+  Set<String> _masteredIds = {};
+  Set<String> _relearningIds = {};
+
+  bool _searchTouched = false;
+  bool _filterTouched = false;
 
   bool _recording = false;
   bool _judging = false;
-  String? _recognized;
-  int _attempts = 0;
-  String? _tier; // 'perfect' | 'improve' | 'retry'
-  String? _aiFeedback;
+  String? _recognized; // B5：ASR 原始输出，一字不改
+  AsrGuardResult? _guard;
+  SilenceAutoStop? _silence;
+  String? _tier; // perfect | improve | retry
   String? _aiCorrected;
-  bool _celebrate = false;
+  bool _storedChain = false;
+  int _sentenceCount = 0;
 
-  ProgressService get _p => Provider.of<ProgressService>(context, listen: false);
+  ProgressService get _p =>
+      Provider.of<ProgressService>(context, listen: false);
 
-  /// 当前待开口的句子：优先已选块拼接，否则第一条推荐。
   String get _targetText {
-    if (_selected.isNotEmpty) {
-      return _selected.map((c) => c.text).join(' ');
-    }
-    return _recommended.isNotEmpty ? _recommended.first : '';
+    if (_targetOverride != null) return _targetOverride!;
+    return _selected.map((c) => c.text).join(' ');
   }
+
+  bool get _hasSentence => _targetText.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
+    // 说完 1.2s 静音自动截断，避免环境音/尾音继续喂给解码器。
+    _silence = SilenceAutoStop(onSilence: () {
+      if (mounted && _recording && !_judging) _toggleRecord();
+    });
     _prepare();
   }
 
   Future<void> _prepare() async {
+    // context 只能在 await 之前用；先取依赖，再等引擎与建库查询。
+    final content = Provider.of<ContentPack>(context, listen: false);
+    final progress = _p;
     final useOverride = SpeechService.debugTranscriberOverride != null;
     if (!useOverride) {
       try {
         await SpeechEngine.instance.init();
       } catch (_) {}
     }
-    final ready = useOverride || SpeechEngine.instance.isReady;
-    final failed = !useOverride && SpeechEngine.instance.failed;
-    final content = Provider.of<ContentPack>(context, listen: false);
-    final rec = _genRecommended(content, widget.learnedChunks);
+    final rows = await progress.chunkStore.allRows();
+    _masteredIds = masteredIdsOf(rows);
+    _relearningIds = relearningIdsOf(rows);
+    _sceneOf = {
+      for (final lv in content.levels)
+        for (final c in lv.chunks) c.id: lv.id,
+    };
+    final pool = dedupePool(widget.learnedChunks);
+    _tags = sceneTags(content, _sceneOf);
+    final ordered = orderPool(
+        pool: pool, lastUsed: progress.sandbox.lastUsedAt, sceneOf: _sceneOf);
     if (!mounted) return;
     setState(() {
-      _engineReady = ready;
-      _engineFailed = failed;
-      _recommended = rec;
+      _engineReady = useOverride || SpeechEngine.instance.isReady;
+      _engineFailed = !useOverride && SpeechEngine.instance.failed;
+      _pool = ordered;
+      _recentIds = ordered
+          .where((c) => (progress.sandbox.lastUsedAt[c.id] ?? 0) > 0)
+          .map((c) => c.id)
+          .take(12)
+          .toList();
+      _sentenceCount = progress.sandbox.sentences.length;
     });
-    await _p.logEvent('freebuild_sandbox_open',
-        {'pool': widget.learnedChunks.length});
-  }
-
-  /// 生成 3 句推荐组合：优先取「其组成块全部已学」的整句，不足用已学块拼接补足。
-  List<String> _genRecommended(ContentPack content, List<Chunk> chunks) {
-    final byId = {for (final c in chunks) c.id: c};
-    final sentences = <String>[];
-    outer:
-    for (final lv in content.levels) {
-      for (final s in lv.sentences) {
-        if (s.chunkIds.isNotEmpty && s.chunkIds.every((id) => byId.containsKey(id))) {
-          sentences.add(s.text);
-          if (sentences.length >= 3) break outer;
-        }
-      }
-    }
-    var i = 0;
-    while (sentences.length < 3 && chunks.length >= 2) {
-      final a = chunks[i % chunks.length].text;
-      final b = chunks[(i + 1) % chunks.length].text;
-      final combo = a == b ? a : '$a $b';
-      if (!sentences.contains(combo)) sentences.add(combo);
-      i++;
-    }
-    return sentences.take(3).toList();
+    await progress.sandbox.recordVisit();
+    await progress.logEvent(
+        'freebuild_sandbox_open', {'pool': widget.learnedChunks.length});
   }
 
   @override
   void dispose() {
+    _silence?.detach();
+    // P0 加固：录音中退出必须停掉原生录音线程，避免麦克风/渲染树残留。
+    if (_recording) _rec.stop();
+    _rec.stopPlay();
     _ai.dispose();
     super.dispose();
   }
 
-  void _toggleChunk(Chunk c) {
+  // —— 块池选择 ——
+
+  void _toggle(MergedChunk m) {
     if (_judging || _recording) return;
     setState(() {
-      if (_selected.contains(c)) {
-        _selected.remove(c);
+      _targetOverride = null;
+      final hit = _selected.where((c) => m.ids.contains(c.id)).toList();
+      if (hit.isNotEmpty) {
+        _selected.removeWhere((c) => m.ids.contains(c.id));
       } else {
-        _selected.add(c);
+        final chunk = widget.learnedChunks.firstWhere((c) => c.id == m.id);
+        _selected.add(chunk);
       }
-      // 重新拼句后清除上次判定，避免旧反馈残留。
-      _tier = null;
-      _recognized = null;
-      _aiFeedback = null;
-      _aiCorrected = null;
-      _attempts = 0;
+      _clearFeedback();
     });
   }
 
-  void _useCombo(String sentence) {
-    if (_judging || _recording) return;
-    setState(() {
-      _selected.clear();
-      // 按整句文本反查已学块，逐词块回填（找不到则整句作为不可拆目标）。
-      _tier = null;
-      _recognized = null;
-      _aiFeedback = null;
-      _aiCorrected = null;
-      _attempts = 0;
-    });
+  void _clearFeedback() {
+    _tier = null;
+    _recognized = null;
+    _guard = null;
+    _aiCorrected = null;
+    _storedChain = false;
   }
 
   void _repick() {
     if (_judging || _recording) return;
     setState(() {
       _selected.clear();
-      _tier = null;
-      _recognized = null;
-      _aiFeedback = null;
-      _aiCorrected = null;
-      _attempts = 0;
+      _targetOverride = null;
+      _clearFeedback();
     });
   }
 
-  /// 一键听示范：TTS 朗读当前待开口句（或第一条推荐）。
-  void _listenDemo() {
-    final t = _targetText;
-    if (t.isEmpty) return;
-    speakOrHint(context, Provider.of<TtsService>(context, listen: false), t);
+  /// 推荐组合：按整句反查池内块并逐块填入（反查不到则整句作目标）。
+  void _useCombo(String sentence) {
+    if (_judging || _recording) return;
+    final byNorm = <String, Chunk>{
+      for (final c in widget.learnedChunks) c.text.toLowerCase().trim(): c,
+    };
+    final picked = <Chunk>[];
+    final words = sentence.split(' ');
+    for (var i = 0; i < words.length; i++) {
+      for (var len = 4; len >= 1; len--) {
+        if (i + len > words.length) continue;
+        final cand = words.sublist(i, i + len).join(' ').toLowerCase().trim();
+        final hit = byNorm[cand];
+        if (hit != null) {
+          if (!picked.any((c) => c.id == hit.id)) picked.add(hit);
+          i += len - 1;
+          break;
+        }
+      }
+    }
+    setState(() {
+      _selected
+        ..clear()
+        ..addAll(picked);
+      _targetOverride = picked.isEmpty ? sentence : null;
+      _clearFeedback();
+    });
   }
+
+  // —— 搜索 / 筛选 ——
+
+  void _onQuery(String v) {
+    setState(() {
+      _query = v;
+      if (v.trim().isNotEmpty) _searchTouched = true;
+    });
+  }
+
+  void _onScene(String? id) {
+    setState(() {
+      _scene = id;
+      if (id != null) _filterTouched = true;
+    });
+  }
+
+  List<MergedChunk> get _visible {
+    final q = _query;
+    final s = _scene;
+    return _pool
+        .where((c) => (s == null || _sceneOf[c.id] == s) && matchesQuery(c, q))
+        .toList();
+  }
+
+  List<MergedChunk> get _recent => _recentIds
+      .map((id) => _pool.where((c) => c.id == id).toList())
+      .where((l) => l.isNotEmpty)
+      .map((l) => l.first)
+      .toList();
+
+  // —— 试听 / 长按浮层 ——
+
+  void _speak(String text) {
+    if (text.trim().isEmpty) return;
+    // 录音中禁用 TTS，防止扬声器回授被麦克风自吞。
+    if (_recording || _judging) return;
+    speakOrHint(context, Provider.of<TtsService>(context, listen: false), text);
+  }
+
+  void _showChipSheet(MergedChunk m) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: kCard,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(m.text,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                  if (_relearningIds.contains(m.id)) _amberTag(),
+                ],
+              ),
+              const SizedBox(height: 10),
+              if (m.meanings.isEmpty)
+                const Text('这份内容没写中文释义',
+                    style: TextStyle(color: Colors.white54))
+              else
+                for (final meaning in m.meanings)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text('· $meaning',
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 15)),
+                  ),
+              if (m.mergedCount > 1)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text('同名 ${m.mergedCount} 块已合并显示',
+                      style: const TextStyle(color: kPrimary, fontSize: 13)),
+                ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: () => _speak(m.text),
+                    icon: const Icon(Icons.volume_up, color: kPrimary),
+                    label: const Text('试听', style: TextStyle(color: kPrimary)),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _toggle(m);
+                    },
+                    child:
+                        const Text('加入句子', style: TextStyle(color: kUnlocked)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _amberTag() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: kPrimary.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: kPrimary.withValues(alpha: 0.6)),
+        ),
+        child:
+            const Text('需重修', style: TextStyle(color: kPrimary, fontSize: 11)),
+      );
+
+  // —— 开口与判定 ——
 
   Future<void> _toggleRecord() async {
     if (_judging) return;
     if (_recording) {
+      _silence?.detach();
       final path = await _rec.stop();
       if (path == null) {
         setState(() => _recording = false);
@@ -170,10 +325,9 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
       await _judge(path);
       return;
     }
-    if (_targetText.isEmpty) {
+    if (!_hasSentence) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('先挑几个词块，或选一句推荐组合'),
-          duration: Duration(seconds: 2)));
+          content: Text('先挑块拼一句'), duration: Duration(seconds: 2)));
       return;
     }
     final perm = await _rec.ensurePermission();
@@ -195,6 +349,12 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
         _engineFailed = SpeechEngine.instance.failed;
       } catch (_) {}
     }
+    // TTS 播放期间禁采集：先停朗读与试听，防止回授自吞。
+    if (!mounted) return;
+    try {
+      Provider.of<TtsService>(context, listen: false).stop();
+    } catch (_) {}
+    await _rec.stopPlay();
     final path = await _rec.start();
     if (path == null) {
       if (!mounted) return;
@@ -202,6 +362,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
           content: Text('录音启动失败，请重试'), duration: Duration(seconds: 2)));
       return;
     }
+    _guard = null;
+    _silence?.attach(_rec.levels);
     setState(() => _recording = true);
   }
 
@@ -209,35 +371,35 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
     setState(() {
       _recording = false;
       _judging = true;
-      _aiFeedback = null;
-      _aiCorrected = null;
+      _clearFeedback();
     });
     final target = _targetText;
     String text = '';
+    List<double> wordConfs = const [];
     try {
-      final override = SpeechService.debugTranscriberOverride;
-      if (override != null) {
-        final res = await override.transcribe(path, [target]);
-        text = res.text.trim();
-      } else if (_engineReady) {
-        final res = await SpeechEngine.instance.transcribeFree(path);
-        text = res.text.trim();
-      }
+      // B5：开放输出走全模型（不传场景词表），原文不做任何改写。
+      final res = await _speech.recognizeOpen(path, e2ePhrases: [target]);
+      text = res.text.trim();
+      wordConfs = res.wordConfidences;
     } catch (_) {}
     if (!mounted) return;
-    if (text.isEmpty) {
+    final guard = guardAsr(
+        raw: text,
+        wordConfidences: wordConfs,
+        targetBlock: target,
+        checkChunkStack: true);
+    if (text.isEmpty || !guard.ok) {
       setState(() {
         _judging = false;
-        _recognized = '';
+        _recognized = text;
+        _guard = guard;
         _tier = 'retry';
-        _attempts++;
       });
       return;
     }
     JudgeResult? ai;
-    // 隐私门：设置内关闭「AI 联网点评」后不发任何请求，直接走下方本机规则判定。
-    final aiNet = Provider.of<ProgressService>(context, listen: false).aiNetOn;
-    if (aiNet) {
+    // 隐私门：关掉「AI 联网点评」后不发任何请求，直接走本机规则判定。
+    if (_p.aiNetOn) {
       try {
         ai = await _ai.judgeFreeBuild(BuildData(
           scenario: '自由造句',
@@ -248,18 +410,18 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
       } catch (_) {}
     }
     String tier;
+    final tm = _speech.textMatch(target, text);
+    final wordCount =
+        text.split(RegExp(r'\s+')).where((w) => w.trim().isNotEmpty).length;
+    final structureOk = wordCount >= 3;
+    // B5 通过条件：目标块命中 + confidence/垃圾启发式达标（guard 已在上面拦截）。
     if (ai != null) {
-      tier = ai.score >= 5
-          ? 'perfect'
-          : (ai.score >= 4 ? 'improve' : 'retry');
-      _aiFeedback = ai.feedback.isNotEmpty ? ai.feedback : null;
+      tier = ai.score >= 5 ? 'perfect' : (ai.score >= 4 ? 'improve' : 'retry');
       _aiCorrected = ai.corrected.isNotEmpty ? ai.corrected : null;
+      if (tier == 'perfect' && (tm.hitRate < 0.8 || !structureOk)) {
+        tier = 'improve';
+      }
     } else {
-      // 离线规则：与「已选块/目标句」的文本匹配 + 词数下限。
-      final tm = _speech.textMatch(target, text);
-      final wordCount =
-          text.split(RegExp(r'\s+')).where((w) => w.trim().isNotEmpty).length;
-      final structureOk = wordCount >= 3;
       if (tm.hitRate >= 0.8 && structureOk) {
         tier = 'perfect';
       } else if (tm.hitRate >= 0.4) {
@@ -272,28 +434,143 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
     setState(() {
       _judging = false;
       _recognized = text;
+      _guard = guard;
       _tier = tier;
-      _attempts++;
     });
+    if (tier == 'perfect') await _store();
   }
 
-  /// 完成一次自由造句：仅「开口判定通过」时到达（计入次数 + 今日开口同源）。
-  Future<void> _complete() async {
+  /// 通过即自动入库：计数、串联判定、今日开口、成就。
+  Future<void> _store() async {
     final p = _p;
+    final chain = await p.sandbox.addSentence(_selected, _masteredIds);
     await p.incFreeBuild();
-    await p.noteSpoken(); // A2②：沙盒开口通过计入「今日开口」。
-    await p.logEvent('freebuild_complete', {'level': 'sandbox'});
+    await p.noteSpoken();
+    await p.logEvent(
+        'freebuild_complete', {'level': 'sandbox', 'chain': chain ? 1 : 0});
+    if (_searchTouched) await p.sandbox.recordSearch();
+    if (_filterTouched) await p.sandbox.recordFilter();
     final first = !p.freeBuildBadge;
+    if (!mounted) return;
+    setState(() {
+      _sentenceCount = p.sandbox.sentences.length;
+      _storedChain = chain;
+      _recentIds = [
+        ..._selected.map((c) => c.id),
+        ..._recentIds.where((id) => !_selected.any((s) => s.id == id)),
+      ].take(12).toList();
+    });
     if (first) {
       await p.awardFreeBuildBadge();
-      await p.logEvent('freebuild_badge');
       if (!mounted) return;
-      setState(() => _celebrate = true);
-    } else {
-      if (!mounted) return;
-      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('造句新手 🏅 成就已解锁'), duration: Duration(seconds: 2)));
     }
   }
+
+  // —— 我的句子 ——
+
+  void _showSentences() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: kCard,
+      builder: (_) => StatefulBuilder(
+        builder: (sheetContext, setSheet) {
+          // 每次重建都重新取一遍：删除后 setSheet 才拿得到新列表（旧写法把 list 提在外面，删了也不刷新）。
+          final list = _p.sandbox.sentences;
+          return SafeArea(
+            child: SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.6,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
+                    child: Row(
+                      children: [
+                        const Text('我的句子',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700)),
+                        const Spacer(),
+                        Text('${list.length} 句',
+                            style: const TextStyle(color: kPrimary)),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: list.isEmpty
+                        ? const Center(
+                            child: Text('还没有通过的句子。\n拼一句、点下面的麦克风说出来即可。',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.white54)))
+                        : ListView.builder(
+                            itemCount: list.length,
+                            itemBuilder: (_, i) {
+                              final s = list[i];
+                              return ListTile(
+                                title: Text(s.text,
+                                    style:
+                                        const TextStyle(color: Colors.white)),
+                                subtitle: Text(
+                                    '${s.chunkIds.length} 块'
+                                    '${s.chain ? ' · 串联（≥2 个已掌握块）' : ''}',
+                                    style: const TextStyle(
+                                        color: Colors.white54, fontSize: 12)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.volume_up,
+                                          color: kPrimary),
+                                      onPressed: () => _speak(s.text),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.mic,
+                                          color: kUnlocked),
+                                      onPressed: () {
+                                        Navigator.of(sheetContext).pop();
+                                        setState(() {
+                                          _selected.clear();
+                                          _targetOverride = s.text;
+                                          _clearFeedback();
+                                        });
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text('这句已放回，点麦克风再说一遍'),
+                                                duration:
+                                                    Duration(seconds: 2)));
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline,
+                                          color: Colors.white38),
+                                      onPressed: () async {
+                                        await _p.sandbox
+                                            .deleteSentence(s.createdAt);
+                                        setSheet(() {});
+                                        if (!mounted) return;
+                                        setState(() => _sentenceCount =
+                                            _p.sandbox.sentences.length);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // —— 布局：三区固定 + 唯一滚动区 ——
 
   @override
   Widget build(BuildContext context) {
@@ -303,316 +580,474 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
           icon: const Icon(Icons.close, color: Colors.white70),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: const Text('自由造句沙盒',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
-      ),
-      body: Stack(
-        children: [
-          _body(),
-          if (_celebrate) _celebration(),
+        title: Text('自由造句沙盒 · $_sentenceCount 句',
+            style: const TextStyle(color: Colors.white, fontSize: 18)),
+        actions: [
+          IconButton(
+            key: const Key('sandboxMySentences'),
+            icon: const Icon(Icons.auto_stories, color: kPrimary),
+            tooltip: '我的句子',
+            onPressed: _showSentences,
+          ),
         ],
       ),
+      body: !_engineReady && !_engineFailed
+          ? const Center(child: CircularProgressIndicator(color: kPrimary))
+          : Column(
+              children: [
+                _sentenceCard(),
+                _feedbackStrip(),
+                _filterBar(),
+                Expanded(child: _poolView()),
+                _dock(),
+              ],
+            ),
     );
   }
 
-  Widget _body() {
-    if (!_engineReady && !_engineFailed) {
-      return const Center(child: CircularProgressIndicator(color: kPrimary));
-    }
-    final selectedText = _selected.map((c) => c.text).join(' ');
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        // 当前拼好的句子
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: kCard,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: kPrimary.withOpacity(0.4)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('你的句子',
-                  style: TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Text(
-                selectedText.isEmpty ? '从下面挑词块拼一句，或选一句推荐' : selectedText,
-                style: TextStyle(
-                  color: selectedText.isEmpty ? Colors.white54 : Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: _listenDemo,
-                    icon: const Icon(Icons.volume_up, color: kPrimary),
-                    label: const Text('一键听示范', style: TextStyle(color: kPrimary)),
-                  ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: _repick,
-                    icon: const Icon(Icons.refresh, color: Colors.white70),
-                    label: const Text('重拼', style: TextStyle(color: Colors.white70)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        // 3 句推荐组合
-        if (_recommended.isNotEmpty) ...[
-          const Text('推荐组合（点一下套用）',
-              style: TextStyle(color: Colors.white70, fontSize: 14)),
-          const SizedBox(height: 8),
-          for (final s in _recommended)
-            GestureDetector(
-              onTap: () => _useCombo(s),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: kPrimary.withOpacity(0.4)),
-                ),
-                child: Text(s, style: const TextStyle(color: kPrimary)),
-              ),
-            ),
-          const SizedBox(height: 12),
-        ],
-        // 已学词块池
-        const Text('已学词块池（点选拼句）',
-            style: TextStyle(color: Colors.white70, fontSize: 14)),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: widget.learnedChunks.map((c) {
-            final on = _selected.contains(c);
-            return GestureDetector(
-              onTap: () => _toggleChunk(c),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: on
-                      ? kPrimary.withOpacity(0.30)
-                      : kPrimary.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: on ? kPrimary : kPrimary.withOpacity(0.4),
-                      width: on ? 2 : 1),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(c.text,
-                        style: const TextStyle(
-                            color: kPrimary, fontWeight: FontWeight.w600)),
-                    if (c.meaningCN.isNotEmpty)
-                      Text(c.meaningCN,
-                          style:
-                              const TextStyle(color: Colors.white54, fontSize: 11)),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 24),
-        if (_engineFailed)
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text('离线识别引擎未就绪，请重启 App 后重试',
-                style: TextStyle(color: Colors.redAccent)),
-          )
-        else ...[
-          Center(
-            child: GestureDetector(
-              onTap: _toggleRecord,
-              child: Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _recording ? kPrimary : kCard,
-                  border: Border.all(color: kPrimary, width: 2),
-                ),
-                child: Center(
-                  child: _judging
-                      ? const CircularProgressIndicator(color: kPrimary)
-                      : Icon(
-                          _recording ? Icons.stop : Icons.mic,
-                          size: 40,
-                          color: _recording ? Colors.black87 : kPrimary,
-                        ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Center(
-            child: Text(
-              _recording
-                  ? '正在聆听… 再点一下停止'
-                  : (_judging ? '识别 / 评句中…' : '拼好句子，点一下开口说'),
-              style: const TextStyle(color: Colors.white54, fontSize: 13),
-            ),
-          ),
-          const SizedBox(height: 20),
-          if (_tier != null) _feedback(),
-        ],
-      ],
-    );
-  }
-
-  /// 评判反馈三档；仅 perfect（判定通过）出现「完成造句」按钮 → 才计数。
-  Widget _feedback() {
-    final perfect = _tier == 'perfect';
-    final improve = _tier == 'improve';
-    final color = perfect
-        ? kUnlocked
-        : (improve ? kPrimary : Colors.white70);
-    final title = perfect
-        ? '✅ 通过！'
-        : (improve ? '⚠️ 可改进' : '💪 再试试');
-    final body = _aiFeedback ??
-        (perfect
-            ? '判定通过！这句已计入自由造句次数。'
-            : (improve ? '意思接近了，照着示范再顺一遍。' : '没听清或没拼对，重拼或再试一次。'));
+  Widget _sentenceCard() {
+    final empty = !_hasSentence;
     return Container(
-      padding: const EdgeInsets.all(16),
+      key: const Key('sandboxSentenceCard'),
+      height: 132,
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: TextStyle(
-                  color: color, fontSize: 18, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          if (_recognized != null && _recognized!.isNotEmpty)
-            Text('你说：$_recognized',
-                style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          const Text('你的句子',
+              style: TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          Text(body, style: const TextStyle(color: Colors.white, fontSize: 15)),
-          if (_aiCorrected != null && _aiCorrected!.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text('建议说法：$_aiCorrected',
-                style: const TextStyle(color: kPrimary, fontSize: 14)),
-          ],
-          const SizedBox(height: 14),
-          if (perfect)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimary,
-                  foregroundColor: Colors.black87,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: _complete,
-                child: const Text('完成造句',
-                    style: TextStyle(fontWeight: FontWeight.w700)),
+          Expanded(
+            child: Text(
+              empty ? '从下面挑块拼一句' : _targetText,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: empty ? Colors.white54 : Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
-            )
-          else if (_attempts < 3)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kCard,
-                  foregroundColor: kPrimary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: kPrimary)),
-                ),
-                onPressed: _repick,
-                child: const Text('重拼再试'),
+            ),
+          ),
+          Row(
+            children: [
+              TextButton.icon(
+                key: const Key('sandboxListenDemo'),
+                onPressed: empty ? null : () => _speak(_targetText),
+                icon: const Icon(Icons.volume_up, color: kPrimary),
+                label: const Text('听示范', style: TextStyle(color: kPrimary)),
               ),
-            )
-          else
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimary,
-                  foregroundColor: Colors.black87,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () => setState(() {
-                  _tier = null;
-                  _recognized = null;
-                  _attempts = 0;
-                }),
-                child: const Text('再试一次',
-                    style: TextStyle(fontWeight: FontWeight.w700)),
+              const Spacer(),
+              TextButton.icon(
+                key: const Key('sandboxRepick'),
+                onPressed: (empty || _selected.isEmpty) ? _repick : _repick,
+                icon: const Icon(Icons.refresh, color: Colors.white70),
+                label:
+                    const Text('重拼', style: TextStyle(color: Colors.white70)),
               ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 反馈条高度固定：没有反馈时留同一块空白，页面骨架不随判定结果跳动。
+  /// B5：原文行与校验结论分立——原文恒上屏，结论只描述校验，不改写话语。
+  Widget _feedbackStrip() {
+    const height = 96.0;
+    final t = _tier;
+    if (t == null) {
+      return Container(
+        key: const Key('sandboxFeedbackSlot'),
+        height: height,
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: kCard.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Text('拼好句子，点下面的麦克风开口说',
+            style: TextStyle(color: Colors.white38, fontSize: 13)),
+      );
+    }
+    final perfect = t == 'perfect';
+    final improve = t == 'improve';
+    final guardFailed = _guard != null && !_guard!.ok;
+    final color = perfect ? kUnlocked : (improve ? kPrimary : Colors.white70);
+    final title = perfect
+        ? (_storedChain ? '已存入我的句子 · 串联 +1' : '通过！已存入我的句子')
+        : (improve
+            ? '意思接近了，再顺一遍'
+            : (guardFailed ? '⚠ 没听清，再说一遍' : '✗ 和目标句还不一致'));
+    final rawLine = _recognized == null
+        ? null
+        : '你说：${_recognized!.isEmpty ? '（没听到）' : _recognized}';
+    final refLine = (_aiCorrected == null || _aiCorrected!.isEmpty)
+        ? null
+        : '参考说法：$_aiCorrected';
+    return Container(
+      key: const Key('sandboxFeedbackSlot'),
+      height: height,
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(title,
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                if (rawLine != null)
+                  Text(rawLine,
+                      key: const Key('sandboxAsrRaw'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: Colors.white, fontSize: 13)),
+                if (refLine != null)
+                  Text(refLine,
+                      key: const Key('sandboxReference'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: Colors.white54, fontSize: 12)),
+              ],
+            ),
+          ),
+          if (!perfect)
+            TextButton(
+              key: const Key('sandboxRetry'),
+              onPressed: () => setState(_clearFeedback),
+              child: const Text('再说一次', style: TextStyle(color: kPrimary)),
             ),
         ],
       ),
     );
   }
 
-  Widget _celebration() => Container(
-        color: Colors.black54,
-        child: Center(
-          child: Container(
-            margin: const EdgeInsets.all(32),
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: kCard,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.emoji_events, color: kPrimary, size: 64),
-                const SizedBox(height: 14),
-                const Text('成就解锁',
-                    style: TextStyle(color: Colors.white54, fontSize: 14)),
-                const SizedBox(height: 6),
-                const Text('造句新手 🏅',
-                    style: TextStyle(
-                        color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 10),
-                const Text('你完成了第一次自由造句！',
-                    style: TextStyle(color: Colors.white70, fontSize: 15)),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kPrimary,
-                      foregroundColor: Colors.black87,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () {
-                      setState(() => _celebrate = false);
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('继续',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
-                  ),
+  Widget _filterBar() {
+    return Container(
+      key: const Key('sandboxFilterBar'),
+      height: 96,
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 44,
+            child: TextField(
+              key: const Key('sandboxSearch'),
+              controller: _searchCtl,
+              onChanged: _onQuery,
+              style: const TextStyle(color: Colors.white, fontSize: 15),
+              decoration: InputDecoration(
+                hintText: '搜词块（英文或中文释义）',
+                hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
+                prefixIcon:
+                    const Icon(Icons.search, color: Colors.white38, size: 20),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                filled: true,
+                fillColor: kCard,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 40,
+            child: ListView(
+              key: const Key('sandboxSceneChips'),
+              scrollDirection: Axis.horizontal,
+              children: [
+                _sceneChip(null, '全部', _pool.length),
+                for (final t in _tags) _sceneChip(t.id, t.label, t.count),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  final TextEditingController _searchCtl = TextEditingController();
+
+  Widget _sceneChip(String? id, String label, int count) {
+    final on = _scene == id;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: () => _onScene(id),
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: on ? kPrimary.withValues(alpha: 0.24) : kCard,
+            borderRadius: BorderRadius.circular(20),
+            border:
+                Border.all(color: on ? kPrimary : kPrimary.withValues(alpha: 0.3)),
+          ),
+          child: Text('$label · $count',
+              style: TextStyle(
+                  color: on ? kPrimary : Colors.white54, fontSize: 13)),
         ),
+      ),
+    );
+  }
+
+  /// 分组标题用人能读的场景名（标签数据源＝内容 schema 的 theme），不是场景 id。
+  String _sceneLabel(String id) {
+    for (final t in _tags) {
+      if (t.id == id) return t.label;
+    }
+    return id;
+  }
+
+  /// 唯一滚动区：最近使用（横滑一行）→ 按场景分组（SliverList 懒建，200 块也不卡）。
+  Widget _poolView() {
+    final visible = _visible;
+    if (visible.isEmpty) {
+      return const Center(
+        child: Text('这个筛选下没有词块\n换个关键词或点「全部」',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white38)),
       );
+    }
+    final groups = <String, List<MergedChunk>>{};
+    for (final c in visible) {
+      groups.putIfAbsent(_sceneOf[c.id] ?? '其他', () => []).add(c);
+    }
+    final recent =
+        _recent.where((c) => visible.any((v) => v.id == c.id)).toList();
+    return CustomScrollView(
+      key: const Key('sandboxPool'),
+      slivers: [
+        if (recent.isNotEmpty)
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 66,
+              child: ListView(
+                key: const Key('sandboxRecentRow'),
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  for (final m in recent)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _chip(m, compact: true),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        for (final g in groups.entries) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+              child: Text(_sceneLabel(g.key),
+                  style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (_, row) {
+                final take = g.value.skip(row * 2).take(2).toList();
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final m in take) Expanded(child: _chip(m)),
+                      if (take.length == 1) const Expanded(child: SizedBox()),
+                    ],
+                  ),
+                );
+              },
+              childCount: (g.value.length / 2).ceil(),
+            ),
+          ),
+        ],
+        const SliverToBoxAdapter(child: SizedBox(height: 12)),
+      ],
+    );
+  }
+
+  Widget _chip(MergedChunk m, {bool compact = false}) {
+    final on = _selected.any((c) => m.ids.contains(c.id));
+    final relearn = _relearningIds.contains(m.id);
+    return GestureDetector(
+      onTap: () => _toggle(m),
+      onLongPress: () => _showChipSheet(m),
+      child: Container(
+        constraints: BoxConstraints(maxWidth: compact ? 200 : double.infinity),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: on ? kPrimary.withValues(alpha: 0.30) : kPrimary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+              color: on ? kPrimary : kPrimary.withValues(alpha: 0.4),
+              width: on ? 2 : 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Flexible(
+                  child: Text(m.text,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: kPrimary, fontWeight: FontWeight.w600)),
+                ),
+                if (relearn) ...[
+                  const SizedBox(width: 4),
+                  const Icon(Icons.autorenew, color: kPrimary, size: 14),
+                ],
+              ],
+            ),
+            if (!compact && m.meanings.isNotEmpty)
+              Text(m.meanings.first,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 底栏固定：推荐横滑一行 + mic（拇指区）。块再多也不被顶走。
+  Widget _dock() {
+    final combos = _recommended();
+    return Container(
+      key: const Key('sandboxDock'),
+      decoration: BoxDecoration(
+        color: kBg,
+        border: Border(top: BorderSide(color: kPrimary.withValues(alpha: 0.2))),
+      ),
+      padding: const EdgeInsets.fromLTRB(0, 6, 0, 10),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 40,
+            child: ListView(
+              key: const Key('sandboxRecommend'),
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                for (final s in combos)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => _useCombo(s),
+                      child: Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: kPrimary.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: kPrimary.withValues(alpha: 0.4)),
+                        ),
+                        child: Text(s,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                const TextStyle(color: kPrimary, fontSize: 13)),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                key: const Key('sandboxMic'),
+                onTap: _toggleRecord,
+                child: Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: !_hasSentence
+                        ? kLocked
+                        : (_recording ? kPrimary : kCard),
+                    border: Border.all(
+                        color: _hasSentence ? kPrimary : Colors.white24,
+                        width: 2),
+                  ),
+                  child: Center(
+                    child: _judging
+                        ? const CircularProgressIndicator(
+                            color: kPrimary, strokeWidth: 2)
+                        : Icon(
+                            _recording ? Icons.stop : Icons.mic,
+                            size: 30,
+                            color: !_hasSentence
+                                ? Colors.white38
+                                : (_recording ? Colors.black87 : kPrimary),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _engineFailed
+                ? '离线识别引擎未就绪，请重启 App 后重试'
+                : _recording
+                    ? '正在聆听… 再点一下停止'
+                    : (_judging
+                        ? '识别 / 评句中…'
+                        : (_hasSentence ? '点一下开口说这句' : '先挑块拼一句')),
+            style: const TextStyle(color: Colors.white38, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 推荐组合：池里现成能拼的整句（含合并块），最多 6 句。
+  List<String> _recommended() {
+    final texts = <String>[];
+    for (final lv in Provider.of<ContentPack>(context, listen: false).levels) {
+      for (final s in lv.sentences) {
+        if (s.chunkIds.length >= 2 &&
+            s.chunkIds.every((id) => _pool.any((c) => c.ids.contains(id)))) {
+          texts.add(s.text);
+          if (texts.length >= 6) return texts;
+        }
+      }
+    }
+    return texts;
+  }
 }

@@ -1,35 +1,35 @@
 {
-  "versionName": "1.5.2",
-  "versionCode": 4053,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.2/chunkspoke-latest.apk",
+  "versionName": "1.5.4",
+  "versionCode": 4055,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.4/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.2/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.5.2/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.4/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.5.4/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "063bbf3f4d884f30469f615e553965c4fe3b282b4d47aaef91673b43cfcf2a8c",
-  "size": 58276345,
-  "notes": "v1.5.2：新增六步学习管线（锚定→拆解→听辨→影子跟读→定向替换→自由造句+场景应用；单块 5~8 分钟，超时自动存档，可断点续学）；新增「我的词块库」，按巩固状态分组，显示首学日期、复习次数、连对与下次到期，支持一键试听与需重修立即复习；新增「导出学习数据」，只出聚合计数（不含录音与文本原文），是否分享由你决定；学完的词块次日回访一次，之后按 3/7/14 天巩固，走完四档才算已掌握。",
+  "sha256": "697db902933624d29288de48a825f353b8a55204d539313a4091163a7d358ec0",
+  "size": 59443223,
+  "notes": "v1.5.4：新增「磨耳朵」浸泡层——10 篇场景文章（点餐/机场/职场/医院），2–3 分钟一篇，全离线逐句合成音频，句级高亮、AB 循环、变速与定时；支持后台播放与通知栏/锁屏控制（上一句/播放暂停/下一句/关闭），来电打断自动暂停并记住续播点；文章按新块候选（蓝）→在学（琥珀）→已掌握（金）三色随学习进度成熟，听中可收词进六步、到期块直接复习；语音判定收口：识别原文逐字展示、通过与否另起一行、AI 参考说法分列。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.2/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.4/parts/apk.part0",
       "size": 15728640,
-      "sha256": "be91cd8be3f3600c61524da60f0107bcdb64732c6fcf95139059eb74a6c26efe"
+      "sha256": "16413db82bc21d2769f0804f9009e5b1ec8ab042d442fd97738e8ffe0377ab25"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.2/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.4/parts/apk.part1",
       "size": 15728640,
-      "sha256": "aea3bee60ff825d891adf6bd75a2484f1afa2cb9e17ea7bfc2b2fcb3cd442425"
+      "sha256": "6ac8949a2ff4ec3e513363d1aa29f3b8b9562dac7eeaa644cd0fc1428658b772"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.2/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.4/parts/apk.part2",
       "size": 15728640,
-      "sha256": "7a7f4f9642d8d37ffd3be3a5c00c2d982d909aae662d0f615d73634b55f77a64"
+      "sha256": "4578b69c140fb259161b3b3c741a032bede2e2667cd1476e2f5858790e855a4e"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.2/parts/apk.part3",
-      "size": 11090425,
-      "sha256": "5e21818e3f7bacb9fb0b2b2c816d01cc6d1139c8804a138ad651a8d04a081adb"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.4/parts/apk.part3",
+      "size": 12257303,
+      "sha256": "1417900d312f557ec5b927c8ed5d0196d83f192dede591579326ff3db4d361f7"
     }
   ],
   "model": {

@@ -52,7 +52,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
@@ -225,7 +225,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
           decoration: BoxDecoration(
             color: on ? kPrimary : kBg,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: kPrimary.withOpacity(0.5)),
+            border: Border.all(color: kPrimary.withValues(alpha: 0.5)),
           ),
           child: Text(label,
               style: TextStyle(color: on ? Colors.black87 : kText)),

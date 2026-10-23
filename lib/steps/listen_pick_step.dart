@@ -161,9 +161,9 @@ class _ListenPickStepState extends State<ListenPickStep> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.12),
+                  color: kPrimary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: kPrimary.withOpacity(0.4)),
+                  border: Border.all(color: kPrimary.withValues(alpha: 0.4)),
                 ),
                 child: Text(_speedLabel,
                     style: const TextStyle(color: kPrimary, fontSize: 12)),
@@ -222,8 +222,8 @@ class _ListenPickStepState extends State<ListenPickStep> {
                               ),
                               color: (_roundPassed || _revealed) &&
                                       s == widget.chunk.text
-                                  ? kUnlocked.withOpacity(0.12)
-                                  : kBg.withOpacity(0.5),
+                                  ? kUnlocked.withValues(alpha: 0.12)
+                                  : kBg.withValues(alpha: 0.5),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -251,10 +251,10 @@ class _ListenPickStepState extends State<ListenPickStep> {
             ),
           ),
           if (_roundMissed && !_roundPassed)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
               child: Text('答案已标出，记住它，点下方按钮继续',
-                  style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                  style: TextStyle(color: Colors.white54, fontSize: 13)),
             ),
           const Spacer(),
           if (_roundPassed || _revealed)

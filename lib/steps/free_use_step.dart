@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
+import '../services/asr_guard.dart';
 import '../services/crash_log.dart';
 import '../services/learning_flow.dart';
 import '../services/loaders.dart';
@@ -48,6 +49,10 @@ class _FreeUseStepState extends State<FreeUseStep> {
   FreeUseVerdict? _verdict;
   bool _showReference = false;
   bool _passed = false;
+  String _asrRaw = '';
+  AsrGuardResult? _guard;
+  bool _fromVoice = false;
+  SilenceAutoStop? _silence;
 
   TtsService get _tts => Provider.of<TtsService>(context, listen: false);
   ProgressService get _p => Provider.of<ProgressService>(context, listen: false);
@@ -55,6 +60,9 @@ class _FreeUseStepState extends State<FreeUseStep> {
   @override
   void initState() {
     super.initState();
+    _silence = SilenceAutoStop(onSilence: () {
+      if (mounted && _listening) _toggleMic();
+    });
     _rec.ensurePermission().then((perm) async {
       if (!mounted) return;
       if (perm != MicPerm.granted) {
@@ -72,6 +80,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
 
   @override
   void dispose() {
+    _silence?.detach();
     if (_listening) _rec.stop();
     _rec.stopPlay();
     _controller.dispose();
@@ -81,11 +90,12 @@ class _FreeUseStepState extends State<FreeUseStep> {
   void _check() {
     final v = judgeFreeUse(
         input: _controller.text, chunkText: widget.chunk.text);
+    final guardOk = !_fromVoice || (_guard?.ok ?? false);
     setState(() {
       _verdict = v;
-      if (!v.pass) _showReference = true;
+      if (!v.pass || !guardOk) _showReference = true;
     });
-    if (v.pass) {
+    if (v.pass && guardOk) {
       HapticFeedback.mediumImpact();
       setState(() => _passed = true);
     }
@@ -93,6 +103,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
 
   Future<void> _toggleMic() async {
     if (_listening) {
+      _silence?.detach();
       setState(() {
         _listening = false;
         _thinking = true;
@@ -103,40 +114,57 @@ class _FreeUseStepState extends State<FreeUseStep> {
         return;
       }
       String text = '';
+      List<double>? confs;
       if (await _speech.initVosk()) {
-        final r = await _speech.recognize(
-            path, [widget.referenceText, widget.chunk.text]);
+        final r = await _speech.recognizeOpen(path,
+            e2ePhrases: [widget.referenceText, widget.chunk.text]);
         text = r.text;
+        confs = r.wordConfidences;
       } else if (_p.azureKey != null && _p.azureRegion != null) {
         text = await _speech.transcribeAzure(
             path, _p.azureKey!, _p.azureRegion!);
       }
       if (!mounted) return;
-      if (text.trim().isNotEmpty) _controller.text = text;
-      setState(() => _thinking = false);
-      if (text.trim().isNotEmpty) {
-        _check();
-      } else {
-        setState(() => _micBlocked = true);
-      }
+      final g = guardAsr(
+        raw: text,
+        wordConfidences: confs,
+        targetBlock: widget.chunk.text,
+        checkChunkStack: true,
+      );
+      setState(() {
+        _thinking = false;
+        _asrRaw = text;
+        _guard = g;
+        _fromVoice = true;
+        if (g.ok) _controller.text = text;
+      });
+      _check();
       return;
     }
     if (_micBlocked || !_micReady) return;
+    // 防回声自吞：录音开始前先停掉 TTS / 本地回放。
+    await _tts.stop();
+    await _rec.stopPlay();
     final path = await _rec.start();
     if (!mounted) return;
     if (path == null) {
       setState(() => _micBlocked = true);
       return;
     }
+    _silence?.attach(_rec.levels);
     setState(() {
       _listening = true;
       _verdict = null;
       _passed = false;
       _showReference = false;
+      _asrRaw = '';
+      _guard = null;
+      _fromVoice = false;
     });
   }
 
   Future<void> _speakReference() async {
+    if (_listening || _thinking) return;
     final text = widget.referenceText.trim().isEmpty
         ? widget.chunk.text
         : widget.referenceText;
@@ -147,6 +175,14 @@ class _FreeUseStepState extends State<FreeUseStep> {
   @override
   Widget build(BuildContext context) {
     final v = _verdict;
+    final av = (_fromVoice && _guard != null && v != null)
+        ? asrVerdictFor(
+            guard: _guard!,
+            targetHit: v.pass,
+            targetLabel: widget.chunk.text,
+          )
+        : null;
+    final ok = av != null ? av.kind == AsrVerdictKind.pass : (v?.pass ?? false);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       child: Column(
@@ -169,7 +205,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: kBg.withOpacity(0.5),
+                      color: kBg.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: Colors.white24),
                     ),
@@ -198,6 +234,10 @@ class _FreeUseStepState extends State<FreeUseStep> {
                     minLines: 1,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _check(),
+                    onChanged: (_) {
+                      // 用户手动改字后按文本输入判定（原始识别行仍保留展示）。
+                      if (_fromVoice) setState(() => _fromVoice = false);
+                    },
                     style: const TextStyle(color: Colors.white, fontSize: 16),
                     decoration: InputDecoration(
                       hintText: '用英文写下或说出你的句子，把词块放进今天的场景…',
@@ -215,22 +255,41 @@ class _FreeUseStepState extends State<FreeUseStep> {
                       ),
                     ),
                   ),
+                  if (_asrRaw.isNotEmpty)
+                    Container(
+                      key: const Key('freeUseAsrRaw'),
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: kCard,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: Text('你说：$_asrRaw',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 13)),
+                    ),
                   const SizedBox(height: 10),
                   if (v != null)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                            v.pass
+                            ok
                                 ? Icons.check_circle
-                                : Icons.lightbulb_outline,
-                            color: v.pass ? kUnlocked : kPrimary,
+                                : (av?.kind == AsrVerdictKind.notUsed
+                                    ? Icons.cancel_outlined
+                                    : Icons.lightbulb_outline),
+                            color: ok ? kUnlocked : kPrimary,
                             size: 18),
                         const SizedBox(width: 6),
                         Flexible(
-                          child: Text(freeUseHint(v, widget.chunk.text),
+                          child: Text(
+                              av?.text ?? freeUseHint(v, widget.chunk.text),
+                              textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: v.pass ? kUnlocked : kPrimary,
+                                  color: ok ? kUnlocked : kPrimary,
                                   fontSize: 13)),
                         ),
                       ],
@@ -315,7 +374,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
         decoration: BoxDecoration(
           color: kCard,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: kPrimary.withOpacity(0.35)),
+          border: Border.all(color: kPrimary.withValues(alpha: 0.35)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

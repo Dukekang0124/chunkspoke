@@ -96,7 +96,7 @@ void main() {
   });
 
   // —— M7 掌握硬门槛边界 ——
-  Future<void> _toL4(ChunkProgressStore store, String k,
+  Future<void> toL4(ChunkProgressStore store, String k,
       {bool oneTry = true, int l3acc = 90}) async {
     await store.applyEvent(k, ChunkEvent.assembleCorrect); // l1->l2
     if (!oneTry) {
@@ -110,7 +110,7 @@ void main() {
     final db = _newDb();
     await db.db;
     final store = ChunkProgressStore(db);
-    await _toL4(store, 'k', oneTry: true);
+    await toL4(store, 'k', oneTry: true);
     await store.applyEvent('k', ChunkEvent.speakSuccess, accuracy: 79);
     expect((await store.get('k')).level, ChunkLevel.review);
     expect(ChunkProgressStore.isMastered(await store.get('k')), isFalse);
@@ -118,7 +118,7 @@ void main() {
     final db2 = AppDatabase(path: inMemoryDatabasePath);
     await db2.db;
     final store2 = ChunkProgressStore(db2);
-    await _toL4(store2, 'k', oneTry: true);
+    await toL4(store2, 'k', oneTry: true);
     await store2.applyEvent('k', ChunkEvent.speakSuccess, accuracy: 80);
     expect((await store2.get('k')).level, ChunkLevel.mastered);
     expect(ChunkProgressStore.isMastered(await store2.get('k')), isTrue);
@@ -129,7 +129,7 @@ void main() {
     final db = _newDb();
     await db.db;
     final store = ChunkProgressStore(db);
-    await _toL4(store, 'k', oneTry: false);
+    await toL4(store, 'k', oneTry: false);
     expect((await store.get('k')).l2OneTry, 1); // 拖对即补回“一次过”
     await store.applyEvent('k', ChunkEvent.speakSuccess, accuracy: 95);
     expect((await store.get('k')).level, ChunkLevel.mastered);
@@ -140,7 +140,7 @@ void main() {
     final db = _newDb();
     await db.db;
     final store = ChunkProgressStore(db);
-    await _toL4(store, 'k', oneTry: true);
+    await toL4(store, 'k', oneTry: true);
     await store.applyEvent('k', ChunkEvent.scheduleReview);
     final row = await store.get('k');
     expect(row.level, ChunkLevel.review);
@@ -152,14 +152,14 @@ void main() {
     final db = _newDb();
     await db.db;
     final store = ChunkProgressStore(db);
-    await _toL4(store, 'k', oneTry: true);
+    await toL4(store, 'k', oneTry: true);
     await store.applyEvent('k', ChunkEvent.speakSuccess, selfEval: false);
     expect((await store.get('k')).level, ChunkLevel.review);
 
     final db2 = AppDatabase(path: inMemoryDatabasePath);
     await db2.db;
     final store2 = ChunkProgressStore(db2);
-    await _toL4(store2, 'k', oneTry: true);
+    await toL4(store2, 'k', oneTry: true);
     await store2.applyEvent('k', ChunkEvent.speakSuccess, selfEval: true);
     final r = await store2.get('k');
     expect(r.level, ChunkLevel.mastered);
@@ -171,9 +171,9 @@ void main() {
     final db = _newDb();
     await db.db;
     final store = ChunkProgressStore(db);
-    await _toL4(store, 'a', oneTry: true);
+    await toL4(store, 'a', oneTry: true);
     await store.applyEvent('a', ChunkEvent.speakSuccess, accuracy: 90);
-    await _toL4(store, 'b', oneTry: true);
+    await toL4(store, 'b', oneTry: true);
     await store.applyEvent('b', ChunkEvent.speakSuccess, accuracy: 79); // review
     final m = await store.allMasteredKeys();
     expect(m, contains('a'));

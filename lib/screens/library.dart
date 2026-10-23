@@ -257,7 +257,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 await Clipboard.setData(ClipboardData(text: export.text));
                 if (ctx.mounted) {
                   Navigator.of(ctx).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(ctx).showSnackBar(
                       const SnackBar(
                           content: Text('汇总文本已复制'),
                           duration: Duration(seconds: 1)));

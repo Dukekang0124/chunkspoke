@@ -7,10 +7,11 @@ import '../ui/theme.dart';
 import 'map.dart';
 import 'me.dart';
 import 'library.dart';
+import 'listening_home_screen.dart';
 import 'settings.dart';
 import '../services/update/update_flow.dart';
 
-/// M5 三栏导航：[练习][词块库][进度] + 齿轮（设置）。
+/// M5 导航：[练习][磨耳朵][词块库][进度] + 齿轮（设置）。
 class AppNav extends StatefulWidget {
   const AppNav({super.key});
   @override
@@ -67,6 +68,7 @@ class _AppNavState extends State<AppNav> {
   Widget build(BuildContext context) {
     final tabs = [
       const MapScreen(),
+      ListeningHomeScreen(onGoLibrary: () => setState(() => _index = 2)),
       LibraryScreen(onGoPractice: () => setState(() => _index = 0)),
       const MeScreen(),
     ];
@@ -86,11 +88,14 @@ class _AppNavState extends State<AppNav> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
         onTap: (i) => setState(() => _index = i),
+        type: BottomNavigationBarType.fixed,
         backgroundColor: kCard,
         selectedItemColor: kPrimary,
         unselectedItemColor: Colors.white54,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.school), label: '练习'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.headphones), label: '磨耳朵'),
           BottomNavigationBarItem(
               icon: Icon(Icons.library_books), label: '词块库'),
           BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: '进度'),

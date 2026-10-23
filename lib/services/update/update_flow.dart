@@ -67,6 +67,7 @@ Future<void> runUpdateFlow(BuildContext context,
         if (silentIfLatest && await _skipMemoryHits(res.info.versionCode)) {
           return;
         }
+        if (!context.mounted) return;
         final action = await showUpdateDialog(context, res.info);
         if (!context.mounted) return;
         switch (action) {

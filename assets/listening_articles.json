@@ -1,0 +1,2931 @@
+{
+ "version": 1,
+ "generatedAt": "2026-10-23",
+ "articles": [
+  {
+   "id": "L01",
+   "title": "A Morning Coffee Run",
+   "scene": "food",
+   "sceneLabel": "点餐",
+   "summaryCN": "一个忙碌清晨的咖啡外带小故事，练点单、尺寸和口味。",
+   "updatedAt": "2026-10-23",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L01s1",
+     "text": "Good morning, everyone.",
+     "meaningCN": "大家早上好。",
+     "chunks": []
+    },
+    {
+     "id": "L01s2",
+     "text": "I am in a hurry, so I just want a coffee to go.",
+     "meaningCN": "我赶时间，所以只想要一杯咖啡带走。",
+     "chunks": [
+      {
+       "id": "c01",
+       "text": "a coffee",
+       "meaningCN": "来杯咖啡"
+      },
+      {
+       "id": "c04",
+       "text": "to go",
+       "meaningCN": "带走"
+      }
+     ]
+    },
+    {
+     "id": "L01s3",
+     "text": "The cafe is next to the station, and it is already busy.",
+     "meaningCN": "咖啡店在车站旁边，已经忙起来了。",
+     "chunks": []
+    },
+    {
+     "id": "L01s4",
+     "text": "I feel hungry, so I order a muffin as well.",
+     "meaningCN": "我觉得饿了，所以又点了一个松饼。",
+     "chunks": [
+      {
+       "id": "e04",
+       "text": "feel hungry",
+       "meaningCN": "感到饿"
+      }
+     ]
+    },
+    {
+     "id": "L01s5",
+     "text": "The barista smiles and asks what size I want.",
+     "meaningCN": "咖啡师笑着问我要什么尺寸。",
+     "chunks": [
+      {
+       "id": "c11",
+       "text": "what size",
+       "meaningCN": "什么杯型"
+      }
+     ]
+    },
+    {
+     "id": "L01s6",
+     "text": "I ask for a medium with milk, but no sugar.",
+     "meaningCN": "我要中杯、加奶、不加糖。",
+     "chunks": [
+      {
+       "id": "c12",
+       "text": "a medium",
+       "meaningCN": "要中杯"
+      },
+      {
+       "id": "c02",
+       "text": "with milk",
+       "meaningCN": "加奶"
+      }
+     ]
+    },
+    {
+     "id": "L01s7",
+     "text": "She asks if I want oat milk today.",
+     "meaningCN": "她问我今天要不要燕麦奶。",
+     "chunks": [
+      {
+       "id": "lx_food_oat_milk",
+       "text": "oat milk",
+       "meaningCN": "燕麦奶",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L01s8",
+     "text": "I say yes, and I ask for an extra shot.",
+     "meaningCN": "我说好，还要一份额外的浓缩。",
+     "chunks": [
+      {
+       "id": "lx_food_an_extra_shot",
+       "text": "an extra shot",
+       "meaningCN": "一份额外的浓缩",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L01s9",
+     "text": "\"That will be five dollars,\" she says.",
+     "meaningCN": "她说：“一共五美元。”",
+     "chunks": []
+    },
+    {
+     "id": "L01s10",
+     "text": "I pay by card and wait near the counter.",
+     "meaningCN": "我刷卡付款，在柜台旁等候。",
+     "chunks": []
+    },
+    {
+     "id": "L01s11",
+     "text": "The machine is loud, and the room smells wonderful.",
+     "meaningCN": "机器很响，屋里香气扑鼻。",
+     "chunks": []
+    },
+    {
+     "id": "L01s12",
+     "text": "A man beside me is reading a newspaper.",
+     "meaningCN": "我旁边的男人在看报纸。",
+     "chunks": []
+    },
+    {
+     "id": "L01s13",
+     "text": "A student is typing quickly on her laptop.",
+     "meaningCN": "一个学生在笔记本电脑上飞快打字。",
+     "chunks": []
+    },
+    {
+     "id": "L01s14",
+     "text": "Everyone seems calm except me.",
+     "meaningCN": "除了我，大家似乎都很从容。",
+     "chunks": []
+    },
+    {
+     "id": "L01s15",
+     "text": "I check my phone and see that I am late.",
+     "meaningCN": "我看了一眼手机，发现已经迟了。",
+     "chunks": []
+    },
+    {
+     "id": "L01s16",
+     "text": "The barista calls my name and hands me the cup.",
+     "meaningCN": "咖啡师叫我的名字，把杯子递给我。",
+     "chunks": []
+    },
+    {
+     "id": "L01s17",
+     "text": "The cup is warm in my hand.",
+     "meaningCN": "杯子在我手里暖暖的。",
+     "chunks": []
+    },
+    {
+     "id": "L01s18",
+     "text": "I walk out and turn left at the corner.",
+     "meaningCN": "我走出去，在街角左转。",
+     "chunks": []
+    },
+    {
+     "id": "L01s19",
+     "text": "The street is full of people and bicycles.",
+     "meaningCN": "街上满是行人和自行车。",
+     "chunks": []
+    },
+    {
+     "id": "L01s20",
+     "text": "I take a sip and the coffee tastes strong and sweet.",
+     "meaningCN": "我喝了一口，咖啡又浓又甜。",
+     "chunks": []
+    },
+    {
+     "id": "L01s21",
+     "text": "It is a small pleasure on a busy day.",
+     "meaningCN": "这是忙碌日子里的一点小确幸。",
+     "chunks": []
+    },
+    {
+     "id": "L01s22",
+     "text": "I will come back tomorrow morning.",
+     "meaningCN": "明天早上我还会再来。",
+     "chunks": []
+    },
+    {
+     "id": "L01s23",
+     "text": "Maybe I will try a latte next time.",
+     "meaningCN": "也许下次我会试试拿铁。",
+     "chunks": []
+    },
+    {
+     "id": "L01s24",
+     "text": "The cafe also sells fresh bread and cakes.",
+     "meaningCN": "这家店还卖新鲜面包和蛋糕。",
+     "chunks": []
+    },
+    {
+     "id": "L01s25",
+     "text": "The line is long, but the staff are fast.",
+     "meaningCN": "队伍很长，但店员动作很快。",
+     "chunks": []
+    },
+    {
+     "id": "L01s26",
+     "text": "They know many customers by name.",
+     "meaningCN": "他们能叫出许多顾客的名字。",
+     "chunks": []
+    },
+    {
+     "id": "L01s27",
+     "text": "An old woman is talking to the owner.",
+     "meaningCN": "一位老妇人正在和店主聊天。",
+     "chunks": []
+    },
+    {
+     "id": "L01s28",
+     "text": "They laugh about the rainy weather.",
+     "meaningCN": "他们笑着聊起下雨的天气。",
+     "chunks": []
+    },
+    {
+     "id": "L01s29",
+     "text": "I finish my coffee near the park.",
+     "meaningCN": "我在公园附近喝完咖啡。",
+     "chunks": []
+    },
+    {
+     "id": "L01s30",
+     "text": "The sky is still gray, but I feel awake.",
+     "meaningCN": "天空仍然灰蒙蒙的，但我清醒了。",
+     "chunks": []
+    },
+    {
+     "id": "L01s31",
+     "text": "I throw the cup into the bin.",
+     "meaningCN": "我把杯子扔进垃圾桶。",
+     "chunks": []
+    },
+    {
+     "id": "L01s32",
+     "text": "Then I walk to the office with a clear head.",
+     "meaningCN": "然后我头脑清醒地走向办公室。",
+     "chunks": []
+    },
+    {
+     "id": "L01s33",
+     "text": "Outside, a bus stops with a soft hiss.",
+     "meaningCN": "外面，一辆公交车伴着轻轻的嘶声停下。",
+     "chunks": []
+    },
+    {
+     "id": "L01s34",
+     "text": "I step onto it and find a seat by the window.",
+     "meaningCN": "我上了车，在窗边找了个座位。",
+     "chunks": []
+    },
+    {
+     "id": "L01s35",
+     "text": "The city passes quickly, and my mind is quiet.",
+     "meaningCN": "城市飞快掠过，我的心很安静。",
+     "chunks": []
+    },
+    {
+     "id": "L01s36",
+     "text": "I take the last sip near the station door.",
+     "meaningCN": "我在车站门口喝完最后一口。",
+     "chunks": []
+    },
+    {
+     "id": "L01s37",
+     "text": "The bus is already waiting at the stop.",
+     "meaningCN": "公交车已经在站台等着了。",
+     "chunks": []
+    },
+    {
+     "id": "L01s38",
+     "text": "I find a seat and open my notebook.",
+     "meaningCN": "我找了个座位，打开笔记本。",
+     "chunks": []
+    },
+    {
+     "id": "L01s39",
+     "text": "A new day has begun.",
+     "meaningCN": "新的一天开始了。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L02",
+   "title": "Dinner for Two",
+   "scene": "food",
+   "sceneLabel": "点餐",
+   "summaryCN": "两人晚餐：订位、前菜、主菜、账单与分摊。",
+   "updatedAt": "2026-10-21",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L02s1",
+     "text": "On Friday night, I want to book a table for two.",
+     "meaningCN": "周五晚上，我想订一张两人桌。",
+     "chunks": [
+      {
+       "id": "d02",
+       "text": "book a table",
+       "meaningCN": "订位"
+      }
+     ]
+    },
+    {
+     "id": "L02s2",
+     "text": "The restaurant is small, warm, and close to the river.",
+     "meaningCN": "餐厅不大，很温暖，离河很近。",
+     "chunks": []
+    },
+    {
+     "id": "L02s3",
+     "text": "We arrive at seven and the waiter greets us at the door.",
+     "meaningCN": "我们七点到，服务员在门口迎接。",
+     "chunks": [
+      {
+       "id": "d03",
+       "text": "the waiter",
+       "meaningCN": "服务员"
+      }
+     ]
+    },
+    {
+     "id": "L02s4",
+     "text": "He takes our coats and shows us to a quiet table.",
+     "meaningCN": "他接过我们的外套，把我们带到一张安静的桌子。",
+     "chunks": []
+    },
+    {
+     "id": "L02s5",
+     "text": "The menu has many dishes, and everything sounds good.",
+     "meaningCN": "菜单上菜很多，每道听起来都不错。",
+     "chunks": []
+    },
+    {
+     "id": "L02s6",
+     "text": "We order still water while we read.",
+     "meaningCN": "我们边看边点了still water。",
+     "chunks": [
+      {
+       "id": "lx_food_still_water",
+       "text": "still water",
+       "meaningCN": "不含气的矿泉水",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L02s7",
+     "text": "My friend asks for a vegetarian option.",
+     "meaningCN": "朋友问有没有素食选项。",
+     "chunks": [
+      {
+       "id": "lx_food_a_vegetarian_option",
+       "text": "a vegetarian option",
+       "meaningCN": "素食选项",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L02s8",
+     "text": "The waiter says the soup is vegetarian today.",
+     "meaningCN": "服务员说今天的汤是素的。",
+     "chunks": []
+    },
+    {
+     "id": "L02s9",
+     "text": "We share a starter with bread and tomatoes.",
+     "meaningCN": "我们分了一份配面包和番茄的前菜。",
+     "chunks": [
+      {
+       "id": "d04",
+       "text": "a starter",
+       "meaningCN": "前菜"
+      }
+     ]
+    },
+    {
+     "id": "L02s10",
+     "text": "The starter is simple but very fresh.",
+     "meaningCN": "前菜简单，但非常新鲜。",
+     "chunks": []
+    },
+    {
+     "id": "L02s11",
+     "text": "For the main course, I choose fish with rice.",
+     "meaningCN": "主菜我选了鱼配米饭。",
+     "chunks": [
+      {
+       "id": "d05",
+       "text": "main course",
+       "meaningCN": "主菜"
+      }
+     ]
+    },
+    {
+     "id": "L02s12",
+     "text": "My friend orders pasta with mushrooms.",
+     "meaningCN": "朋友点了蘑菇意面。",
+     "chunks": []
+    },
+    {
+     "id": "L02s13",
+     "text": "The food arrives after fifteen minutes.",
+     "meaningCN": "食物十五分钟后到了。",
+     "chunks": []
+    },
+    {
+     "id": "L02s14",
+     "text": "The fish is soft, and the sauce is light.",
+     "meaningCN": "鱼肉很嫩，酱汁清淡。",
+     "chunks": []
+    },
+    {
+     "id": "L02s15",
+     "text": "We talk about work, travel, and old friends.",
+     "meaningCN": "我们聊工作、旅行和老朋友。",
+     "chunks": []
+    },
+    {
+     "id": "L02s16",
+     "text": "The waiter fills our glasses and smiles.",
+     "meaningCN": "服务员给我们倒满水，笑了笑。",
+     "chunks": []
+    },
+    {
+     "id": "L02s17",
+     "text": "For dessert, we share a small chocolate cake.",
+     "meaningCN": "甜点我们分了一块小巧克力蛋糕。",
+     "chunks": []
+    },
+    {
+     "id": "L02s18",
+     "text": "The cake is sweet, but not too heavy.",
+     "meaningCN": "蛋糕很甜，但不腻。",
+     "chunks": []
+    },
+    {
+     "id": "L02s19",
+     "text": "We drink tea and watch the lights on the river.",
+     "meaningCN": "我们喝茶，看河上的灯光。",
+     "chunks": []
+    },
+    {
+     "id": "L02s20",
+     "text": "The restaurant becomes quieter after nine.",
+     "meaningCN": "九点后餐厅安静下来。",
+     "chunks": []
+    },
+    {
+     "id": "L02s21",
+     "text": "We ask for the bill and the waiter brings it quickly.",
+     "meaningCN": "我们叫结账，服务员很快拿来账单。",
+     "chunks": [
+      {
+       "id": "b06",
+       "text": "the bill",
+       "meaningCN": "（餐）账单"
+      }
+     ]
+    },
+    {
+     "id": "L02s22",
+     "text": "We decide to split the bill.",
+     "meaningCN": "我们决定分摊账单。",
+     "chunks": [
+      {
+       "id": "lx_food_split_the_bill",
+       "text": "split the bill",
+       "meaningCN": "分摊账单",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L02s23",
+     "text": "I pay my part by card, and my friend pays cash.",
+     "meaningCN": "我刷卡付自己那份，朋友付现金。",
+     "chunks": []
+    },
+    {
+     "id": "L02s24",
+     "text": "We leave a small tip on the table.",
+     "meaningCN": "我们在桌上留了一点小费。",
+     "chunks": []
+    },
+    {
+     "id": "L02s25",
+     "text": "The waiter thanks us and opens the door.",
+     "meaningCN": "服务员道谢并为我们开门。",
+     "chunks": []
+    },
+    {
+     "id": "L02s26",
+     "text": "Outside, the night air is cool and clean.",
+     "meaningCN": "外面，夜晚的空气清凉干净。",
+     "chunks": []
+    },
+    {
+     "id": "L02s27",
+     "text": "We walk along the river for a while.",
+     "meaningCN": "我们沿着河走了一会儿。",
+     "chunks": []
+    },
+    {
+     "id": "L02s28",
+     "text": "It is a good end to a long week.",
+     "meaningCN": "这是一周辛苦工作的好结尾。",
+     "chunks": []
+    },
+    {
+     "id": "L02s29",
+     "text": "The river is dark, and the city lights move on the water.",
+     "meaningCN": "河水很深，城市灯光在水面晃动。",
+     "chunks": []
+    },
+    {
+     "id": "L02s30",
+     "text": "We talk about coming back next month.",
+     "meaningCN": "我们聊到下个月再来。",
+     "chunks": []
+    },
+    {
+     "id": "L02s31",
+     "text": "My friend says she knows a good place for dessert.",
+     "meaningCN": "朋友说她知道一家不错的甜点店。",
+     "chunks": []
+    },
+    {
+     "id": "L02s32",
+     "text": "I laugh and say we already had cake.",
+     "meaningCN": "我笑着说我们已经吃过蛋糕了。",
+     "chunks": []
+    },
+    {
+     "id": "L02s33",
+     "text": "It is late, so we call a taxi.",
+     "meaningCN": "时间不早了，我们叫了出租车。",
+     "chunks": []
+    },
+    {
+     "id": "L02s34",
+     "text": "We say goodbye and promise to meet again.",
+     "meaningCN": "我们道别，约好再见面。",
+     "chunks": []
+    },
+    {
+     "id": "L02s35",
+     "text": "The taxi is warm, and the driver plays soft music.",
+     "meaningCN": "出租车里很暖，司机放着轻柔的音乐。",
+     "chunks": []
+    },
+    {
+     "id": "L02s36",
+     "text": "I look at the river one last time.",
+     "meaningCN": "我最后看了一眼河。",
+     "chunks": []
+    },
+    {
+     "id": "L02s37",
+     "text": "It was a simple dinner, but I will remember it.",
+     "meaningCN": "这顿晚餐很简单，但我会记住它。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L03",
+   "title": "Takeaway on a Busy Night",
+   "scene": "food",
+   "sceneLabel": "点餐",
+   "summaryCN": "忙碌夜晚的外带订单：点餐、总价、现金与退单。",
+   "updatedAt": "2026-10-19",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L03s1",
+     "text": "It is late, and I am too tired to cook.",
+     "meaningCN": "已经很晚了，我累得不想做饭。",
+     "chunks": []
+    },
+    {
+     "id": "L03s2",
+     "text": "I decide to order food from a small shop near my home.",
+     "meaningCN": "我决定从家附近的小店点餐。",
+     "chunks": [
+      {
+       "id": "e12",
+       "text": "order food",
+       "meaningCN": "点餐"
+      }
+     ]
+    },
+    {
+     "id": "L03s3",
+     "text": "The shop is busy, so I use the app instead of calling.",
+     "meaningCN": "店里很忙，所以我用应用下单，没有打电话。",
+     "chunks": []
+    },
+    {
+     "id": "L03s4",
+     "text": "I want a hot soup, a sandwich, and a drink.",
+     "meaningCN": "我想要热汤、三明治和饮料。",
+     "chunks": []
+    },
+    {
+     "id": "L03s5",
+     "text": "The app asks if I want to get takeaway or eat in.",
+     "meaningCN": "应用问我是外带还是堂食。",
+     "chunks": [
+      {
+       "id": "e14",
+       "text": "get takeaway",
+       "meaningCN": "外带带走"
+      }
+     ]
+    },
+    {
+     "id": "L03s6",
+     "text": "I choose takeaway because I want to go home.",
+     "meaningCN": "我选外带，因为我想回家。",
+     "chunks": []
+    },
+    {
+     "id": "L03s7",
+     "text": "I add extra napkins to the order.",
+     "meaningCN": "我在订单里加了额外的餐巾纸。",
+     "chunks": [
+      {
+       "id": "lx_food_extra_napkins",
+       "text": "extra napkins",
+       "meaningCN": "额外的餐巾纸",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L03s8",
+     "text": "I also ask for no ice in my drink.",
+     "meaningCN": "我还要求饮料不加冰。",
+     "chunks": [
+      {
+       "id": "lx_food_no_ice",
+       "text": "no ice",
+       "meaningCN": "不加冰",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L03s9",
+     "text": "The total is twenty dollars.",
+     "meaningCN": "总价是二十美元。",
+     "chunks": [
+      {
+       "id": "g05",
+       "text": "the total",
+       "meaningCN": "总额"
+      }
+     ]
+    },
+    {
+     "id": "L03s10",
+     "text": "I notice the shop takes cash only.",
+     "meaningCN": "我注意到这家店只收现金。",
+     "chunks": [
+      {
+       "id": "f11",
+       "text": "cash only",
+       "meaningCN": "只收现金"
+      }
+     ]
+    },
+    {
+     "id": "L03s11",
+     "text": "I check my wallet and find enough cash.",
+     "meaningCN": "我检查钱包，发现现金够用。",
+     "chunks": []
+    },
+    {
+     "id": "L03s12",
+     "text": "I walk to the shop in the light rain.",
+     "meaningCN": "我冒着小雨走向店里。",
+     "chunks": []
+    },
+    {
+     "id": "L03s13",
+     "text": "The street is quiet, and most shops are closed.",
+     "meaningCN": "街上很安静，大多数店都关门了。",
+     "chunks": []
+    },
+    {
+     "id": "L03s14",
+     "text": "A delivery rider passes me on a bike.",
+     "meaningCN": "一个外卖骑手骑车从我身边经过。",
+     "chunks": []
+    },
+    {
+     "id": "L03s15",
+     "text": "At the shop, a young man is packing bags.",
+     "meaningCN": "店里，一个年轻人在打包。",
+     "chunks": []
+    },
+    {
+     "id": "L03s16",
+     "text": "He tells me my food will be ready soon.",
+     "meaningCN": "他告诉我食物很快就好。",
+     "chunks": []
+    },
+    {
+     "id": "L03s17",
+     "text": "I wait by the window and watch the rain.",
+     "meaningCN": "我在窗边等，看着雨。",
+     "chunks": []
+    },
+    {
+     "id": "L03s18",
+     "text": "The man calls my number and gives me the bag.",
+     "meaningCN": "他叫我的号，把袋子递给我。",
+     "chunks": []
+    },
+    {
+     "id": "L03s19",
+     "text": "I ask for a refund for the drink because it is wrong.",
+     "meaningCN": "饮料做错了，我要求退款。",
+     "chunks": [
+      {
+       "id": "lx_food_a_refund",
+       "text": "a refund",
+       "meaningCN": "退款",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L03s20",
+     "text": "He checks the order and gives me the money.",
+     "meaningCN": "他核对了订单，把钱退给我。",
+     "chunks": []
+    },
+    {
+     "id": "L03s21",
+     "text": "He also gives me a snack for free.",
+     "meaningCN": "他还免费送了我一份小吃。",
+     "chunks": [
+      {
+       "id": "e03",
+       "text": "a snack",
+       "meaningCN": "小吃／零食"
+      }
+     ]
+    },
+    {
+     "id": "L03s22",
+     "text": "I take a bite while I wait for the bus.",
+     "meaningCN": "等公交时我咬了一口。",
+     "chunks": []
+    },
+    {
+     "id": "L03s23",
+     "text": "The soup is hot, and the sandwich is fresh.",
+     "meaningCN": "汤很热，三明治很新鲜。",
+     "chunks": []
+    },
+    {
+     "id": "L03s24",
+     "text": "I feel full and happy on the way home.",
+     "meaningCN": "回家路上我吃得饱饱的，很开心。",
+     "chunks": []
+    },
+    {
+     "id": "L03s25",
+     "text": "At home, I put the food on the table.",
+     "meaningCN": "到家后，我把食物放在桌上。",
+     "chunks": []
+    },
+    {
+     "id": "L03s26",
+     "text": "I eat slowly and listen to music.",
+     "meaningCN": "我慢慢吃，听着音乐。",
+     "chunks": []
+    },
+    {
+     "id": "L03s27",
+     "text": "Next time, I will check the order before I leave.",
+     "meaningCN": "下次离开前我会先检查订单。",
+     "chunks": []
+    },
+    {
+     "id": "L03s28",
+     "text": "It is a small mistake, but the shop fixes it well.",
+     "meaningCN": "这是个小失误，但店里处理得很好。",
+     "chunks": []
+    },
+    {
+     "id": "L03s29",
+     "text": "I put the empty boxes in the bin.",
+     "meaningCN": "我把空盒子扔进垃圾桶。",
+     "chunks": []
+    },
+    {
+     "id": "L03s30",
+     "text": "Then I wash my hands and make some tea.",
+     "meaningCN": "然后洗手泡了杯茶。",
+     "chunks": []
+    },
+    {
+     "id": "L03s31",
+     "text": "The rain is still falling outside.",
+     "meaningCN": "外面雨还在下。",
+     "chunks": []
+    },
+    {
+     "id": "L03s32",
+     "text": "I open a book but fall asleep on the sofa.",
+     "meaningCN": "我打开书，却在沙发上睡着了。",
+     "chunks": []
+    },
+    {
+     "id": "L03s33",
+     "text": "It was a busy night, but everything worked out.",
+     "meaningCN": "这是个忙碌的夜晚，但一切都解决了。",
+     "chunks": []
+    },
+    {
+     "id": "L03s34",
+     "text": "I turn off the lamp and go to bed.",
+     "meaningCN": "我关灯上床。",
+     "chunks": []
+    },
+    {
+     "id": "L03s35",
+     "text": "The rain stops before midnight.",
+     "meaningCN": "雨在午夜前停了。",
+     "chunks": []
+    },
+    {
+     "id": "L03s36",
+     "text": "Tomorrow I will cook something simple.",
+     "meaningCN": "明天我要做点简单的饭菜。",
+     "chunks": []
+    },
+    {
+     "id": "L03s37",
+     "text": "For now, I just want to sleep.",
+     "meaningCN": "现在，我只想睡觉。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L04",
+   "title": "Checking In at the Airport",
+   "scene": "airport",
+   "sceneLabel": "机场",
+   "summaryCN": "机场值机：托运行李、登机牌、座位与登机口。",
+   "updatedAt": "2026-10-22",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L04s1",
+     "text": "My flight leaves at nine, so I arrive at the airport at seven.",
+     "meaningCN": "航班九点起飞，所以我七点就到了机场。",
+     "chunks": [
+      {
+       "id": "i04",
+       "text": "the airport",
+       "meaningCN": "机场"
+      }
+     ]
+    },
+    {
+     "id": "L04s2",
+     "text": "The airport is busy, but the signs are clear.",
+     "meaningCN": "机场很忙，但指示牌很清楚。",
+     "chunks": []
+    },
+    {
+     "id": "L04s3",
+     "text": "I need to check in for my flight to London.",
+     "meaningCN": "我需要办理去伦敦的航班值机。",
+     "chunks": [
+      {
+       "id": "t01",
+       "text": "check in",
+       "meaningCN": "办理入住"
+      }
+     ]
+    },
+    {
+     "id": "L04s4",
+     "text": "I walk to the counter and show my passport.",
+     "meaningCN": "我走到柜台，出示护照。",
+     "chunks": []
+    },
+    {
+     "id": "L04s5",
+     "text": "The woman asks if I want a window seat.",
+     "meaningCN": "工作人员问我要不要靠窗座位。",
+     "chunks": [
+      {
+       "id": "lx_airport_window_seat",
+       "text": "window seat",
+       "meaningCN": "靠窗座位",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L04s6",
+     "text": "I say yes, and she prints my boarding pass.",
+     "meaningCN": "我说要，她打印了我的登机牌。",
+     "chunks": [
+      {
+       "id": "lx_airport_boarding_pass",
+       "text": "boarding pass",
+       "meaningCN": "登机牌",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L04s7",
+     "text": "My friend prefers an aisle seat.",
+     "meaningCN": "朋友更喜欢靠过道的座位。",
+     "chunks": [
+      {
+       "id": "lx_airport_an_aisle_seat",
+       "text": "an aisle seat",
+       "meaningCN": "靠过道的座位",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L04s8",
+     "text": "She books it for him without any trouble.",
+     "meaningCN": "她顺利地为朋友订好了。",
+     "chunks": []
+    },
+    {
+     "id": "L04s9",
+     "text": "The woman tells me the gate number.",
+     "meaningCN": "她告诉我登机口号码。",
+     "chunks": []
+    },
+    {
+     "id": "L04s10",
+     "text": "I ask where is the security check.",
+     "meaningCN": "我问安检在哪里。",
+     "chunks": [
+      {
+       "id": "h01",
+       "text": "where is",
+       "meaningCN": "…在哪里"
+      }
+     ]
+    },
+    {
+     "id": "L04s11",
+     "text": "She says go straight and turn right at the coffee shop.",
+     "meaningCN": "她说一直走，在咖啡店右转。",
+     "chunks": [
+      {
+       "id": "h02",
+       "text": "go straight",
+       "meaningCN": "直走"
+      }
+     ]
+    },
+    {
+     "id": "L04s12",
+     "text": "I follow her direction and join the line.",
+     "meaningCN": "我按她说的走，加入了队伍。",
+     "chunks": []
+    },
+    {
+     "id": "L04s13",
+     "text": "The line moves faster than I expect.",
+     "meaningCN": "队伍比我想象的快。",
+     "chunks": []
+    },
+    {
+     "id": "L04s14",
+     "text": "I put my bag on the belt and walk through.",
+     "meaningCN": "我把包放上传送带，走了过去。",
+     "chunks": []
+    },
+    {
+     "id": "L04s15",
+     "text": "My flight is on time today.",
+     "meaningCN": "我的航班今天准点。",
+     "chunks": [
+      {
+       "id": "j13",
+       "text": "on time",
+       "meaningCN": "准时"
+      }
+     ]
+    },
+    {
+     "id": "L04s16",
+     "text": "I find a seat near the gate and check my email.",
+     "meaningCN": "我在登机口附近找了个座位，查看邮件。",
+     "chunks": []
+    },
+    {
+     "id": "L04s17",
+     "text": "A family with two children sits beside me.",
+     "meaningCN": "一家带着两个孩子的人坐在我旁边。",
+     "chunks": []
+    },
+    {
+     "id": "L04s18",
+     "text": "The children are excited about the trip.",
+     "meaningCN": "孩子们对旅行很兴奋。",
+     "chunks": []
+    },
+    {
+     "id": "L04s19",
+     "text": "I buy a bottle of water and a small snack.",
+     "meaningCN": "我买了一瓶水和一份小零食。",
+     "chunks": []
+    },
+    {
+     "id": "L04s20",
+     "text": "I hear an announcement about boarding.",
+     "meaningCN": "我听到登机广播。",
+     "chunks": []
+    },
+    {
+     "id": "L04s21",
+     "text": "I look at my boarding pass again.",
+     "meaningCN": "我又看了一眼登机牌。",
+     "chunks": []
+    },
+    {
+     "id": "L04s22",
+     "text": "The gate is close, so I walk slowly.",
+     "meaningCN": "登机口很近，所以我慢慢走。",
+     "chunks": []
+    },
+    {
+     "id": "L04s23",
+     "text": "I call my friend and tell him I am ready.",
+     "meaningCN": "我给朋友打电话，说我准备好了。",
+     "chunks": []
+    },
+    {
+     "id": "L04s24",
+     "text": "He says he is near the gate already.",
+     "meaningCN": "他说他已经到登机口附近了。",
+     "chunks": []
+    },
+    {
+     "id": "L04s25",
+     "text": "We meet at the window and watch the planes.",
+     "meaningCN": "我们在窗边碰面，看着飞机。",
+     "chunks": []
+    },
+    {
+     "id": "L04s26",
+     "text": "The sky is bright, and the runway is long.",
+     "meaningCN": "天空明亮，跑道很长。",
+     "chunks": []
+    },
+    {
+     "id": "L04s27",
+     "text": "We board the plane at half past eight.",
+     "meaningCN": "我们八点半登机。",
+     "chunks": []
+    },
+    {
+     "id": "L04s28",
+     "text": "It is the start of a short holiday.",
+     "meaningCN": "一段短假开始了。",
+     "chunks": []
+    },
+    {
+     "id": "L04s29",
+     "text": "The plane pushes back from the gate.",
+     "meaningCN": "飞机从登机口推出。",
+     "chunks": []
+    },
+    {
+     "id": "L04s30",
+     "text": "The crew shows us how to use the life jacket.",
+     "meaningCN": "机组人员演示救生衣的用法。",
+     "chunks": []
+    },
+    {
+     "id": "L04s31",
+     "text": "I put my bag under the seat.",
+     "meaningCN": "我把包放在座位下面。",
+     "chunks": []
+    },
+    {
+     "id": "L04s32",
+     "text": "The engine is loud, and the plane begins to move.",
+     "meaningCN": "引擎很响，飞机开始移动。",
+     "chunks": []
+    },
+    {
+     "id": "L04s33",
+     "text": "I look out of the window as the city gets smaller.",
+     "meaningCN": "我看着窗外，城市越来越小。",
+     "chunks": []
+    },
+    {
+     "id": "L04s34",
+     "text": "Soon we are above the clouds.",
+     "meaningCN": "很快我们就到了云层之上。",
+     "chunks": []
+    },
+    {
+     "id": "L04s35",
+     "text": "I close my eyes and listen to the engines.",
+     "meaningCN": "我闭上眼睛，听着引擎声。",
+     "chunks": []
+    },
+    {
+     "id": "L04s36",
+     "text": "In two hours, I will be in a new city.",
+     "meaningCN": "两小时后，我就会到一座新城市。",
+     "chunks": []
+    },
+    {
+     "id": "L04s37",
+     "text": "I smile and think about the holiday.",
+     "meaningCN": "我微笑着，想着假期。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L05",
+   "title": "Through Security to the Gate",
+   "scene": "airport",
+   "sceneLabel": "机场",
+   "summaryCN": "安检到登机口：方向、时间、登机牌与登机组。",
+   "updatedAt": "2026-10-20",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L05s1",
+     "text": "I arrive at the airport with my small bag.",
+     "meaningCN": "我带着小包到达机场。",
+     "chunks": [
+      {
+       "id": "i04",
+       "text": "the airport",
+       "meaningCN": "机场"
+      }
+     ]
+    },
+    {
+     "id": "L05s2",
+     "text": "The security check is at the end of the hall.",
+     "meaningCN": "安检在大厅尽头。",
+     "chunks": [
+      {
+       "id": "lx_airport_security_check",
+       "text": "security check",
+       "meaningCN": "安检",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L05s3",
+     "text": "A staff member tells me to go straight.",
+     "meaningCN": "一位工作人员让我一直走。",
+     "chunks": [
+      {
+       "id": "h02",
+       "text": "go straight",
+       "meaningCN": "直走"
+      }
+     ]
+    },
+    {
+     "id": "L05s4",
+     "text": "Then I should turn left after the shops.",
+     "meaningCN": "然后过了商店后左转。",
+     "chunks": [
+      {
+       "id": "h03",
+       "text": "turn left",
+       "meaningCN": "左转"
+      }
+     ]
+    },
+    {
+     "id": "L05s5",
+     "text": "I ask what time boarding starts.",
+     "meaningCN": "我问几点开始登机。",
+     "chunks": [
+      {
+       "id": "j01",
+       "text": "what time",
+       "meaningCN": "几点"
+      }
+     ]
+    },
+    {
+     "id": "L05s6",
+     "text": "He says it starts at ten fifteen.",
+     "meaningCN": "他说十点十五开始。",
+     "chunks": []
+    },
+    {
+     "id": "L05s7",
+     "text": "I don't understand the gate number.",
+     "meaningCN": "我没听懂登机口号码。",
+     "chunks": [
+      {
+       "id": "r01",
+       "text": "I don't understand",
+       "meaningCN": "我没听懂"
+      },
+      {
+       "id": "lx_airport_gate_number",
+       "text": "gate number",
+       "meaningCN": "登机口号码",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L05s8",
+     "text": "He repeats it slowly and points at the screen.",
+     "meaningCN": "他慢慢重复，并指着屏幕。",
+     "chunks": []
+    },
+    {
+     "id": "L05s9",
+     "text": "I thank him and walk to the line.",
+     "meaningCN": "我道谢后走向队伍。",
+     "chunks": []
+    },
+    {
+     "id": "L05s10",
+     "text": "The line is long, but it moves quickly.",
+     "meaningCN": "队伍很长，但移动得很快。",
+     "chunks": []
+    },
+    {
+     "id": "L05s11",
+     "text": "I take out my laptop and my liquids.",
+     "meaningCN": "我拿出笔记本电脑和液体。",
+     "chunks": []
+    },
+    {
+     "id": "L05s12",
+     "text": "A woman checks my boarding pass.",
+     "meaningCN": "一位女士检查我的登机牌。",
+     "chunks": []
+    },
+    {
+     "id": "L05s13",
+     "text": "She asks me to step through the scanner.",
+     "meaningCN": "她让我走过扫描仪。",
+     "chunks": []
+    },
+    {
+     "id": "L05s14",
+     "text": "My bag is clear, and I pick it up.",
+     "meaningCN": "我的包没问题，我把它拿起来。",
+     "chunks": []
+    },
+    {
+     "id": "L05s15",
+     "text": "I look for a boarding group on the screen.",
+     "meaningCN": "我在屏幕上寻找登机组。",
+     "chunks": [
+      {
+       "id": "lx_airport_a_boarding_group",
+       "text": "a boarding group",
+       "meaningCN": "登机组",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L05s16",
+     "text": "The screen shows that my flight is boarding.",
+     "meaningCN": "屏幕显示我的航班正在登机。",
+     "chunks": []
+    },
+    {
+     "id": "L05s17",
+     "text": "I walk to the gate and find a free seat.",
+     "meaningCN": "我走到登机口，找了个空位。",
+     "chunks": []
+    },
+    {
+     "id": "L05s18",
+     "text": "A man is charging his phone near the window.",
+     "meaningCN": "一个男人在窗边给手机充电。",
+     "chunks": []
+    },
+    {
+     "id": "L05s19",
+     "text": "A child is sleeping on her mother's lap.",
+     "meaningCN": "一个孩子睡在妈妈腿上。",
+     "chunks": []
+    },
+    {
+     "id": "L05s20",
+     "text": "I buy a coffee and sit down.",
+     "meaningCN": "我买了杯咖啡坐下。",
+     "chunks": []
+    },
+    {
+     "id": "L05s21",
+     "text": "I check my passport and my ticket.",
+     "meaningCN": "我检查护照和机票。",
+     "chunks": []
+    },
+    {
+     "id": "L05s22",
+     "text": "The gate agent calls my group.",
+     "meaningCN": "登机口工作人员叫到我的组。",
+     "chunks": []
+    },
+    {
+     "id": "L05s23",
+     "text": "I stand up and join the line.",
+     "meaningCN": "我起身加入队伍。",
+     "chunks": []
+    },
+    {
+     "id": "L05s24",
+     "text": "The plane is ready, and the crew is smiling.",
+     "meaningCN": "飞机准备好了，机组人员在微笑。",
+     "chunks": []
+    },
+    {
+     "id": "L05s25",
+     "text": "I send a message to my family.",
+     "meaningCN": "我给家人发了条消息。",
+     "chunks": []
+    },
+    {
+     "id": "L05s26",
+     "text": "They wish me a safe flight.",
+     "meaningCN": "他们祝我一路平安。",
+     "chunks": []
+    },
+    {
+     "id": "L05s27",
+     "text": "I walk through the door and onto the plane.",
+     "meaningCN": "我穿过门，走上飞机。",
+     "chunks": []
+    },
+    {
+     "id": "L05s28",
+     "text": "The seat is small, but the window is clear.",
+     "meaningCN": "座位很小，但窗户很明亮。",
+     "chunks": []
+    },
+    {
+     "id": "L05s29",
+     "text": "The agent scans my boarding pass.",
+     "meaningCN": "工作人员扫描我的登机牌。",
+     "chunks": []
+    },
+    {
+     "id": "L05s30",
+     "text": "I walk down the bridge and into the plane.",
+     "meaningCN": "我走过廊桥，进入机舱。",
+     "chunks": []
+    },
+    {
+     "id": "L05s31",
+     "text": "A flight attendant greets me with a smile.",
+     "meaningCN": "一位空乘微笑着迎接我。",
+     "chunks": []
+    },
+    {
+     "id": "L05s32",
+     "text": "I find my seat and put my bag above.",
+     "meaningCN": "我找到座位，把包放上去。",
+     "chunks": []
+    },
+    {
+     "id": "L05s33",
+     "text": "The passenger beside me is reading a map.",
+     "meaningCN": "旁边的乘客在看地图。",
+     "chunks": []
+    },
+    {
+     "id": "L05s34",
+     "text": "I fasten my seat belt and wait.",
+     "meaningCN": "我系好安全带，等待起飞。",
+     "chunks": []
+    },
+    {
+     "id": "L05s35",
+     "text": "The plane is full, and the crew is busy.",
+     "meaningCN": "飞机坐满了，机组人员很忙。",
+     "chunks": []
+    },
+    {
+     "id": "L05s36",
+     "text": "I put on my headphones and choose some music.",
+     "meaningCN": "我戴上耳机，选了些音乐。",
+     "chunks": []
+    },
+    {
+     "id": "L05s37",
+     "text": "The engines start, and the plane moves slowly.",
+     "meaningCN": "引擎启动，飞机缓缓移动。",
+     "chunks": []
+    },
+    {
+     "id": "L05s38",
+     "text": "I am ready for the flight.",
+     "meaningCN": "我准备好起飞了。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L06",
+   "title": "A Delayed Flight",
+   "scene": "airport",
+   "sceneLabel": "机场",
+   "summaryCN": "航班延误后的转机、行李与出租车，练求助与时间表达。",
+   "updatedAt": "2026-10-18",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L06s1",
+     "text": "I land at the airport and check my connecting flight.",
+     "meaningCN": "我降落机场，查看转机航班。",
+     "chunks": [
+      {
+       "id": "lx_airport_connecting_flight",
+       "text": "connecting flight",
+       "meaningCN": "转机航班",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L06s2",
+     "text": "The weather is bad, and it is rainy outside.",
+     "meaningCN": "天气不好，外面在下雨。",
+     "chunks": [
+      {
+       "id": "k02",
+       "text": "it is rainy",
+       "meaningCN": "下雨天"
+      }
+     ]
+    },
+    {
+     "id": "L06s3",
+     "text": "I have an umbrella, but my bag is heavy.",
+     "meaningCN": "我带了伞，但包很重。",
+     "chunks": [
+      {
+       "id": "k13",
+       "text": "an umbrella",
+       "meaningCN": "雨伞"
+      }
+     ]
+    },
+    {
+     "id": "L06s4",
+     "text": "The screen says my next flight is delayed.",
+     "meaningCN": "屏幕显示我的下一班航班延误了。",
+     "chunks": []
+    },
+    {
+     "id": "L06s5",
+     "text": "I ask a staff member what I should do right now.",
+     "meaningCN": "我问工作人员现在该怎么办。",
+     "chunks": [
+      {
+       "id": "j02",
+       "text": "right now",
+       "meaningCN": "现在"
+      }
+     ]
+    },
+    {
+     "id": "L06s6",
+     "text": "She says the flight will leave a bit later.",
+     "meaningCN": "她说航班会晚一点起飞。",
+     "chunks": [
+      {
+       "id": "j03",
+       "text": "a bit later",
+       "meaningCN": "稍晚一点"
+      }
+     ]
+    },
+    {
+     "id": "L06s7",
+     "text": "I need to find baggage claim first.",
+     "meaningCN": "我得先去找行李提取处。",
+     "chunks": [
+      {
+       "id": "lx_airport_baggage_claim",
+       "text": "baggage claim",
+       "meaningCN": "行李提取处",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L06s8",
+     "text": "The signs are hard to read in the crowd.",
+     "meaningCN": "人群里很难看清指示牌。",
+     "chunks": []
+    },
+    {
+     "id": "L06s9",
+     "text": "I follow the other passengers down the stairs.",
+     "meaningCN": "我跟着其他乘客下楼。",
+     "chunks": []
+    },
+    {
+     "id": "L06s10",
+     "text": "A train takes us to the main building.",
+     "meaningCN": "一列小火车把我们带到主楼。",
+     "chunks": []
+    },
+    {
+     "id": "L06s11",
+     "text": "The station is warm and full of noise.",
+     "meaningCN": "车站很暖和，充满了嘈杂声。",
+     "chunks": [
+      {
+       "id": "i03",
+       "text": "the station",
+       "meaningCN": "车站"
+      }
+     ]
+    },
+    {
+     "id": "L06s12",
+     "text": "I wait near the baggage belt for twenty minutes.",
+     "meaningCN": "我在行李传送带旁等了二十分钟。",
+     "chunks": []
+    },
+    {
+     "id": "L06s13",
+     "text": "My suitcase finally appears on the belt.",
+     "meaningCN": "我的行李箱终于出现在传送带上。",
+     "chunks": []
+    },
+    {
+     "id": "L06s14",
+     "text": "I take a taxi stand outside the door.",
+     "meaningCN": "我在门外找到了出租车候车点。",
+     "chunks": [
+      {
+       "id": "lx_airport_a_taxi_stand",
+       "text": "a taxi stand",
+       "meaningCN": "出租车候车点",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L06s15",
+     "text": "The line for taxis is very long.",
+     "meaningCN": "等出租车的人排得很长。",
+     "chunks": []
+    },
+    {
+     "id": "L06s16",
+     "text": "A driver offers to take me to the city.",
+     "meaningCN": "一位司机主动载我去市区。",
+     "chunks": []
+    },
+    {
+     "id": "L06s17",
+     "text": "I ask him if he can drive faster.",
+     "meaningCN": "我问他能不能开快一点。",
+     "chunks": []
+    },
+    {
+     "id": "L06s18",
+     "text": "He laughs and says the traffic is terrible.",
+     "meaningCN": "他笑着说交通太糟了。",
+     "chunks": []
+    },
+    {
+     "id": "L06s19",
+     "text": "We drive through the rain and the lights.",
+     "meaningCN": "我们穿过雨幕和灯光。",
+     "chunks": []
+    },
+    {
+     "id": "L06s20",
+     "text": "I call my hotel and say I will arrive late.",
+     "meaningCN": "我给酒店打电话，说我会晚到。",
+     "chunks": []
+    },
+    {
+     "id": "L06s21",
+     "text": "The hotel clerk says my room is ready.",
+     "meaningCN": "酒店前台说房间已经准备好了。",
+     "chunks": []
+    },
+    {
+     "id": "L06s22",
+     "text": "I feel tired but relieved.",
+     "meaningCN": "我累了，但松了口气。",
+     "chunks": []
+    },
+    {
+     "id": "L06s23",
+     "text": "The taxi stops in front of the hotel.",
+     "meaningCN": "出租车停在酒店门口。",
+     "chunks": []
+    },
+    {
+     "id": "L06s24",
+     "text": "I pay the driver and give him a tip.",
+     "meaningCN": "我付了车费，还给了小费。",
+     "chunks": []
+    },
+    {
+     "id": "L06s25",
+     "text": "The rain is still falling, but I am dry.",
+     "meaningCN": "雨还在下，但我是干的。",
+     "chunks": []
+    },
+    {
+     "id": "L06s26",
+     "text": "I check in and go straight to my room.",
+     "meaningCN": "我办了入住，直接回房间。",
+     "chunks": []
+    },
+    {
+     "id": "L06s27",
+     "text": "Tomorrow I will take the early train.",
+     "meaningCN": "明天我要坐早班火车。",
+     "chunks": []
+    },
+    {
+     "id": "L06s28",
+     "text": "For now, I just want to sleep.",
+     "meaningCN": "现在，我只想睡觉。",
+     "chunks": []
+    },
+    {
+     "id": "L06s29",
+     "text": "I open the window and listen to the rain.",
+     "meaningCN": "我打开窗，听雨声。",
+     "chunks": []
+    },
+    {
+     "id": "L06s30",
+     "text": "The room is small, but the bed is soft.",
+     "meaningCN": "房间不大，但床很软。",
+     "chunks": []
+    },
+    {
+     "id": "L06s31",
+     "text": "I put my wet coat on a chair.",
+     "meaningCN": "我把湿外套放在椅子上。",
+     "chunks": []
+    },
+    {
+     "id": "L06s32",
+     "text": "I set an alarm for six.",
+     "meaningCN": "我把闹钟定在六点。",
+     "chunks": []
+    },
+    {
+     "id": "L06s33",
+     "text": "Then I turn off the light.",
+     "meaningCN": "然后关了灯。",
+     "chunks": []
+    },
+    {
+     "id": "L06s34",
+     "text": "Tomorrow will be a better day.",
+     "meaningCN": "明天会更好。",
+     "chunks": []
+    },
+    {
+     "id": "L06s35",
+     "text": "I hear the rain on the window and feel calm.",
+     "meaningCN": "我听着窗上的雨声，感到平静。",
+     "chunks": []
+    },
+    {
+     "id": "L06s36",
+     "text": "The hotel is quiet, and the city is far away.",
+     "meaningCN": "酒店很安静，城市仿佛很远。",
+     "chunks": []
+    },
+    {
+     "id": "L06s37",
+     "text": "I close my eyes and let the day go.",
+     "meaningCN": "我闭上眼，把这一天放下。",
+     "chunks": []
+    },
+    {
+     "id": "L06s38",
+     "text": "Tomorrow I will start again with a clear plan.",
+     "meaningCN": "明天我会带着清晰的计划重新开始。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L07",
+   "title": "First Day at the Office",
+   "scene": "work",
+   "sceneLabel": "职场",
+   "summaryCN": "入职第一天：自我介绍、工牌、会议室与茶歇。",
+   "updatedAt": "2026-10-23",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L07s1",
+     "text": "Today is my first day at the office.",
+     "meaningCN": "今天是我到办公室的第一天。",
+     "chunks": []
+    },
+    {
+     "id": "L07s2",
+     "text": "I get up early and go to work by bus.",
+     "meaningCN": "我早起坐公交去上班。",
+     "chunks": [
+      {
+       "id": "s13",
+       "text": "go to work",
+       "meaningCN": "去上班"
+      }
+     ]
+    },
+    {
+     "id": "L07s3",
+     "text": "The building is tall, and the lobby is bright.",
+     "meaningCN": "大楼很高，大堂很明亮。",
+     "chunks": []
+    },
+    {
+     "id": "L07s4",
+     "text": "A woman at the desk gives me a badge.",
+     "meaningCN": "前台女士给了我一张工牌。",
+     "chunks": [
+      {
+       "id": "lx_work_a_badge",
+       "text": "a badge",
+       "meaningCN": "工牌",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L07s5",
+     "text": "She says my name is on the list.",
+     "meaningCN": "她说名单上有我的名字。",
+     "chunks": [
+      {
+       "id": "a05",
+       "text": "my name is",
+       "meaningCN": "我的名字是"
+      }
+     ]
+    },
+    {
+     "id": "L07s6",
+     "text": "I meet my manager near the elevator.",
+     "meaningCN": "我在电梯旁见到了经理。",
+     "chunks": []
+    },
+    {
+     "id": "L07s7",
+     "text": "He says nice to meet you and shakes my hand.",
+     "meaningCN": "他说很高兴认识我，和我握手。",
+     "chunks": [
+      {
+       "id": "a07",
+       "text": "nice to meet you",
+       "meaningCN": "很高兴认识你"
+      }
+     ]
+    },
+    {
+     "id": "L07s8",
+     "text": "He shows me the meeting room.",
+     "meaningCN": "他带我看会议室。",
+     "chunks": [
+      {
+       "id": "lx_work_the_meeting_room",
+       "text": "the meeting room",
+       "meaningCN": "会议室",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L07s9",
+     "text": "The room has a long table and a large screen.",
+     "meaningCN": "房间里有一张长桌和一块大屏幕。",
+     "chunks": []
+    },
+    {
+     "id": "L07s10",
+     "text": "My desk is near the window.",
+     "meaningCN": "我的工位在窗边。",
+     "chunks": []
+    },
+    {
+     "id": "L07s11",
+     "text": "Could you help me please with the computer?",
+     "meaningCN": "你能帮我弄一下电脑吗？",
+     "chunks": [
+      {
+       "id": "o03",
+       "text": "help me please",
+       "meaningCN": "请帮帮我"
+      }
+     ]
+    },
+    {
+     "id": "L07s12",
+     "text": "I don't understand the password system.",
+     "meaningCN": "我不懂这个密码系统。",
+     "chunks": [
+      {
+       "id": "r01",
+       "text": "I don't understand",
+       "meaningCN": "我没听懂"
+      }
+     ]
+    },
+    {
+     "id": "L07s13",
+     "text": "She explains it again and writes it down.",
+     "meaningCN": "她又解释了一遍，并写下来。",
+     "chunks": []
+    },
+    {
+     "id": "L07s14",
+     "text": "At ten, we take a coffee break.",
+     "meaningCN": "十点，我们去茶歇。",
+     "chunks": [
+      {
+       "id": "lx_work_a_coffee_break",
+       "text": "a coffee break",
+       "meaningCN": "茶歇",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L07s15",
+     "text": "The coffee is strong, and the biscuits are good.",
+     "meaningCN": "咖啡很浓，饼干很好吃。",
+     "chunks": []
+    },
+    {
+     "id": "L07s16",
+     "text": "Everyone asks me where I am from.",
+     "meaningCN": "大家问我是哪里人。",
+     "chunks": []
+    },
+    {
+     "id": "L07s17",
+     "text": "I tell them about my city and my family.",
+     "meaningCN": "我跟他们讲我的城市和家庭。",
+     "chunks": []
+    },
+    {
+     "id": "L07s18",
+     "text": "They ask me about my old job.",
+     "meaningCN": "他们问我以前的工作。",
+     "chunks": []
+    },
+    {
+     "id": "L07s19",
+     "text": "I say I like the team already.",
+     "meaningCN": "我说我已经喜欢上这个团队了。",
+     "chunks": []
+    },
+    {
+     "id": "L07s20",
+     "text": "At noon, we eat lunch together.",
+     "meaningCN": "中午我们一起吃午饭。",
+     "chunks": []
+    },
+    {
+     "id": "L07s21",
+     "text": "The food is simple, but the conversation is warm.",
+     "meaningCN": "饭菜简单，但聊天很温暖。",
+     "chunks": []
+    },
+    {
+     "id": "L07s22",
+     "text": "In the afternoon, I read some documents.",
+     "meaningCN": "下午我读了一些文件。",
+     "chunks": []
+    },
+    {
+     "id": "L07s23",
+     "text": "I ask a lot of questions.",
+     "meaningCN": "我问了很多问题。",
+     "chunks": []
+    },
+    {
+     "id": "L07s24",
+     "text": "My manager says it is normal on the first day.",
+     "meaningCN": "经理说第一天这样很正常。",
+     "chunks": []
+    },
+    {
+     "id": "L07s25",
+     "text": "I leave the office at six.",
+     "meaningCN": "我六点离开办公室。",
+     "chunks": []
+    },
+    {
+     "id": "L07s26",
+     "text": "The city lights are bright on the way home.",
+     "meaningCN": "回家路上城市灯火明亮。",
+     "chunks": []
+    },
+    {
+     "id": "L07s27",
+     "text": "I feel tired but happy.",
+     "meaningCN": "我累但开心。",
+     "chunks": []
+    },
+    {
+     "id": "L07s28",
+     "text": "Tomorrow I will know more names.",
+     "meaningCN": "明天我会记住更多名字。",
+     "chunks": []
+    },
+    {
+     "id": "L07s29",
+     "text": "At home, I write down the names I learned.",
+     "meaningCN": "回家后，我写下学到的名字。",
+     "chunks": []
+    },
+    {
+     "id": "L07s30",
+     "text": "I make a small list for tomorrow.",
+     "meaningCN": "我为明天列了个小清单。",
+     "chunks": []
+    },
+    {
+     "id": "L07s31",
+     "text": "My family asks me about the day.",
+     "meaningCN": "家人问我今天怎么样。",
+     "chunks": []
+    },
+    {
+     "id": "L07s32",
+     "text": "I tell them the office is friendly.",
+     "meaningCN": "我告诉他们办公室的人很友好。",
+     "chunks": []
+    },
+    {
+     "id": "L07s33",
+     "text": "I go to bed early.",
+     "meaningCN": "我很早就睡了。",
+     "chunks": []
+    },
+    {
+     "id": "L07s34",
+     "text": "I feel ready for the next morning.",
+     "meaningCN": "我觉得已经准备好迎接第二天早晨。",
+     "chunks": []
+    },
+    {
+     "id": "L07s35",
+     "text": "I set my alarm and put my badge on the desk.",
+     "meaningCN": "我定好闹钟，把工牌放在桌上。",
+     "chunks": []
+    },
+    {
+     "id": "L07s36",
+     "text": "The first day was hard, but the people were kind.",
+     "meaningCN": "第一天很难，但大家都很友善。",
+     "chunks": []
+    },
+    {
+     "id": "L07s37",
+     "text": "I know the building a little better now.",
+     "meaningCN": "我现在对大楼熟悉了一点。",
+     "chunks": []
+    },
+    {
+     "id": "L07s38",
+     "text": "I look forward to my first real project.",
+     "meaningCN": "我期待我的第一个正式项目。",
+     "chunks": []
+    },
+    {
+     "id": "L07s39",
+     "text": "I think I will like working here.",
+     "meaningCN": "我想我会喜欢在这里工作。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L08",
+   "title": "A Busy Monday Meeting",
+   "scene": "work",
+   "sceneLabel": "职场",
+   "summaryCN": "周一例会：议程、分歧、跟进邮件与收尾。",
+   "updatedAt": "2026-10-17",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L08s1",
+     "text": "It is Monday morning, and the office is full of noise.",
+     "meaningCN": "周一早上，办公室很热闹。",
+     "chunks": []
+    },
+    {
+     "id": "L08s2",
+     "text": "We have a team meeting on Monday at nine.",
+     "meaningCN": "我们周一九点开团队会。",
+     "chunks": [
+      {
+       "id": "j08",
+       "text": "on Monday",
+       "meaningCN": "周一"
+      }
+     ]
+    },
+    {
+     "id": "L08s3",
+     "text": "The manager puts the agenda on the screen.",
+     "meaningCN": "经理把议程放在屏幕上。",
+     "chunks": [
+      {
+       "id": "lx_work_the_agenda",
+       "text": "the agenda",
+       "meaningCN": "议程",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L08s4",
+     "text": "The first item is the new project plan.",
+     "meaningCN": "第一项是新项目计划。",
+     "chunks": []
+    },
+    {
+     "id": "L08s5",
+     "text": "I think the plan is too ambitious.",
+     "meaningCN": "我觉得这个计划太激进了。",
+     "chunks": [
+      {
+       "id": "m01",
+       "text": "I think",
+       "meaningCN": "我认为"
+      }
+     ]
+    },
+    {
+     "id": "L08s6",
+     "text": "I agree with the goal, but not the timeline.",
+     "meaningCN": "我同意目标，但不同意时间表。",
+     "chunks": [
+      {
+       "id": "m03",
+       "text": "I agree",
+       "meaningCN": "我同意"
+      }
+     ]
+    },
+    {
+     "id": "L08s7",
+     "text": "Another colleague says I disagree with the cost.",
+     "meaningCN": "另一位同事说他不同意成本。",
+     "chunks": [
+      {
+       "id": "m04",
+       "text": "I disagree",
+       "meaningCN": "我不同意"
+      }
+     ]
+    },
+    {
+     "id": "L08s8",
+     "text": "We discuss the budget for twenty minutes.",
+     "meaningCN": "我们讨论了二十分钟预算。",
+     "chunks": []
+    },
+    {
+     "id": "L08s9",
+     "text": "I was wondering if we could start smaller.",
+     "meaningCN": "我在想我们能不能从小规模开始。",
+     "chunks": [
+      {
+       "id": "o12",
+       "text": "I was wondering",
+       "meaningCN": "我想请教"
+      }
+     ]
+    },
+    {
+     "id": "L08s10",
+     "text": "The manager writes my idea on the board.",
+     "meaningCN": "经理把我的想法写在白板上。",
+     "chunks": []
+    },
+    {
+     "id": "L08s11",
+     "text": "She says that is a good idea.",
+     "meaningCN": "她说这是个好主意。",
+     "chunks": [
+      {
+       "id": "p12",
+       "text": "good idea",
+       "meaningCN": "好主意"
+      }
+     ]
+    },
+    {
+     "id": "L08s12",
+     "text": "We decide to test the plan with one team first.",
+     "meaningCN": "我们决定先在一个团队试点。",
+     "chunks": []
+    },
+    {
+     "id": "L08s13",
+     "text": "After the meeting, I need to follow up by email.",
+     "meaningCN": "会后，我需要发邮件跟进。",
+     "chunks": [
+      {
+       "id": "lx_work_follow_up",
+       "text": "follow up",
+       "meaningCN": "跟进",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L08s14",
+     "text": "I write a short summary and send it to everyone.",
+     "meaningCN": "我写了一份简短总结，发给所有人。",
+     "chunks": []
+    },
+    {
+     "id": "L08s15",
+     "text": "A colleague calls me to check the numbers.",
+     "meaningCN": "一位同事打电话来核对数字。",
+     "chunks": []
+    },
+    {
+     "id": "L08s16",
+     "text": "We find a mistake in the third row.",
+     "meaningCN": "我们发现第三行有个错误。",
+     "chunks": []
+    },
+    {
+     "id": "L08s17",
+     "text": "I correct it and send the file again.",
+     "meaningCN": "我改正后重新发送文件。",
+     "chunks": []
+    },
+    {
+     "id": "L08s18",
+     "text": "At noon, I take a quick break.",
+     "meaningCN": "中午我短暂休息了一下。",
+     "chunks": []
+    },
+    {
+     "id": "L08s19",
+     "text": "The afternoon is quieter than the morning.",
+     "meaningCN": "下午比上午安静。",
+     "chunks": []
+    },
+    {
+     "id": "L08s20",
+     "text": "I finish two reports and answer many messages.",
+     "meaningCN": "我完成两份报告，回复了很多消息。",
+     "chunks": []
+    },
+    {
+     "id": "L08s21",
+     "text": "At five, I review my notes from the meeting.",
+     "meaningCN": "五点，我回顾会议笔记。",
+     "chunks": []
+    },
+    {
+     "id": "L08s22",
+     "text": "The plan is clearer now.",
+     "meaningCN": "计划现在更清楚了。",
+     "chunks": []
+    },
+    {
+     "id": "L08s23",
+     "text": "I make a list for Tuesday.",
+     "meaningCN": "我为周二列了清单。",
+     "chunks": []
+    },
+    {
+     "id": "L08s24",
+     "text": "I leave the office after six.",
+     "meaningCN": "我六点后离开办公室。",
+     "chunks": []
+    },
+    {
+     "id": "L08s25",
+     "text": "The bus is crowded, but I find a seat.",
+     "meaningCN": "公交很挤，但我找到了座位。",
+     "chunks": []
+    },
+    {
+     "id": "L08s26",
+     "text": "I listen to music and watch the city.",
+     "meaningCN": "我听音乐，看着城市。",
+     "chunks": []
+    },
+    {
+     "id": "L08s27",
+     "text": "It was a long day, but we made progress.",
+     "meaningCN": "今天很长，但我们有进展。",
+     "chunks": []
+    },
+    {
+     "id": "L08s28",
+     "text": "Tomorrow we will follow up with the client.",
+     "meaningCN": "明天我们会跟进客户。",
+     "chunks": []
+    },
+    {
+     "id": "L08s29",
+     "text": "I buy a sandwich and eat it in the park.",
+     "meaningCN": "我买了个三明治，在公园吃。",
+     "chunks": []
+    },
+    {
+     "id": "L08s30",
+     "text": "The sun comes out for a few minutes.",
+     "meaningCN": "太阳出来了几分钟。",
+     "chunks": []
+    },
+    {
+     "id": "L08s31",
+     "text": "I check my messages before I go back.",
+     "meaningCN": "回去前我查看了消息。",
+     "chunks": []
+    },
+    {
+     "id": "L08s32",
+     "text": "The afternoon passes quickly.",
+     "meaningCN": "下午过得很快。",
+     "chunks": []
+    },
+    {
+     "id": "L08s33",
+     "text": "At six, I pack my bag and leave.",
+     "meaningCN": "六点，我收拾包离开。",
+     "chunks": []
+    },
+    {
+     "id": "L08s34",
+     "text": "I will sleep well tonight.",
+     "meaningCN": "今晚我会睡得很好。",
+     "chunks": []
+    },
+    {
+     "id": "L08s35",
+     "text": "The meeting was long, but the result was clear.",
+     "meaningCN": "会议很长，但结果很清楚。",
+     "chunks": []
+    },
+    {
+     "id": "L08s36",
+     "text": "I am glad we tested the plan first.",
+     "meaningCN": "我很高兴我们先做了试点。",
+     "chunks": []
+    },
+    {
+     "id": "L08s37",
+     "text": "Next week, we will check the numbers again.",
+     "meaningCN": "下周我们会再核对数字。",
+     "chunks": []
+    },
+    {
+     "id": "L08s38",
+     "text": "I close my laptop and say good night to the team.",
+     "meaningCN": "我合上电脑，和团队道晚安。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L09",
+   "title": "Making an Appointment",
+   "scene": "hospital",
+   "sceneLabel": "医院",
+   "summaryCN": "医院预约与就诊：时间、保险卡、候诊室和用药叮嘱。",
+   "updatedAt": "2026-10-21",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L09s1",
+     "text": "I feel sick, so I call a hospital near my home.",
+     "meaningCN": "我不舒服，所以打电话给家附近的医院。",
+     "chunks": [
+      {
+       "id": "i05",
+       "text": "a hospital",
+       "meaningCN": "医院"
+      }
+     ]
+    },
+    {
+     "id": "L09s2",
+     "text": "I need an appointment with a doctor.",
+     "meaningCN": "我需要预约看医生。",
+     "chunks": [
+      {
+       "id": "lx_hospital_an_appointment",
+       "text": "an appointment",
+       "meaningCN": "预约",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L09s3",
+     "text": "The woman on the phone asks what time I can come.",
+     "meaningCN": "电话里的女士问我几点能来。",
+     "chunks": [
+      {
+       "id": "j01",
+       "text": "what time",
+       "meaningCN": "几点"
+      }
+     ]
+    },
+    {
+     "id": "L09s4",
+     "text": "Could you repeat the address, please?",
+     "meaningCN": "你能重复一下地址吗？",
+     "chunks": [
+      {
+       "id": "o01",
+       "text": "could you",
+       "meaningCN": "您能…吗"
+      }
+     ]
+    },
+    {
+     "id": "L09s5",
+     "text": "Please speak slowly and give me the street name.",
+     "meaningCN": "请说慢一点，告诉我街道名。",
+     "chunks": [
+      {
+       "id": "r03",
+       "text": "speak slowly",
+       "meaningCN": "说慢点"
+      }
+     ]
+    },
+    {
+     "id": "L09s6",
+     "text": "I write it down and thank her.",
+     "meaningCN": "我记下来并道谢。",
+     "chunks": []
+    },
+    {
+     "id": "L09s7",
+     "text": "She asks for the insurance card at the desk.",
+     "meaningCN": "她在前台要保险卡。",
+     "chunks": [
+      {
+       "id": "lx_hospital_the_insurance_card",
+       "text": "the insurance card",
+       "meaningCN": "保险卡",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L09s8",
+     "text": "I read the number from my card.",
+     "meaningCN": "我从卡上读出号码。",
+     "chunks": []
+    },
+    {
+     "id": "L09s9",
+     "text": "She says the waiting room is on the second floor.",
+     "meaningCN": "她说候诊室在二楼。",
+     "chunks": [
+      {
+       "id": "lx_hospital_the_waiting_room",
+       "text": "the waiting room",
+       "meaningCN": "候诊室",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L09s10",
+     "text": "I arrive early and sit near the window.",
+     "meaningCN": "我提前到，坐在窗边。",
+     "chunks": []
+    },
+    {
+     "id": "L09s11",
+     "text": "The waiting room is quiet and clean.",
+     "meaningCN": "候诊室安静又干净。",
+     "chunks": []
+    },
+    {
+     "id": "L09s12",
+     "text": "A nurse calls my name and checks my temperature.",
+     "meaningCN": "护士叫我的名字，量了体温。",
+     "chunks": []
+    },
+    {
+     "id": "L09s13",
+     "text": "Could you help me please with the form?",
+     "meaningCN": "你能帮我填一下表吗？",
+     "chunks": [
+      {
+       "id": "o03",
+       "text": "help me please",
+       "meaningCN": "请帮帮我"
+      }
+     ]
+    },
+    {
+     "id": "L09s14",
+     "text": "I fill in my name, age, and address.",
+     "meaningCN": "我填上姓名、年龄和地址。",
+     "chunks": []
+    },
+    {
+     "id": "L09s15",
+     "text": "The doctor asks me how I feel.",
+     "meaningCN": "医生问我感觉怎么样。",
+     "chunks": []
+    },
+    {
+     "id": "L09s16",
+     "text": "I tell her about my headache and my cough.",
+     "meaningCN": "我告诉她我头痛、咳嗽。",
+     "chunks": []
+    },
+    {
+     "id": "L09s17",
+     "text": "She listens carefully and asks more questions.",
+     "meaningCN": "她仔细听，又问了一些问题。",
+     "chunks": []
+    },
+    {
+     "id": "L09s18",
+     "text": "She says I need rest and some medicine.",
+     "meaningCN": "她说我需要休息和吃药。",
+     "chunks": []
+    },
+    {
+     "id": "L09s19",
+     "text": "I ask if I can go to work tomorrow.",
+     "meaningCN": "我问明天能不能去上班。",
+     "chunks": []
+    },
+    {
+     "id": "L09s20",
+     "text": "She says I should stay home for one day.",
+     "meaningCN": "她说我应该在家待一天。",
+     "chunks": []
+    },
+    {
+     "id": "L09s21",
+     "text": "I thank her and leave the room.",
+     "meaningCN": "我道谢后离开诊室。",
+     "chunks": []
+    },
+    {
+     "id": "L09s22",
+     "text": "At the front desk, I pay for the visit.",
+     "meaningCN": "我在前台付了诊费。",
+     "chunks": []
+    },
+    {
+     "id": "L09s23",
+     "text": "The clerk gives me a receipt and a smile.",
+     "meaningCN": "工作人员递给我收据，笑了笑。",
+     "chunks": []
+    },
+    {
+     "id": "L09s24",
+     "text": "Outside, the sun is warm.",
+     "meaningCN": "外面阳光很暖。",
+     "chunks": []
+    },
+    {
+     "id": "L09s25",
+     "text": "I buy some fruit and go home.",
+     "meaningCN": "我买了些水果回家。",
+     "chunks": []
+    },
+    {
+     "id": "L09s26",
+     "text": "I take my medicine and sleep for two hours.",
+     "meaningCN": "我吃了药，睡了两个小时。",
+     "chunks": []
+    },
+    {
+     "id": "L09s27",
+     "text": "I feel better in the evening.",
+     "meaningCN": "晚上我感觉好多了。",
+     "chunks": []
+    },
+    {
+     "id": "L09s28",
+     "text": "Next time, I will call earlier.",
+     "meaningCN": "下次我会早点打电话。",
+     "chunks": []
+    },
+    {
+     "id": "L09s29",
+     "text": "The nurse gives me a glass of water.",
+     "meaningCN": "护士给了我一杯水。",
+     "chunks": []
+    },
+    {
+     "id": "L09s30",
+     "text": "I sit in the waiting room and read a poster.",
+     "meaningCN": "我坐在候诊室看海报。",
+     "chunks": []
+    },
+    {
+     "id": "L09s31",
+     "text": "It says that sleep is important for health.",
+     "meaningCN": "上面说睡眠对健康很重要。",
+     "chunks": []
+    },
+    {
+     "id": "L09s32",
+     "text": "I agree and close my eyes for a moment.",
+     "meaningCN": "我同意，闭眼休息了一会儿。",
+     "chunks": []
+    },
+    {
+     "id": "L09s33",
+     "text": "The doctor calls my name again.",
+     "meaningCN": "医生又叫了我的名字。",
+     "chunks": []
+    },
+    {
+     "id": "L09s34",
+     "text": "I stand up and follow her.",
+     "meaningCN": "我起身跟着她走。",
+     "chunks": []
+    },
+    {
+     "id": "L09s35",
+     "text": "She gives me a mask and asks me to wait.",
+     "meaningCN": "她给了我一个口罩，让我等一下。",
+     "chunks": []
+    },
+    {
+     "id": "L09s36",
+     "text": "The room is bright, and the bed is clean.",
+     "meaningCN": "房间很明亮，床很干净。",
+     "chunks": []
+    },
+    {
+     "id": "L09s37",
+     "text": "I feel a little nervous, but the doctor is kind.",
+     "meaningCN": "我有点紧张，但医生很和善。",
+     "chunks": []
+    },
+    {
+     "id": "L09s38",
+     "text": "I know I will be fine after some rest.",
+     "meaningCN": "我知道休息一下就会好。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L10",
+   "title": "At the Pharmacy",
+   "scene": "hospital",
+   "sceneLabel": "医院",
+   "summaryCN": "药房取药：处方、副作用、服药说明与一次回访。",
+   "updatedAt": "2026-10-19",
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L10s1",
+     "text": "The doctor gives me a prescription for my cough.",
+     "meaningCN": "医生给我开了止咳处方。",
+     "chunks": [
+      {
+       "id": "lx_hospital_a_prescription",
+       "text": "a prescription",
+       "meaningCN": "处方",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L10s2",
+     "text": "I walk to a pharmacy next to the hospital.",
+     "meaningCN": "我走向医院旁边的一家药房。",
+     "chunks": [
+      {
+       "id": "i06",
+       "text": "a pharmacy",
+       "meaningCN": "药房"
+      },
+      {
+       "id": "h06",
+       "text": "next to",
+       "meaningCN": "在…旁边"
+      }
+     ]
+    },
+    {
+     "id": "L10s3",
+     "text": "The pharmacist is a kind woman with glasses.",
+     "meaningCN": "药剂师是位戴眼镜的友善女士。",
+     "chunks": []
+    },
+    {
+     "id": "L10s4",
+     "text": "I give her the prescription and wait.",
+     "meaningCN": "我把处方递给她，等着。",
+     "chunks": []
+    },
+    {
+     "id": "L10s5",
+     "text": "She asks if I am allergic to anything.",
+     "meaningCN": "她问我有没有过敏史。",
+     "chunks": []
+    },
+    {
+     "id": "L10s6",
+     "text": "I say no, but I am worried about the side effects.",
+     "meaningCN": "我说没有，但我担心副作用。",
+     "chunks": [
+      {
+       "id": "l09",
+       "text": "I am worried",
+       "meaningCN": "我担心"
+      },
+      {
+       "id": "lx_hospital_side_effects",
+       "text": "side effects",
+       "meaningCN": "副作用",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L10s7",
+     "text": "Could you explain how to take it?",
+     "meaningCN": "你能解释一下怎么服用吗？",
+     "chunks": [
+      {
+       "id": "o01",
+       "text": "could you",
+       "meaningCN": "您能…吗"
+      }
+     ]
+    },
+    {
+     "id": "L10s8",
+     "text": "She says I should take it with food.",
+     "meaningCN": "她说我应该随餐服用。",
+     "chunks": [
+      {
+       "id": "lx_hospital_take_it_with_food",
+       "text": "take it with food",
+       "meaningCN": "随餐服用",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L10s9",
+     "text": "I ask her to say that again.",
+     "meaningCN": "我请她再说一遍。",
+     "chunks": [
+      {
+       "id": "r02",
+       "text": "say that again",
+       "meaningCN": "再说一遍"
+      }
+     ]
+    },
+    {
+     "id": "L10s10",
+     "text": "She repeats the instruction slowly.",
+     "meaningCN": "她慢慢重复了说明。",
+     "chunks": []
+    },
+    {
+     "id": "L10s11",
+     "text": "I should take one pill in the morning and one at night.",
+     "meaningCN": "我应该在早晚各服一片。",
+     "chunks": []
+    },
+    {
+     "id": "L10s12",
+     "text": "I should not drink alcohol with this medicine.",
+     "meaningCN": "服这种药不能喝酒。",
+     "chunks": []
+    },
+    {
+     "id": "L10s13",
+     "text": "She also gives me some cough drops.",
+     "meaningCN": "她还给了我一些止咳含片。",
+     "chunks": []
+    },
+    {
+     "id": "L10s14",
+     "text": "I ask if I can drive after taking it.",
+     "meaningCN": "我问服药后能不能开车。",
+     "chunks": []
+    },
+    {
+     "id": "L10s15",
+     "text": "She says I may feel sleepy, so I should rest.",
+     "meaningCN": "她说我可能会犯困，应该休息。",
+     "chunks": []
+    },
+    {
+     "id": "L10s16",
+     "text": "I pay for the medicine and put it in my bag.",
+     "meaningCN": "我付了药费，把药放进包里。",
+     "chunks": []
+    },
+    {
+     "id": "L10s17",
+     "text": "On the way home, I buy a bottle of water.",
+     "meaningCN": "回家路上，我买了一瓶水。",
+     "chunks": []
+    },
+    {
+     "id": "L10s18",
+     "text": "I read the label again at the kitchen table.",
+     "meaningCN": "我在餐桌旁又看了一遍标签。",
+     "chunks": []
+    },
+    {
+     "id": "L10s19",
+     "text": "The instructions are clear and easy to follow.",
+     "meaningCN": "说明清楚易懂。",
+     "chunks": []
+    },
+    {
+     "id": "L10s20",
+     "text": "I take the first pill with a small meal.",
+     "meaningCN": "我随少量食物服下第一片药。",
+     "chunks": []
+    },
+    {
+     "id": "L10s21",
+     "text": "The medicine tastes bitter, but I swallow it.",
+     "meaningCN": "药很苦，但我咽了下去。",
+     "chunks": []
+    },
+    {
+     "id": "L10s22",
+     "text": "I lie down and close my eyes.",
+     "meaningCN": "我躺下，闭上眼睛。",
+     "chunks": []
+    },
+    {
+     "id": "L10s23",
+     "text": "In the afternoon, I feel a little better.",
+     "meaningCN": "下午我感觉好了一点。",
+     "chunks": []
+    },
+    {
+     "id": "L10s24",
+     "text": "I drink tea and read a book.",
+     "meaningCN": "我喝茶看书。",
+     "chunks": []
+    },
+    {
+     "id": "L10s25",
+     "text": "My friend calls to ask about my health.",
+     "meaningCN": "朋友打电话问我身体怎么样。",
+     "chunks": []
+    },
+    {
+     "id": "L10s26",
+     "text": "I tell her the pharmacist was very helpful.",
+     "meaningCN": "我告诉她药剂师帮了很大忙。",
+     "chunks": []
+    },
+    {
+     "id": "L10s27",
+     "text": "She says she will visit tomorrow.",
+     "meaningCN": "她说说明天来看我。",
+     "chunks": []
+    },
+    {
+     "id": "L10s28",
+     "text": "I am grateful for the quiet day at home.",
+     "meaningCN": "我很感激在家度过的安静一天。",
+     "chunks": []
+    },
+    {
+     "id": "L10s29",
+     "text": "I put the medicine in a safe place.",
+     "meaningCN": "我把药放在安全的地方。",
+     "chunks": []
+    },
+    {
+     "id": "L10s30",
+     "text": "I write a note to take it at eight.",
+     "meaningCN": "我写了张便条，提醒八点吃药。",
+     "chunks": []
+    },
+    {
+     "id": "L10s31",
+     "text": "My mother calls and asks if I need anything.",
+     "meaningCN": "妈妈打电话问我要不要什么。",
+     "chunks": []
+    },
+    {
+     "id": "L10s32",
+     "text": "I say no thanks and tell her I am fine.",
+     "meaningCN": "我说不用了，谢谢，我很好。",
+     "chunks": []
+    },
+    {
+     "id": "L10s33",
+     "text": "She says she will bring some soup.",
+     "meaningCN": "她说会带些汤来。",
+     "chunks": []
+    },
+    {
+     "id": "L10s34",
+     "text": "I smile and wait for her.",
+     "meaningCN": "我笑了笑，等她来。",
+     "chunks": []
+    },
+    {
+     "id": "L10s35",
+     "text": "The soup is warm and tastes like home.",
+     "meaningCN": "汤很暖，有家的味道。",
+     "chunks": []
+    },
+    {
+     "id": "L10s36",
+     "text": "We talk for an hour and laugh a little.",
+     "meaningCN": "我们聊了一个小时，笑了几声。",
+     "chunks": []
+    },
+    {
+     "id": "L10s37",
+     "text": "I take my medicine again before bed.",
+     "meaningCN": "睡前我又吃了一次药。",
+     "chunks": []
+    },
+    {
+     "id": "L10s38",
+     "text": "The day was quiet, and I feel grateful.",
+     "meaningCN": "这一天很安静，我心怀感激。",
+     "chunks": []
+    }
+   ]
+  }
+ ]
+}

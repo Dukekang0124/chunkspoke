@@ -316,10 +316,10 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                 ],
               ),
               const SizedBox(height: 6),
-              Text(
+              const Text(
                 '语音问题不影响听辨、跟读和录音判定，修复后自动恢复。',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white38, fontSize: 11.5),
+                style: TextStyle(color: Colors.white38, fontSize: 11.5),
               ),
               TextButton(
                 style: TextButton.styleFrom(

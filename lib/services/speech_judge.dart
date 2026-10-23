@@ -99,7 +99,7 @@ const Set<String> _functionWords = {
   'what', 'when', 'where', 'who', 'whom', 'why', 'how', 'which',
 };
 
-bool _isFunction(String w) => _functionWords.contains(w);
+bool isFunctionWord(String w) => _functionWords.contains(w);
 
 /// 判定结果。
 /// [layer]：命中的漏斗层 —— 'exact'（完全匹配快速通道）/ 'fuzzy'（模糊层）/ 'reject'。
@@ -300,10 +300,10 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
   final n = rec.length;
   final m = tgt.length;
 
-  double del(String w) => _isFunction(w) ? 0.3 : 2.0;
-  double ins(String w) => _isFunction(w) ? 0.2 : 0.5;
+  double del(String w) => isFunctionWord(w) ? 0.3 : 2.0;
+  double ins(String w) => isFunctionWord(w) ? 0.2 : 0.5;
   double sub(String r, String t) =>
-      wordClose(r, t) ? 0.0 : (_isFunction(r) && _isFunction(t) ? 0.3 : 2.0);
+      wordClose(r, t) ? 0.0 : (isFunctionWord(r) && isFunctionWord(t) ? 0.3 : 2.0);
 
   final dp = List.generate(n + 1, (_) => List.filled(m + 1, inf));
   dp[0][0] = 0;
@@ -344,7 +344,7 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
 
   var contentCount = 0, contentHit = 0;
   for (var k = 0; k < m; k++) {
-    if (_isFunction(tgt[k])) continue;
+    if (isFunctionWord(tgt[k])) continue;
     contentCount++;
     if (matched[k]) contentHit++;
   }

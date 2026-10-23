@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/loaders.dart';
@@ -10,12 +11,16 @@ import '../services/vosk_engine.dart';
 import '../services/vosk_model.dart';
 import '../services/tts_voice.dart';
 import '../services/notification_service.dart';
+import '../services/recording.dart';
 import '../services/review_notify.dart';
 import '../ui/theme.dart';
 import '../ui/feedback.dart';
 import 'ai_coach_screen.dart';
 import 'legal_screen.dart';
+import 'listening_debug.dart';
 import 'tts_guide.dart';
+
+const bool _kListeningPreview = bool.fromEnvironment('LISTENING_PREVIEW');
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -160,6 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _clearCustom() async {
     final p = Provider.of<ProgressService>(context, listen: false);
     await p.clearCustomLlm();
+    if (!mounted) return;
     _customUrl.clear();
     _customModel.clear();
     _customKey.clear();
@@ -226,6 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       initialTime: TimeOfDay(hour: _notifHour, minute: _notifMinute),
     );
     if (picked == null) return;
+    if (!mounted) return;
     final p = Provider.of<ProgressService>(context, listen: false);
     await p.setNotifTime(picked.hour, picked.minute);
     if (_notifOn) {
@@ -262,7 +269,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kPrimary.withOpacity(0.4)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.4)),
       ),
       // Material(transparency)：DecoratedBox 背景色与 ListTile 之间的 Material 锚点
       // （tileColor 不足以消除「水波纹不可见」断言）。
@@ -299,7 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.35)),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -337,7 +344,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.35)),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Material(
         type: MaterialType.transparency,
@@ -369,7 +376,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             final s = tts.status == TtsStatus.unknown
                 ? await tts.recheck()
                 : tts.status;
-            if (!mounted) return;
+            if (!context.mounted) return;
             setState(() => _ttsStatus = s);
             if (s == TtsStatus.ready) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -862,6 +869,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ));
   }
 
+  /// 浸泡层预览入口（仅 Debug）：首页常驻入口在 Q-3/Q-4 接入。
+  Widget _listeningDebugEntry(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.35)),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          leading: const Icon(Icons.headphones, color: kPrimary),
+          title: const Text('磨耳朵（预览）', style: TextStyle(color: kText)),
+          subtitle: const Text('浸泡层播放器 · 1.5.4 预览',
+              style: TextStyle(color: Colors.white54, fontSize: 12)),
+          trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ListeningDebugScreen()),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// 留存通知卡片：开关 + 提醒时间选择。
   Widget _notificationCard(BuildContext context) {
     return Container(
@@ -879,7 +910,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: const Text('每天固定时间提醒开口练习（本地通知）',
                   style: TextStyle(color: Colors.white54, fontSize: 12)),
               value: _notifOn,
-              activeColor: kPrimary,
+              activeThumbColor: kPrimary,
               onChanged: _toggleNotif,
             ),
             if (_notifOn)
@@ -931,7 +962,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           subtitle: const Text('答对提示音（关闭后仅保留视觉反馈）',
               style: TextStyle(color: Colors.white54, fontSize: 12)),
           value: _soundOn,
-          activeColor: kPrimary,
+          activeThumbColor: kPrimary,
           onChanged: _toggleSound,
         ),
       ),
@@ -963,7 +994,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
           value: _aiNetOn,
-          activeColor: kPrimary,
+          activeThumbColor: kPrimary,
           onChanged: _toggleAiNet,
         ),
       ),
@@ -1064,6 +1095,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 12),
               _voiceCard(context),
             ],
+            if (kDebugMode || _kListeningPreview) ...[
+              const SizedBox(height: 12),
+              _listeningDebugEntry(context),
+            ],
             const SizedBox(height: 16),
             _notificationCard(context),
             const SizedBox(height: 12),
@@ -1146,7 +1181,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: const Text('开启后优先级高于内置服务；关闭即回落内置',
                     style: TextStyle(color: Colors.white54, fontSize: 12)),
                 value: _customOn,
-                activeColor: kPrimary,
+                activeThumbColor: kPrimary,
                 onChanged: (v) => setState(() => _customOn = v),
               ),
               if (_customOn) ...[
@@ -1213,6 +1248,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(color: Colors.white38, fontSize: 11),
                 ),
               ],
+              const Divider(color: Colors.white12),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('保存最近一次录音（排障）',
+                    style: TextStyle(color: kText)),
+                subtitle: const Text(
+                    '默认关；开启后停止录音时复制到应用文档 asr_debug/last.wav',
+                    style: TextStyle(color: Colors.white54, fontSize: 12)),
+                value: RecordingService.keepLastWavForDebug,
+                activeThumbColor: kPrimary,
+                onChanged: (v) =>
+                    setState(() => RecordingService.keepLastWavForDebug = v),
+              ),
             ],
           ),
         ),

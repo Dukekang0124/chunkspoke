@@ -30,6 +30,8 @@ class MainActivity : FlutterActivity() {
     private val POWER_CH = "chunkspoke/power"
     private val TTS_CH = "chunkspoke/tts"
     private val VOICE_CH = "chunkspoke/voice"
+    private val LISTEN_CH = "chunkspoke/listening_playback"
+    private val LISTEN_EVENT_CH = "chunkspoke/listening_playback_events"
     private val mainHandler = Handler(Looper.getMainLooper())
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
@@ -256,6 +258,38 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+
+        // —— 磨耳朵后台播放通道：前台服务 + 通知栏/锁屏动作 ——
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, LISTEN_CH)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "start", "update" -> {
+                        val payload = call.arguments as? Map<*, *> ?: emptyMap<String, Any>()
+                        val ok = ListeningPlaybackService.send(
+                            this,
+                            payload,
+                            call.method == "update",
+                        )
+                        result.success(ok)
+                    }
+                    "stop" -> {
+                        ListeningPlaybackService.stop(this)
+                        result.success(null)
+                    }
+                    "isRunning" -> result.success(ListeningPlaybackService.isRunning)
+                    else -> result.notImplemented()
+                }
+            }
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, LISTEN_EVENT_CH)
+            .setStreamHandler(object : EventChannel.StreamHandler {
+                override fun onListen(args: Any?, events: EventChannel.EventSink?) {
+                    events?.let { ListeningPlaybackBridge.attach(it) }
+                }
+
+                override fun onCancel(args: Any?) {
+                    ListeningPlaybackBridge.detach()
+                }
+            })
 
         // —— 采集电平通道（录音期间实时 RMS/峰值 0..1，供 UI 电平反馈自检） ——
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, LEVEL_CH)

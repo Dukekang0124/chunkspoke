@@ -1,19 +1,30 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_tts/flutter_tts.dart';
 import '../models/content_pack.dart';
+import '../models/listening_article.dart';
 import 'crash_log.dart';
 import 'database.dart';
 import 'chunk_asset.dart';
 import 'chunk_progress.dart';
 import 'hd_voice_types.dart';
+import 'listening_audio.dart';
+import 'listening_store.dart';
+import 'sandbox_store.dart';
 import 'session.dart';
 import 'tts_voice.dart';
 
 Future<ContentPack> loadContentPack() async {
   final str = await rootBundle.loadString('assets/content_pack.json');
   return ContentPack.fromJson(jsonDecode(str) as Map<String, dynamic>);
+}
+
+/// 收听文章（磨耳朵 · 浸泡层）。schema 校验在 test 与 debug 启动时执行。
+Future<ListeningPack> loadListeningPack() async {
+  final str = await rootBundle.loadString('assets/listening_articles.json');
+  return ListeningPack.fromJson(jsonDecode(str) as Map<String, dynamic>);
 }
 
 class Appeal {
@@ -204,7 +215,9 @@ class ProgressService {
     final list = (map[levelId] as List? ?? [false, false, false, false])
         .cast<bool>()
         .toList();
-    while (list.length < 4) list.add(false);
+    while (list.length < 4) {
+      list.add(false);
+    }
     final idx = _dims.indexOf(dim);
     if (idx >= 0) list[idx] = true;
     map[levelId] = list;
@@ -254,7 +267,9 @@ class ProgressService {
     final map = _reviewMap();
     final next =
         _clock().add(const Duration(days: 1)).millisecondsSinceEpoch;
-    for (final k in chunkKeys) map.putIfAbsent(k, () => next);
+    for (final k in chunkKeys) {
+      map.putIfAbsent(k, () => next);
+    }
     await _put('review', jsonEncode(map));
   }
 
@@ -479,6 +494,14 @@ class ProgressService {
       onNewMastery: () {
         bumpDailyNew();
       });
+
+  /// 沙盒（自由造句）：通过校验的句子入库 + 串联计量 + 四项本地统计。
+  late final SandboxStore sandbox =
+      SandboxStore(read: _kv, write: _put, clock: _clock);
+
+  /// 浸泡层（磨耳朵）：独立账本，只记收听/收词/重逢，不写学习会话轴。
+  late final ListeningStore listening =
+      ListeningStore(read: _kv, write: _put, clock: _clock);
 }
 
 /// A1：自由造句沙盒解锁阈值（累计学完 ≥10 块，资产轴非新学）。
@@ -516,7 +539,19 @@ abstract class TtsVoiceAdapter {
   Future<void> clearVoice();
 }
 
-class FlutterTtsAdapter implements TtsAdapter, TtsVoiceAdapter {
+/// 离线合成到 WAV（浸泡层缓存管线用）。
+/// 独立于 [TtsAdapter]，既有假实现无需新增方法即可继续编译。
+abstract class TtsSynthAdapter {
+  Future<bool> synthesizeToFile(String text, String fileName);
+}
+
+/// 读到句末才返回的朗读（浸泡层直播降级顺序播放用）。
+abstract class TtsAwaitAdapter {
+  Future<bool> speakAndWait(String text);
+}
+
+class FlutterTtsAdapter
+    implements TtsAdapter, TtsVoiceAdapter, TtsSynthAdapter, TtsAwaitAdapter {
   final FlutterTts _tts = FlutterTts();
 
   @override
@@ -585,9 +620,37 @@ class FlutterTtsAdapter implements TtsAdapter, TtsVoiceAdapter {
   Future<void> clearVoice() async {
     await _tts.clearVoice();
   }
+
+  @override
+  Future<bool> synthesizeToFile(String text, String fileName) async {
+    // awaitSynthCompletion 让平台调用在文件真正写完才返回；
+    // 结束后恢复，避免影响普通 speak 的既有语义。
+    await _tts.awaitSynthCompletion(true);
+    try {
+      final r = await _tts.synthesizeToFile(text, fileName, true);
+      return r == 1 || r == true;
+    } finally {
+      try {
+        await _tts.awaitSynthCompletion(false);
+      } catch (_) {}
+    }
+  }
+
+  @override
+  Future<bool> speakAndWait(String text) async {
+    await _tts.awaitSpeakCompletion(true);
+    try {
+      final r = await _tts.speak(text);
+      return r == 1 || r == true;
+    } finally {
+      try {
+        await _tts.awaitSpeakCompletion(false);
+      } catch (_) {}
+    }
+  }
 }
 
-class TtsService {
+class TtsService implements ListeningVoice {
   TtsService({
     TtsAdapter? adapter,
     String? Function()? preferredVoice,
@@ -675,6 +738,32 @@ class TtsService {
 
   /// 高清发音包当前是否接管发音（设置页展示用）。
   bool get hdActive => _hdVoice?.active ?? false;
+
+  HdVoiceSynthesizer? get _hdSynth {
+    final Object? h = _hdVoice;
+    return h is HdVoiceSynthesizer ? h : null;
+  }
+
+  /// 浸泡层首选音源是否有高清包可离线合成。
+  @override
+  bool get preferHd => _hdSynth != null && (_hdVoice?.active ?? false);
+
+  /// 浸泡层音频缓存键：HD 用模型版本；系统用引擎|声音|locale。
+  /// 音色切换后键随之变化，缓存整篇失效重合成。
+  @override
+  String get voiceKey {
+    final s = _hdSynth;
+    if (s != null && (_hdVoice?.active ?? false)) return 'hd:${s.modelTag}';
+    return systemVoiceKey;
+  }
+
+  @override
+  String get systemVoiceKey {
+    final v = _selected;
+    if (v != null) return 'sys:${v.engine}|${v.name}|${v.locale}';
+    final engine = _activeEngine.isEmpty ? 'default' : _activeEngine;
+    return 'sys:$engine|auto|${_language ?? 'none'}';
+  }
 
   /// 最近一次播放失败原因（供诊断 / UI 提示「无法播放」）。
   String? get lastError => _lastError;
@@ -967,6 +1056,88 @@ class TtsService {
       _lastError ??= speakError ?? 'tts-speak-failed';
     }
     return false;
+  }
+
+  /// 浸泡层：按指定音源把一句合成到 WAV（失败返回 false，由管线回退）。
+  @override
+  Future<bool> synthesizeToFile(String text, String fullPath,
+      {required bool hd}) async {
+    final t = text.trim();
+    if (t.isEmpty) return false;
+    if (hd) {
+      final s = _hdSynth;
+      if (s == null || !(_hdVoice?.active ?? false)) return false;
+      try {
+        return await s.synthesizeToFile(t, fullPath);
+      } catch (e, st) {
+        _lastError = 'hd-synth: $e';
+        CrashLog.write('TtsService.synthesizeToFile(hd): $e', st);
+        return false;
+      }
+    }
+    if (_status != TtsStatus.ready) {
+      await init();
+      if (_status != TtsStatus.ready) {
+        _lastError ??=
+            _status == TtsStatus.noEngine ? 'no-tts-engine' : 'tts-unavailable';
+        return false;
+      }
+    }
+    final a = _tts is TtsSynthAdapter ? _tts as TtsSynthAdapter : null;
+    if (a == null) {
+      _lastError = 'tts-synth-unsupported';
+      return false;
+    }
+    try {
+      await _tts.setSpeechRate(kRate);
+      await _tts.setPitch(kPitch);
+      final ok = await a.synthesizeToFile(t, fullPath);
+      _lastError = ok ? null : 'tts-synth-failed';
+      return ok;
+    } catch (e, st) {
+      _lastError = '$e';
+      CrashLog.write('TtsService.synthesizeToFile: $e', st);
+      return false;
+    }
+  }
+
+  /// 浸泡层直播降级：读到句末才返回；系统引擎不可用时返回 false。
+  Future<bool> speakAndWait(String text) async {
+    final t = text.trim();
+    if (t.isEmpty) return false;
+    if (_status != TtsStatus.ready) {
+      await init();
+      if (_status != TtsStatus.ready) {
+        _lastError ??=
+            _status == TtsStatus.noEngine ? 'no-tts-engine' : 'tts-unavailable';
+        return false;
+      }
+    }
+    final a = _tts is TtsAwaitAdapter ? _tts as TtsAwaitAdapter : null;
+    if (a == null) {
+      _lastError = 'tts-live-unsupported';
+      return false;
+    }
+    // 引擎偶发不回调完成：按句长给上限并主动 stop，避免播放循环卡死。
+    final timeout = Duration(
+        milliseconds: (4000 + t.length * 90).clamp(6000, 30000));
+    try {
+      await _tts.setSpeechRate(kRate);
+      await _tts.setPitch(kPitch);
+      final ok = await a.speakAndWait(t).timeout(timeout);
+      _lastError = ok ? null : 'tts-speak-returned-0';
+      return ok;
+    } on TimeoutException {
+      try {
+        await _tts.stop();
+      } catch (_) {}
+      _lastError = 'tts-live-timeout';
+      return false;
+    } catch (e, st) {
+      _lastError = '$e';
+      CrashLog.write('TtsService.speakAndWait: $e', st);
+      return false;
+    }
   }
 
   Future<void> stop() async {

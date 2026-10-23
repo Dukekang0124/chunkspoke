@@ -159,8 +159,7 @@ class _MapScreenState extends State<MapScreen> {
                             lockedHint: e.key > 0 ? lockedHintFor(e.key) : null,
                             masteredCount: masteredIn(e.value),
                             onReturn: _reload,
-                          ))
-                      .toList(),
+                          )),
                   const SizedBox(height: 14),
                 ],
             ],
@@ -236,7 +235,7 @@ class _FreeBuildCard extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: unlocked ? kPrimary.withOpacity(0.6) : Colors.white12),
+                color: unlocked ? kPrimary.withValues(alpha: 0.6) : Colors.white12),
           ),
           child: Row(
             children: [
@@ -320,7 +319,7 @@ class _SceneRow extends StatelessWidget {
             color: kBg,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-                color: done ? kUnlocked.withOpacity(0.6) : Colors.white12),
+                color: done ? kUnlocked.withValues(alpha: 0.6) : Colors.white12),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,9 +332,9 @@ class _SceneRow extends StatelessWidget {
                           height: 40,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: kPrimary.withOpacity(0.15),
+                            color: kPrimary.withValues(alpha: 0.15),
                             border:
-                                Border.all(color: kPrimary.withOpacity(0.5)),
+                                Border.all(color: kPrimary.withValues(alpha: 0.5)),
                           ),
                           child: done
                               ? const Icon(Icons.check, color: kUnlocked)
@@ -457,7 +456,7 @@ class TodayCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: kPrimary.withOpacity(0.45)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.45)),
         boxShadow: const [
           BoxShadow(
               color: Colors.black45, blurRadius: 14, offset: Offset(0, 6)),
@@ -519,9 +518,9 @@ class TodayCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
                 decoration: BoxDecoration(
-                  color: kUnlocked.withOpacity(0.12),
+                  color: kUnlocked.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: kUnlocked.withOpacity(0.5)),
+                  border: Border.all(color: kUnlocked.withValues(alpha: 0.5)),
                 ),
                 child: Row(
                   children: [

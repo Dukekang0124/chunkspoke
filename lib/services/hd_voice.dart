@@ -14,7 +14,8 @@ import 'wav_codec.dart';
 /// 高清发音包：下载 → 落盘校验 → VITS 离线合成 → 原生播放。
 ///
 /// 下载/续传/清场全部复用 ModelManager（B3 硬化链），本类只负责状态机与发声路由。
-class HdVoiceService extends ChangeNotifier implements HdVoiceSpeaker {
+class HdVoiceService extends ChangeNotifier
+    implements HdVoiceSpeaker, HdVoiceSynthesizer {
   HdVoiceService({
     required bool Function() isEnabled,
     required Future<void> Function(bool) setEnabled,
@@ -81,6 +82,15 @@ class HdVoiceService extends ChangeNotifier implements HdVoiceSpeaker {
 
   @override
   bool get active => _ready && _enabled;
+
+  @override
+  String get modelTag {
+    final m = _manifest;
+    final v = (m?.modelVersion ?? '').trim();
+    if (v.isNotEmpty) return v;
+    final n = (m?.name ?? '').trim();
+    return n.isEmpty ? 'vits' : n;
+  }
 
   bool get downloading => _downloading;
   bool get deleting => _deleting;
@@ -218,6 +228,24 @@ class HdVoiceService extends ChangeNotifier implements HdVoiceSpeaker {
       return true;
     } catch (e) {
       debugPrint('[hd-voice] speak failed: $e');
+      _error = '高清发音暂不可用，已切回系统发音';
+      _notify();
+      return false;
+    }
+  }
+
+  /// 离线合成到指定 WAV（浸泡层缓存管线）。不占播放通道，不动 speakToken。
+  @override
+  Future<bool> synthesizeToFile(String text, String fullPath) async {
+    final t = text.trim();
+    if (t.isEmpty || !active) return false;
+    try {
+      if (!await _ensureEngine()) return false;
+      final audio = await _synth.synthesize(t, speed: kSpeed);
+      await writeWavFile(File(fullPath), audio.samples, audio.sampleRate);
+      return true;
+    } catch (e) {
+      debugPrint('[hd-voice] synthesizeToFile failed: $e');
       _error = '高清发音暂不可用，已切回系统发音';
       _notify();
       return false;

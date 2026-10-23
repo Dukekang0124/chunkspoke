@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'models/content_pack.dart';
+import 'models/listening_article.dart';
 import 'services/crash_log.dart';
 import 'services/hd_voice.dart';
 import 'services/loaders.dart';
@@ -42,6 +44,13 @@ Future<void> bootstrap() async {
     final progress = ProgressService();
     await progress.init();
     final content = await loadContentPack();
+    final listening = await loadListeningPack();
+    if (kDebugMode) {
+      final errors = validateListeningPack(listening, content);
+      if (errors.isNotEmpty) {
+        throw StateError('收听文章内容校验失败：${errors.take(5).join('；')}');
+      }
+    }
     final hdVoice = HdVoiceService(
       isEnabled: () => progress.hdVoiceEnabled,
       setEnabled: progress.setHdVoiceEnabled,
@@ -90,6 +99,7 @@ Future<void> bootstrap() async {
         providers: [
           Provider<ProgressService>.value(value: progress),
           Provider<ContentPack>.value(value: content),
+          Provider<ListeningPack>.value(value: listening),
           Provider<TtsService>.value(value: tts),
           ChangeNotifierProvider<HdVoiceService>.value(value: hdVoice),
         ],

@@ -45,6 +45,8 @@ class _FakeTranscriber implements Transcriber {
   @override
   Future<VoskResult> transcribe(String wavPath, List<String> phrases) async =>
       VoskResult(text, 1.0);
+  @override
+  Future<VoskResult> transcribeOpen(String wavPath) => transcribe(wavPath, const []);
 }
 
 Chunk _chunk(String id, String text) =>

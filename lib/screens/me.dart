@@ -30,7 +30,7 @@ class MeScreen extends StatelessWidget {
               children: [
                 _stat('已掌握词块', '$n 个',
                     help: () => _showMasteryHelp(context)),
-                _stat('累计可组合句子', '${combo}+', sub: '越学越强大'),
+                _stat('累计可组合句子', '$combo+', sub: '越学越强大'),
               ],
             );
           },

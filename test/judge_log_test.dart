@@ -6,6 +6,8 @@ import 'package:chunkspoke_flutter/services/speech_judge.dart';
 void _log(String tag, JudgeOutcome r) {
   final conf = r.confidence == null ? 'null(缺失)' : r.confidence!.toStringAsFixed(2);
   final norm = r.recognizedWords.join(' ');
+  // 人工以 `-r expanded` 读判定原文，print 即本用例的产出通道。
+  // ignore: avoid_print
   print('[回归] $tag | 规范化后="$norm" | 相似度=${r.similarity.toStringAsFixed(3)} '
       '| 置信度=$conf | 层=${r.layer} | reason=${r.reason} | 判定=${r.pass ? "放行" : "不放行"}');
 }

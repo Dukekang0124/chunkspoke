@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
+import '../services/asr_guard.dart';
 import '../services/crash_log.dart';
 import '../services/learning_flow.dart';
 import '../services/loaders.dart';
@@ -50,7 +51,9 @@ class _SubstituteStepState extends State<SubstituteStep> {
   bool _playing = false;
   String? _recPath;
   String _transcript = '';
+  AsrGuardResult? _guard;
   SubstitutionVerdict? _verdict;
+  SilenceAutoStop? _silence;
   int _attempts = 0;
   bool _showSelfEval = false;
   bool _passed = false;
@@ -64,6 +67,9 @@ class _SubstituteStepState extends State<SubstituteStep> {
   void initState() {
     super.initState();
     _plan = widget.plan;
+    _silence = SilenceAutoStop(onSilence: () {
+      if (mounted && _listening) _stop();
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _speakTarget();
     });
@@ -88,12 +94,14 @@ class _SubstituteStepState extends State<SubstituteStep> {
   @override
   void dispose() {
     _playTimer?.cancel();
+    _silence?.detach();
     if (_listening) _rec.stop();
     _rec.stopPlay();
     super.dispose();
   }
 
   Future<void> _speakTarget() async {
+    if (_listening || _thinking) return;
     final ok = await _tts.speak(_plan.replacedSentence);
     if (!ok && mounted) speakOrHint(context, _tts, _plan.replacedSentence);
   }
@@ -105,8 +113,14 @@ class _SubstituteStepState extends State<SubstituteStep> {
         ..._plan.replacementOptions,
       }.toList(growable: false);
 
+  String get _guardTarget =>
+      _plan.isFallback ? _plan.chunkText : _plan.replacement;
+
   Future<void> _start() async {
     if (_permBlocked || !_ready || _passed) return;
+    // 防回声自吞：录音开始前先停掉 TTS / 本地回放。
+    await _tts.stop();
+    await _rec.stopPlay();
     final path = await _rec.start();
     if (path == null) {
       setState(() => _showSelfEval = true);
@@ -116,16 +130,20 @@ class _SubstituteStepState extends State<SubstituteStep> {
       await _rec.stop();
       return;
     }
+    _silence?.attach(_rec.levels);
     setState(() {
       _recPath = path;
       _listening = true;
       _thinking = false;
       _transcript = '';
+      _guard = null;
       _verdict = null;
     });
   }
 
   Future<void> _stop() async {
+    if (!_listening) return;
+    _silence?.detach();
     final start = DateTime.now();
     setState(() {
       _listening = false;
@@ -144,29 +162,30 @@ class _SubstituteStepState extends State<SubstituteStep> {
       await Future.delayed(const Duration(milliseconds: 400) - elapsed);
     }
     String text = '';
+    List<double>? confs;
     if (await _speech.initVosk()) {
-      final r = await _speech.recognize(usePath, _phrases);
+      final r = await _speech.recognizeOpen(usePath, e2ePhrases: _phrases);
       text = r.text;
+      confs = r.wordConfidences;
     } else if (_p.azureKey != null && _p.azureRegion != null) {
       text = await _speech.transcribeAzure(
           usePath, _p.azureKey!, _p.azureRegion!);
     }
     if (!mounted) return;
-    if (text.trim().isEmpty) {
-      setState(() {
-        _thinking = false;
-        _showSelfEval = true;
-        _verdict = judgeSubstitution(recognized: text, plan: _plan);
-      });
-      return;
-    }
+    final g = guardAsr(
+      raw: text,
+      wordConfidences: confs,
+      targetBlock: _guardTarget,
+    );
     final v = judgeSubstitution(recognized: text, plan: _plan);
-    if (v.pass) HapticFeedback.mediumImpact();
+    final pass = g.ok && v.pass;
+    if (pass) HapticFeedback.mediumImpact();
     setState(() {
       _thinking = false;
       _transcript = text;
+      _guard = g;
       _verdict = v;
-      if (v.pass) {
+      if (pass) {
         // 识别通过也必须进入成功态，否则界面停在录音入口、没有“下一步”。
         _passed = true;
         _accuracy = 100;
@@ -219,6 +238,22 @@ class _SubstituteStepState extends State<SubstituteStep> {
   @override
   Widget build(BuildContext context) {
     final v = _verdict;
+    final g = _guard;
+    final av = (g != null && v != null)
+        ? asrVerdictFor(
+            guard: g,
+            targetHit: v.pass,
+            targetLabel: _guardTarget,
+            passText: '✓ 替换成功，句子说完整了',
+          )
+        : null;
+    final hint = av == null
+        ? (v == null ? null : substitutionHint(v, _plan))
+        : (av.kind == AsrVerdictKind.notUsed
+            ? substitutionHint(v!, _plan)
+            : av.text);
+    final hintColor =
+        av?.kind == AsrVerdictKind.pass ? kUnlocked : kPrimary;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -237,7 +272,7 @@ class _SubstituteStepState extends State<SubstituteStep> {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: kBg.withOpacity(0.5),
+              color: kBg.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white24),
             ),
@@ -276,6 +311,7 @@ class _SubstituteStepState extends State<SubstituteStep> {
                   onSelected: (_) => setState(() {
                     _plan = _plan.withReplacement(o);
                     _verdict = null;
+                    _guard = null;
                     _transcript = '';
                   }),
                 );
@@ -315,9 +351,9 @@ class _SubstituteStepState extends State<SubstituteStep> {
             ],
           ),
           if (_plan.isFallback)
-            Text('这个词块暂时没有替换搭档，直接把它说进句子',
+            const Text('这个词块暂时没有替换搭档，直接把它说进句子',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                style: TextStyle(color: Colors.white38, fontSize: 12)),
           const SizedBox(height: 4),
           Text(widget.meaningCN,
               textAlign: TextAlign.center,
@@ -333,6 +369,14 @@ class _SubstituteStepState extends State<SubstituteStep> {
                         color: kUnlocked,
                         fontSize: 17,
                         fontWeight: FontWeight.w600)),
+                if (_transcript.trim().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text('你说：$_transcript',
+                      key: const Key('substituteAsrRaw'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 13)),
+                ],
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
@@ -368,7 +412,7 @@ class _SubstituteStepState extends State<SubstituteStep> {
                     height: 76,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: kPrimary.withOpacity(0.2),
+                      color: kPrimary.withValues(alpha: 0.2),
                       border: Border.all(color: kPrimary, width: 2),
                     ),
                     child: const Icon(Icons.stop, color: kPrimary, size: 36),
@@ -377,16 +421,27 @@ class _SubstituteStepState extends State<SubstituteStep> {
               ],
             )
           else ...[
-            if (v != null && !v.pass) ...[
-              Text(substitutionHint(v, _plan),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: kPrimary, fontSize: 13)),
-              if (_transcript.trim().isNotEmpty)
-                Text("听到：'$_transcript'",
+            if (_transcript.trim().isNotEmpty)
+              Container(
+                key: const Key('substituteAsrRaw'),
+                width: double.infinity,
+                padding: const EdgeInsets.all(9),
+                margin: const EdgeInsets.only(bottom: 6),
+                decoration: BoxDecoration(
+                  color: kCard,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Text('你说：$_transcript',
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
-                        color: Colors.white54, fontSize: 12)),
-              const SizedBox(height: 6),
-            ] else
+                        color: Colors.white70, fontSize: 13)),
+              ),
+            if (hint != null)
+              Text(hint,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: hintColor, fontSize: 13))
+            else
               const Text('选好替换词，开口说出新句子',
                   style: TextStyle(color: Colors.white70)),
             const SizedBox(height: 8),

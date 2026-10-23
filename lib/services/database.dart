@@ -192,7 +192,7 @@ class AppDatabase {
 
   static Future<String> _defaultPath() async {
     final dir = await getDatabasesPath();
-    return '${dir}/chunkspoke.db';
+    return '$dir/chunkspoke.db';
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -383,6 +383,24 @@ class AppDatabase {
     final r = await (await db).rawQuery(
         'SELECT COUNT(*) c FROM sessions WHERE outcome = ?', [name]);
     return (r.first['c'] as int?) ?? 0;
+  }
+
+  /// 某词块是否在会话轴留下过指定事件（收词浮层的「已学/已复习」分派依据）。
+  Future<bool> hasSessionOutcome(String key, String outcome,
+      {bool? review}) async {
+    final rows = await (await db).query(
+      'sessions',
+      columns: ['id'],
+      where: 'chunk_key = ? AND outcome = ?'
+          '${review == null ? '' : ' AND review = ?'}',
+      whereArgs: [
+        key,
+        outcome,
+        if (review != null) review ? 1 : 0,
+      ],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
   }
 
   /// 事件计数（可按复习/学习会话过滤），供导出与漏斗口径使用。

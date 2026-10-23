@@ -72,9 +72,9 @@ class _AnchorStepState extends State<AnchorStep> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
             decoration: BoxDecoration(
-              color: kBg.withOpacity(0.6),
+              color: kBg.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: kPrimary.withOpacity(0.45)),
+              border: Border.all(color: kPrimary.withValues(alpha: 0.45)),
             ),
             child: Column(
               children: [

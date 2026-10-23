@@ -84,9 +84,9 @@ class _TtsGateState extends State<TtsGate> with WidgetsBindingObserver {
     final progress = Provider.of<ProgressService>(context, listen: false);
 
     if (tts.status == TtsStatus.unknown || _checking) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: kBg,
-        body: const SafeArea(
+        body: SafeArea(
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
