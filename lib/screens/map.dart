@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/chunk_asset.dart';
@@ -12,6 +11,9 @@ import 'review.dart';
 import 'free_build_screen.dart';
 
 import '../ui/labels.dart';
+import '../ui/count_up.dart';
+import '../ui/motion.dart';
+import '../ui/pressable.dart';
 
 String _cn(Level lv) => sceneCn(lv.theme);
 
@@ -44,8 +46,7 @@ class _MapScreenState extends State<MapScreen> {
   Future<_MapData> _load() async {
     final progress = Provider.of<ProgressService>(context, listen: false);
     final content = Provider.of<ContentPack>(context, listen: false);
-    final levelMastered =
-        (await progress.chunkStore.allMasteredKeys()).toSet();
+    final levelMastered = (await progress.chunkStore.allMasteredKeys()).toSet();
     final rows = await progress.chunkStore.allRows();
     final contentIds = <String>{
       for (final lv in content.levels)
@@ -235,7 +236,9 @@ class _FreeBuildCard extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: unlocked ? kPrimary.withValues(alpha: 0.6) : Colors.white12),
+                color: unlocked
+                    ? kPrimary.withValues(alpha: 0.6)
+                    : Colors.white12),
           ),
           child: Row(
             children: [
@@ -294,7 +297,7 @@ class _SceneRow extends StatelessWidget {
       ));
       return;
     }
-    HapticFeedback.mediumImpact();
+    Motion.of(context).success();
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => LevelScreen(level: level)),
     );
@@ -319,7 +322,8 @@ class _SceneRow extends StatelessWidget {
             color: kBg,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-                color: done ? kUnlocked.withValues(alpha: 0.6) : Colors.white12),
+                color:
+                    done ? kUnlocked.withValues(alpha: 0.6) : Colors.white12),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,8 +337,8 @@ class _SceneRow extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: kPrimary.withValues(alpha: 0.15),
-                            border:
-                                Border.all(color: kPrimary.withValues(alpha: 0.5)),
+                            border: Border.all(
+                                color: kPrimary.withValues(alpha: 0.5)),
                           ),
                           child: done
                               ? const Icon(Icons.check, color: kUnlocked)
@@ -399,8 +403,10 @@ class _SceneRow extends StatelessWidget {
 class TodayCard extends StatelessWidget {
   /// 关卡轴：只用于场景解锁/推进。
   final Set<String> levelMastered;
+
   /// 资产轴：已进入复习周期（非 learning）的块，用于“新学”筛选。
   final Set<String> learned;
+
   /// 资产轴：走完 1/3/7/14 天的块数（W2-1 头部唯一口径）。
   final int assetMasteredCount;
   final ContentPack content;
@@ -487,11 +493,12 @@ class TodayCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            '已掌握 $assetMasteredCount 个词块',
-            style: const TextStyle(
-                color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
-          ),
+          CountUpText(assetMasteredCount,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700),
+              format: (v) => '已掌握 $v 个词块'),
           const SizedBox(height: 6),
           Text(
             '复习 $reviewCount 个 + 新学 $newCount 个 · '
@@ -505,33 +512,37 @@ class TodayCard extends StatelessWidget {
           ),
           if (due.isNotEmpty) ...[
             const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ReviewScreen()),
-                );
-                onReturn();
-              },
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-                decoration: BoxDecoration(
-                  color: kUnlocked.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: kUnlocked.withValues(alpha: 0.5)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.replay, color: kUnlocked, size: 18),
-                    const SizedBox(width: 8),
-                    Text('今日复习 ${due.length} 个词块',
-                        style: const TextStyle(color: kUnlocked, fontSize: 15)),
-                    const Spacer(),
-                    const Icon(Icons.arrow_forward_ios,
-                        size: 14, color: kUnlocked),
-                  ],
+            PressableScale(
+              scale: 0.98,
+              child: GestureDetector(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ReviewScreen()),
+                  );
+                  onReturn();
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: kUnlocked.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: kUnlocked.withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.replay, color: kUnlocked, size: 18),
+                      const SizedBox(width: 8),
+                      Text('今日复习 ${due.length} 个词块',
+                          style:
+                              const TextStyle(color: kUnlocked, fontSize: 15)),
+                      const Spacer(),
+                      const Icon(Icons.arrow_forward_ios,
+                          size: 14, color: kUnlocked),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -545,20 +556,24 @@ class TodayCard extends StatelessWidget {
                     fontWeight: FontWeight.w600)),
           ],
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                foregroundColor: Colors.black87,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+          PressableScale(
+            scale: 0.98,
+            enabled: target != null,
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  foregroundColor: Colors.black87,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed:
+                    target == null ? null : () => _openToday(context, target),
+                child: Text(target == null ? '已全部通关' : '继续学习：${_cn(target)}',
+                    style: const TextStyle(
+                        fontSize: 17, fontWeight: FontWeight.w700)),
               ),
-              onPressed:
-                  target == null ? null : () => _openToday(context, target),
-              child: Text(target == null ? '已全部通关' : '继续学习：${_cn(target)}',
-                  style: const TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -567,7 +582,7 @@ class TodayCard extends StatelessWidget {
   }
 
   void _openToday(BuildContext context, Level target) async {
-    HapticFeedback.mediumImpact();
+    Motion.of(context).success();
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => LevelScreen(level: target)),
@@ -575,7 +590,6 @@ class TodayCard extends StatelessWidget {
     onReturn();
   }
 }
-
 
 class _MapData {
   final Set<String> levelMastered;

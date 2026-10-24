@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/loaders.dart';
 import '../ui/theme.dart';
+import '../ui/motion.dart';
 import 'ftue.dart';
 import 'nav.dart';
 import 'tts_gate.dart';
@@ -106,7 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () => _pc.nextPage(
-                        duration: const Duration(milliseconds: 300),
+                        duration: Motion.of(context).dur(300),
                         curve: Curves.easeInOut),
                     child: const Text('下一步',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),

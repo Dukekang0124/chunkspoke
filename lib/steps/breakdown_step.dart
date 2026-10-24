@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../ui/theme.dart';
+import '../ui/motion.dart';
 import '../ui/feedback.dart';
 
 /// ① 拆解：把词块拆成词卡，逐个听发音、看清构成，再拼回整块。
@@ -88,7 +89,8 @@ class _BreakdownStepState extends State<BreakdownStep> {
                     return GestureDetector(
                       onTap: () => _hear(i),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 160),
+                        duration: Motion.of(context).dur(160),
+                        curve: Curves.easeOut,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(

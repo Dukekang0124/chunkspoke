@@ -58,7 +58,8 @@ Future<void> _pumpUntil(WidgetTester tester, Finder finder,
     {int tries = 100}) async {
   for (var i = 0; i < tries; i++) {
     await Future<void>.delayed(const Duration(milliseconds: 20));
-    await tester.pump();
+    // M1 起数字带 count-up：推进假时钟让动画走完，否则终值永远读不到。
+    await tester.pump(const Duration(milliseconds: 50));
     if (finder.evaluate().isNotEmpty) return;
   }
   fail('等待超时：$finder');

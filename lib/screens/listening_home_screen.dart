@@ -8,7 +8,10 @@ import '../services/listening_home.dart';
 import '../services/listening_palette.dart';
 import '../services/listening_store.dart';
 import '../services/loaders.dart';
+import '../ui/pressable.dart';
+import '../ui/stagger.dart';
 import '../ui/theme.dart';
+import '../ui/count_up.dart';
 import 'listening_player.dart';
 
 /// 磨耳朵内容首页（tab）：
@@ -68,12 +71,10 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
     };
     final dueRows = rows
         .where((r) =>
-            r.dueDate > 0 &&
-            r.dueDate <= nowMs &&
-            r.assetState.isReviewable)
+            r.dueDate > 0 && r.dueDate <= nowMs && r.assetState.isReviewable)
         .toList();
-    final weekStart =
-        now.subtract(Duration(days: now.weekday - 1)).copyWith(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
+    final weekStart = now.subtract(Duration(days: now.weekday - 1)).copyWith(
+        hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
 
     final data = buildListeningHome(
       articles: pack.articles,
@@ -107,8 +108,8 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
   }
 
   int _minutes(ListeningArticle a) {
-    final ms = a.sentences.fold<int>(
-        0, (sum, s) => sum + estimateLiveSentenceMs(s.text));
+    final ms = a.sentences
+        .fold<int>(0, (sum, s) => sum + estimateLiveSentenceMs(s.text));
     return (ms / 60000).ceil().clamp(1, 999);
   }
 
@@ -202,8 +203,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 30),
               child: Center(
-                child: Text('暂无篇目',
-                    style: TextStyle(color: Colors.white38)),
+                child: Text('暂无篇目', style: TextStyle(color: Colors.white38)),
               ),
             )
           else if (_byLevel)
@@ -221,8 +221,8 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                   ],
                 ),
               ),
-              for (final a in g.articles) ...[
-                _articleTile(a, data),
+              for (final (i, a) in g.articles.indexed) ...[
+                _articleTile(a, data, stagger: i),
                 const SizedBox(height: 8),
               ],
             ]
@@ -248,15 +248,15 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                     ],
                   ),
                 ),
-                for (final a in _visible(g.articles)) ...[
-                  _articleTile(a, data),
+                for (final (i, a) in _visible(g.articles).indexed) ...[
+                  _articleTile(a, data, stagger: i),
                   const SizedBox(height: 8),
                 ],
               ],
             ]
           else
-            for (final a in _visible(data.recent)) ...[
-              _articleTile(a, data),
+            for (final (i, a) in _visible(data.recent).indexed) ...[
+              _articleTile(a, data, stagger: i),
               const SizedBox(height: 8),
             ],
         ],
@@ -266,7 +266,9 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
 
   /// 级别筛选后的篇目列表。
   List<ListeningArticle> _visible(List<ListeningArticle> src) =>
-      _levelFilter == null ? src : src.where((a) => a.level == _levelFilter).toList();
+      _levelFilter == null
+          ? src
+          : src.where((a) => a.level == _levelFilter).toList();
 
   List<ListeningLevelGroup> _visibleLevels(ListeningHomeData data) => [
         for (final g in data.levels)
@@ -290,11 +292,35 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    '今日浸泡 ${_minutesOf(_todaySeconds)} 分钟 · '
-                    '本周 ${_minutesOf(_weekSeconds)} 分钟',
-                    style: const TextStyle(
-                        color: kText, fontSize: 14, fontWeight: FontWeight.w600),
+                  // M1（数字滚动）：数字拆成可滚段，前后文案保持静态；降级时直接显示终值。
+                  child: Row(
+                    children: [
+                      const Text('今日浸泡 ',
+                          style: TextStyle(
+                              color: kText,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                      CountUpText(_minutesOf(_todaySeconds),
+                          style: const TextStyle(
+                              color: kText,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                      const Text(' 分钟 · 本周 ',
+                          style: TextStyle(
+                              color: kText,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                      CountUpText(_minutesOf(_weekSeconds),
+                          style: const TextStyle(
+                              color: kText,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                      const Text(' 分钟',
+                          style: TextStyle(
+                              color: kText,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                    ],
                   ),
                 ),
                 const Text('看统计 ›',
@@ -323,20 +349,22 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
 
   Widget _levelChip(String label, ListeningLevel? level) {
     final on = _levelFilter == level;
-    return ChoiceChip(
-      key: Key('listening_level_chip_${level?.key ?? 'all'}'),
-      label: Text(label,
-          style: TextStyle(fontSize: 12, color: on ? Colors.black : kText)),
-      selected: on,
-      onSelected: (_) => setState(() => _levelFilter = level),
-      backgroundColor: kCard,
-      selectedColor: kPrimary,
-      showCheckmark: false,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: on ? kPrimary : Colors.white12),
-      ),
-    );
+    return PressableScale(
+        scale: 0.94,
+        child: ChoiceChip(
+          key: Key('listening_level_chip_${level?.key ?? 'all'}'),
+          label: Text(label,
+              style: TextStyle(fontSize: 12, color: on ? Colors.black : kText)),
+          selected: on,
+          onSelected: (_) => setState(() => _levelFilter = level),
+          backgroundColor: kCard,
+          selectedColor: kPrimary,
+          showCheckmark: false,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: on ? kPrimary : Colors.white12),
+          ),
+        ));
   }
 
   /// 卡片上的级别徽标。
@@ -435,11 +463,10 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                 for (final a in pl.articles.take(6))
                   ActionChip(
                     key: Key('listening_playlist_${a.id}'),
-                    avatar: const Icon(Icons.headphones,
-                        size: 16, color: kPrimary),
+                    avatar:
+                        const Icon(Icons.headphones, size: 16, color: kPrimary),
                     label: Text(a.title,
-                        style: const TextStyle(
-                            color: kText, fontSize: 12)),
+                        style: const TextStyle(color: kText, fontSize: 12)),
                     onPressed: () => _open(a, reviewRun: true),
                     backgroundColor: kLocked,
                     shape: RoundedRectangleBorder(
@@ -482,7 +509,8 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
       ListeningPickKind.yesterday => Colors.white70,
       ListeningPickKind.reunion => kUnlocked,
     };
-    return SizedBox(
+    return PressableScale(
+        child: SizedBox(
       width: 232,
       child: Material(
         color: kCard,
@@ -564,14 +592,15 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _continueCard(ListeningResume resume) {
     final where = resume.completed
         ? '已听完 · 再听一遍'
         : '上次听到 ${_mmss(resume.positionMs)} · 第 ${resume.sentenceIndex + 1} 句';
-    return Material(
+    return PressableScale(
+        child: Material(
       color: kCard,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
@@ -626,68 +655,72 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
-  Widget _articleTile(ListeningArticle a, ListeningHomeData data) {
+  Widget _articleTile(ListeningArticle a, ListeningHomeData data,
+      {int stagger = 0}) {
     final done = data.completedIds.contains(a.id);
     final heard = data.lastListenedAt.containsKey(a.id);
-    return Material(
-      color: kCard,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        key: Key('listening_tile_${a.id}'),
-        borderRadius: BorderRadius.circular(10),
-        onTap: () => _open(a),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 11, 10, 11),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+    return StaggerIn(
+        index: stagger,
+        child: PressableScale(
+            child: Material(
+          color: kCard,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            key: Key('listening_tile_${a.id}'),
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => _open(a),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 11, 10, 11),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Flexible(
-                          child: Text(a.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  color: kText,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600)),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(a.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: kText,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                            const SizedBox(width: 6),
+                            _levelBadge(a.level),
+                            if (done) ...[
+                              const SizedBox(width: 6),
+                              const Icon(Icons.check_circle,
+                                  size: 14, color: kUnlocked),
+                            ] else if (heard) ...[
+                              const SizedBox(width: 6),
+                              const Icon(Icons.headphones,
+                                  size: 13, color: Colors.white30),
+                            ],
+                          ],
                         ),
-                        const SizedBox(width: 6),
-                        _levelBadge(a.level),
-                        if (done) ...[
-                          const SizedBox(width: 6),
-                          const Icon(Icons.check_circle,
-                              size: 14, color: kUnlocked),
-                        ] else if (heard) ...[
-                          const SizedBox(width: 6),
-                          const Icon(Icons.headphones,
-                              size: 13, color: Colors.white30),
-                        ],
+                        const SizedBox(height: 4),
+                        Text(
+                          '${a.sceneLabel} · ${_minutes(a)} 分钟'
+                          '${_updated(a).isEmpty ? '' : ' · ${_updated(a)}'}',
+                          style: const TextStyle(
+                              color: Colors.white38, fontSize: 11),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${a.sceneLabel} · ${_minutes(a)} 分钟'
-                      '${_updated(a).isEmpty ? '' : ' · ${_updated(a)}'}',
-                      style: const TextStyle(
-                          color: Colors.white38, fontSize: 11),
-                    ),
-                  ],
-                ),
+                  ),
+                  const Icon(Icons.play_circle_outline,
+                      color: kPrimary, size: 24),
+                ],
               ),
-              const Icon(Icons.play_circle_outline,
-                  color: kPrimary, size: 24),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        )));
   }
 
   Widget _noNewContentCard(ListeningHomeData data) {
@@ -702,8 +735,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.replay_circle_filled,
-              color: kUnlocked, size: 26),
+          const Icon(Icons.replay_circle_filled, color: kUnlocked, size: 26),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

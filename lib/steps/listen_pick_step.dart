@@ -4,6 +4,7 @@ import '../models/content_pack.dart';
 import '../services/learning_flow.dart';
 import '../services/loaders.dart';
 import '../ui/theme.dart';
+import '../ui/motion.dart';
 import '../ui/feedback.dart';
 
 class ListenPickResult {
@@ -105,7 +106,7 @@ class _ListenPickStepState extends State<ListenPickStep> {
       return;
     }
     if (_revealed) return;
-    buzzWrong();
+    buzzWrong(context);
     _attempts++;
     _wrongThisRound++;
     setState(() {
@@ -193,7 +194,8 @@ class _ListenPickStepState extends State<ListenPickStep> {
           ),
           const SizedBox(height: 8),
           AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
+            duration: Motion.of(context).dur(150),
+            curve: Curves.easeOut,
             transform: Matrix4.translationValues(_shake, 0, 0),
             child: Column(
               children: _options

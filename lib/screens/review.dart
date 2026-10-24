@@ -8,6 +8,8 @@ import '../services/session.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import '../ui/feedback.dart';
+import '../ui/pressable.dart';
+import '../ui/stagger.dart';
 import '../steps/practice_loop.dart';
 
 /// 复习页：展示到期复习词块（统一以 chunk.id 为键，与 chunks 表一致）。
@@ -92,8 +94,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ? '今日复习已达上限 ${q.cap} 块\n剩余 ${q.dueTotal} 块明天继续'
                       : '今天没有待复习词块',
                   textAlign: TextAlign.center,
-                  style:
-                      const TextStyle(color: Colors.white70, fontSize: 16),
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
                 ),
               ),
             );
@@ -101,21 +102,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kUnlocked,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+              PressableScale(
+                scale: 0.98,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kUnlocked,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => _startReview(items),
+                    icon: const Icon(Icons.play_arrow, color: Colors.white),
+                    label: Text('开始复习（${items.length} 个 · 听辨→跟读→替换→开口）',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 15)),
                   ),
-                  onPressed: () => _startReview(items),
-                  icon: const Icon(Icons.play_arrow, color: Colors.white),
-                  label: Text(
-                      '开始复习（${items.length} 个 · 听辨→跟读→替换→开口）',
-                      style:
-                          const TextStyle(color: Colors.white, fontSize: 15)),
                 ),
               ),
               const SizedBox(height: 10),
@@ -125,7 +128,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
               const SizedBox(height: 16),
-              for (final c in items) _ReviewItem(chunk: c),
+              for (final (i, c) in items.indexed)
+                StaggerIn(index: i, child: _ReviewItem(chunk: c)),
             ],
           );
         },
@@ -155,10 +159,8 @@ class _ReviewItem extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.volume_up, color: kPrimary),
-              onPressed: () => speakOrHint(
-                  context,
-                  Provider.of<TtsService>(context, listen: false),
-                  chunk.text),
+              onPressed: () => speakOrHint(context,
+                  Provider.of<TtsService>(context, listen: false), chunk.text),
             ),
           ],
         ),

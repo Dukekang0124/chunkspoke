@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../ui/theme.dart';
+import '../ui/count_up.dart';
 import 'settings.dart';
 
 class MeScreen extends StatelessWidget {
@@ -104,6 +105,20 @@ class MeScreen extends StatelessWidget {
         ),
       );
 
+  Widget _statValue(String value) {
+    final m = RegExp(r'^(\d+)(.*)$').firstMatch(value);
+    if (m == null) {
+      return Text(value,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold));
+    }
+    final suffix = m.group(2) ?? '';
+    return CountUpText(int.parse(m.group(1)!),
+        style: const TextStyle(
+            color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+        format: (v) => '$v$suffix');
+  }
+
   Widget _stat(String label, String value,
           {String sub = '', VoidCallback? help}) =>
       Container(
@@ -141,11 +156,8 @@ class MeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold)),
+            // M1（数字滚动）：以数字开头的统计值滚到位（450ms ≤600ms），非数字文案原样显示。
+            _statValue(value),
           ],
         ),
       );

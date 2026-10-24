@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:math' as math;
 
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
@@ -13,7 +12,7 @@ import '../services/session_report.dart';
 import '../ui/theme.dart';
 import '../ui/labels.dart';
 import '../ui/feedback.dart';
-import '../ui/motion.dart';
+import '../ui/confetti.dart';
 import '../steps/practice_loop.dart';
 
 /// 场景会话页：直接进入「逐块闭环」练习（锚定→拆解→听辨→跟读→替换→造句）。
@@ -159,30 +158,19 @@ class CompletionView extends StatefulWidget {
 }
 
 class _CompletionViewState extends State<CompletionView>
-    with TickerProviderStateMixin {
-  // 两个独立动画（彩带 + 徽章）必须各占一个 ticker，SingleTicker 会在建第二个时抛错。
-  late final AnimationController _confetti;
+    with SingleTickerProviderStateMixin {
   late final AnimationController _badge;
-  bool _lowPower = false;
 
   @override
   void initState() {
     super.initState();
-    _confetti = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1800))
-      ..forward();
     _badge = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500))
       ..forward();
-    // B7 省电模式探测：省电时粒子减半。
-    PowerService.isPowerSaveMode().then((v) {
-      if (mounted) setState(() => _lowPower = v);
-    });
   }
 
   @override
   void dispose() {
-    _confetti.dispose();
     _badge.dispose();
     super.dispose();
   }
@@ -190,8 +178,6 @@ class _CompletionViewState extends State<CompletionView>
   @override
   Widget build(BuildContext context) {
     const labels = ['听辨', '跟读', '替换', '开口'];
-    final reduce = MediaQuery.of(context).disableAnimations; // B7 尊重系统减弱动画
-    final policy = MotionPolicy(reduceMotion: reduce, lowPower: _lowPower);
     final canContinue = widget.nextUnlocked && widget.nextScene != null;
     final hasMissingStars = widget.dims.any((ok) => !ok);
     return Stack(
@@ -292,18 +278,8 @@ class _CompletionViewState extends State<CompletionView>
             ),
           ),
         ),
-        // B5 彩带（尊重系统减弱动画 / 省电降级时跳过或减半）
-        if (policy.confettiOn)
-          IgnorePointer(
-            child: AnimatedBuilder(
-              animation: _confetti,
-              builder: (_, __) => CustomPaint(
-                size: Size.infinite,
-                painter:
-                    _ConfettiPainter(_confetti.value, policy.particles(60)),
-              ),
-            ),
-          ),
+        // B5 彩带（M1 起走共享组件，内部统一过减弱动画/省电闸）
+        const ConfettiBurst(),
       ],
     );
   }
@@ -405,44 +381,4 @@ class _CompletionViewState extends State<CompletionView>
       ),
     );
   }
-}
-
-/// B5 彩带粒子绘制。
-class _ConfettiPainter extends CustomPainter {
-  final double t;
-  final int count;
-  _ConfettiPainter(this.t, this.count);
-  final math.Random _rng = math.Random(7);
-  static const _colors = [
-    Color(0xFFFFB84D),
-    Color(0xFF34D399),
-    Colors.white,
-    Color(0xFFF59E0B),
-    Color(0xFF60A5FA),
-  ];
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (var i = 0; i < count; i++) {
-      final x = _rng.nextDouble() * size.width;
-      final y =
-          (_rng.nextDouble() * size.height + t * size.height) % size.height;
-      final c = _colors[i % _colors.length];
-      final w = 6.0 + _rng.nextDouble() * 5;
-      final h = 10.0 + _rng.nextDouble() * 6;
-      canvas.save();
-      canvas.translate(x, y);
-      canvas.rotate(_rng.nextDouble() * math.pi + t * 4);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-            Rect.fromCenter(center: Offset.zero, width: w, height: h),
-            const Radius.circular(2)),
-        Paint()..color = c.withValues(alpha: 1.0 - t * 0.25),
-      );
-      canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConfettiPainter old) => old.t != t;
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/loaders.dart';
 import '../services/tts_native.dart';
+import 'sheet.dart';
 import 'theme.dart';
 
 /// 安装语音引擎的商店检索入口（国内厂商商店优先，Google TTS 备选）。
@@ -30,7 +31,7 @@ Future<void> openTtsSettings(BuildContext context) async {
 
 /// 商店检索底部弹层：两个可下载的语音引擎，逐项跳转。
 Future<void> showTtsStoreSheet(BuildContext context) async {
-  await showModalBottomSheet<void>(
+  await showAppSheet<void>(
     context: context,
     backgroundColor: kCard,
     builder: (sheetCtx) => SafeArea(

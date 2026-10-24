@@ -3,40 +3,56 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/loaders.dart';
 import 'theme.dart';
+import 'motion.dart';
+import 'pressable.dart';
 import 'labels.dart';
 
 /// 词块视觉芯片：颜色 + 形状双重编码。纯展示，拖拽/点击由外层包裹。
+/// [interactive] 置 true 才给按下缩放——展示用芯片（词块库行、复习卡）不能反馈，
+/// 否则「按下去有反应」会误导（动效红线：反馈要对得上动作）。
 class ChunkTile extends StatelessWidget {
   final String text;
   final String type;
   final bool selected;
+  final bool interactive;
   final VoidCallback? onTap;
   final EdgeInsets? margin;
   const ChunkTile(this.text, this.type,
-      {this.selected = false, this.onTap, this.margin, super.key});
+      {this.selected = false,
+      this.interactive = false,
+      this.onTap,
+      this.margin,
+      super.key});
 
   @override
   Widget build(BuildContext context) {
     final color = chunkColor(type);
-    return Container(
-      margin: margin,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: selected ? color.withValues(alpha: 0.35) : color.withValues(alpha: 0.16),
-        border: Border.all(
-          color: type == 'timeplace'
-              ? color
-              : (selected ? color : color.withValues(alpha: 0.5)),
-          width: type == 'timeplace' ? 1 : (selected ? 2 : 1),
+    // M-2（按下态）：词块 chip 遍布六步、沙盒、词块库与播放页，统一在共享组件里给反馈。
+    return PressableScale(
+      scale: 0.96,
+      enabled: interactive,
+      child: Container(
+        margin: margin,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected
+              ? color.withValues(alpha: 0.35)
+              : color.withValues(alpha: 0.16),
+          border: Border.all(
+            color: type == 'timeplace'
+                ? color
+                : (selected ? color : color.withValues(alpha: 0.5)),
+            width: type == 'timeplace' ? 1 : (selected ? 2 : 1),
+          ),
+          borderRadius: chunkRadius(type),
         ),
-        borderRadius: chunkRadius(type),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: chunkFontSize(type),
-          fontWeight: FontWeight.w600,
+        child: Text(
+          text,
+          style: TextStyle(
+            color: color,
+            fontSize: chunkFontSize(type),
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -78,7 +94,8 @@ void showCnCard(BuildContext context, String cn) {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white24),
           ),
-          child: Text(cn, style: const TextStyle(color: Colors.white, fontSize: 16)),
+          child: Text(cn,
+              style: const TextStyle(color: Colors.white, fontSize: 16)),
         ),
       ),
     ),
@@ -116,7 +133,9 @@ class SceneCard extends StatelessWidget {
               Text(sceneCn(theme),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                      color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               Text(theme,
                   textAlign: TextAlign.center,
@@ -136,6 +155,7 @@ class LevelMeter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = level.clamp(0.0, 1.0);
+    final policy = Motion.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(24, (i) {
@@ -143,7 +163,9 @@ class LevelMeter extends StatelessWidget {
         final w = 0.45 + 0.55 * (0.5 + 0.5 * sin(i * pi / 6));
         final h = 8.0 + l * 48.0 * w;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 90),
+          // 仪表类实时反馈（M-0 裁定豁免三级时长带），但降级时仍直接切换。
+          duration: policy.dur(90),
+          curve: Curves.easeOut,
           margin: const EdgeInsets.symmetric(horizontal: 2),
           width: 4,
           height: h,

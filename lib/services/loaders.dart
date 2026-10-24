@@ -325,6 +325,10 @@ class ProgressService {
   }
 
   // —— 留存通知设置（默认关；默认 20:00）——
+  /// M1（#64）：首次完听后只问一次通知，不在进页面时静默索取。
+  bool get notifAskDone => _kv('notifAskDone') == 'true';
+  Future<void> setNotifAskDone() => _put('notifAskDone', 'true');
+
   bool get notifEnabled => _kv('notifEnabled') == 'true';
   Future<void> setNotifEnabled(bool v) => _put('notifEnabled', v.toString());
 
@@ -388,6 +392,12 @@ class ProgressService {
   }
 
   // —— 升级亮点（A6）：v1.4.0 首启一次性清单，看过记忆不再弹 ——
+  /// M1（#64）：权限前说明每个权限只弹一次，说明过就记下来。
+  bool get prepromptSeenMic => _kv('prepromptMic') == 'true';
+  Future<void> setPrepromptSeenMic() => _put('prepromptMic', 'true');
+  bool get prepromptSeenNotify => _kv('prepromptNotify') == 'true';
+  Future<void> setPrepromptSeenNotify() => _put('prepromptNotify', 'true');
+
   bool get seenChangelog140 => _kv('seenChangelog140') == 'true';
   Future<void> setSeenChangelog140() => _put('seenChangelog140', 'true');
 

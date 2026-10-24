@@ -9,7 +9,11 @@ class SwapStep extends StatefulWidget {
   final Chunk chunk;
   final String levelId;
   final VoidCallback onDone;
-  const SwapStep({required this.chunk, required this.levelId, required this.onDone, super.key});
+  const SwapStep(
+      {required this.chunk,
+      required this.levelId,
+      required this.onDone,
+      super.key});
 
   @override
   State<SwapStep> createState() => _SwapStepState();
@@ -60,7 +64,10 @@ class _SwapStepState extends State<SwapStep> {
   @override
   Widget build(BuildContext context) {
     if (_saying && _chosen != null) {
-      return SayWidget(sentence: _newSentence(_chosen!), levelId: widget.levelId, onDone: (_) => widget.onDone);
+      return SayWidget(
+          sentence: _newSentence(_chosen!),
+          levelId: widget.levelId,
+          onDone: (_) => widget.onDone);
     }
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -77,20 +84,24 @@ class _SwapStepState extends State<SwapStep> {
               final s = _slots[i];
               final highlight = i == _swapIndex;
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: highlight ? kPrimary : Colors.white24,
                     width: highlight ? 2 : 1,
                   ),
-                  color: highlight ? kPrimary.withValues(alpha: 0.12) : Colors.transparent,
+                  color: highlight
+                      ? kPrimary.withValues(alpha: 0.12)
+                      : Colors.transparent,
                 ),
                 child: Text(s.text,
                     style: TextStyle(
                         color: highlight ? kPrimary : Colors.white,
                         fontSize: 16,
-                        fontWeight: highlight ? FontWeight.bold : FontWeight.normal)),
+                        fontWeight:
+                            highlight ? FontWeight.bold : FontWeight.normal)),
               );
             }),
           ),
@@ -107,7 +118,7 @@ class _SwapStepState extends State<SwapStep> {
                   _chosen = opt;
                   _saying = true;
                 }),
-                child: ChunkTile(opt, 'content'),
+                child: ChunkTile(opt, 'content', interactive: true),
               );
             }).toList(),
           ),

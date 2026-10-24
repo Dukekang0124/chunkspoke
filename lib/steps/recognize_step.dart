@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../ui/theme.dart';
+import '../ui/motion.dart';
 import '../ui/widgets.dart';
 import '../ui/feedback.dart';
 
@@ -83,7 +84,8 @@ class _RecognizeStepState extends State<RecognizeStep> {
           ),
           const SizedBox(height: 20),
           AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
+            duration: Motion.of(context).dur(150),
+            curve: Curves.easeOut,
             transform: Matrix4.translationValues(_shake, 0, 0),
             child: Wrap(
               spacing: 12,
@@ -92,7 +94,8 @@ class _RecognizeStepState extends State<RecognizeStep> {
               children: _options
                   .map((t) => GestureDetector(
                         onTap: () => _answer(t),
-                        child: ChunkTile(t, typeMap[t] ?? 'content'),
+                        child: ChunkTile(t, typeMap[t] ?? 'content',
+                            interactive: true),
                       ))
                   .toList(),
             ),

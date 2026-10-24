@@ -13,6 +13,8 @@ import '../services/tts_voice.dart';
 import '../services/notification_service.dart';
 import '../services/recording.dart';
 import '../services/review_notify.dart';
+import '../ui/sheet.dart';
+import '../ui/permission_preprompt.dart';
 import '../ui/theme.dart';
 import '../ui/feedback.dart';
 import 'ai_coach_screen.dart';
@@ -188,7 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _toggleNotif(bool v) async {
     final p = Provider.of<ProgressService>(context, listen: false);
     if (v) {
-      final ok = await NotificationService.instance.requestPermission();
+      final ok = await ensureNotificationsWithPreprompt(context);
       if (!ok) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -211,7 +213,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _toggleReviewNotif(bool v) async {
     final p = Provider.of<ProgressService>(context, listen: false);
     if (v) {
-      final ok = await NotificationService.instance.requestPermission();
+      final ok = await ensureNotificationsWithPreprompt(context);
       if (!ok && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -743,7 +745,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ));
       return;
     }
-    final picked = await showModalBottomSheet<_VoiceChoice>(
+    final picked = await showAppSheet<_VoiceChoice>(
       context: context,
       backgroundColor: kBg,
       isScrollControlled: true,

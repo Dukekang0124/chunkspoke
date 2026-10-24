@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,7 +12,12 @@ import '../services/speech.dart';
 import '../services/vosk_engine.dart';
 import '../services/ai/ai_service.dart';
 import '../services/ai/ai_models.dart';
+import '../ui/check_mark.dart';
 import '../ui/feedback.dart';
+import '../ui/motion.dart';
+import '../ui/permission_preprompt.dart';
+import '../ui/pressable.dart';
+import '../ui/sheet.dart';
 import '../ui/theme.dart';
 
 /// 自由造句沙盒（指令 O 重构，1.5.3）：词块资产生命周期「用」的终点站。
@@ -27,7 +34,8 @@ class FreeBuildScreen extends StatefulWidget {
   State<FreeBuildScreen> createState() => _FreeBuildScreenState();
 }
 
-class _FreeBuildScreenState extends State<FreeBuildScreen> {
+class _FreeBuildScreenState extends State<FreeBuildScreen>
+    with SingleTickerProviderStateMixin {
   final RecordingService _rec = RecordingService();
   final SpeechService _speech = SpeechService();
   final AIService _ai = AIServiceImpl();
@@ -63,6 +71,9 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
   bool _storedChain = false;
   int _sentenceCount = 0;
 
+  /// M1（#23）：判定失败的摇头（与 build_step 同一套节奏，整站一致）。
+  late final AnimationController _wrongShake;
+
   ProgressService get _p =>
       Provider.of<ProgressService>(context, listen: false);
 
@@ -80,7 +91,20 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
     _silence = SilenceAutoStop(onSilence: () {
       if (mounted && _recording && !_judging) _toggleRecord();
     });
+    _wrongShake = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
     _prepare();
+  }
+
+  /// M1（#21/#23）：三态反馈的动效与触感。通过=打勾+微震；失败=摇头+微震；接近=只换色不摇。
+  void _verdictFx(String tier) {
+    final policy = Motion.of(context);
+    if (tier == 'perfect') {
+      policy.success();
+    } else if (tier == 'retry') {
+      policy.wrong();
+      if (policy.animates) _wrongShake.forward(from: 0);
+    }
   }
 
   Future<void> _prepare() async {
@@ -123,6 +147,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
 
   @override
   void dispose() {
+    _wrongShake.dispose();
     _silence?.detach();
     // P0 加固：录音中退出必须停掉原生录音线程，避免麦克风/渲染树残留。
     if (_recording) _rec.stop();
@@ -234,7 +259,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
   }
 
   void _showChipSheet(MergedChunk m) {
-    showModalBottomSheet(
+    showAppSheet<void>(
       context: context,
       backgroundColor: kCard,
       builder: (_) => SafeArea(
@@ -330,7 +355,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
           content: Text('先挑块拼一句'), duration: Duration(seconds: 2)));
       return;
     }
-    final perm = await _rec.ensurePermission();
+    final perm = await ensureMicWithPreprompt(context, _rec);
     if (perm != MicPerm.granted) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -395,6 +420,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
         _guard = guard;
         _tier = 'retry';
       });
+      _verdictFx('retry');
       return;
     }
     JudgeResult? ai;
@@ -437,6 +463,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
       _guard = guard;
       _tier = tier;
     });
+    _verdictFx(tier);
     if (tier == 'perfect') await _store();
   }
 
@@ -471,7 +498,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
   // —— 我的句子 ——
 
   void _showSentences() {
-    showModalBottomSheet(
+    showAppSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: kCard,
@@ -705,6 +732,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
       ),
       child: Row(
         children: [
+          _verdictIcon(t),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -721,15 +750,15 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
                       key: const Key('sandboxAsrRaw'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          color: Colors.white, fontSize: 13)),
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 13)),
                 if (refLine != null)
                   Text(refLine,
                       key: const Key('sandboxReference'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          color: Colors.white54, fontSize: 12)),
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 12)),
               ],
             ),
           ),
@@ -741,6 +770,37 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  /// 槽内图标：打勾一笔画入 / 接近 / 失败摇头。文案不动（B5 展示与校验分立的既有口径）。
+  Widget _verdictIcon(String tier) {
+    final policy = Motion.of(context);
+    final icon = AnimatedSwitcher(
+      duration: policy.dur(250),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      transitionBuilder: (child, a) => ScaleTransition(
+          scale: a, child: FadeTransition(opacity: a, child: child)),
+      child: tier == 'perfect'
+          ? const CheckDraw(
+              key: ValueKey('ok'), size: 22, stroke: 2.6, color: kUnlocked)
+          : Icon(
+              tier == 'improve' ? Icons.tips_and_updates_outlined : Icons.close,
+              key: ValueKey(tier),
+              size: 20,
+              color: tier == 'improve' ? kPrimary : kError,
+            ),
+    );
+    return AnimatedBuilder(
+      animation: _wrongShake,
+      builder: (_, child) {
+        final s = _wrongShake.value;
+        final dx =
+            (s > 0 && s < 1) ? math.sin(s * math.pi * 6) * 8 * (1 - s) : 0.0;
+        return Transform.translate(offset: Offset(dx, 0), child: child);
+      },
+      child: SizedBox(width: 26, child: Center(child: icon)),
     );
   }
 
@@ -797,7 +857,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
     final on = _scene == id;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
+      child: PressableScale(
+        scale: 0.94,
         onTap: () => _onScene(id),
         child: Container(
           alignment: Alignment.center,
@@ -805,8 +866,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
           decoration: BoxDecoration(
             color: on ? kPrimary.withValues(alpha: 0.24) : kCard,
             borderRadius: BorderRadius.circular(20),
-            border:
-                Border.all(color: on ? kPrimary : kPrimary.withValues(alpha: 0.3)),
+            border: Border.all(
+                color: on ? kPrimary : kPrimary.withValues(alpha: 0.3)),
           ),
           child: Text('$label · $count',
               style: TextStyle(
@@ -899,14 +960,17 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
   Widget _chip(MergedChunk m, {bool compact = false}) {
     final on = _selected.any((c) => m.ids.contains(c.id));
     final relearn = _relearningIds.contains(m.id);
-    return GestureDetector(
+    return PressableScale(
+      scale: 0.96,
       onTap: () => _toggle(m),
       onLongPress: () => _showChipSheet(m),
       child: Container(
         constraints: BoxConstraints(maxWidth: compact ? 200 : double.infinity),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: on ? kPrimary.withValues(alpha: 0.30) : kPrimary.withValues(alpha: 0.12),
+          color: on
+              ? kPrimary.withValues(alpha: 0.30)
+              : kPrimary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
               color: on ? kPrimary : kPrimary.withValues(alpha: 0.4),
@@ -964,7 +1028,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
                 for (final s in combos)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
+                    child: PressableScale(
+                      scale: 0.94,
                       onTap: () => _useCombo(s),
                       child: Container(
                         alignment: Alignment.center,
@@ -972,7 +1037,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
                         decoration: BoxDecoration(
                           color: kPrimary.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: kPrimary.withValues(alpha: 0.4)),
+                          border: Border.all(
+                              color: kPrimary.withValues(alpha: 0.4)),
                         ),
                         child: Text(s,
                             maxLines: 1,
@@ -989,8 +1055,9 @@ class _FreeBuildScreenState extends State<FreeBuildScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              GestureDetector(
+              PressableScale(
                 key: const Key('sandboxMic'),
+                scale: 0.96,
                 onTap: _toggleRecord,
                 child: Container(
                   width: 68,

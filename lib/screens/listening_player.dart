@@ -17,11 +17,15 @@ import '../services/listening_shadow.dart';
 import '../services/loaders.dart';
 import '../services/recording.dart';
 import '../services/speech.dart';
-import '../services/notification_service.dart';
 import '../steps/practice_loop.dart';
 import '../ui/feedback.dart';
+import '../ui/sheet.dart';
 import '../ui/theme.dart';
-
+import '../ui/confetti.dart';
+import '../ui/motion.dart';
+import '../ui/permission_preprompt.dart';
+import '../ui/play_pause_morph.dart';
+import '../ui/pressable.dart';
 
 /// 浸泡层播放页（应用内）。
 ///
@@ -58,6 +62,9 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
   /// 译文开关（§二.5）：默认开，偏好落库。
   bool _showTranslation = true;
 
+  /// M1（#25 补齐）：收词六步真的走完才置位——撒花是氛围层，状态没变不放（DDS §24.2 R1）。
+  bool _celebrateSix = false;
+
   /// 讲解徽标里展示块面用（候选块也在 article.chunks 里）。
   late final Map<String, String> _articleChunkText = {
     for (final c in widget.article.chunks) c.id: c.text,
@@ -71,13 +78,13 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     }
     _pulse = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 900));
-    _showTranslation =
-        Provider.of<ProgressService>(context, listen: false).listening
-            .showTranslation;
+    _showTranslation = Provider.of<ProgressService>(context, listen: false)
+        .listening
+        .showTranslation;
     _createController();
     _loadStates();
     if (widget.reviewRun) unawaited(_loadDueChunks());
-    unawaited(NotificationService.instance.requestPermission());
+    // M1（#64）：取消进页面即静默索取通知——改到首次完听后带说明再问。
   }
 
   /// 复习播单入口：只读「哪些块到期」，不改任何到期时间（禁 force due-now）。
@@ -100,7 +107,9 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         ..clear()
         ..addAll(inArticle);
     });
-    if (_dueChunkIds.isNotEmpty) _pulse.repeat(reverse: true);
+    if (_dueChunkIds.isNotEmpty && Motion.of(context).animates) {
+      _pulse.repeat(reverse: true); // 到期块琥珀脉动（M1 起过闸）
+    }
   }
 
   void _createController() {
@@ -152,8 +161,18 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         content: Text('本篇已播完，浸泡时长已记录'),
         duration: Duration(seconds: 2),
       ));
+      unawaited(_maybeAskNotifications());
     }
     setState(() {});
+  }
+
+  /// M1（#64）：情境化索取——刚完听这一篇、且从没问过，才弹「为什么需要通知」说明卡。
+  Future<void> _maybeAskNotifications() async {
+    final p = Provider.of<ProgressService>(context, listen: false);
+    if (p.notifEnabled || p.notifAskDone) return;
+    await p.setNotifAskDone();
+    if (!mounted) return;
+    await ensureNotificationsWithPreprompt(context);
   }
 
   void _scrollTo(int index) {
@@ -213,8 +232,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                 _levelBadge(widget.article.level),
                 const SizedBox(width: 6),
                 Text('默认 ${_c.baseRate}x',
-                    style: const TextStyle(
-                        fontSize: 11, color: Colors.white38)),
+                    style:
+                        const TextStyle(fontSize: 11, color: Colors.white38)),
               ],
             ),
           ],
@@ -305,17 +324,30 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
 
   Widget _ready() {
     final plan = _c.plan!;
-    return Column(
+    return Stack(
       children: [
-        _explainToggle(plan),
-        _modeBanner(plan),
-        _legend(),
-        _chunkStrip(),
-        Expanded(child: _sentenceList(plan)),
-        if (!_c.live && (_c.loopA != null || _c.abActive)) _abStatus(),
-        _progress(plan),
-        _transport(plan),
-        _tools(),
+        Column(
+          children: [
+            _explainToggle(plan),
+            _modeBanner(plan),
+            _legend(),
+            _chunkStrip(),
+            Expanded(child: _sentenceList(plan)),
+            if (!_c.live && (_c.loopA != null || _c.abActive)) _abStatus(),
+            _progress(plan),
+            _transport(plan),
+            _tools(),
+          ],
+        ),
+        // 不跳页、不打断播放：只在原页面盖一层氛围彩带，播完自动收。
+        if (_celebrateSix)
+          Positioned.fill(
+            child: ConfettiBurst(
+              onDone: () {
+                if (mounted) setState(() => _celebrateSix = false);
+              },
+            ),
+          ),
       ],
     );
   }
@@ -385,16 +417,21 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     required bool enabled,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return PressableScale(
       key: key,
+      scale: 0.94,
+      enabled: enabled,
       onTap: enabled ? onTap : null,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? kPrimary.withValues(alpha: 0.16) : Colors.transparent,
+          color:
+              selected ? kPrimary.withValues(alpha: 0.16) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-              color: selected ? kPrimary.withValues(alpha: 0.6) : Colors.transparent),
+              color: selected
+                  ? kPrimary.withValues(alpha: 0.6)
+                  : Colors.transparent),
         ),
         child: Text(
           label,
@@ -539,13 +576,14 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     final s = plan.sentences[i];
     final active = i == _c.currentIndex;
     final src = plan.article.sentences[i];
-    final dueHere = widget.reviewRun &&
-        src.chunks.any((c) => _dueChunkIds.contains(c.id));
+    final dueHere =
+        widget.reviewRun && src.chunks.any((c) => _dueChunkIds.contains(c.id));
     return AnimatedBuilder(
       animation: _pulse,
       builder: (context, inner) => AnimatedContainer(
         key: _sentenceKeys[i],
-        duration: const Duration(milliseconds: 220),
+        duration: Motion.of(context).dur(220),
+        curve: Curves.easeOut,
         margin: const EdgeInsets.symmetric(vertical: 3),
         padding: const EdgeInsets.fromLTRB(8, 9, 8, 9),
         decoration: BoxDecoration(
@@ -612,8 +650,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                 states: _states,
                 active: active,
                 dueIds: dueHere ? _dueChunkIds : const {},
-                emphasizedIds:
-                    explaining ? expl.chunkIds.toSet() : const {},
+                emphasizedIds: explaining ? expl.chunkIds.toSet() : const {},
                 onChunkTap: (chunk) => _showChunk(chunk, i),
               ),
               if (explaining) ...[
@@ -656,8 +693,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                         ),
                       ),
                       const Text('轻点跳过',
-                          style: TextStyle(
-                              color: Colors.white24, fontSize: 10)),
+                          style:
+                              TextStyle(color: Colors.white24, fontSize: 10)),
                     ],
                   ),
                 ),
@@ -717,8 +754,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                   ? 'A-B 循环'
                   : 'A ${_fmtMs(a)} · B ${b == null ? '未设' : _fmtMs(b)}'
                       '${_c.abActive ? ' · 循环中' : ' · 播放到点后设 B'}',
-              style:
-                  const TextStyle(color: Colors.white70, fontSize: 12),
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
           ),
           TextButton(
@@ -748,11 +784,10 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('第 ${_c.currentIndex + 1} / ${plan.sentences.length} 句',
-                    style: const TextStyle(
-                        color: Colors.white38, fontSize: 11)),
-                const Text('进度为估算',
                     style:
-                        TextStyle(color: Colors.white24, fontSize: 11)),
+                        const TextStyle(color: Colors.white38, fontSize: 11)),
+                const Text('进度为估算',
+                    style: TextStyle(color: Colors.white24, fontSize: 11)),
               ],
             ),
           ],
@@ -817,43 +852,52 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          IconButton(
-            iconSize: 28,
-            tooltip: '上一句',
-            color: atStart ? Colors.white24 : Colors.white70,
-            onPressed: atStart ? null : _c.previous,
-            icon: const Icon(Icons.skip_previous),
+          // M1（#38 附带项）：其余播控图标只补按下态，不做变形。
+          PressableScale(
+            scale: 0.96,
+            child: IconButton(
+              iconSize: 28,
+              tooltip: '上一句',
+              color: atStart ? Colors.white24 : Colors.white70,
+              onPressed: atStart ? null : _c.previous,
+              icon: const Icon(Icons.skip_previous),
+            ),
           ),
           SizedBox(
             width: 64,
             height: 64,
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                shape: const CircleBorder(),
-                backgroundColor: _c.canPlay ? kPrimary : kLocked,
-                padding: EdgeInsets.zero,
-              ),
-              onPressed: _c.canPlay ? _c.togglePlay : null,
-              child: Icon(
-                _c.playing ? Icons.pause : Icons.play_arrow,
-                size: 34,
-                color: _c.canPlay ? Colors.black : Colors.white38,
+            child: PressableScale(
+              scale: 0.92,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  shape: const CircleBorder(),
+                  backgroundColor: _c.canPlay ? kPrimary : kLocked,
+                  padding: EdgeInsets.zero,
+                ),
+                onPressed: _c.canPlay ? _c.togglePlay : null,
+                child: PlayPauseMorph(
+                  playing: _c.playing,
+                  size: 34,
+                  color: _c.canPlay ? Colors.black : Colors.white38,
+                ),
               ),
             ),
           ),
-          IconButton(
-            iconSize: 28,
-            tooltip: '下一句',
-            color: atEnd ? Colors.white24 : Colors.white70,
-            onPressed: atEnd ? null : _c.next,
-            icon: const Icon(Icons.skip_next),
+          PressableScale(
+            scale: 0.96,
+            child: IconButton(
+              iconSize: 28,
+              tooltip: '下一句',
+              color: atEnd ? Colors.white24 : Colors.white70,
+              onPressed: atEnd ? null : _c.next,
+              icon: const Icon(Icons.skip_next),
+            ),
           ),
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('第 ${_c.currentIndex + 1} / ${plan.sentences.length} 句',
-                  style:
-                      const TextStyle(color: Colors.white54, fontSize: 11)),
+                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
               if (_c.completed)
                 const Text('已完听',
                     style: TextStyle(color: kUnlocked, fontSize: 10)),
@@ -911,11 +955,15 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
   }) {
     return TextButton.icon(
       onPressed: enabled ? onTap : null,
-      icon: Icon(icon, size: 16, color: enabled ? (active ? kPrimary : Colors.white54) : Colors.white24),
+      icon: Icon(icon,
+          size: 16,
+          color:
+              enabled ? (active ? kPrimary : Colors.white54) : Colors.white24),
       label: Text(
         label,
         style: TextStyle(
-          color: enabled ? (active ? kPrimary : Colors.white70) : Colors.white24,
+          color:
+              enabled ? (active ? kPrimary : Colors.white70) : Colors.white24,
           fontSize: 12,
         ),
       ),
@@ -938,7 +986,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
   }
 
   Future<void> _pickSpeed() async {
-    final picked = await showModalBottomSheet<int>(
+    final picked = await showAppSheet<int>(
       context: context,
       backgroundColor: kCard,
       builder: (ctx) => SafeArea(
@@ -947,8 +995,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
           children: [
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Text('播放速度',
-                  style: TextStyle(color: kText, fontSize: 16)),
+              child: Text('播放速度', style: TextStyle(color: kText, fontSize: 16)),
             ),
             for (var i = 0; i < ListeningPlayerController.kSpeeds.length; i++)
               ListTile(
@@ -970,7 +1017,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
 
   Future<void> _pickAb() async {
     if (_c.live) return;
-    await showModalBottomSheet<void>(
+    await showAppSheet<void>(
       context: context,
       backgroundColor: kCard,
       builder: (ctx) => SafeArea(
@@ -1018,8 +1065,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                     child: Text(
                       '${_c.loopA == null ? 'A 未设' : 'A ${_fmtMs(_c.loopA!)}'}'
                       ' · ${_c.loopB == null ? 'B 未设' : 'B ${_fmtMs(_c.loopB!)}'}',
-                      style: const TextStyle(
-                          color: Colors.white54, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 12),
                     ),
                   ),
                   TextButton(
@@ -1039,7 +1086,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
   }
 
   Future<void> _pickSleep() async {
-    final picked = await showModalBottomSheet<SleepTimerOption>(
+    final picked = await showAppSheet<SleepTimerOption>(
       context: context,
       backgroundColor: kCard,
       builder: (ctx) => SafeArea(
@@ -1048,8 +1095,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
           children: [
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Text('定时关闭',
-                  style: TextStyle(color: kText, fontSize: 16)),
+              child: Text('定时关闭', style: TextStyle(color: kText, fontSize: 16)),
             ),
             for (final option in SleepTimerOption.values)
               ListTile(
@@ -1089,7 +1135,6 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
       articleCollectLimit: widget.article.collectLimit,
     );
   }
-
 
   /// 级别徽标（与首页同一套色：级别=篇目属性，不与三色块状态混义）。
   Widget _levelBadge(ListeningLevel level) {
@@ -1145,8 +1190,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                       style: const TextStyle(color: kText, fontSize: 13)),
                   const Spacer(),
                   Text(_chunksOpen ? '收起' : '展开',
-                      style: const TextStyle(
-                          color: Colors.white38, fontSize: 12)),
+                      style:
+                          const TextStyle(color: Colors.white38, fontSize: 12)),
                   Icon(_chunksOpen ? Icons.expand_less : Icons.expand_more,
                       size: 18, color: Colors.white38),
                 ],
@@ -1173,8 +1218,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                 };
                 return ActionChip(
                   key: Key('listening_strip_${c.id}'),
-                  label: Text(c.text,
-                      style: TextStyle(color: fg, fontSize: 12)),
+                  label:
+                      Text(c.text, style: TextStyle(color: fg, fontSize: 12)),
                   onPressed: () => _showChunk(c, firstIndex[c.id] ?? 0),
                   backgroundColor: kCard,
                   shape: RoundedRectangleBorder(
@@ -1195,7 +1240,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     await _c.pause();
     if (!mounted) return;
     final src = widget.article.sentences[index];
-    await showModalBottomSheet<void>(
+    await showAppSheet<void>(
       context: context,
       backgroundColor: kCard,
       isScrollControlled: true,
@@ -1232,7 +1277,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     }
     if (!mounted) return;
 
-    final result = await showModalBottomSheet<_SheetResult>(
+    final result = await showAppSheet<_SheetResult>(
       context: context,
       backgroundColor: kCard,
       isScrollControlled: true,
@@ -1281,6 +1326,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     if (!mounted) return;
     await _loadStates();
     if (!mounted) return;
+    if (completed) setState(() => _celebrateSix = true);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(completed ? '六步完成 · 已回到文章，可继续听' : '进度已保存 · 可从浮层继续学习'),
       duration: const Duration(seconds: 2),
@@ -1322,7 +1368,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
   void _showAudioInfo() {
     final plan = _c.plan;
     if (plan == null) return;
-    showModalBottomSheet<void>(
+    showAppSheet<void>(
       context: context,
       backgroundColor: kCard,
       isScrollControlled: true,
@@ -1343,8 +1389,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                 '播放模式：${_c.explainedActive ? '讲解版' : '原版'}'
                 '${plan.hasExplanations ? ' · 讲解 ${plan.items.where((e) => e.isExplanation).length} 段'
                     '（新合成 ${plan.explanationSynthesized} / 缓存 ${plan.explanationReused}）' : ''}',
-                style:
-                    const TextStyle(color: Colors.white70, fontSize: 12),
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
               ),
               const SizedBox(height: 4),
               Text('缓存键音色：${plan.voiceKey}',
@@ -1356,8 +1401,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
               Text(
                 '总时长：${_fmtMs(plan.totalMs)} · '
                 '${plan.precise ? '实测时长回填时间轴' : '估算时间轴（精确定位不可用）'}',
-                style:
-                    const TextStyle(color: Colors.white54, fontSize: 12),
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
               const SizedBox(height: 12),
               ConstrainedBox(
@@ -1394,8 +1438,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                                     fontSize: 11)),
                           ),
                           Expanded(
-                            child: Text(
-                                expl ? '讲解 · ${s.text}' : s.text,
+                            child: Text(expl ? '讲解 · ${s.text}' : s.text,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -1552,10 +1595,9 @@ class _SentenceRichTextState extends State<_SentenceRichText> {
               : (highlighted ? FontWeight.w600 : null),
           decoration:
               (highlighted || emphasized) ? TextDecoration.underline : null,
-          decorationStyle:
-              (tone == ListeningChunkTone.mastered || emphasized)
-                  ? TextDecorationStyle.solid
-                  : TextDecorationStyle.dotted,
+          decorationStyle: (tone == ListeningChunkTone.mastered || emphasized)
+              ? TextDecorationStyle.solid
+              : TextDecorationStyle.dotted,
           decorationColor: emphasized
               ? kPrimary
               : (highlighted ? color?.withValues(alpha: 0.45) : null),
@@ -1676,11 +1718,11 @@ class _ChunkSheetState extends State<_ChunkSheet> {
       case ListeningChunkAction.join:
         _collect();
       case ListeningChunkAction.continueLearning:
-        Navigator.of(context).pop(
-            _SheetResult(_SheetCommand.openSix, _r.contentChunk));
+        Navigator.of(context)
+            .pop(_SheetResult(_SheetCommand.openSix, _r.contentChunk));
       case ListeningChunkAction.reviewNow:
-        Navigator.of(context).pop(
-            _SheetResult(_SheetCommand.openReview, _r.contentChunk));
+        Navigator.of(context)
+            .pop(_SheetResult(_SheetCommand.openReview, _r.contentChunk));
       case ListeningChunkAction.mastered:
       case ListeningChunkAction.unavailable:
         break;
@@ -1718,9 +1760,7 @@ class _ChunkSheetState extends State<_ChunkSheet> {
         }
         return '加入后进入词块库，并排入明日复习；不强制立刻学六步。';
       case ListeningChunkAction.continueLearning:
-        return _r.sixStarted
-            ? '有六步断点，将从上次的步骤继续。'
-            : '已收词，继续六步可完成这块。';
+        return _r.sixStarted ? '有六步断点，将从上次的步骤继续。' : '已收词，继续六步可完成这块。';
       case ListeningChunkAction.reviewNow:
         return '复习走后四步；通过后按 1/3/7/14 天档升一级。';
       case ListeningChunkAction.mastered:
@@ -1793,8 +1833,7 @@ class _ChunkSheetState extends State<_ChunkSheet> {
             if (showCap) ...[
               const SizedBox(height: 6),
               Text('本篇已收 ${_r.collectedCount}/${_r.collectCap} 块',
-                  style:
-                      const TextStyle(color: Colors.white38, fontSize: 11)),
+                  style: const TextStyle(color: Colors.white38, fontSize: 11)),
             ],
             if (primary != null) ...[
               const SizedBox(height: 16),
@@ -1845,7 +1884,6 @@ class _ChunkSheetState extends State<_ChunkSheet> {
   }
 }
 
-
 /// 句级轻跟读浮层（指令 S §二.4）。
 ///
 /// 复用六步④的判定与阈值（judgeSpeech + guardAsr + asrVerdictFor，闭合跟读文案），
@@ -1891,12 +1929,12 @@ class _ShadowReadSheetState extends State<_ShadowReadSheet> {
 
   void _snack(String text) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(text), duration: const Duration(seconds: 2)));
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(text), duration: const Duration(seconds: 2)));
   }
 
   Future<void> _start() async {
-    final perm = await _rec.ensurePermission();
+    final perm = await ensureMicWithPreprompt(context, _rec);
     if (!mounted) return;
     if (perm != MicPerm.granted) {
       _snack(perm == MicPerm.permanentlyDenied
@@ -1978,8 +2016,8 @@ class _ShadowReadSheetState extends State<_ShadowReadSheet> {
             const SizedBox(height: 10),
             Text(widget.sentence,
                 key: const Key('shadowTarget'),
-                style: const TextStyle(
-                    color: kText, fontSize: 18, height: 1.35)),
+                style:
+                    const TextStyle(color: kText, fontSize: 18, height: 1.35)),
             const SizedBox(height: 12),
             if (v != null) ...[
               Text('你说：${v.recognized}',
@@ -2005,12 +2043,12 @@ class _ShadowReadSheetState extends State<_ShadowReadSheet> {
                 Expanded(
                   child: FilledButton.icon(
                     key: const Key('shadowRecordButton'),
-                    onPressed:
-                        _thinking ? null : (_recording ? _stopAndJudge : _start),
+                    onPressed: _thinking
+                        ? null
+                        : (_recording ? _stopAndJudge : _start),
                     icon: Icon(_recording ? Icons.stop : Icons.mic),
-                    label: Text(_thinking
-                        ? '识别中…'
-                        : (_recording ? '说完，判定' : '按住说完这句')),
+                    label: Text(
+                        _thinking ? '识别中…' : (_recording ? '说完，判定' : '按住说完这句')),
                   ),
                 ),
                 const SizedBox(width: 10),

@@ -13,6 +13,10 @@ import '../services/session.dart';
 import '../steps/practice_loop.dart';
 import '../ui/feedback.dart';
 import '../ui/theme.dart';
+import '../ui/copy_morph.dart';
+import '../ui/count_up.dart';
+import '../ui/pressable.dart';
+import '../ui/stagger.dart';
 import '../ui/widgets.dart';
 
 /// 词块库（波 2 · 模块 D）：资产轴唯一口径。
@@ -129,8 +133,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
         final data = snap.data;
         if (data == null) {
           return const Center(
-              child: Text('词块库加载失败，请重试',
-                  style: TextStyle(color: Colors.white54)));
+              child:
+                  Text('词块库加载失败，请重试', style: TextStyle(color: Colors.white54)));
         }
         final shown = _fromListeningOnly
             ? _LibraryData(
@@ -143,9 +147,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
               )
             : data;
         final groups = _buildGroups(shown);
-        final sourceCount = data.chunks
-            .where((c) => data.sources.containsKey(c.id))
-            .length;
+        final sourceCount =
+            data.chunks.where((c) => data.sources.containsKey(c.id)).length;
         final total = data.chunks.length;
         final contentIds = {for (final c in data.chunks) c.id};
         final learned = data.rows.values
@@ -167,15 +170,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                FilterChip(
-                  key: const Key('library_filter_listening'),
-                  label: Text('磨耳朵来源 $sourceCount 块',
-                      style: const TextStyle(fontSize: 12)),
-                  selected: _fromListeningOnly,
-                  onSelected: (v) => setState(() => _fromListeningOnly = v),
-                  avatar: const Icon(Icons.headphones,
-                      size: 16, color: kPrimary),
-                  showCheckmark: false,
+                PressableScale(
+                  scale: 0.94,
+                  child: FilterChip(
+                    key: const Key('library_filter_listening'),
+                    label: Text('磨耳朵来源 $sourceCount 块',
+                        style: const TextStyle(fontSize: 12)),
+                    selected: _fromListeningOnly,
+                    onSelected: (v) => setState(() => _fromListeningOnly = v),
+                    avatar:
+                        const Icon(Icons.headphones, size: 16, color: kPrimary),
+                    showCheckmark: false,
+                  ),
                 ),
               ],
             ),
@@ -187,9 +193,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 if (g.chunks.isNotEmpty) ...[
                   _GroupHeader(group: g),
                   const SizedBox(height: 8),
-                  for (final c in g.chunks) ...[
-                    _libraryRow(c, shown.rows[c.id],
-                        shown.combos[c.id] ?? 0, data.sources[c.id]),
+                  for (final (i, c) in g.chunks.indexed) ...[
+                    StaggerIn(
+                      index: i,
+                      child: _libraryRow(c, shown.rows[c.id],
+                          shown.combos[c.id] ?? 0, data.sources[c.id]),
+                    ),
                     const SizedBox(height: 10),
                   ],
                   const SizedBox(height: 8),
@@ -217,15 +226,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
         children: [
           const Text('词块资产库',
               style: TextStyle(
-                  color: kPrimary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600)),
+                  color: kPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          Text('已掌握 $mastered 个词块',
+          CountUpText(mastered,
               style: const TextStyle(
                   color: Colors.white,
                   fontSize: 23,
-                  fontWeight: FontWeight.w700)),
+                  fontWeight: FontWeight.w700),
+              format: (v) => '已掌握 $v 个词块'),
           const SizedBox(height: 4),
           Text('已学完 $learned / $total 块 · 已掌握 = 走完 1/3/7/14 天复习',
               style: const TextStyle(color: Colors.white54, fontSize: 12)),
@@ -301,19 +309,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: export.text));
-                if (ctx.mounted) {
-                  Navigator.of(ctx).pop();
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                      const SnackBar(
-                          content: Text('汇总文本已复制'),
-                          duration: Duration(seconds: 1)));
-                }
-              },
-              child: const Text('复制内容',
-                  style: TextStyle(color: kPrimary)),
+            // M1（#40 复制变勾）：反馈出现在按钮本身，不弹提示框、不关对话框。
+            CopyMorphButton(
+              variant: CopyMorphVariant.text,
+              label: '复制内容',
+              copy: () => Clipboard.setData(ClipboardData(text: export.text)),
             ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
@@ -325,8 +325,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     } catch (e, st) {
       CrashLog.write('Library.export: $e', st);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('导出失败，请稍后重试')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('导出失败，请稍后重试')));
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -334,19 +334,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   List<_AssetGroup> _buildGroups(_LibraryData data) {
-    List<Chunk> of(Set<ChunkAssetState> states) => data.chunks
-        .where((c) {
+    List<Chunk> of(Set<ChunkAssetState> states) => data.chunks.where((c) {
           final r = data.rows[c.id];
           return r != null && states.contains(r.assetState);
-        })
-        .toList()
-      ..sort((a, b) {
-        final ra = data.rows[a.id]!;
-        final rb = data.rows[b.id]!;
-        final da = ra.dueDate == 0 ? 1 << 62 : ra.dueDate;
-        final db = rb.dueDate == 0 ? 1 << 62 : rb.dueDate;
-        return da.compareTo(db);
-      });
+        }).toList()
+          ..sort((a, b) {
+            final ra = data.rows[a.id]!;
+            final rb = data.rows[b.id]!;
+            final da = ra.dueDate == 0 ? 1 << 62 : ra.dueDate;
+            final db = rb.dueDate == 0 ? 1 << 62 : rb.dueDate;
+            return da.compareTo(db);
+          });
     return [
       _AssetGroup(
         state: ChunkAssetState.relearning,
@@ -396,8 +394,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
-            const Text(
-                '完成一块的六步学习后，它会进入 1/3/7/14 天的巩固周期，并出现在这里。',
+            const Text('完成一块的六步学习后，它会进入 1/3/7/14 天的巩固周期，并出现在这里。',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white54, fontSize: 13)),
             const SizedBox(height: 14),
@@ -415,9 +412,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Widget _libraryRow(Chunk c, ChunkRow? row, int combos,
       [List<ListeningArticle>? from]) {
     final state = row?.assetState ?? ChunkAssetState.learning;
-    final first = row == null || row.firstLearnedAt == 0
-        ? '—'
-        : _md(row.firstLearnedAt);
+    final first =
+        row == null || row.firstLearnedAt == 0 ? '—' : _md(row.firstLearnedAt);
     final due = row == null || row.dueDate == 0
         ? (state == ChunkAssetState.mastered ? '周期已完成' : '—')
         : '下次 ${_md(row.dueDate)}';
@@ -440,16 +436,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(c.meaningCN,
-                    style: const TextStyle(
-                        color: Colors.white70, fontSize: 13)),
+                    style:
+                        const TextStyle(color: Colors.white70, fontSize: 13)),
               ),
               IconButton(
                 visualDensity: VisualDensity.compact,
                 icon: const Icon(Icons.volume_up, color: kPrimary, size: 20),
-                onPressed: () => speakOrHint(
-                    context,
-                    Provider.of<TtsService>(context, listen: false),
-                    c.text),
+                onPressed: () => speakOrHint(context,
+                    Provider.of<TtsService>(context, listen: false), c.text),
               ),
             ],
           ),
@@ -541,9 +535,8 @@ class _GroupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = group.state == ChunkAssetState.relearning
-        ? Colors.redAccent
-        : kPrimary;
+    final color =
+        group.state == ChunkAssetState.relearning ? Colors.redAccent : kPrimary;
     return Row(
       children: [
         Container(
@@ -554,9 +547,7 @@ class _GroupHeader extends StatelessWidget {
         const SizedBox(width: 8),
         Text(group.title,
             style: TextStyle(
-                color: color,
-                fontSize: 16,
-                fontWeight: FontWeight.w700)),
+                color: color, fontSize: 16, fontWeight: FontWeight.w700)),
         const SizedBox(width: 6),
         Text('${group.chunks.length} 块',
             style: const TextStyle(color: Colors.white54, fontSize: 12)),

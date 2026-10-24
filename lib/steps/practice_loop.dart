@@ -20,6 +20,8 @@ import 'free_use_step.dart';
 import 'listen_pick_step.dart';
 import 'substitute_step.dart';
 import 'l4_step.dart';
+import '../services/listening_palette.dart';
+import '../ui/motion.dart';
 
 /// 闯关切句的 State key：必须随句 id 变化，禁止复用上一句的判定/尝试次数。
 Key challengeStepKey(String sentenceId) => ValueKey('challenge_$sentenceId');
@@ -824,55 +826,76 @@ class _PracticeLoopState extends State<PracticeLoop>
         ),
       );
 
-  Widget _chunkDoneView() => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Transform.rotate(
-              angle: -0.15,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                      color: _justMastered ? kPrimary : Colors.white38,
-                      width: 2),
-                  borderRadius: BorderRadius.circular(8),
+  Widget _chunkDoneView() {
+    final policy = Motion.of(context);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // M1（P0-2）：盖章弹入对齐闯关完成页既有模式（520ms、超调 ≤8%）；
+          // 升档时描边由琥珀渐变到金，不硬换色。
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.45, end: 1),
+            duration: policy.dur(520),
+            curve: const Cubic(0.34, 1.56, 0.64, 1),
+            builder: (_, v, child) => Transform.scale(scale: v, child: child),
+            child: TweenAnimationBuilder<Color?>(
+              tween: ColorTween(
+                begin: kPrimary,
+                end: _justMastered
+                    ? kListeningMasteredText
+                    : Colors.white38,
+              ),
+              duration: policy.dur(360),
+              curve: Curves.easeOut,
+              builder: (_, accent, __) => Transform.rotate(
+                angle: -0.15,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: accent ?? kPrimary, width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(_stampText,
+                      style: TextStyle(
+                          color: _justMastered
+                              ? (accent ?? kListeningMasteredText)
+                              : Colors.white70,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 2)),
                 ),
-                child: Text(_stampText,
-                    style: TextStyle(
-                        color: _justMastered ? kPrimary : Colors.white70,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 2)),
               ),
             ),
-            const SizedBox(height: 12),
-            Text(_encourage,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    color: kUnlocked,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
-            if (!widget.reviewMode && _combo >= 3) ...[
-              const SizedBox(height: 8),
-              Text('Combo x$_combo',
-                  style: const TextStyle(
-                      color: kPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700)),
-            ],
-            const SizedBox(height: 14),
-            MasteryRing(_total > 0 ? _progressCount / _total : 0, size: 60),
+          ),
+          const SizedBox(height: 12),
+          Text(_encourage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: kUnlocked,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600)),
+          if (!widget.reviewMode && _combo >= 3) ...[
             const SizedBox(height: 8),
-            Text(
-                widget.reviewMode
-                    ? '复习 $_reviewed/$_total'
-                    : '本次完成 $_completed/$_total',
-                style: const TextStyle(color: Colors.white70)),
+            Text('Combo x$_combo',
+                style: const TextStyle(
+                    color: kPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700)),
           ],
-        ),
-      );
+          const SizedBox(height: 14),
+          MasteryRing(_total > 0 ? _progressCount / _total : 0, size: 60),
+          const SizedBox(height: 8),
+          Text(
+              widget.reviewMode
+                  ? '复习 $_reviewed/$_total'
+                  : '本次完成 $_completed/$_total',
+              style: const TextStyle(color: Colors.white70)),
+        ],
+      ),
+    );
+  }
 
   Widget _statChip(String label, String value) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
@@ -904,8 +927,8 @@ class _PracticeLoopState extends State<PracticeLoop>
             children: [
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.45, end: 1),
-                duration: const Duration(milliseconds: 520),
-                curve: Curves.easeOutBack,
+                duration: Motion.of(context).dur(520),
+                curve: const Cubic(0.34, 1.56, 0.64, 1),
                 builder: (_, v, child) =>
                     Transform.scale(scale: v, child: child),
                 child:

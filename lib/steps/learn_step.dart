@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../ui/theme.dart';
+import '../ui/motion.dart';
 import '../ui/widgets.dart';
 import '../ui/feedback.dart';
 
@@ -86,7 +87,8 @@ class _LearnStepState extends State<LearnStep> {
                     onLongPressEnd: (_) => _cancelDissolve(),
                     child: AnimatedOpacity(
                       opacity: _cnDissolved ? 0.0 : 1.0,
-                      duration: const Duration(milliseconds: 400),
+                      duration: Motion.of(context).dur(400),
+                      curve: Curves.easeOut,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(

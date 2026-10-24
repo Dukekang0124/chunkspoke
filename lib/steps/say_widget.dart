@@ -12,6 +12,8 @@ import '../services/vosk_engine.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import '../ui/feedback.dart';
+import '../ui/motion.dart';
+import '../ui/permission_preprompt.dart';
 
 /// SAY 步骤（识别优先级：Vosk 离线默认必通 ＞ Azure 发音评测/增强）：
 ///  - L1：配了 Azure Key+Region → 录音 → Azure 发音评测（三项分数，高精度增强）。
@@ -88,7 +90,7 @@ class _SayWidgetState extends State<SayWidget> {
   /// 权限预检 + 采集链路初始化。禁止静默失败；任何异常兜底为引擎失败卡（P0 加固）。
   Future<void> _initMic() async {
     try {
-      final perm = await _rec.ensurePermission();
+      final perm = await ensureMicWithPreprompt(context, _rec);
       if (!mounted) return;
       setState(() => _perm = perm);
       if (perm != MicPerm.granted) {
@@ -216,6 +218,7 @@ class _SayWidgetState extends State<SayWidget> {
     _cancelLevels();
     final path = await _rec.stop();
     if (!mounted) return;
+    final policy = Motion.of(context); // 过闸取一次，避免跨 async gap 再用 context
     final recPath = path ?? _recPath;
     final r = recPath == null
         ? const VoskResult('', null)
@@ -227,7 +230,7 @@ class _SayWidgetState extends State<SayWidget> {
       _recPath = recPath ?? _recPath;
     });
     if (text.trim().isEmpty) {
-      buzzWrong();
+      policy.wrong();
       setState(() {
         _outcome = SayOutcome(
           passed: false,

@@ -5,6 +5,8 @@ import '../services/loaders.dart';
 import '../services/recording.dart';
 import '../services/vosk_engine.dart';
 import '../ui/theme.dart';
+import '../ui/motion.dart';
+import '../ui/permission_preprompt.dart';
 import '../ui/widgets.dart';
 import 'level.dart';
 import 'nav.dart';
@@ -43,7 +45,7 @@ class _FtueScreenState extends State<FtueScreen> {
 
   Future<void> _prep() async {
     try {
-      final perm = await RecordingService().ensurePermission();
+      final perm = await ensureMicWithPreprompt(context, RecordingService());
       if (mounted) setState(() => _micOk = perm == MicPerm.granted);
     } catch (_) {}
     if (mounted) setState(() => _engine = EngineState.loading);
@@ -74,7 +76,8 @@ class _FtueScreenState extends State<FtueScreen> {
 
   Widget _fly(bool visible, String text, String type) => AnimatedOpacity(
         opacity: visible ? 1 : 0,
-        duration: const Duration(milliseconds: 350),
+        duration: Motion.of(context).dur(350),
+        curve: Curves.easeOut,
         child: ChunkTile(text, type),
       );
 
@@ -106,7 +109,8 @@ class _FtueScreenState extends State<FtueScreen> {
               const SizedBox(height: 12),
               AnimatedOpacity(
                 opacity: s3 ? 1 : 0,
-                duration: const Duration(milliseconds: 300),
+                duration: Motion.of(context).dur(300),
+                curve: Curves.easeOut,
                 child: const Text("I'd like a cup of coffee.",
                     style: TextStyle(fontSize: 18, color: Colors.white)),
               ),

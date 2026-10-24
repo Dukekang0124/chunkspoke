@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/loaders.dart';
+import 'copy_morph.dart';
+import 'motion.dart';
+import 'sheet.dart';
 import 'theme.dart';
 import 'tts_dialogs.dart';
 
-/// 最小反馈：对=轻快系统音（受设置页「音效」开关控制，B7）；错=中等振动（跟随系统）。
+/// 最小反馈：对=轻快系统音（受设置页「音效」开关控制，B7）；错=中等振动（M1 起统一过闸）。
 void chimeCorrect([BuildContext? context]) {
   if (context != null) {
     final p = Provider.of<ProgressService>(context, listen: false);
@@ -15,7 +18,8 @@ void chimeCorrect([BuildContext? context]) {
   SystemSound.play(SystemSoundType.click);
 }
 
-void buzzWrong() => HapticFeedback.mediumImpact();
+/// M1：震动统一走 [MotionPolicy.hapticsOn]（省电模式关闭）。
+void buzzWrong(BuildContext context) => Motion.of(context).wrong();
 
 /// 反馈邮箱（A7：会话收尾页 + 设置页双入口）。
 const String kFeedbackEmail = 'chunkspoke.feedback@gmail.com';
@@ -46,25 +50,19 @@ Future<void> speakOrHint(
 }
 
 /// 反馈入口（A7）：底部弹层提供「发邮件 / 复制邮箱」双方式。
+/// M1：浮层入场统一走 [showAppSheet]，复制反馈改为按钮原地变勾（不再弹 SnackBar）。
 void showFeedbackSheet(BuildContext context) {
-  showModalBottomSheet<void>(
+  showAppSheet<void>(
     context: context,
-    backgroundColor: kCard,
     builder: (ctx) => SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('反馈与建议',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            const Text('发邮件或复制邮箱，我们都会认真看',
-                style: TextStyle(color: Colors.white54, fontSize: 13)),
-            const SizedBox(height: 16),
+            const AppSheetTitle('反馈与建议', subtitle: '发邮件或复制邮箱，我们都会认真看'),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -80,19 +78,14 @@ void showFeedbackSheet(BuildContext context) {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      await copyFeedbackEmail();
-                      if (ctx.mounted) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
-                            content: Text('邮箱已复制'),
-                            duration: Duration(seconds: 1)));
-                      }
-                    },
-                    icon: const Icon(Icons.copy, color: kPrimary),
-                    label: const Text('复制邮箱',
-                        style: TextStyle(color: kPrimary)),
+                const Expanded(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: CopyMorphButton(
+                      copy: copyFeedbackEmail,
+                      label: '复制邮箱',
+                      variant: CopyMorphVariant.filled,
+                    ),
                   ),
                 ),
               ],

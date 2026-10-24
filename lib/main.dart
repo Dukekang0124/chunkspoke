@@ -12,6 +12,7 @@ import 'services/notification_service.dart';
 import 'services/review_notify.dart';
 import 'ui/theme.dart';
 import 'ui/error_page.dart';
+import 'ui/motion.dart';
 import 'screens/ftue.dart';
 import 'screens/model_gate.dart';
 import 'screens/nav.dart';
@@ -102,6 +103,8 @@ Future<void> bootstrap() async {
           Provider<ListeningPack>.value(value: listening),
           Provider<TtsService>.value(value: tts),
           ChangeNotifierProvider<HdVoiceService>.value(value: hdVoice),
+          ChangeNotifierProvider<MotionService>(
+              create: (_) => MotionService()),
         ],
         child: const ChunkSpokeApp(),
       ),

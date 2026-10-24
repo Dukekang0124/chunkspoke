@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/asr_guard.dart';
@@ -14,6 +13,8 @@ import '../services/speech_judge.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import '../ui/feedback.dart';
+import '../ui/motion.dart';
+import '../ui/permission_preprompt.dart';
 
 /// 琥珀高亮色（统一收口“目标词琥珀高亮”意图）。
 const Color kAmber = Color(0xFFFFB84D);
@@ -132,7 +133,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
         _p.azureKey!.isNotEmpty &&
         _p.azureRegion != null &&
         _p.azureRegion!.isNotEmpty;
-    _rec.ensurePermission().then((perm) {
+    ensureMicWithPreprompt(context, _rec).then((perm) {
       if (!mounted) return;
       setState(() {
         _perm = perm;
@@ -371,8 +372,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       _showAnswer = false;
       _passPending = false;
     });
-    if (!MediaQuery.of(context).disableAnimations) {
-      _breathCtrl.repeat(reverse: true); // B3 呼吸脉动（尊重系统减弱动画）
+    if (Motion.of(context).animates) {
+      _breathCtrl.repeat(reverse: true); // B3 呼吸脉动（M1 起统一过闸）
     }
     _listenStart = DateTime.now();
     _stopping = false;
@@ -444,7 +445,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
         confidence: confidence,
         durationSec: durationSec);
     final passed = g.ok && outcome.pass;
-    if (passed) HapticFeedback.mediumImpact();
+    if (passed) Motion.of(context).success();
     final accuracy = (outcome.similarity * 100).round();
     // A2① 平均准确度=文本匹配相似度：每次开口判定（通过与否）都记相似度，
     // 使「平均准确度」真实反映开口文本匹配，而不是恒为 0。
@@ -536,7 +537,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   }
 
   void _enterSelfAssess() {
-    buzzWrong();
+    buzzWrong(context);
     setState(() {
       _thinking = false;
       _selfAssess = true;
@@ -661,7 +662,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 onPressed: _perm == MicPerm.permanentlyDenied
                     ? () => _rec.openSettings()
                     : () {
-                        _rec.ensurePermission().then((p) {
+                        ensureMicWithPreprompt(context, _rec).then((p) {
                           if (!mounted) return;
                           setState(() {
                             _perm = p;

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/asr_guard.dart';
@@ -13,6 +12,8 @@ import '../services/speech.dart';
 import '../ui/theme.dart';
 import '../ui/labels.dart';
 import '../ui/feedback.dart';
+import '../ui/motion.dart';
+import '../ui/permission_preprompt.dart';
 
 /// ⑤ 自由造句 + 场景应用：用今天的词块说/写一句自己的话。
 /// 宽松校验（用上词块 + 至少 3 词 + 有新增内容），通过后给母语者参考句对照。
@@ -63,7 +64,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
     _silence = SilenceAutoStop(onSilence: () {
       if (mounted && _listening) _toggleMic();
     });
-    _rec.ensurePermission().then((perm) async {
+    ensureMicWithPreprompt(context, _rec).then((perm) async {
       if (!mounted) return;
       if (perm != MicPerm.granted) {
         setState(() => _micBlocked = true);
@@ -96,7 +97,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
       if (!v.pass || !guardOk) _showReference = true;
     });
     if (v.pass && guardOk) {
-      HapticFeedback.mediumImpact();
+      Motion.of(context).success();
       setState(() => _passed = true);
     }
   }

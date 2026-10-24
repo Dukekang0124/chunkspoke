@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/asr_guard.dart';
@@ -12,6 +11,8 @@ import '../services/recording.dart';
 import '../services/speech.dart';
 import '../ui/theme.dart';
 import '../ui/feedback.dart';
+import '../ui/motion.dart';
+import '../ui/permission_preprompt.dart';
 
 /// ④ 定向替换：在目标句中把当前词块换成同类搭档，开口说出新句。
 /// 双校验：骨架词有序覆盖率 ≥0.8 + 替代词命中；失败给重试/听标准/自评三条路，
@@ -73,7 +74,7 @@ class _SubstituteStepState extends State<SubstituteStep> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _speakTarget();
     });
-    _rec.ensurePermission().then((perm) async {
+    ensureMicWithPreprompt(context, _rec).then((perm) async {
       if (!mounted) return;
       if (perm != MicPerm.granted) {
         setState(() => _permBlocked = true);
@@ -179,7 +180,7 @@ class _SubstituteStepState extends State<SubstituteStep> {
     );
     final v = judgeSubstitution(recognized: text, plan: _plan);
     final pass = g.ok && v.pass;
-    if (pass) HapticFeedback.mediumImpact();
+    if (pass) Motion.of(context).success();
     setState(() {
       _thinking = false;
       _transcript = text;

@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/crash_log.dart';
@@ -9,6 +8,7 @@ import '../services/state_machine.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import '../ui/feedback.dart';
+import '../ui/motion.dart';
 
 /// ③ 块拼句（核心差异化环节）：给出目标句的「中文提示」，把打乱的「词块卡片」
 /// 拖进槽位拼出句子。卡片 = 正确词块 + 少量干扰卡（≤2）；正确块之间可点击互换微调。
@@ -28,7 +28,8 @@ class BuildStep extends StatefulWidget {
   State<BuildStep> createState() => _BuildStepState();
 }
 
-class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMixin {
+class _BuildStepState extends State<BuildStep>
+    with SingleTickerProviderStateMixin {
   late final List<String> _expected; // 按 chunkIds 顺序展开的目标词块文本
   late final List<String?> _filled;
   late final List<String> _tray; // 可拖拽的词块卡片（正确块 + ≤2 干扰块）
@@ -42,8 +43,8 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    _shakeCtrl =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
+    _shakeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 350));
     final byId = {for (final c in widget.level.chunks) c.id: c};
     _expected = widget.sentence.orderedChunkTexts(byId);
     _filled = List<String?>.filled(_expected.length, null);
@@ -65,7 +66,7 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
 
   void _place(int i, String tile) {
     if (tile != _expected[i] || _filled[i] != null) return; // 顺序/类型错误 → 回弹
-    HapticFeedback.lightImpact();
+    Motion.of(context).tap();
     setState(() {
       _filled[i] = tile;
       _tray.remove(tile);
@@ -74,7 +75,8 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
     if (assemblyCorrect(_filled, _expected)) {
       setState(() => _built = true);
       chimeCorrect(context);
-      Provider.of<TtsService>(context, listen: false).speak(widget.sentence.text);
+      Provider.of<TtsService>(context, listen: false)
+          .speak(widget.sentence.text);
       Future.delayed(const Duration(milliseconds: 700), () {
         if (mounted) widget.onDone();
       });
@@ -99,7 +101,9 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
   }
 
   void _recordWrong() {
-    if (mounted) _shakeCtrl.forward(from: 0); // B2 错误抖动
+    if (mounted && Motion.of(context).animates) {
+      _shakeCtrl.forward(from: 0); // B2 错误抖动（降级时只变红不摇）
+    }
     final store =
         Provider.of<ProgressService>(context, listen: false).chunkStore;
     store.applyEvent(widget.chunk.id, ChunkEvent.dragWrong).catchError((e, st) {
@@ -122,7 +126,8 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
           SceneCard(widget.level.theme),
           const SizedBox(height: 16),
           const Text('用中文意思，把「词块」拖进槽位拼出句子',
-              style: TextStyle(color: kPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
+              style: TextStyle(
+                  color: kPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Container(
             width: double.infinity,
@@ -133,8 +138,13 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
               border: Border.all(color: Colors.white24),
             ),
             child: Text(
-              _revealEn || _built ? widget.sentence.text : widget.sentence.meaningCN,
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+              _revealEn || _built
+                  ? widget.sentence.text
+                  : widget.sentence.meaningCN,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600),
             ),
           ),
           Row(
@@ -160,9 +170,8 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
             builder: (ctx, _) {
               final s = _shakeCtrl.value;
               final shaking = s > 0 && s < 1;
-              final dx = shaking
-                  ? math.sin(s * math.pi * 6) * 8 * (1 - s)
-                  : 0.0;
+              final dx =
+                  shaking ? math.sin(s * math.pi * 6) * 8 * (1 - s) : 0.0;
               return Transform.translate(
                 offset: Offset(dx, 0),
                 child: Container(
@@ -181,7 +190,11 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
                             ? kUnlocked.withValues(alpha: 0.08)
                             : Colors.transparent),
                     boxShadow: _built
-                        ? [BoxShadow(color: kUnlocked.withValues(alpha: 0.4), blurRadius: 14)]
+                        ? [
+                            BoxShadow(
+                                color: kUnlocked.withValues(alpha: 0.4),
+                                blurRadius: 14)
+                          ]
                         : null,
                   ),
                   child: Wrap(
@@ -195,8 +208,8 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
                           // B2 磁吸：落槽瞬间 150ms 弹性缩放入位
                           child: AnimatedScale(
                             scale: _filled[i] != null ? 1.0 : 0.85,
-                            duration: const Duration(milliseconds: 150),
-                            curve: Curves.easeOutBack,
+                            duration: Motion.of(ctx).dur(150),
+                            curve: const Cubic(0.34, 1.56, 0.64, 1),
                             child: _filled[i] != null
                                 ? Container(
                                     padding: const EdgeInsets.symmetric(
@@ -204,11 +217,14 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
-                                        color: _selected == i ? kPrimary : Colors.white24,
+                                        color: _selected == i
+                                            ? kPrimary
+                                            : Colors.white24,
                                         width: _selected == i ? 2 : 1,
                                       ),
                                     ),
-                                    child: ChunkTile(_filled[i]!, _typeFor(_filled[i]!)),
+                                    child: ChunkTile(
+                                        _filled[i]!, _typeFor(_filled[i]!)),
                                   )
                                 : Container(
                                     padding: const EdgeInsets.symmetric(
@@ -216,13 +232,16 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
-                                        color: _selected == i ? kPrimary : Colors.white24,
+                                        color: _selected == i
+                                            ? kPrimary
+                                            : Colors.white24,
                                         width: _selected == i ? 2 : 1,
                                       ),
                                     ),
                                     child: const Text('—',
                                         style: TextStyle(
-                                            color: Colors.white24, fontSize: 16)),
+                                            color: Colors.white24,
+                                            fontSize: 16)),
                                   ),
                           ),
                         ),
@@ -241,7 +260,10 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
             const Padding(
               padding: EdgeInsets.only(top: 12),
               child: Text('句子拼好了！现在说出来',
-                  style: TextStyle(color: kUnlocked, fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: TextStyle(
+                      color: kUnlocked,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600)),
             ),
           const Spacer(),
           Wrap(
@@ -259,7 +281,7 @@ class _BuildStepState extends State<BuildStep> with SingleTickerProviderStateMix
                       onDragEnd: (d) {
                         if (!d.wasAccepted) _recordWrong();
                       },
-                      child: ChunkTile(t, _typeFor(t)),
+                      child: ChunkTile(t, _typeFor(t), interactive: true),
                     ))
                 .toList(),
           ),

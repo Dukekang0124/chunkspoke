@@ -8,7 +8,7 @@ import 'loaders.dart';
 
 /// 导出头部的版本号：发版时与 pubspec.yaml 同 bump。
 /// library_export_test 里有一条用例把它和 pubspec 对齐，漏改会让回归变红。
-const String kExportAppVersion = '1.5.5';
+const String kExportAppVersion = '1.5.6';
 
 /// 学习数据导出（波 2 · 模块 D）：只生成本机文本，不上报、不联网。
 /// 内容：资产分组、六步漏斗、复习保持率、节奏指标。
