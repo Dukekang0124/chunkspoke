@@ -191,6 +191,52 @@ void main() {
     expect(t, contains('会话事件合计：0 条'));
   });
 
+  test('导出：讲解版模式切换/完听/跳过与两模式占比，分母为 0 时不编数', () async {
+    final dir = await Directory.systemTemp.createTemp('w2_export_expl');
+    final progress = ProgressService(db: AppDatabase(path: '${dir.path}/t.db'));
+    await progress.init();
+
+    final cold = await buildLearningExport(
+      progress: progress,
+      content: _content(),
+      now: DateTime(2026, 10, 22, 9, 5),
+    );
+    expect(cold.text, contains('模式切换：原版→讲解版 0 次 · 讲解版→原版 0 次（累计）'));
+    expect(
+        cold.text,
+        contains('讲解段：开始 0 段 · 完听 0 段 · 跳过 0 段'
+            '（完听率 — · 跳过率 —）'));
+    expect(cold.text, contains('（讲解占比 —，累计实际播放秒数）'));
+
+    await progress.logEvent('listen_mode_switch', {'mode': 'explained'});
+    await progress.logEvent('listen_mode_switch', {'mode': 'explained'});
+    await progress.logEvent('listen_mode_switch', {'mode': 'original'});
+    for (var i = 0; i < 4; i++) {
+      await progress.logEvent('listen_expl_start', {'sentence': i});
+    }
+    for (var i = 0; i < 3; i++) {
+      await progress.logEvent('listen_expl_complete', {'sentence': i});
+    }
+    await progress.logEvent('listen_expl_skip', {'reason': 'user'});
+    await progress.listening.addModeSeconds('o', 120);
+    await progress.listening.addModeSeconds('x', 60);
+
+    final export = await buildLearningExport(
+      progress: progress,
+      content: _content(),
+      now: DateTime(2026, 10, 22, 9, 6),
+    );
+    final t = export.text;
+    expect(t, contains('模式切换：原版→讲解版 2 次 · 讲解版→原版 1 次（累计）'));
+    expect(t, contains('讲解段：开始 4 段 · 完听 3 段 · 跳过 1 段'
+        '（完听率 75.0% · 跳过率 25.0%）'));
+    expect(t, contains('两模式播放：原版 2 分钟 · 讲解版 1 分钟'
+        '（讲解占比 33.3%，累计实际播放秒数）'));
+    // 讲解版只是呈现模式：仍不产出资产、不进会话轴。
+    expect(t, contains('新学 3'));
+    expect(t, contains('会话事件合计：0 条'));
+  });
+
   test('导出头部版本号与 pubspec 同 bump（漏改即红）', () async {
     final pubspec = await File('pubspec.yaml').readAsString();
     final m = RegExp(r'^version:\s*([0-9.]+)\+(\d+)\s*$', multiLine: true)

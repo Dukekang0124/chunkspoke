@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:chunkspoke_flutter/models/listening_article.dart';
 import 'package:chunkspoke_flutter/services/listening_home.dart';
+import 'package:chunkspoke_flutter/services/listening_player.dart';
 import 'package:chunkspoke_flutter/services/listening_store.dart';
 
 ListeningArticle _article(
@@ -12,6 +14,7 @@ ListeningArticle _article(
   String label,
   int updatedDay, {
   List<String> chunks = const [],
+  ListeningLevel level = ListeningLevel.b1,
 }) =>
     ListeningArticle(
       id: id,
@@ -22,6 +25,9 @@ ListeningArticle _article(
       updatedAt: '2026-10-${updatedDay.toString().padLeft(2, '0')}',
       audioUrl: '',
       collectLimit: 8,
+      levelRaw: level.key,
+      level: level,
+      baseRate: level.baseRate,
       sentences: [
         ListeningSentence(
           id: 's_$id',
@@ -41,6 +47,18 @@ ListeningPosition _pos(int ms, int idx, DateTime at) => ListeningPosition(
       updatedAt: at.millisecondsSinceEpoch,
     );
 
+ListeningStore _storeWith(Map<String, double> overrides) {
+  final kv = <String, String>{
+    if (overrides.isNotEmpty)
+      'listen_speed_overrides': jsonEncode(overrides),
+  };
+  return ListeningStore(
+    read: (k) => kv[k],
+    write: (k, v) async => kv[k] = v,
+    clock: () => DateTime(2026, 10, 23, 9),
+  );
+}
+
 void main() {
   final now = DateTime(2026, 10, 23, 9);
   final articles = [
@@ -57,6 +75,8 @@ void main() {
     Set<String> completed = const {},
     Set<String> learned = const {},
     int due = 0,
+    Set<String> mastered = const {},
+    Set<String> dueChunkIds = const {},
     DateTime? at,
   }) =>
       buildListeningHome(
@@ -67,6 +87,8 @@ void main() {
         learnedChunkIds: learned,
         now: at ?? now,
         dueReviews: due,
+        masteredChunkIds: mastered,
+        dueChunkIds: dueChunkIds,
       );
 
   group('最近 7 天推荐', () {
@@ -177,6 +199,113 @@ void main() {
       expect(src.contains('最近更新'), isTrue);
       expect(src.contains('按场景'), isTrue);
       expect(src.contains('词块库待复习'), isTrue);
+      // 指令 S 新增文案在此登记，避免悄悄引入越线口径
+      for (final label in [
+        '今日复习播单',
+        '个到期块',
+        '今日浸泡 ',
+        '按级别',
+        '全部',
+      ]) {
+        expect(src, contains(label), reason: '首页新增文案需登记：$label');
+      }
     });
   });
+
+  group('磨耳朵 2.0 · 分级与联动（指令 S）', () {
+    final graded = [
+      _article('G01', 'greet', '打招呼', 23,
+          chunks: ['a01', 'a04'], level: ListeningLevel.a1),
+      _article('G02', 'direction', '问路', 22,
+          chunks: ['h01', 'h02'], level: ListeningLevel.a1),
+      _article('G03', 'work', '职场', 21,
+          chunks: ['c01', 'c02', 'c03'], level: ListeningLevel.b1),
+      _article('G04', 'radio', '电台', 20,
+          chunks: ['m01'], level: ListeningLevel.c1),
+    ];
+
+    ListeningHomeData buildG({
+      Set<String> mastered = const {},
+      Set<String> dueChunkIds = const {},
+    }) =>
+        buildListeningHome(
+          articles: graded,
+          lastListenedAt: const {},
+          positions: const {},
+          completedIds: const {},
+          learnedChunkIds: const {},
+          now: now,
+          masteredChunkIds: mastered,
+          dueChunkIds: dueChunkIds,
+        );
+
+    test('级别分组按 A1→C1 固定序，只列库里真实存在的档', () {
+      final d = buildG();
+      expect(
+          d.levelsPresent, [ListeningLevel.a1, ListeningLevel.b1, ListeningLevel.c1]);
+      expect(d.levels.map((g) => g.articles.length).toList(), [2, 1, 1]);
+      expect(d.levels.first.articles.map((a) => a.id).toList(), ['G01', 'G02']);
+    });
+
+    test('引导卡：0 掌握建议 A1；有掌握按场景匹配到该块所在篇的级别', () {
+      final fresh = buildG();
+      expect(fresh.guidance, isNotNull);
+      expect(fresh.guidance!.level, ListeningLevel.a1);
+      expect(fresh.guidance!.title, '从 A1 开始听');
+
+      final some = buildG(mastered: {'c01'});
+      expect(some.guidance!.level, ListeningLevel.b1);
+      expect(some.guidance!.sceneLabel, '职场');
+      expect(some.guidance!.hint, contains('含 1 个已掌握块'));
+      final words = '${some.guidance!.title}${some.guidance!.hint}';
+      expect(RegExp(r'解锁|门槛|考核|付费|会员').hasMatch(words), isFalse,
+          reason: '级别只是建议，不得写成门槛');
+    });
+
+    test('复习播单：无到期不显示；有到期按到期块数降序，块数去重', () {
+      expect(buildG().reviewPlaylist.show, isFalse);
+      expect(buildG(dueChunkIds: {'zz'}).reviewPlaylist.show, isFalse);
+
+      final pl = buildG(dueChunkIds: {'c01', 'c02', 'm01'});
+      expect(pl.reviewPlaylist.show, isTrue);
+      expect(pl.reviewPlaylist.dueChunks, 3);
+      expect(pl.reviewPlaylist.articles.map((a) => a.id).toList(), ['G03', 'G04'],
+          reason: 'G03 含 2 个到期块，排前');
+    });
+
+    test('复习播单只挑含到期块的篇目，不触碰任何到期时间（禁 force due-now）', () {
+      final due = {'c01', 'c02'};
+      final pl = buildG(dueChunkIds: due);
+      expect(pl.reviewPlaylist.articles.map((a) => a.id).toList(), ['G03']);
+      expect(
+          pl.reviewPlaylist.articles.every((a) =>
+              due.intersection(a.chunks.map((c) => c.id).toSet()).isNotEmpty),
+          isTrue);
+      // 数据层无副作用：同一批文章重复构建，篇目与块集合不变
+      final again = buildG(dueChunkIds: due);
+      expect(again.reviewPlaylist.articles.map((a) => a.id).toList(),
+          pl.reviewPlaylist.articles.map((a) => a.id).toList());
+      expect(graded.map((a) => a.chunks.length).toList(),
+          again.recent.map((a) => a.chunks.length).toList());
+    });
+
+    test('级别默认语速与播放速率梯对齐，且用户覆盖优先', () {
+      expect(
+          ListeningPlayerController.defaultRateFor(
+              graded.first, _storeWith(const {})),
+          0.75);
+      expect(
+          ListeningPlayerController.defaultRateFor(
+              graded.first, _storeWith({'A1': 1.25})),
+          1.25);
+      expect(ListeningPlayerController.indexForRate(0.75), 0);
+      expect(ListeningPlayerController.indexForRate(1.0), 1);
+      expect(ListeningPlayerController.indexForRate(1.25), 2);
+      // 梯外值吸附最近档，绝不产生新档位（音频缓存键因此不变）
+      expect(ListeningPlayerController.indexForRate(0.9), 1);
+      expect(ListeningPlayerController.indexForRate(0.8), 0);
+      expect(ListeningPlayerController.indexForRate(9.9), 2);
+    });
+  });
+
 }

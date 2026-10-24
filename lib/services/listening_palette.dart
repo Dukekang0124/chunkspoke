@@ -29,3 +29,26 @@ ListeningChunkTone listeningChunkTone(
       ? ListeningChunkTone.mastered
       : ListeningChunkTone.learning;
 }
+
+/// CEFR 级别徽标色（指令 S §一.4）。与三色阶梯刻意分开：
+/// 级别是「篇目属性」，三色是「块状态」，两套语义不得混用同一颜色含义。
+const Color kListeningLevelA1 = Color(0xFF8BC34A);
+const Color kListeningLevelA2 = Color(0xFF4DD0E1);
+const Color kListeningLevelB1 = Color(0xFF90CAF9);
+const Color kListeningLevelB2 = Color(0xFFB39DDB);
+const Color kListeningLevelC1 = Color(0xFFFF8A65);
+
+Color listeningLevelColor(ListeningLevel level) {
+  switch (level) {
+    case ListeningLevel.a1:
+      return kListeningLevelA1;
+    case ListeningLevel.a2:
+      return kListeningLevelA2;
+    case ListeningLevel.b1:
+      return kListeningLevelB1;
+    case ListeningLevel.b2:
+      return kListeningLevelB2;
+    case ListeningLevel.c1:
+      return kListeningLevelC1;
+  }
+}

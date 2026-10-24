@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models/content_pack.dart';
+import '../models/listening_article.dart';
 import '../services/chunk_asset.dart';
 import '../services/crash_log.dart';
 import '../services/database.dart';
@@ -29,6 +30,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<_LibraryData>? _future;
   bool _exporting = false;
 
+  /// 「磨耳朵来源」筛选（指令 S §二.3）：只看从收听文章里收进来的块。
+  bool _fromListeningOnly = false;
+
   @override
   void initState() {
     super.initState();
@@ -38,13 +42,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
   void _reload() {
     final p = Provider.of<ProgressService>(context, listen: false);
     final content = Provider.of<ContentPack>(context, listen: false);
+    final pack = Provider.of<ListeningPack>(context, listen: false);
     setState(() {
-      _future = _load(p, content);
+      _future = _load(p, content, pack);
     });
   }
 
   Future<_LibraryData> _load(
-      ProgressService p, ContentPack content) async {
+      ProgressService p, ContentPack content, ListeningPack pack) async {
     final rows = await p.chunkStore.allRows();
     final byKey = {for (final r in rows) r.chunkKey: r};
     final chunks = <Chunk>[];
@@ -94,7 +99,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
       }
       combos[c.id] = peers.length;
     }
-    return _LibraryData(chunks: chunks, rows: byKey, combos: combos);
+    // 来源互指：块 id → 出现过它的收听文章（最近更新在前，取第一篇 + 篇数）
+    final sources = <String, List<ListeningArticle>>{};
+    for (final a in pack.articles) {
+      for (final c in a.chunks) {
+        sources.putIfAbsent(c.id, () => <ListeningArticle>[]).add(a);
+      }
+    }
+    for (final list in sources.values) {
+      list.sort((x, y) {
+        final xd = x.updatedDate ?? DateTime(1970);
+        final yd = y.updatedDate ?? DateTime(1970);
+        return yd.compareTo(xd);
+      });
+    }
+    return _LibraryData(
+        chunks: chunks, rows: byKey, combos: combos, sources: sources);
   }
 
   @override
@@ -112,7 +132,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
               child: Text('词块库加载失败，请重试',
                   style: TextStyle(color: Colors.white54)));
         }
-        final groups = _buildGroups(data);
+        final shown = _fromListeningOnly
+            ? _LibraryData(
+                chunks: data.chunks
+                    .where((c) => data.sources.containsKey(c.id))
+                    .toList(),
+                rows: data.rows,
+                combos: data.combos,
+                sources: data.sources,
+              )
+            : data;
+        final groups = _buildGroups(shown);
+        final sourceCount = data.chunks
+            .where((c) => data.sources.containsKey(c.id))
+            .length;
         final total = data.chunks.length;
         final contentIds = {for (final c in data.chunks) c.id};
         final learned = data.rows.values
@@ -131,6 +164,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
             _header(mastered, learned, total),
             const SizedBox(height: 12),
             _exportCard(),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                FilterChip(
+                  key: const Key('library_filter_listening'),
+                  label: Text('磨耳朵来源 $sourceCount 块',
+                      style: const TextStyle(fontSize: 12)),
+                  selected: _fromListeningOnly,
+                  onSelected: (v) => setState(() => _fromListeningOnly = v),
+                  avatar: const Icon(Icons.headphones,
+                      size: 16, color: kPrimary),
+                  showCheckmark: false,
+                ),
+              ],
+            ),
             const SizedBox(height: 18),
             if (groups.every((g) => g.chunks.isEmpty))
               _emptyState()
@@ -140,7 +188,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   _GroupHeader(group: g),
                   const SizedBox(height: 8),
                   for (final c in g.chunks) ...[
-                    _libraryRow(c, data.rows[c.id], data.combos[c.id] ?? 0),
+                    _libraryRow(c, shown.rows[c.id],
+                        shown.combos[c.id] ?? 0, data.sources[c.id]),
                     const SizedBox(height: 10),
                   ],
                   const SizedBox(height: 8),
@@ -363,7 +412,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ),
       );
 
-  Widget _libraryRow(Chunk c, ChunkRow? row, int combos) {
+  Widget _libraryRow(Chunk c, ChunkRow? row, int combos,
+      [List<ListeningArticle>? from]) {
     final state = row?.assetState ?? ChunkAssetState.learning;
     final first = row == null || row.firstLearnedAt == 0
         ? '—'
@@ -403,6 +453,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
               ),
             ],
           ),
+          if (from != null && from.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              from.length == 1
+                  ? '来自《${from.first.sceneLabel} · ${from.first.title}》'
+                  : '来自《${from.first.title}》等 ${from.length} 篇',
+              key: Key('library_source_${c.id}'),
+              style: const TextStyle(color: kPrimary, fontSize: 11),
+            ),
+          ],
           const SizedBox(height: 6),
           Text(
             '首学 $first · 复习 ${row?.reviewCount ?? 0} 次 · '
@@ -453,10 +513,12 @@ class _LibraryData {
   final List<Chunk> chunks;
   final Map<String, ChunkRow> rows;
   final Map<String, int> combos;
+  final Map<String, List<ListeningArticle>> sources;
   const _LibraryData({
     required this.chunks,
     required this.rows,
     required this.combos,
+    this.sources = const {},
   });
 }
 

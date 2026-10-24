@@ -50,11 +50,55 @@ class ListeningSceneGroup {
   });
 }
 
+/// 按级别分组（指令 S §一.4「全部篇目列表按级别分组」）。
+class ListeningLevelGroup {
+  final ListeningLevel level;
+  final List<ListeningArticle> articles;
+
+  const ListeningLevelGroup({required this.level, required this.articles});
+}
+
+/// 级别引导（指令 S §一.4）：0 掌握建议 A1；有掌握则按已掌握块的场景匹配。
+/// 红线：只是建议，不构成门槛，也不出现「解锁/考核」口径。
+class ListeningGuidance {
+  final ListeningLevel level;
+  final String title;
+  final String hint;
+  final String? sceneLabel;
+
+  const ListeningGuidance({
+    required this.level,
+    required this.title,
+    required this.hint,
+    this.sceneLabel,
+  });
+}
+
+/// 今日复习播单（指令 S §二.1）：含到期块的篇目按到期块数降序。
+/// 红线：不 force due-now，不改任何块的到期时间，点进去仍走既有复习正路。
+class ListeningReviewPlaylist {
+  final List<ListeningArticle> articles;
+
+  /// 这些篇目覆盖到的去重到期块数（口径：文章标注块 ∩ 到期块）。
+  final int dueChunks;
+
+  const ListeningReviewPlaylist({
+    required this.articles,
+    required this.dueChunks,
+  });
+
+  bool get show => articles.isNotEmpty && dueChunks > 0;
+}
+
 class ListeningHomeData {
   final List<ListeningPick> picks;
   final ListeningResume? resume;
   final List<ListeningArticle> recent;
   final List<ListeningSceneGroup> scenes;
+  final List<ListeningLevelGroup> levels;
+  final List<ListeningLevel> levelsPresent;
+  final ListeningGuidance? guidance;
+  final ListeningReviewPlaylist reviewPlaylist;
   final bool noNewContent;
   final int dueReviews;
   final Map<String, int> lastListenedAt;
@@ -65,6 +109,10 @@ class ListeningHomeData {
     required this.resume,
     required this.recent,
     required this.scenes,
+    required this.levels,
+    required this.levelsPresent,
+    required this.guidance,
+    required this.reviewPlaylist,
     required this.noNewContent,
     required this.dueReviews,
     required this.lastListenedAt,
@@ -80,6 +128,8 @@ ListeningHomeData buildListeningHome({
   required Set<String> learnedChunkIds,
   required DateTime now,
   int dueReviews = 0,
+  Set<String> masteredChunkIds = const {},
+  Set<String> dueChunkIds = const {},
 }) {
   final byId = {for (final a in articles) a.id: a};
   final todayStart = _dayStart(now);
@@ -174,6 +224,8 @@ ListeningHomeData buildListeningHome({
 
   final recent = [...articles]..sort(_recentOrder);
   final scenes = _sceneGroups(recent);
+  final levels = _levelGroups(recent);
+  final levelsPresent = [for (final g in levels) g.level];
   final allHeard = articles.isNotEmpty &&
       articles.every((a) =>
           lastListenedAt.containsKey(a.id) || completedIds.contains(a.id));
@@ -183,11 +235,94 @@ ListeningHomeData buildListeningHome({
     resume: resume,
     recent: recent,
     scenes: scenes,
+    levels: levels,
+    levelsPresent: levelsPresent,
+    guidance: _guidance(articles, masteredChunkIds, learnedChunkIds),
+    reviewPlaylist: _reviewPlaylist(articles, dueChunkIds),
     noNewContent: allHeard,
     dueReviews: dueReviews,
     lastListenedAt: Map.unmodifiable(lastListenedAt),
     completedIds: Set.unmodifiable(completedIds),
   );
+}
+
+/// 按 CEFR 级别分组，级别顺序固定 A1→C1，组内沿用「最近更新」序。
+List<ListeningLevelGroup> _levelGroups(List<ListeningArticle> recent) {
+  final buckets = <ListeningLevel, List<ListeningArticle>>{};
+  for (final a in recent) {
+    (buckets[a.level] ??= <ListeningArticle>[]).add(a);
+  }
+  return [
+    for (final l in ListeningLevel.values)
+      if (buckets.containsKey(l))
+        ListeningLevelGroup(level: l, articles: buckets[l]!),
+  ];
+}
+
+/// 引导卡口径：一个掌握块都没有 → 建议 A1；否则取「已掌握块出现最多」的场景，
+/// 并把该场景里含掌握块最多的那一篇的级别作为建议档。
+ListeningGuidance? _guidance(
+  List<ListeningArticle> articles,
+  Set<String> masteredChunkIds,
+  Set<String> learnedChunkIds,
+) {
+  if (articles.isEmpty) return null;
+  if (masteredChunkIds.isEmpty) {
+    final a1 = articles.where((a) => a.level == ListeningLevel.a1).toList();
+    if (a1.isEmpty) return null;
+    return const ListeningGuidance(
+      level: ListeningLevel.a1,
+      title: '从 A1 开始听',
+      hint: '短句、慢速，先把常见表达听个耳熟',
+    );
+  }
+  final byScene = <String, int>{};
+  final bySceneLabel = <String, String>{};
+  ListeningArticle? best;
+  var bestHits = 0;
+  for (final a in articles) {
+    final hits = a.chunks.where((c) => masteredChunkIds.contains(c.id)).length;
+    if (hits == 0) continue;
+    byScene[a.scene] = (byScene[a.scene] ?? 0) + hits;
+    bySceneLabel[a.scene] = a.sceneLabel.isNotEmpty ? a.sceneLabel : a.scene;
+    if (hits > bestHits) {
+      bestHits = hits;
+      best = a;
+    }
+  }
+  if (best == null) return null;
+  final topScene = byScene.entries.fold<String?>(
+      null, (m, e) => m == null || e.value > byScene[m]! ? e.key : m);
+  return ListeningGuidance(
+    level: best.level,
+    title: '按你已掌握的块，建议听 ${best.level.key}',
+    hint: '你在学的块多出现在这个场景，含 $bestHits 个已掌握块',
+    sceneLabel: topScene == null ? null : bySceneLabel[topScene],
+  );
+}
+
+/// 今日复习播单：含 ≥1 个到期块的篇目，按到期块数降序、再按最近更新序。
+ListeningReviewPlaylist _reviewPlaylist(
+  List<ListeningArticle> articles,
+  Set<String> dueChunkIds,
+) {
+  if (dueChunkIds.isEmpty) {
+    return const ListeningReviewPlaylist(articles: [], dueChunks: 0);
+  }
+  final covered = <String>{};
+  final hits = <ListeningArticle, int>{};
+  for (final a in articles) {
+    final due = a.chunks.where((c) => dueChunkIds.contains(c.id)).toList();
+    if (due.isEmpty) continue;
+    hits[a] = due.length;
+    covered.addAll(due.map((c) => c.id));
+  }
+  final list = hits.keys.toList()
+    ..sort((a, b) {
+      final byHits = hits[b]!.compareTo(hits[a]!);
+      return byHits != 0 ? byHits : _recentOrder(a, b);
+    });
+  return ListeningReviewPlaylist(articles: list, dueChunks: covered.length);
 }
 
 ListeningArticle? _todayPick(

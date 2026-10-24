@@ -1,7 +1,7 @@
 name: chunkspoke_flutter
 description: "Think in chunks. Speak in English."
 publish_to: 'none'
-version: 1.5.4+2055
+version: 1.5.5+2056
 
 environment:
   sdk: '>=3.2.0 <4.0.0'

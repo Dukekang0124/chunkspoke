@@ -64,6 +64,57 @@ class ListeningPack {
       };
 }
 
+/// CEFR 五档自选级别。
+///
+/// 定位（指令 S §〇.3）：级别**只是筛选器与默认语速**，没有分级测试、没有门槛、
+/// 没有解锁语义 —— 用户自选，随时可换档。
+/// 标尺三轴：总词数 / 句均词数 / 标注块数；`baseRate` 走播放速率（保调变速），
+/// 不进音频缓存键，因此换级不重合成。
+enum ListeningLevel {
+  a1('A1', 'A1 入门', 0.75, 100, 180, 0, 6.0, 1, 6),
+  a2('A2', 'A2 基础', 0.75, 181, 260, 6.1, 7.4, 6, 8),
+  b1('B1', 'B1 进阶', 1.00, 261, 360, 7.5, 9.4, 7, 8),
+  b2('B2', 'B2 流利', 1.00, 361, 430, 9.5, 11.9, 8, 8),
+  c1('C1', 'C1 自主', 1.25, 431, 520, 12.0, double.infinity, 8, 8);
+
+  const ListeningLevel(
+    this.key,
+    this.label,
+    this.baseRate,
+    this.minWords,
+    this.maxWords,
+    this.minAvgWords,
+    this.maxAvgWords,
+    this.minChunks,
+    this.maxChunks,
+  );
+
+  /// 内容文件里写的字符串（也是筛选 chips 的显示简称）。
+  final String key;
+
+  /// 界面徽标文案。
+  final String label;
+
+  /// 该级别的默认播放速率；必须是播放速率梯上的既有档位，避免新增档位。
+  final double baseRate;
+
+  final int minWords;
+  final int maxWords;
+  final double minAvgWords;
+  final double maxAvgWords;
+  final int minChunks;
+  final int maxChunks;
+
+  static ListeningLevel? parse(String? raw) {
+    if (raw == null) return null;
+    final key = raw.trim().toUpperCase();
+    for (final l in values) {
+      if (l.key == key) return l;
+    }
+    return null;
+  }
+}
+
 class ListeningArticle {
   final String id;
   final String title;
@@ -73,6 +124,13 @@ class ListeningArticle {
   final String updatedAt;
   final String audioUrl;
   final int collectLimit;
+
+  /// 内容文件里 `level` 的原始值（缺失或非法时校验器要报错，故与解析结果并存）。
+  final String levelRaw;
+  final ListeningLevel level;
+
+  /// 内容文件里 `baseRate` 的原始值；null 表示未声明。
+  final double? baseRate;
   final List<ListeningSentence> sentences;
 
   ListeningArticle({
@@ -84,23 +142,31 @@ class ListeningArticle {
     required this.updatedAt,
     required this.audioUrl,
     required this.collectLimit,
+    this.levelRaw = '',
+    this.level = ListeningLevel.b1,
+    this.baseRate,
     required this.sentences,
   });
 
-  factory ListeningArticle.fromJson(Map<String, dynamic> json) =>
-      ListeningArticle(
-        id: json['id'] as String,
-        title: (json['title'] as String?) ?? '',
-        scene: (json['scene'] as String?) ?? '',
-        sceneLabel: (json['sceneLabel'] as String?) ?? '',
-        summaryCN: (json['summaryCN'] as String?) ?? '',
-        updatedAt: (json['updatedAt'] as String?) ?? '',
-        audioUrl: (json['audioUrl'] as String?) ?? '',
-        collectLimit: (json['collectLimit'] as num?)?.toInt() ?? 8,
-        sentences: (json['sentences'] as List? ?? [])
-            .map((e) => ListeningSentence.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+  factory ListeningArticle.fromJson(Map<String, dynamic> json) {
+    final raw = (json['level'] as String?)?.trim() ?? '';
+    return ListeningArticle(
+      id: json['id'] as String,
+      title: (json['title'] as String?) ?? '',
+      scene: (json['scene'] as String?) ?? '',
+      sceneLabel: (json['sceneLabel'] as String?) ?? '',
+      summaryCN: (json['summaryCN'] as String?) ?? '',
+      updatedAt: (json['updatedAt'] as String?) ?? '',
+      audioUrl: (json['audioUrl'] as String?) ?? '',
+      collectLimit: (json['collectLimit'] as num?)?.toInt() ?? 8,
+      levelRaw: raw,
+      level: ListeningLevel.parse(raw) ?? ListeningLevel.b1,
+      baseRate: (json['baseRate'] as num?)?.toDouble(),
+      sentences: (json['sentences'] as List? ?? [])
+          .map((e) => ListeningSentence.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 
   /// 去重后的块标注，按首次出现排序（浮层/收词上限都以此为准）。
   List<ListeningChunk> get chunks {
@@ -114,6 +180,30 @@ class ListeningArticle {
 
   int get totalSeconds => sentences.fold<int>(
       0, (s, e) => s + ((e.endMs ?? 0) - (e.startMs ?? 0)).clamp(0, 1 << 30));
+
+  /// 全文词数（按空白切分，只数含字母或数字的 token）。分级标尺的第一轴。
+  int get wordCount => sentences.fold<int>(0, (sum, s) => sum + s.wordCount);
+
+  /// 句均词数。分级标尺的第二轴（句子密度的直接体现）。
+  double get avgWordsPerSentence =>
+      sentences.isEmpty ? 0 : wordCount / sentences.length;
+
+  /// 去重后的标注块数。分级标尺的第三轴。
+  int get chunkCount => chunks.length;
+
+  /// 复用率：标注块里引用既有词块（非新块候选）的占比。A1 档要求 ≥0.70。
+  double get knownChunkRatio {
+    final all = chunks;
+    if (all.isEmpty) return 0;
+    return all.where((c) => !c.candidate).length / all.length;
+  }
+
+  /// 按本级默认语速折算的实际收听秒数（合成语速按 150 wpm 估算）。
+  int get estimatedSecondsAtBaseRate {
+    final rate = baseRate ?? level.baseRate;
+    final atNormal = wordCount / 150.0 * 60.0;
+    return rate <= 0 ? atNormal.round() : (atNormal / rate).round();
+  }
 
   bool get hasTimeline => sentences.isNotEmpty && sentences.every((s) => s.hasTimeline);
 
@@ -153,6 +243,17 @@ class ListeningSentence {
       );
 
   bool get hasTimeline => startMs != null && endMs != null && endMs! > startMs!;
+
+  /// 句词数：按空白切分后只数含字母或数字的 token（引号、标点不单独成词）。
+  int get wordCount => _wordCount(text);
+}
+
+int _wordCount(String text) {
+  if (text.trim().isEmpty) return 0;
+  return text
+      .split(RegExp(r'\s+'))
+      .where((t) => RegExp(r'[A-Za-z0-9]').hasMatch(t))
+      .length;
 }
 
 class ListeningChunk {
@@ -219,6 +320,38 @@ List<String> validateListeningPack(ListeningPack pack, ContentPack content) {
     if (a.sentences.isEmpty) errors.add('${a.id} 无句子');
     if (a.audioUrl.isNotEmpty && !a.hasTimeline) {
       errors.add('${a.id} 有音频 URL 但句级时间轴不全');
+    }
+
+    // —— 分级断言（指令 S §一.1）：级别必须声明、语速必须走本级默认档、
+    //    三轴实测值必须落在本级标尺内；A1 另加复用率门槛。
+    if (a.levelRaw.isEmpty) {
+      errors.add('${a.id} 缺 level 字段');
+    } else if (ListeningLevel.parse(a.levelRaw) == null) {
+      errors.add('${a.id} level 非法：${a.levelRaw}（须为 A1/A2/B1/B2/C1）');
+    }
+    final rubric = a.level;
+    if (a.baseRate == null) {
+      errors.add('${a.id} 缺 baseRate 字段');
+    } else if ((a.baseRate! - rubric.baseRate).abs() > 0.001) {
+      errors.add(
+          '${a.id} baseRate ${a.baseRate} 与本级默认 ${rubric.baseRate}（${rubric.key}）不符');
+    }
+    if (a.wordCount < rubric.minWords || a.wordCount > rubric.maxWords) {
+      errors.add('${a.id} 词数 ${a.wordCount} 不在 ${rubric.key} 档 '
+          '${rubric.minWords}..${rubric.maxWords}');
+    }
+    if (a.avgWordsPerSentence < rubric.minAvgWords ||
+        a.avgWordsPerSentence > rubric.maxAvgWords) {
+      errors.add('${a.id} 句均词数 ${a.avgWordsPerSentence.toStringAsFixed(1)} 不在 '
+          '${rubric.key} 档 ${rubric.minAvgWords}..${rubric.maxAvgWords}');
+    }
+    if (a.chunkCount < rubric.minChunks || a.chunkCount > rubric.maxChunks) {
+      errors.add('${a.id} 标注块数 ${a.chunkCount} 不在 ${rubric.key} 档 '
+          '${rubric.minChunks}..${rubric.maxChunks}');
+    }
+    if (rubric == ListeningLevel.a1 && a.knownChunkRatio < 0.70) {
+      errors.add('${a.id} A1 档要求复用既有词块 ≥70%，实测 '
+          '${(a.knownChunkRatio * 100).round()}%');
     }
 
     final seen = <String>{};

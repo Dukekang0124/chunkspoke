@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:chunkspoke_flutter/models/content_pack.dart';
 import 'package:chunkspoke_flutter/models/listening_article.dart';
 import 'package:chunkspoke_flutter/services/listening_audio.dart';
+import 'package:chunkspoke_flutter/services/listening_explanation.dart';
 import 'package:chunkspoke_flutter/services/wav_codec.dart';
 
 /// 假音色：可配置两条合成通道的成败与句长，产物是真实可解析的 WAV。
@@ -17,6 +20,7 @@ class _FakeVoice implements ListeningVoice {
     this.hdFail = false,
     this.sysFail = false,
     this.hdFailAt = -1,
+    this.msFor,
   });
 
   @override
@@ -28,6 +32,9 @@ class _FakeVoice implements ListeningVoice {
   bool hdFail;
   bool sysFail;
   int hdFailAt;
+
+  /// 按文本定制时长（同句多块合并段模拟超 8 秒）。
+  final int Function(String text)? msFor;
 
   int hdCalls = 0;
   int sysCalls = 0;
@@ -48,7 +55,7 @@ class _FakeVoice implements ListeningVoice {
       sysCalls++;
       if (sysFail) return false;
     }
-    final ms = hd ? hdMs : sysMs;
+    final ms = hd ? (msFor?.call(text) ?? hdMs) : sysMs;
     const rate = 8000;
     await writeWavFile(
         File(fullPath), Float32List(rate * ms ~/ 1000), rate);
@@ -262,4 +269,248 @@ void main() {
     expect(plan.source, ListeningAudioSource.system);
     expect(plan.totalMs, 800);
   });
+
+  group('讲解版插入（指令 S+）', () {
+    test('讲解段插在句尾：条目时间轴/句锚/条目锚一致', () async {
+      final a = _chunk('a', 'alpha');
+      final b = _chunk('b', 'beta', candidate: true);
+      final article = _chunked('L01', [
+        _line('s0', 'Alpha beta.', [a, b]),
+        _line('s1', 'Plain one.', []),
+      ]);
+      final plan = await pipeline.prepare(
+        article,
+        _FakeVoice(),
+        explanations: [
+          _segment(0, [
+            _explained(a, 'alpha. 甲'),
+            _explained(b, 'beta. beta. 乙'),
+          ]),
+        ],
+      );
+
+      expect(plan.precise, isTrue);
+      expect(plan.hasExplanations, isTrue);
+      expect(plan.explanationSynthesized, 1);
+      expect(plan.items.map((e) => e.isExplanation), [false, true, false]);
+      expect(plan.items[1].startMs, 1000);
+      expect(plan.items[1].endMs, 2000);
+      expect(plan.items[1].chunkIds, ['a', 'b']);
+      expect(plan.items[1].memoryKeys, ['i:a', 't:beta']);
+      // 正文句时间轴被讲解段整体后移，但句锚仍是 1。
+      expect(plan.sentences[1].startMs, 2000);
+      expect(plan.sentences[1].endMs, 3000);
+      expect(plan.totalMs, 3000);
+      expect(plan.startMsOf(1), 2000);
+      expect(plan.itemIndexForSentence(1), 2);
+      expect(plan.indexForPositionMs(1500), 0);
+      expect(plan.explanationForSentence(0)?.id, isNotEmpty);
+      expect(plan.explanationForSentence(1), isNull);
+      expect(await File(plan.items[1].path!).exists(), isTrue);
+    });
+
+    test('同音色二次打开讲解段整段命中缓存', () async {
+      final article = _chunked('L01', [
+        _line('s0', 'Alpha.', [_chunk('a', 'alpha')]),
+      ]);
+      final segments = [_segment(0, [_explained(_chunk('a', 'alpha'), 'alpha. 甲')])];
+      final voice = _FakeVoice();
+
+      final first = await pipeline.prepare(article, voice, explanations: segments);
+      expect(first.explanationSynthesized, 1);
+      expect(voice.hdCalls, 2); // 正文 1 + 讲解 1
+
+      final second = await pipeline.prepare(article, voice, explanations: segments);
+      expect(second.explanationSynthesized, 0);
+      expect(second.explanationReused, 1);
+      expect(voice.hdCalls, 2, reason: '讲解段缓存命中不应再合成');
+      expect(await File(second.items[1].path!).exists(), isTrue);
+    });
+
+    test('切回原版保留讲解缓存；再开讲解版直接复用', () async {
+      final article = _chunked('L01', [
+        _line('s0', 'Alpha.', [_chunk('a', 'alpha')]),
+      ]);
+      final segments = [_segment(0, [_explained(_chunk('a', 'alpha'), 'alpha. 甲')])];
+      final voice = _FakeVoice();
+
+      final explained = await pipeline.prepare(
+          article, voice, explanations: segments);
+      final explPath = explained.items[1].path!;
+
+      final original = await pipeline.prepare(article, voice);
+      expect(original.hasExplanations, isFalse);
+      expect(await File(explPath).exists(), isTrue,
+          reason: '原版不应删掉讲解缓存，否则每次切模式都要重合成');
+
+      final again = await pipeline.prepare(article, voice, explanations: segments);
+      expect(again.explanationReused, 1);
+      expect(again.explanationSynthesized, 0);
+      expect(voice.hdCalls, 2);
+    });
+
+    test('换音色 → 正文与讲解一起失效重合成，旧讲解文件被清理', () async {
+      final article = _chunked('L01', [
+        _line('s0', 'Alpha.', [_chunk('a', 'alpha')]),
+      ]);
+      final segments = [_segment(0, [_explained(_chunk('a', 'alpha'), 'alpha. 甲')])];
+      final voice = _FakeVoice(hdKey: 'hd:v1');
+
+      final old = await pipeline.prepare(article, voice, explanations: segments);
+      final oldExpl = old.items[1].path!;
+
+      voice
+        ..hdKey = 'hd:v2'
+        ..hdMs = 900;
+      final fresh =
+          await pipeline.prepare(article, voice, explanations: segments);
+      expect(fresh.explanationSynthesized, 1);
+      expect(fresh.explanationReused, 0);
+      expect(fresh.items[1].durationMs, 900);
+      expect(await File(oldExpl).exists(), isFalse);
+    });
+
+    test('同句多块合并超 8 秒 → 从尾部丢块重合成', () async {
+      final a = _chunk('a', 'alpha');
+      final b = _chunk('b', 'betaX');
+      final article = _chunked('L01', [
+        _line('s0', 'Alpha betaX.', [a, b]),
+      ]);
+      // 合并段（含 beta）→ 9 秒；单块 alpha → 5 秒。
+      final voice = _FakeVoice(
+          msFor: (t) => t.contains('beta') ? 9000 : 5000);
+      final plan = await pipeline.prepare(
+        article,
+        voice,
+        explanations: [
+          _segment(0, [_explained(a, 'alpha. 甲'), _explained(b, 'beta. 乙')]),
+        ],
+      );
+
+      expect(plan.hasExplanations, isTrue);
+      final expl = plan.items[1];
+      expect(expl.durationMs, 5000);
+      expect(expl.chunkIds, ['a'], reason: '超 8 秒应从尾部丢块');
+      expect(expl.memoryKeys, ['i:a']);
+      expect(_wavs(dir).length, 2, reason: '超限的合并段文件应已删除');
+    });
+
+    test('单块仍超 8 秒 → 整段优雅跳过，正文照常精确播放', () async {
+      final article = _chunked('L01', [
+        _line('s0', 'Alpha.', [_chunk('a', 'alpha')]),
+      ]);
+      final plan = await pipeline.prepare(
+        article,
+        _FakeVoice(msFor: (_) => 9000),
+        explanations: [
+          _segment(0, [_explained(_chunk('a', 'alpha'), 'alpha. 甲')]),
+        ],
+      );
+      expect(plan.precise, isTrue);
+      expect(plan.hasExplanations, isFalse);
+      expect(plan.items, hasLength(1));
+      expect(plan.explanationSynthesized, 0);
+      expect(_wavs(dir), hasLength(1));
+    });
+
+    test('LRU 把讲解文件计入并随篇目整篇清理', () async {
+      final voice = _FakeVoice();
+      final a = _chunked('LA', [
+        _line('s0', 'Alpha.', [_chunk('a', 'alpha')]),
+      ]);
+      final b = _chunked('LB', [
+        _line('s0', 'Bravo.', [_chunk('b', 'bravo')]),
+      ]);
+      final segA = [_segment(0, [_explained(_chunk('a', 'alpha'), 'alpha. 甲')])];
+      final segB = [_segment(0, [_explained(_chunk('b', 'bravo'), 'bravo. 乙')])];
+
+      final first = await pipeline.prepare(a, voice, explanations: segA);
+      final aBytes =
+          _wavs(dir).fold<int>(0, (s, f) => s + f.lengthSync());
+      final tight = ListeningAudioPipeline(
+        cacheDir: () async => dir,
+        maxBytes: aBytes + 1,
+        clock: () => DateTime(2026, 10, 23, 9),
+      );
+      final second = await tight.prepare(b, voice, explanations: segB);
+
+      expect(await File(first.items[1].path!).exists(), isFalse,
+          reason: '讲解文件也计入上限，LA 应整篇清掉');
+      expect(await File(first.items[0].path!).exists(), isFalse);
+      expect(await File(second.items[1].path!).exists(), isTrue);
+    });
+  });
+
+  test('16 篇全量讲解段合成无失败（真实内容包）', () async {
+    final content = ContentPack.fromJson(jsonDecode(
+            await File('assets/content_pack.json').readAsString())
+        as Map<String, dynamic>);
+    final pack = ListeningPack.fromJson(jsonDecode(
+            await File('assets/listening_articles.json').readAsString())
+        as Map<String, dynamic>);
+    final voice = _FakeVoice(hdMs: 800);
+
+    var segmentCount = 0;
+    for (final a in pack.articles) {
+      final segments = ListeningExplanationBuilder.build(
+        article: a,
+        states: const {},
+        content: content,
+      );
+      segmentCount += segments.length;
+      final plan =
+          await pipeline.prepare(a, voice, explanations: segments);
+      expect(plan.precise, isTrue, reason: a.id);
+      expect(plan.items.where((e) => e.isExplanation).length, segments.length,
+          reason: '${a.id} 有讲解段合成失败');
+      for (final it in plan.items.where((e) => e.isExplanation)) {
+        expect(it.durationMs, inInclusiveRange(1, 8000), reason: a.id);
+        expect(it.chunkIds, isNotEmpty, reason: a.id);
+        expect(it.memoryKeys.length, it.chunkIds.length, reason: a.id);
+      }
+    }
+    expect(segmentCount, greaterThan(0));
+  });
 }
+
+ListeningChunk _chunk(String id, String text,
+        {bool candidate = false, String cn = ''}) =>
+    ListeningChunk(
+        id: id, text: text, meaningCN: cn, candidate: candidate);
+
+ListeningSentence _line(
+        String id, String text, List<ListeningChunk> chunks) =>
+    ListeningSentence(id: id, text: text, meaningCN: '', chunks: chunks);
+
+ListeningArticle _chunked(String id, List<ListeningSentence> sentences) =>
+    ListeningArticle(
+      id: id,
+      title: id,
+      scene: 'test',
+      sceneLabel: '测试',
+      summaryCN: '',
+      updatedAt: '',
+      audioUrl: '',
+      collectLimit: 8,
+      sentences: sentences,
+    );
+
+ListeningExplainedChunk _explained(ListeningChunk chunk, String text) =>
+    ListeningExplainedChunk(
+      chunk: chunk,
+      kind: chunk.candidate
+          ? ListeningExplanationKind.candidate
+          : ListeningExplanationKind.learning,
+      key: chunk.candidate
+          ? 't:${chunk.text.trim().toLowerCase()}'
+          : 'i:${chunk.id}',
+      text: text,
+    );
+
+ListeningExplanationSegment _segment(
+        int sentenceIndex, List<ListeningExplainedChunk> chunks) =>
+    ListeningExplanationSegment(
+      sentenceIndex: sentenceIndex,
+      text: [for (final c in chunks) c.text].join(' '),
+      chunks: chunks,
+    );
