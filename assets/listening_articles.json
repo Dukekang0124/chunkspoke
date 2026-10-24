@@ -1,5 +1,5 @@
 {
- "version": 1,
+ "version": 2,
  "generatedAt": "2026-10-23",
  "articles": [
   {
@@ -9,6 +9,8 @@
    "sceneLabel": "点餐",
    "summaryCN": "一个忙碌清晨的咖啡外带小故事，练点单、尺寸和口味。",
    "updatedAt": "2026-10-23",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -305,6 +307,8 @@
    "sceneLabel": "点餐",
    "summaryCN": "两人晚餐：订位、前菜、主菜、账单与分摊。",
    "updatedAt": "2026-10-21",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -593,6 +597,8 @@
    "sceneLabel": "点餐",
    "summaryCN": "忙碌夜晚的外带订单：点餐、总价、现金与退单。",
    "updatedAt": "2026-10-19",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -881,6 +887,8 @@
    "sceneLabel": "机场",
    "summaryCN": "机场值机：托运行李、登机牌、座位与登机口。",
    "updatedAt": "2026-10-22",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -1169,6 +1177,8 @@
    "sceneLabel": "机场",
    "summaryCN": "安检到登机口：方向、时间、登机牌与登机组。",
    "updatedAt": "2026-10-20",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -1462,6 +1472,8 @@
    "sceneLabel": "机场",
    "summaryCN": "航班延误后的转机、行李与出租车，练求助与时间表达。",
    "updatedAt": "2026-10-18",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -1756,6 +1768,8 @@
    "sceneLabel": "职场",
    "summaryCN": "入职第一天：自我介绍、工牌、会议室与茶歇。",
    "updatedAt": "2026-10-23",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -2056,6 +2070,8 @@
    "sceneLabel": "职场",
    "summaryCN": "周一例会：议程、分歧、跟进邮件与收尾。",
    "updatedAt": "2026-10-17",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -2348,6 +2364,8 @@
    "sceneLabel": "医院",
    "summaryCN": "医院预约与就诊：时间、保险卡、候诊室和用药叮嘱。",
    "updatedAt": "2026-10-21",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -2642,6 +2660,8 @@
    "sceneLabel": "医院",
    "summaryCN": "药房取药：处方、副作用、服药说明与一次回访。",
    "updatedAt": "2026-10-19",
+   "level": "B1",
+   "baseRate": 1.0,
    "collectLimit": 8,
    "audioUrl": "",
    "sentences": [
@@ -2924,6 +2944,1780 @@
      "text": "The day was quiet, and I feel grateful.",
      "meaningCN": "这一天很安静，我心怀感激。",
      "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L11",
+   "title": "Hello, Neighbor",
+   "scene": "greet",
+   "sceneLabel": "打招呼",
+   "summaryCN": "新邻居在楼道里打招呼，练最日常的问候与自我介绍。",
+   "updatedAt": "2026-10-23",
+   "level": "A1",
+   "baseRate": 0.75,
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L11s1",
+     "text": "Good morning, neighbor.",
+     "meaningCN": "早上好，邻居。",
+     "chunks": [
+      {
+       "id": "a01",
+       "text": "Good morning",
+       "meaningCN": "早上好"
+      }
+     ]
+    },
+    {
+     "id": "L11s2",
+     "text": "Good morning to you too.",
+     "meaningCN": "你也早上好。",
+     "chunks": [
+      {
+       "id": "a01",
+       "text": "Good morning",
+       "meaningCN": "早上好"
+      }
+     ]
+    },
+    {
+     "id": "L11s3",
+     "text": "I am Sam.",
+     "meaningCN": "我叫 Sam。",
+     "chunks": []
+    },
+    {
+     "id": "L11s4",
+     "text": "My name is Sam.",
+     "meaningCN": "我的名字是 Sam。",
+     "chunks": [
+      {
+       "id": "a05",
+       "text": "my name is",
+       "meaningCN": "我的名字是"
+      }
+     ]
+    },
+    {
+     "id": "L11s5",
+     "text": "Nice to meet you.",
+     "meaningCN": "很高兴认识你。",
+     "chunks": [
+      {
+       "id": "a07",
+       "text": "nice to meet you",
+       "meaningCN": "很高兴认识你"
+      }
+     ]
+    },
+    {
+     "id": "L11s6",
+     "text": "Nice to meet you too.",
+     "meaningCN": "我也很高兴认识你。",
+     "chunks": [
+      {
+       "id": "a07",
+       "text": "nice to meet you",
+       "meaningCN": "很高兴认识你"
+      }
+     ]
+    },
+    {
+     "id": "L11s7",
+     "text": "This is my son.",
+     "meaningCN": "这是我儿子。",
+     "chunks": []
+    },
+    {
+     "id": "L11s8",
+     "text": "He is new here.",
+     "meaningCN": "他刚来这儿。",
+     "chunks": []
+    },
+    {
+     "id": "L11s9",
+     "text": "Do you live here?",
+     "meaningCN": "你住这儿吗？",
+     "chunks": []
+    },
+    {
+     "id": "L11s10",
+     "text": "Yes, we just moved in.",
+     "meaningCN": "是的，我们刚搬来。",
+     "chunks": []
+    },
+    {
+     "id": "L11s11",
+     "text": "The building is quiet.",
+     "meaningCN": "这栋楼很安静。",
+     "chunks": []
+    },
+    {
+     "id": "L11s12",
+     "text": "And the street is safe.",
+     "meaningCN": "街道也安全。",
+     "chunks": []
+    },
+    {
+     "id": "L11s13",
+     "text": "Thank you for the help.",
+     "meaningCN": "谢谢你的帮忙。",
+     "chunks": [
+      {
+       "id": "a04",
+       "text": "thank you",
+       "meaningCN": "谢谢"
+      }
+     ]
+    },
+    {
+     "id": "L11s14",
+     "text": "Thank you so much.",
+     "meaningCN": "真的很感谢你。",
+     "chunks": [
+      {
+       "id": "a04",
+       "text": "thank you",
+       "meaningCN": "谢谢"
+      }
+     ]
+    },
+    {
+     "id": "L11s15",
+     "text": "No problem at all.",
+     "meaningCN": "完全没问题。",
+     "chunks": []
+    },
+    {
+     "id": "L11s16",
+     "text": "Have a nice day.",
+     "meaningCN": "祝你今天愉快。",
+     "chunks": [
+      {
+       "id": "lx_greet_have_a_nice_day",
+       "text": "have a nice day",
+       "meaningCN": "祝你今天愉快",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L11s17",
+     "text": "You too, Sam.",
+     "meaningCN": "你也是，Sam。",
+     "chunks": []
+    },
+    {
+     "id": "L11s18",
+     "text": "See you later.",
+     "meaningCN": "回头见。",
+     "chunks": [
+      {
+       "id": "a08",
+       "text": "see you",
+       "meaningCN": "再见"
+      }
+     ]
+    },
+    {
+     "id": "L11s19",
+     "text": "See you tomorrow.",
+     "meaningCN": "明天见。",
+     "chunks": [
+      {
+       "id": "a08",
+       "text": "see you",
+       "meaningCN": "再见"
+      }
+     ]
+    },
+    {
+     "id": "L11s20",
+     "text": "Have a good weekend.",
+     "meaningCN": "周末愉快。",
+     "chunks": []
+    },
+    {
+     "id": "L11s21",
+     "text": "Thanks, neighbor.",
+     "meaningCN": "谢谢你，邻居。",
+     "chunks": []
+    },
+    {
+     "id": "L11s22",
+     "text": "My son says hello.",
+     "meaningCN": "我儿子向你问好。",
+     "chunks": []
+    },
+    {
+     "id": "L11s23",
+     "text": "Hello to him.",
+     "meaningCN": "替我问好。",
+     "chunks": []
+    },
+    {
+     "id": "L11s24",
+     "text": "Is the coffee good?",
+     "meaningCN": "那里的咖啡好吗？",
+     "chunks": []
+    },
+    {
+     "id": "L11s25",
+     "text": "The cafe is great.",
+     "meaningCN": "那家咖啡店很棒。",
+     "chunks": []
+    },
+    {
+     "id": "L11s26",
+     "text": "I go there daily.",
+     "meaningCN": "我每天都去。",
+     "chunks": []
+    },
+    {
+     "id": "L11s27",
+     "text": "Me too, every day.",
+     "meaningCN": "我也是，每天。",
+     "chunks": []
+    },
+    {
+     "id": "L11s28",
+     "text": "Then we will meet.",
+     "meaningCN": "那我们会碰面。",
+     "chunks": []
+    },
+    {
+     "id": "L11s29",
+     "text": "Good morning again.",
+     "meaningCN": "再次早上好。",
+     "chunks": [
+      {
+       "id": "a01",
+       "text": "Good morning",
+       "meaningCN": "早上好"
+      }
+     ]
+    },
+    {
+     "id": "L11s30",
+     "text": "Goodbye for now.",
+     "meaningCN": "先这样，再见。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L12",
+   "title": "Where Is the Station",
+   "scene": "direction",
+   "sceneLabel": "问路",
+   "summaryCN": "在街口问路去车站：直走、左转、右转、拐角。",
+   "updatedAt": "2026-10-23",
+   "level": "A1",
+   "baseRate": 0.75,
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L12s1",
+     "text": "Excuse me, a question.",
+     "meaningCN": "打扰一下，问个问题。",
+     "chunks": []
+    },
+    {
+     "id": "L12s2",
+     "text": "Where is the station?",
+     "meaningCN": "车站在哪里？",
+     "chunks": [
+      {
+       "id": "h01",
+       "text": "where is",
+       "meaningCN": "…在哪里"
+      },
+      {
+       "id": "i03",
+       "text": "the station",
+       "meaningCN": "车站"
+      }
+     ]
+    },
+    {
+     "id": "L12s3",
+     "text": "The station is near.",
+     "meaningCN": "车站就在附近。",
+     "chunks": [
+      {
+       "id": "i03",
+       "text": "the station",
+       "meaningCN": "车站"
+      }
+     ]
+    },
+    {
+     "id": "L12s4",
+     "text": "Please go straight.",
+     "meaningCN": "请直走。",
+     "chunks": [
+      {
+       "id": "h02",
+       "text": "go straight",
+       "meaningCN": "直走"
+      }
+     ]
+    },
+    {
+     "id": "L12s5",
+     "text": "Go straight for two blocks.",
+     "meaningCN": "直走过两个街区。",
+     "chunks": [
+      {
+       "id": "h02",
+       "text": "go straight",
+       "meaningCN": "直走"
+      }
+     ]
+    },
+    {
+     "id": "L12s6",
+     "text": "Then turn left.",
+     "meaningCN": "然后左转。",
+     "chunks": [
+      {
+       "id": "h03",
+       "text": "turn left",
+       "meaningCN": "左转"
+      }
+     ]
+    },
+    {
+     "id": "L12s7",
+     "text": "Turn left at the light.",
+     "meaningCN": "在红绿灯处左转。",
+     "chunks": [
+      {
+       "id": "h03",
+       "text": "turn left",
+       "meaningCN": "左转"
+      }
+     ]
+    },
+    {
+     "id": "L12s8",
+     "text": "Now turn right.",
+     "meaningCN": "现在右转。",
+     "chunks": [
+      {
+       "id": "h04",
+       "text": "turn right",
+       "meaningCN": "右转"
+      }
+     ]
+    },
+    {
+     "id": "L12s9",
+     "text": "Turn right at the corner.",
+     "meaningCN": "在拐角处右转。",
+     "chunks": [
+      {
+       "id": "h04",
+       "text": "turn right",
+       "meaningCN": "右转"
+      },
+      {
+       "id": "h05",
+       "text": "at the corner",
+       "meaningCN": "在拐角"
+      }
+     ]
+    },
+    {
+     "id": "L12s10",
+     "text": "It is at the corner.",
+     "meaningCN": "它就在拐角。",
+     "chunks": [
+      {
+       "id": "h05",
+       "text": "at the corner",
+       "meaningCN": "在拐角"
+      }
+     ]
+    },
+    {
+     "id": "L12s11",
+     "text": "You will see a big sign.",
+     "meaningCN": "你会看到一个大牌子。",
+     "chunks": []
+    },
+    {
+     "id": "L12s12",
+     "text": "The station is behind it.",
+     "meaningCN": "车站就在后面。",
+     "chunks": [
+      {
+       "id": "i03",
+       "text": "the station",
+       "meaningCN": "车站"
+      }
+     ]
+    },
+    {
+     "id": "L12s13",
+     "text": "Is it far from here?",
+     "meaningCN": "离这儿远吗？",
+     "chunks": []
+    },
+    {
+     "id": "L12s14",
+     "text": "No, it is five minutes.",
+     "meaningCN": "不远，五分钟。",
+     "chunks": []
+    },
+    {
+     "id": "L12s15",
+     "text": "Just walk, it is easy.",
+     "meaningCN": "走着去就行，很容易。",
+     "chunks": []
+    },
+    {
+     "id": "L12s16",
+     "text": "Am I on the right road?",
+     "meaningCN": "我走的路对吗？",
+     "chunks": []
+    },
+    {
+     "id": "L12s17",
+     "text": "Yes, go straight from here.",
+     "meaningCN": "对，从这里直走。",
+     "chunks": [
+      {
+       "id": "h02",
+       "text": "go straight",
+       "meaningCN": "直走"
+      }
+     ]
+    },
+    {
+     "id": "L12s18",
+     "text": "Do not turn left here.",
+     "meaningCN": "这儿不要左转。",
+     "chunks": [
+      {
+       "id": "h03",
+       "text": "turn left",
+       "meaningCN": "左转"
+      }
+     ]
+    },
+    {
+     "id": "L12s19",
+     "text": "Turn right after the shop.",
+     "meaningCN": "商店之后再右转。",
+     "chunks": [
+      {
+       "id": "h04",
+       "text": "turn right",
+       "meaningCN": "右转"
+      }
+     ]
+    },
+    {
+     "id": "L12s20",
+     "text": "Then you will see it.",
+     "meaningCN": "然后你就看到了。",
+     "chunks": []
+    },
+    {
+     "id": "L12s21",
+     "text": "Thank you for the way.",
+     "meaningCN": "谢谢你指路。",
+     "chunks": []
+    },
+    {
+     "id": "L12s22",
+     "text": "You are welcome, friend.",
+     "meaningCN": "不客气，朋友。",
+     "chunks": []
+    },
+    {
+     "id": "L12s23",
+     "text": "Have a good trip.",
+     "meaningCN": "一路顺利。",
+     "chunks": []
+    },
+    {
+     "id": "L12s24",
+     "text": "The station, right?",
+     "meaningCN": "是车站，对吧？",
+     "chunks": [
+      {
+       "id": "i03",
+       "text": "the station",
+       "meaningCN": "车站"
+      }
+     ]
+    },
+    {
+     "id": "L12s25",
+     "text": "Yes, the station ahead.",
+     "meaningCN": "对，车站就在前面。",
+     "chunks": [
+      {
+       "id": "i03",
+       "text": "the station",
+       "meaningCN": "车站"
+      }
+     ]
+    },
+    {
+     "id": "L12s26",
+     "text": "I see the blue sign.",
+     "meaningCN": "我看到蓝色的牌子了。",
+     "chunks": []
+    },
+    {
+     "id": "L12s27",
+     "text": "That is the place.",
+     "meaningCN": "就是那儿。",
+     "chunks": []
+    },
+    {
+     "id": "L12s28",
+     "text": "Great, I found it.",
+     "meaningCN": "太好了，找到了。",
+     "chunks": []
+    },
+    {
+     "id": "L12s29",
+     "text": "Thank you again.",
+     "meaningCN": "再次感谢你。",
+     "chunks": []
+    },
+    {
+     "id": "L12s30",
+     "text": "Goodbye, and walk safe.",
+     "meaningCN": "再见，路上小心。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L13",
+   "title": "At the Corner Shop",
+   "scene": "shop",
+   "sceneLabel": "便利店",
+   "summaryCN": "便利店买水和咖啡：要什么、怎么付、要不要袋子。",
+   "updatedAt": "2026-10-23",
+   "level": "A1",
+   "baseRate": 0.75,
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L13s1",
+     "text": "The shop is open late.",
+     "meaningCN": "这家店开得晚。",
+     "chunks": []
+    },
+    {
+     "id": "L13s2",
+     "text": "I come here often.",
+     "meaningCN": "我常来这儿。",
+     "chunks": []
+    },
+    {
+     "id": "L13s3",
+     "text": "Hello, just two things.",
+     "meaningCN": "你好，就买两样。",
+     "chunks": []
+    },
+    {
+     "id": "L13s4",
+     "text": "I'd like some water.",
+     "meaningCN": "我想要点水。",
+     "chunks": [
+      {
+       "id": "b01",
+       "text": "I'd like",
+       "meaningCN": "我想要（礼貌）"
+      }
+     ]
+    },
+    {
+     "id": "L13s5",
+     "text": "A bottle of water, please.",
+     "meaningCN": "请给我一瓶水。",
+     "chunks": [
+      {
+       "id": "b08",
+       "text": "a bottle of",
+       "meaningCN": "一瓶"
+      }
+     ]
+    },
+    {
+     "id": "L13s6",
+     "text": "And a coffee, hot.",
+     "meaningCN": "再来一杯热咖啡。",
+     "chunks": [
+      {
+       "id": "c01",
+       "text": "a coffee",
+       "meaningCN": "来杯咖啡"
+      }
+     ]
+    },
+    {
+     "id": "L13s7",
+     "text": "The coffee is fresh.",
+     "meaningCN": "咖啡很新鲜。",
+     "chunks": []
+    },
+    {
+     "id": "L13s8",
+     "text": "Do you need a bag?",
+     "meaningCN": "你需要袋子吗？",
+     "chunks": []
+    },
+    {
+     "id": "L13s9",
+     "text": "Yes, a small bag.",
+     "meaningCN": "要，一个小的。",
+     "chunks": []
+    },
+    {
+     "id": "L13s10",
+     "text": "Here is your food.",
+     "meaningCN": "你的吃的在这儿。",
+     "chunks": []
+    },
+    {
+     "id": "L13s11",
+     "text": "How much is it?",
+     "meaningCN": "多少钱？",
+     "chunks": []
+    },
+    {
+     "id": "L13s12",
+     "text": "It is six dollars.",
+     "meaningCN": "六美元。",
+     "chunks": []
+    },
+    {
+     "id": "L13s13",
+     "text": "Can I pay by card?",
+     "meaningCN": "我能刷卡吗？",
+     "chunks": [
+      {
+       "id": "g07",
+       "text": "by card",
+       "meaningCN": "刷卡"
+      }
+     ]
+    },
+    {
+     "id": "L13s14",
+     "text": "Yes, pay by card here.",
+     "meaningCN": "可以，在这儿刷卡。",
+     "chunks": [
+      {
+       "id": "g07",
+       "text": "by card",
+       "meaningCN": "刷卡"
+      }
+     ]
+    },
+    {
+     "id": "L13s15",
+     "text": "The machine is slow.",
+     "meaningCN": "机器有点慢。",
+     "chunks": []
+    },
+    {
+     "id": "L13s16",
+     "text": "No hurry at all.",
+     "meaningCN": "一点不急。",
+     "chunks": []
+    },
+    {
+     "id": "L13s17",
+     "text": "Do you want a receipt?",
+     "meaningCN": "你要小票吗？",
+     "chunks": [
+      {
+       "id": "f10",
+       "text": "a receipt",
+       "meaningCN": "收据"
+      }
+     ]
+    },
+    {
+     "id": "L13s18",
+     "text": "Yes, a receipt please.",
+     "meaningCN": "要，请给我小票。",
+     "chunks": [
+      {
+       "id": "f10",
+       "text": "a receipt",
+       "meaningCN": "收据"
+      }
+     ]
+    },
+    {
+     "id": "L13s19",
+     "text": "I use the self checkout.",
+     "meaningCN": "我用自助结账。",
+     "chunks": [
+      {
+       "id": "lx_shop_self_checkout",
+       "text": "self checkout",
+       "meaningCN": "自助结账",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L13s20",
+     "text": "It is fast and easy.",
+     "meaningCN": "又快又简单。",
+     "chunks": []
+    },
+    {
+     "id": "L13s21",
+     "text": "The line is long today.",
+     "meaningCN": "今天队伍很长。",
+     "chunks": []
+    },
+    {
+     "id": "L13s22",
+     "text": "I wait near the door.",
+     "meaningCN": "我在门边等。",
+     "chunks": []
+    },
+    {
+     "id": "L13s23",
+     "text": "The clerk is kind.",
+     "meaningCN": "店员很和善。",
+     "chunks": []
+    },
+    {
+     "id": "L13s24",
+     "text": "She smiles and says thanks.",
+     "meaningCN": "她笑着说谢谢。",
+     "chunks": []
+    },
+    {
+     "id": "L13s25",
+     "text": "Thank you, have a good night.",
+     "meaningCN": "谢谢，晚上愉快。",
+     "chunks": []
+    },
+    {
+     "id": "L13s26",
+     "text": "You too, take care.",
+     "meaningCN": "你也是，慢走。",
+     "chunks": []
+    },
+    {
+     "id": "L13s27",
+     "text": "I'd like a quiet walk home.",
+     "meaningCN": "我想安静地走回家。",
+     "chunks": [
+      {
+       "id": "b01",
+       "text": "I'd like",
+       "meaningCN": "我想要（礼貌）"
+      }
+     ]
+    },
+    {
+     "id": "L13s28",
+     "text": "The street is calm now.",
+     "meaningCN": "街上现在很安静。",
+     "chunks": []
+    },
+    {
+     "id": "L13s29",
+     "text": "See you next time.",
+     "meaningCN": "下次再来。",
+     "chunks": []
+    },
+    {
+     "id": "L13s30",
+     "text": "Have a nice evening.",
+     "meaningCN": "晚上愉快。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L14",
+   "title": "The Friday Wrap-Up",
+   "scene": "work",
+   "sceneLabel": "职场",
+   "summaryCN": "周五收尾：快速回顾、行动项、下周计划与准时交付。",
+   "updatedAt": "2026-10-23",
+   "level": "B1",
+   "baseRate": 1.0,
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L14s1",
+     "text": "It is Friday afternoon, and the office is finally calm.",
+     "meaningCN": "周五下午，办公室终于安静下来。",
+     "chunks": []
+    },
+    {
+     "id": "L14s2",
+     "text": "I think we all needed a slower hour.",
+     "meaningCN": "我觉得我们都需要慢一点的一个小时。",
+     "chunks": [
+      {
+       "id": "m01",
+       "text": "I think",
+       "meaningCN": "我认为"
+      }
+     ]
+    },
+    {
+     "id": "L14s3",
+     "text": "The meeting ran long, but we closed the last item.",
+     "meaningCN": "会开得很久，但我们把最后一项结了。",
+     "chunks": []
+    },
+    {
+     "id": "L14s4",
+     "text": "Could you send the notes when you have time?",
+     "meaningCN": "你有空时能把会议纪要发一下吗？",
+     "chunks": [
+      {
+       "id": "o01",
+       "text": "could you",
+       "meaningCN": "您能…吗"
+      }
+     ]
+    },
+    {
+     "id": "L14s5",
+     "text": "Got it, I will write them tonight.",
+     "meaningCN": "收到，我今晚就写。",
+     "chunks": [
+      {
+       "id": "p05",
+       "text": "got it",
+       "meaningCN": "明白了"
+      }
+     ]
+    },
+    {
+     "id": "L14s6",
+     "text": "A quick recap keeps everyone on the same page.",
+     "meaningCN": "一次快速回顾能让所有人对齐。",
+     "chunks": [
+      {
+       "id": "lx_work_a_quick_recap",
+       "text": "a quick recap",
+       "meaningCN": "快速回顾",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L14s7",
+     "text": "I will list the action items in one column.",
+     "meaningCN": "我会把行动项列在一栏里。",
+     "chunks": [
+      {
+       "id": "lx_work_action_items",
+       "text": "action items",
+       "meaningCN": "行动项",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L14s8",
+     "text": "Each item gets one owner and one date.",
+     "meaningCN": "每项都有一个负责人和一个日期。",
+     "chunks": []
+    },
+    {
+     "id": "L14s9",
+     "text": "Nobody should leave with an unclear task.",
+     "meaningCN": "不该有人带着模糊的任务离开。",
+     "chunks": []
+    },
+    {
+     "id": "L14s10",
+     "text": "I prefer short lists over long emails.",
+     "meaningCN": "我更喜欢短清单而不是长邮件。",
+     "chunks": []
+    },
+    {
+     "id": "L14s11",
+     "text": "Long emails hide the two things that matter.",
+     "meaningCN": "长邮件会埋掉真正重要的两件事。",
+     "chunks": []
+    },
+    {
+     "id": "L14s12",
+     "text": "The deadline is Tuesday, not next Friday.",
+     "meaningCN": "截止日期是周二，不是下周五。",
+     "chunks": []
+    },
+    {
+     "id": "L14s13",
+     "text": "Next week we start the second phase.",
+     "meaningCN": "下周我们启动第二阶段。",
+     "chunks": [
+      {
+       "id": "j05",
+       "text": "next week",
+       "meaningCN": "下周"
+      }
+     ]
+    },
+    {
+     "id": "L14s14",
+     "text": "Next week also has a review with the client.",
+     "meaningCN": "下周还有一次和客户过的评审。",
+     "chunks": [
+      {
+       "id": "j05",
+       "text": "next week",
+       "meaningCN": "下周"
+      }
+     ]
+    },
+    {
+     "id": "L14s15",
+     "text": "Could you prepare the slides before Thursday?",
+     "meaningCN": "你能在周四前把幻灯片准备好吗？",
+     "chunks": [
+      {
+       "id": "o01",
+       "text": "could you",
+       "meaningCN": "您能…吗"
+      }
+     ]
+    },
+    {
+     "id": "L14s16",
+     "text": "I can do that if I get the data today.",
+     "meaningCN": "如果今天拿到数据，我就能做。",
+     "chunks": []
+    },
+    {
+     "id": "L14s17",
+     "text": "The data lives in a shared folder, I think.",
+     "meaningCN": "数据在共享文件夹里，我猜。",
+     "chunks": [
+      {
+       "id": "m01",
+       "text": "I think",
+       "meaningCN": "我认为"
+      }
+     ]
+    },
+    {
+     "id": "L14s18",
+     "text": "I will ask the team for access this afternoon.",
+     "meaningCN": "我今天下午会向团队要权限。",
+     "chunks": []
+    },
+    {
+     "id": "L14s19",
+     "text": "Please keep the numbers simple and honest.",
+     "meaningCN": "请把数字弄得简单、诚实。",
+     "chunks": []
+    },
+    {
+     "id": "L14s20",
+     "text": "Simple numbers make better decisions.",
+     "meaningCN": "简单的数字能带来更好的决策。",
+     "chunks": []
+    },
+    {
+     "id": "L14s21",
+     "text": "We agreed to ship on time, not early and rough.",
+     "meaningCN": "我们同意按时交付，而不是提前交粗糙的东西。",
+     "chunks": [
+      {
+       "id": "j13",
+       "text": "on time",
+       "meaningCN": "准时"
+      }
+     ]
+    },
+    {
+     "id": "L14s22",
+     "text": "Being on time builds trust with the client.",
+     "meaningCN": "准时能建立客户的信任。",
+     "chunks": [
+      {
+       "id": "j13",
+       "text": "on time",
+       "meaningCN": "准时"
+      }
+     ]
+    },
+    {
+     "id": "L14s23",
+     "text": "I agree, and I will say so in the review.",
+     "meaningCN": "我同意，评审时我会这么说。",
+     "chunks": []
+    },
+    {
+     "id": "L14s24",
+     "text": "If anything slips, tell me early.",
+     "meaningCN": "如果有延误，尽早告诉我。",
+     "chunks": []
+    },
+    {
+     "id": "L14s25",
+     "text": "Early warnings are cheaper than late surprises.",
+     "meaningCN": "提前预警比事后惊吓便宜。",
+     "chunks": []
+    },
+    {
+     "id": "L14s26",
+     "text": "Got it, I will flag risks on Monday.",
+     "meaningCN": "明白，我周一就把风险标出来。",
+     "chunks": [
+      {
+       "id": "p05",
+       "text": "got it",
+       "meaningCN": "明白了"
+      }
+     ]
+    },
+    {
+     "id": "L14s27",
+     "text": "Monday morning is a good time for that.",
+     "meaningCN": "周一上午正适合做这件事。",
+     "chunks": []
+    },
+    {
+     "id": "L14s28",
+     "text": "We can move the smaller tasks to next week.",
+     "meaningCN": "我们可以把小事挪到下周。",
+     "chunks": [
+      {
+       "id": "j05",
+       "text": "next week",
+       "meaningCN": "下周"
+      }
+     ]
+    },
+    {
+     "id": "L14s29",
+     "text": "The client only sees the finished part.",
+     "meaningCN": "客户只看到完成的部分。",
+     "chunks": []
+    },
+    {
+     "id": "L14s30",
+     "text": "So let us protect the team's quiet time.",
+     "meaningCN": "所以让我们保住团队的安静时间。",
+     "chunks": []
+    },
+    {
+     "id": "L14s31",
+     "text": "I was glad the meeting ended early today.",
+     "meaningCN": "很高兴今天的会提前结束了。",
+     "chunks": []
+    },
+    {
+     "id": "L14s32",
+     "text": "We still have real work to do this week.",
+     "meaningCN": "这周我们还有真正的活儿。",
+     "chunks": []
+    },
+    {
+     "id": "L14s33",
+     "text": "But the plan is clear, and that helps.",
+     "meaningCN": "不过计划清楚了，这就很有帮助。",
+     "chunks": []
+    },
+    {
+     "id": "L14s34",
+     "text": "Let us call it a day and rest.",
+     "meaningCN": "今天就到这儿，去休息吧。",
+     "chunks": [
+      {
+       "id": "lx_work_call_it_a_day",
+       "text": "call it a day",
+       "meaningCN": "今天就到此为止",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L14s35",
+     "text": "Rest is part of the work, not a reward.",
+     "meaningCN": "休息是工作的一部分，不是奖赏。",
+     "chunks": []
+    },
+    {
+     "id": "L14s36",
+     "text": "See you Monday, refreshed and ready.",
+     "meaningCN": "周一见，精神饱满地开始。",
+     "chunks": []
+    },
+    {
+     "id": "L14s37",
+     "text": "Have a good weekend, everyone.",
+     "meaningCN": "祝大家周末愉快。",
+     "chunks": []
+    },
+    {
+     "id": "L14s38",
+     "text": "Thank you all for a clean finish.",
+     "meaningCN": "谢谢大家把这一周收得干净。",
+     "chunks": []
+    },
+    {
+     "id": "L14s39",
+     "text": "The office is dark, and the week is done.",
+     "meaningCN": "办公室熄了灯，这一周结束了。",
+     "chunks": []
+    },
+    {
+     "id": "L14s40",
+     "text": "I lock the door and head home.",
+     "meaningCN": "我锁门回家。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L15",
+   "title": "Delayed Again at the Desk",
+   "scene": "airport",
+   "sceneLabel": "机场",
+   "summaryCN": "又一次延误：改签、登机口变更、酒店券与行李重新托运。",
+   "updatedAt": "2026-10-23",
+   "level": "B1",
+   "baseRate": 1.0,
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L15s1",
+     "text": "The board says delayed, and the hall fills with sighs.",
+     "meaningCN": "屏幕上写着延误，大厅里满是叹气。",
+     "chunks": []
+    },
+    {
+     "id": "L15s2",
+     "text": "It is rainy outside, so more flights are late.",
+     "meaningCN": "外面下着雨，所以更多航班晚点。",
+     "chunks": [
+      {
+       "id": "k02",
+       "text": "it is rainy",
+       "meaningCN": "下雨天"
+      }
+     ]
+    },
+    {
+     "id": "L15s3",
+     "text": "I walk to the desk and join the longest line.",
+     "meaningCN": "我走到柜台，排进最长的队伍。",
+     "chunks": []
+    },
+    {
+     "id": "L15s4",
+     "text": "What time is the next available flight?",
+     "meaningCN": "下一个有位的航班是几点？",
+     "chunks": [
+      {
+       "id": "j01",
+       "text": "what time",
+       "meaningCN": "几点"
+      }
+     ]
+    },
+    {
+     "id": "L15s5",
+     "text": "The agent checks her screen and says an hour.",
+     "meaningCN": "工作人员看了看屏幕，说一小时。",
+     "chunks": []
+    },
+    {
+     "id": "L15s6",
+     "text": "An hour is fine, I have nowhere to be.",
+     "meaningCN": "一小时没关系，我哪儿也不赶。",
+     "chunks": []
+    },
+    {
+     "id": "L15s7",
+     "text": "But then comes a gate change notice.",
+     "meaningCN": "但接着来了登机口变更的通知。",
+     "chunks": [
+      {
+       "id": "lx_airport_a_gate_change",
+       "text": "a gate change",
+       "meaningCN": "登机口变更",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L15s8",
+     "text": "Gate twelve is now gate twenty-six.",
+     "meaningCN": "十二号口改成了二十六号口。",
+     "chunks": []
+    },
+    {
+     "id": "L15s9",
+     "text": "I need to rebook my flight, not just wait.",
+     "meaningCN": "我需要改签，而不只是等。",
+     "chunks": [
+      {
+       "id": "lx_airport_rebook_my_flight",
+       "text": "rebook my flight",
+       "meaningCN": "改签航班",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L15s10",
+     "text": "Could you put me on the morning flight?",
+     "meaningCN": "能把我改到早班机吗？",
+     "chunks": [
+      {
+       "id": "o01",
+       "text": "could you",
+       "meaningCN": "您能…吗"
+      }
+     ]
+    },
+    {
+     "id": "L15s11",
+     "text": "The agent types slowly and then nods.",
+     "meaningCN": "工作人员慢慢地打字，然后点头。",
+     "chunks": []
+    },
+    {
+     "id": "L15s12",
+     "text": "Yes, that seat is still open today.",
+     "meaningCN": "可以，今天那个座位还空着。",
+     "chunks": []
+    },
+    {
+     "id": "L15s13",
+     "text": "My bag is already checked in downstairs.",
+     "meaningCN": "我的行李已经在楼下托运了。",
+     "chunks": []
+    },
+    {
+     "id": "L15s14",
+     "text": "Will it reach the airport before I do?",
+     "meaningCN": "它会比我先到机场吗？",
+     "chunks": [
+      {
+       "id": "i04",
+       "text": "the airport",
+       "meaningCN": "机场"
+      }
+     ]
+    },
+    {
+     "id": "L15s15",
+     "text": "The airport is large, and the transfer is tight.",
+     "meaningCN": "机场很大，转机很紧。",
+     "chunks": [
+      {
+       "id": "i04",
+       "text": "the airport",
+       "meaningCN": "机场"
+      }
+     ]
+    },
+    {
+     "id": "L15s16",
+     "text": "I ask for a hotel voucher for the night.",
+     "meaningCN": "我要一张当晚的酒店券。",
+     "chunks": []
+    },
+    {
+     "id": "L15s17",
+     "text": "They give me a voucher and a breakfast card.",
+     "meaningCN": "他们给了我一张券和一份早餐卡。",
+     "chunks": []
+    },
+    {
+     "id": "L15s18",
+     "text": "A bit later, the screen changes again.",
+     "meaningCN": "过了一会儿，屏幕又变了。",
+     "chunks": [
+      {
+       "id": "j03",
+       "text": "a bit later",
+       "meaningCN": "稍晚一点"
+      }
+     ]
+    },
+    {
+     "id": "L15s19",
+     "text": "The new flight leaves at six sharp.",
+     "meaningCN": "新航班六点整起飞。",
+     "chunks": []
+    },
+    {
+     "id": "L15s20",
+     "text": "I find a chair near the window and sit.",
+     "meaningCN": "我在窗边找了把椅子坐下。",
+     "chunks": []
+    },
+    {
+     "id": "L15s21",
+     "text": "A man beside me works on a small laptop.",
+     "meaningCN": "我旁边的男人在小笔记本上工作。",
+     "chunks": []
+    },
+    {
+     "id": "L15s22",
+     "text": "His child sleeps under a thin blanket.",
+     "meaningCN": "他的孩子在薄毯子下睡着。",
+     "chunks": []
+    },
+    {
+     "id": "L15s23",
+     "text": "Nobody complains loudly, which feels kind.",
+     "meaningCN": "没有人大声抱怨，这让人觉得善意。",
+     "chunks": []
+    },
+    {
+     "id": "L15s24",
+     "text": "We share the news like a small community.",
+     "meaningCN": "我们像个小集体一样分享消息。",
+     "chunks": []
+    },
+    {
+     "id": "L15s25",
+     "text": "The coffee here costs more than the flight.",
+     "meaningCN": "这里的咖啡比机票还贵。",
+     "chunks": []
+    },
+    {
+     "id": "L15s26",
+     "text": "Still, I buy one and wait without hurry.",
+     "meaningCN": "但我还是买了一杯，不着急地等。",
+     "chunks": []
+    },
+    {
+     "id": "L15s27",
+     "text": "I was wondering if the gate will change again.",
+     "meaningCN": "我在想登机口会不会再变。",
+     "chunks": []
+    },
+    {
+     "id": "L15s28",
+     "text": "It does not, and we board in one group.",
+     "meaningCN": "没有变，我们一组人登机。",
+     "chunks": []
+    },
+    {
+     "id": "L15s29",
+     "text": "The plane is late, but it is ours now.",
+     "meaningCN": "飞机晚点了，但此刻是我们的了。",
+     "chunks": []
+    },
+    {
+     "id": "L15s30",
+     "text": "I stow my bag and look out at the rain.",
+     "meaningCN": "我放好行李，看向外面的雨。",
+     "chunks": []
+    },
+    {
+     "id": "L15s31",
+     "text": "Delay teaches patience at an awkward price.",
+     "meaningCN": "延误以别扭的代价教会人耐心。",
+     "chunks": []
+    },
+    {
+     "id": "L15s32",
+     "text": "Next time I will build in a longer gap.",
+     "meaningCN": "下次我会留出更长的间隔。",
+     "chunks": []
+    },
+    {
+     "id": "L15s33",
+     "text": "I will check in online the night before.",
+     "meaningCN": "我会在前一晚网上值机。",
+     "chunks": [
+      {
+       "id": "t01",
+       "text": "check in",
+       "meaningCN": "办理入住"
+      }
+     ]
+    },
+    {
+     "id": "L15s34",
+     "text": "And I will keep this voucher as a story.",
+     "meaningCN": "我会把这张券留成一个故事。",
+     "chunks": []
+    },
+    {
+     "id": "L15s35",
+     "text": "The engine hums, and the hall falls away.",
+     "meaningCN": "引擎轰鸣，大厅渐渐远去。",
+     "chunks": []
+    },
+    {
+     "id": "L15s36",
+     "text": "Somewhere ahead, my morning is still waiting.",
+     "meaningCN": "在前方某处，我的早晨仍在等待。",
+     "chunks": []
+    },
+    {
+     "id": "L15s37",
+     "text": "I close my eyes and let the night pass.",
+     "meaningCN": "我闭上眼睛，让夜里过去。",
+     "chunks": []
+    },
+    {
+     "id": "L15s38",
+     "text": "By dawn, the delay feels almost small.",
+     "meaningCN": "到拂晓，延误几乎变得渺小。",
+     "chunks": []
+    },
+    {
+     "id": "L15s39",
+     "text": "The pilot apologizes and thanks us kindly.",
+     "meaningCN": "机长道歉并客气地感谢我们。",
+     "chunks": []
+    },
+    {
+     "id": "L15s40",
+     "text": "We land early, which nobody expected today.",
+     "meaningCN": "我们提前落地，谁也没料到。",
+     "chunks": []
+    }
+   ]
+  },
+  {
+   "id": "L16",
+   "title": "Late Night Radio",
+   "scene": "radio",
+   "sceneLabel": "电台",
+   "summaryCN": "深夜电台独白：关于慢下来的节奏、凌晨与自我说服。",
+   "updatedAt": "2026-10-23",
+   "level": "C1",
+   "baseRate": 1.25,
+   "collectLimit": 8,
+   "audioUrl": "",
+   "sentences": [
+    {
+     "id": "L16s1",
+     "text": "It is past midnight, and the city has finally stopped explaining itself to me.",
+     "meaningCN": "已经过了午夜，城市终于不再向我解释它自己。",
+     "chunks": []
+    },
+    {
+     "id": "L16s2",
+     "text": "I think that is the real gift of the small hours.",
+     "meaningCN": "我觉得这正是凌晨时段真正的礼物。",
+     "chunks": [
+      {
+       "id": "m01",
+       "text": "I think",
+       "meaningCN": "我认为"
+      },
+      {
+       "id": "lx_radio_the_small_hours",
+       "text": "the small hours",
+       "meaningCN": "凌晨时分",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L16s3",
+     "text": "Nobody expects a reply before sunrise, and the silence is not rude.",
+     "meaningCN": "没人期待日出前有回复，而这种沉默并不失礼。",
+     "chunks": []
+    },
+    {
+     "id": "L16s4",
+     "text": "I prefer the slower version of my own thinking.",
+     "meaningCN": "我更喜欢自己思考里更慢的那个版本。",
+     "chunks": [
+      {
+       "id": "m07",
+       "text": "I prefer",
+       "meaningCN": "我更喜欢"
+      }
+     ]
+    },
+    {
+     "id": "L16s5",
+     "text": "In daylight, thought arrives already dressed for work.",
+     "meaningCN": "在白天，想法一到达就已经穿好上班的衣服。",
+     "chunks": []
+    },
+    {
+     "id": "L16s6",
+     "text": "At night it comes in bare feet, unhurried and honest.",
+     "meaningCN": "夜里它光着脚来，不慌不忙，也很诚实。",
+     "chunks": [
+      {
+       "id": "j10",
+       "text": "at night",
+       "meaningCN": "夜里"
+      }
+     ]
+    },
+    {
+     "id": "L16s7",
+     "text": "To be honest, I have been running at a speed I never chose.",
+     "meaningCN": "说实话，我一直在用一个自己从未选过的速度奔跑。",
+     "chunks": [
+      {
+       "id": "m20",
+       "text": "to be honest",
+       "meaningCN": "说实话"
+      }
+     ]
+    },
+    {
+     "id": "L16s8",
+     "text": "The schedule was written by other hands, and I simply agreed.",
+     "meaningCN": "日程是别人的手写的，我只是同意了。",
+     "chunks": []
+    },
+    {
+     "id": "L16s9",
+     "text": "Somewhere along the way, agreement started to look like ambition.",
+     "meaningCN": "在某个路口之后，同意开始看起来像野心。",
+     "chunks": []
+    },
+    {
+     "id": "L16s10",
+     "text": "It is important to notice the difference before you are tired.",
+     "meaningCN": "在疲惫之前察觉这个差别，很重要。",
+     "chunks": [
+      {
+       "id": "m14",
+       "text": "it is important",
+       "meaningCN": "这很重要"
+      }
+     ]
+    },
+    {
+     "id": "L16s11",
+     "text": "A slower pace is not laziness wearing a nicer coat.",
+     "meaningCN": "更慢的节奏不是懒惰穿了件更好看的外套。",
+     "chunks": [
+      {
+       "id": "lx_radio_a_slower_pace",
+       "text": "a slower pace",
+       "meaningCN": "更慢的节奏",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
+    },
+    {
+     "id": "L16s12",
+     "text": "It is a decision about which things deserve your attention.",
+     "meaningCN": "它是关于哪些事值得你注意力的决定。",
+     "chunks": []
+    },
+    {
+     "id": "L16s13",
+     "text": "I have learned to keep one hour empty, like a window.",
+     "meaningCN": "我学会留出一个空白小时，像一扇窗。",
+     "chunks": []
+    },
+    {
+     "id": "L16s14",
+     "text": "Nothing is scheduled there, and everything is possible.",
+     "meaningCN": "那里没有安排，却一切皆有可能。",
+     "chunks": []
+    },
+    {
+     "id": "L16s15",
+     "text": "Sometimes I sit with a cup of tea and do absolutely nothing, though the first attempts felt uncomfortable and almost rude.",
+     "meaningCN": "有时我端着一杯茶什么都不做，尽管最初的尝试让人不安，几乎算失礼。",
+     "chunks": []
+    },
+    {
+     "id": "L16s16",
+     "text": "My hands reached for the phone out of pure habit, but I stayed anyway, and the discomfort passed like weather.",
+     "meaningCN": "我的手出于习惯去拿手机，但我还是留下来，那种不适像天气一样过去了。",
+     "chunks": []
+    },
+    {
+     "id": "L16s17",
+     "text": "I think most people underestimate how fast boredom leaves.",
+     "meaningCN": "我觉得大多数人低估了无聊离开的速度。",
+     "chunks": [
+      {
+       "id": "m01",
+       "text": "I think",
+       "meaningCN": "我认为"
+      }
+     ]
+    },
+    {
+     "id": "L16s18",
+     "text": "What arrives afterwards is usually a small, useful idea that rarely shouts and tends to whisper and wait.",
+     "meaningCN": "之后到来的通常是一个小而有用的想法，它很少喊叫，而是低语并等待。",
+     "chunks": []
+    },
+    {
+     "id": "L16s19",
+     "text": "To be honest, some of my best decisions were whispers.",
+     "meaningCN": "说实话，我一些最好的决定都是低语。",
+     "chunks": [
+      {
+       "id": "m20",
+       "text": "to be honest",
+       "meaningCN": "说实话"
+      }
+     ]
+    },
+    {
+     "id": "L16s20",
+     "text": "The loud ones belonged to other people's calendars.",
+     "meaningCN": "那些大声的属于别人的日历。",
+     "chunks": []
+    },
+    {
+     "id": "L16s21",
+     "text": "I would rather be late to a meeting than early to a mistake.",
+     "meaningCN": "我宁愿开会迟到，也不愿过早犯错。",
+     "chunks": []
+    },
+    {
+     "id": "L16s22",
+     "text": "That line sounds careless until you have tried it twice, and stay calm is the instruction I repeat most often now.",
+     "meaningCN": "这句话听起来草率，直到你试过两次；而保持平静是如今我重复最多的一句指令。",
+     "chunks": [
+      {
+       "id": "l08",
+       "text": "stay calm",
+       "meaningCN": "保持冷静"
+      }
+     ]
+    },
+    {
+     "id": "L16s23",
+     "text": "Not calm as in numb, but calm as in clear water where you can see the bottom and read the stones.",
+     "meaningCN": "不是麻木的平静，而是清水般的平静，你能看见水底，读懂石头。",
+     "chunks": []
+    },
+    {
+     "id": "L16s24",
+     "text": "I keep a notebook by the bed for these late transmissions, though most entries are three words long and useless by morning.",
+     "meaningCN": "我在床边放一本笔记本记这些深夜播报，尽管多数条目只有三个词，到早上就没用了。",
+     "chunks": []
+    },
+    {
+     "id": "L16s25",
+     "text": "But one in ten changes the entire following week, and that ratio is cheap enough to pay much more for.",
+     "meaningCN": "但十分之一会改变接下来的整个一周，这个比例便宜到值得付更多。",
+     "chunks": []
+    },
+    {
+     "id": "L16s26",
+     "text": "The radio plays something old and nobody asks for a request, which is a pleasure in receiving what you did not choose.",
+     "meaningCN": "电台放着一首老歌，没人点歌，这种接受你没选的东西本身就是一种愉悦。",
+     "chunks": []
+    },
+    {
+     "id": "L16s27",
+     "text": "I prefer this to the endless menu of my own device.",
+     "meaningCN": "我更喜欢这样，而不是我设备上的无尽菜单。",
+     "chunks": [
+      {
+       "id": "m07",
+       "text": "I prefer",
+       "meaningCN": "我更喜欢"
+      }
+     ]
+    },
+    {
+     "id": "L16s28",
+     "text": "The host speaks softly, as if reading to an empty room.",
+     "meaningCN": "主播轻声说话，像在给空房间朗读。",
+     "chunks": []
+    },
+    {
+     "id": "L16s29",
+     "text": "It is important, I think, to be addressed so gently.",
+     "meaningCN": "我觉得，被人如此温柔地对待很重要。",
+     "chunks": [
+      {
+       "id": "m14",
+       "text": "it is important",
+       "meaningCN": "这很重要"
+      },
+      {
+       "id": "m01",
+       "text": "I think",
+       "meaningCN": "我认为"
+      }
+     ]
+    },
+    {
+     "id": "L16s30",
+     "text": "Gentleness is not a weakness that serious people outgrow.",
+     "meaningCN": "温柔不是严肃的人长大后会丢掉的弱点。",
+     "chunks": []
+    },
+    {
+     "id": "L16s31",
+     "text": "It is a skill, and like most skills it needs quiet practice.",
+     "meaningCN": "它是一种技能，和多数技能一样需要安静地练习。",
+     "chunks": []
+    },
+    {
+     "id": "L16s32",
+     "text": "By now the traffic has gone, and the street sounds wider.",
+     "meaningCN": "此刻车流散去，街道听起来更宽阔。",
+     "chunks": []
+    },
+    {
+     "id": "L16s33",
+     "text": "I will sleep without a plan for tomorrow, which is rare.",
+     "meaningCN": "我会不带明日计划地睡去，这很难得。",
+     "chunks": []
+    },
+    {
+     "id": "L16s34",
+     "text": "Tomorrow will ask its usual questions, and I will answer late.",
+     "meaningCN": "明天会照例提问，我会晚一点回答。",
+     "chunks": []
+    },
+    {
+     "id": "L16s35",
+     "text": "For now, the small hours hold the door open for me, so good night from a city that has stopped explaining itself.",
+     "meaningCN": "此刻，凌晨为我扶着门，所以请接受这座不再解释自己的城市的晚安。",
+     "chunks": [
+      {
+       "id": "lx_radio_the_small_hours",
+       "text": "the small hours",
+       "meaningCN": "凌晨时分",
+       "candidate": true,
+       "type": "content"
+      }
+     ]
     }
    ]
   }

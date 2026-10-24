@@ -9,34 +9,55 @@ import 'package:chunkspoke_flutter/models/listening_article.dart';
 void main() {
   late ContentPack content;
   late ListeningPack pack;
+  late Map<String, dynamic> rawJson;
 
   setUpAll(() async {
     content = ContentPack.fromJson(jsonDecode(
             await File('assets/content_pack.json').readAsString())
         as Map<String, dynamic>);
-    pack = ListeningPack.fromJson(jsonDecode(
-            await File('assets/listening_articles.json').readAsString())
-        as Map<String, dynamic>);
+    rawJson = jsonDecode(await File('assets/listening_articles.json').readAsString())
+        as Map<String, dynamic>;
+    pack = ListeningPack.fromJson(rawJson);
   });
 
   group('浸泡层内容 schema', () {
-    test('10 篇 · 每篇 2-3 分钟 · 校验 0 错', () {
-      expect(pack.articles.length, 10);
+    test('16 篇 · 按级别折算时长 45-210 秒 · 校验 0 错', () {
+      expect(pack.articles.length, 16);
       expect(validateListeningPack(pack, content), isEmpty);
       for (final a in pack.articles) {
-        final words =
-            a.sentences.fold<int>(0, (s, e) => s + e.text.split(' ').length);
-        final secs = words / 150 * 60 + (a.sentences.length - 1) * 0.3;
-        expect(secs, inInclusiveRange(120, 180), reason: '${a.id} 时长 ${secs ~/ 60}');
+        final atNormal = a.wordCount / 150 * 60 + (a.sentences.length - 1) * 0.3;
+        final secs = atNormal / (a.baseRate ?? a.level.baseRate);
+        expect(secs, inInclusiveRange(45, 210),
+            reason: '${a.id}(${a.level.key}) 折算 ${secs.round()} 秒');
       }
     });
 
-    test('每篇标注 ≤8 块，既有块占比 60-70%（首批口径）', () {
+    test('分级分布：A1×3 / B1×12 / C1×1，级别与默认语速成对出现', () {
+      final byLevel = <String, int>{};
+      for (final a in pack.articles) {
+        byLevel[a.level.key] = (byLevel[a.level.key] ?? 0) + 1;
+        expect(a.levelRaw, a.level.key, reason: '${a.id} 级别字面量须规范');
+        expect(a.baseRate, a.level.baseRate, reason: '${a.id} baseRate 须等于本级默认');
+      }
+      expect(byLevel, {'A1': 3, 'B1': 12, 'C1': 1});
+      // A1 三篇必须真的更短更慢：词数与句均都低于 B1 任一篇
+      final a1MaxWords =
+          pack.articles.where((a) => a.level == ListeningLevel.a1).map((a) => a.wordCount).reduce((x, y) => x > y ? x : y);
+      final b1MinWords =
+          pack.articles.where((a) => a.level == ListeningLevel.b1).map((a) => a.wordCount).reduce((x, y) => x < y ? x : y);
+      expect(a1MaxWords, lessThan(b1MinWords));
+    });
+
+    test('每篇标注 ≤ 收词上限，既有块占比 60-70%（全库口径）', () {
       var existing = 0, candidates = 0;
       for (final a in pack.articles) {
         final chunks = a.chunks;
-        expect(chunks.length, lessThanOrEqualTo(8), reason: a.id);
-        expect(chunks.length, a.collectLimit);
+        expect(chunks.length, lessThanOrEqualTo(a.collectLimit), reason: a.id);
+        expect(chunks.length, inInclusiveRange(a.level.minChunks, a.level.maxChunks),
+            reason: '${a.id} 块数须落在 ${a.level.key} 档');
+        if (a.level == ListeningLevel.a1) {
+          expect(a.knownChunkRatio, greaterThanOrEqualTo(0.70), reason: a.id);
+        }
         existing += chunks.where((c) => !c.candidate).length;
         candidates += chunks.where((c) => c.candidate).length;
       }
@@ -69,9 +90,11 @@ void main() {
       }
     });
 
-    test('四个场景成组，且无 Day N 编号库', () {
-      expect(pack.articles.map((a) => a.scene).toSet(),
-          {'food', 'airport', 'work', 'hospital'});
+    test('八个场景成组，无 Day N 编号库，级别文案不构成门槛', () {
+      expect(pack.articles.map((a) => a.scene).toSet(), {
+        'food', 'airport', 'work', 'hospital', // 首批四场景
+        'greet', 'direction', 'shop', 'radio', // 指令 S 新增四场景
+      });
       for (final a in pack.articles) {
         final text = '${a.title} ${a.summaryCN}';
         expect(RegExp(r'\bday\s*\d+', caseSensitive: false).hasMatch(text),
@@ -79,6 +102,10 @@ void main() {
             reason: '${a.id} 出现 Day N');
         expect(RegExp(r'第\s*\d+\s*天').hasMatch(text), isFalse,
             reason: '${a.id} 出现第 N 天');
+        // 级别只是自选标签：内容文案里不得出现解锁/门槛/测试/等级考核口径
+        expect(RegExp(r'解锁|门槛|通关|考核|等级测试|付费|会员').hasMatch(text), isFalse,
+            reason: '${a.id} 级别文案越线');
+        expect(a.sceneLabel.trim(), isNotEmpty, reason: a.id);
       }
     });
 
@@ -164,6 +191,51 @@ void main() {
           ListeningPack(version: 1, generatedAt: '', articles: [bad]), content);
       expect(errs.any((e) => e.contains('须以 lx_ 开头')), isTrue);
       expect(errs.any((e) => e.contains('与既有词块冲突')), isTrue);
+    });
+
+    test('错标级别会被拒：词数 / 句均 / 块数 / baseRate 四轴都核', () {
+      Map<String, dynamic> articleRaw(String id) => Map<String, dynamic>.from(
+          (rawJson['articles'] as List).cast<Map<String, dynamic>>().firstWhere(
+              (a) => a['id'] == id));
+      ListeningPack one(Map<String, dynamic> j) => ListeningPack(
+          version: 2,
+          generatedAt: '',
+          articles: [ListeningArticle.fromJson(j)],
+        );
+
+      // 把 A1 篇（115 词 / 句均 3.8 / 6 块 / 0.75）冒充 C1
+      final fakeC1 = articleRaw('L11')
+        ..['level'] = 'C1'
+        ..['baseRate'] = 1.25;
+      final e1 = validateListeningPack(one(fakeC1), content);
+      expect(e1.any((e) => e.contains('词数')), isTrue, reason: e1.join('\n'));
+      expect(e1.any((e) => e.contains('句均词数')), isTrue);
+      expect(e1.any((e) => e.contains('标注块数')), isTrue);
+
+      // 把 B1 篇冒充 A1：词数/句均/块数越界，且 A1 复用率门槛一并核
+      final fakeA1 = articleRaw('L02')
+        ..['level'] = 'A1'
+        ..['baseRate'] = 0.75;
+      final e2 = validateListeningPack(one(fakeA1), content);
+      expect(e2.any((e) => e.contains('词数')), isTrue);
+      expect(e2.any((e) => e.contains('复用既有词块')), isTrue);
+
+      // 级别字面量非法 / 缺失 / baseRate 与本级默认不符
+      final bogus = articleRaw('L01')..['level'] = 'B2+';
+      expect(
+          validateListeningPack(one(bogus), content)
+              .any((e) => e.contains('level 非法')),
+          isTrue);
+      final noRate = articleRaw('L01')..remove('baseRate');
+      expect(
+          validateListeningPack(one(noRate), content)
+              .any((e) => e.contains('缺 baseRate')),
+          isTrue);
+      final wrongRate = articleRaw('L01')..['baseRate'] = 1.10;
+      expect(
+          validateListeningPack(one(wrongRate), content)
+              .any((e) => e.contains('与本级默认')),
+          isTrue);
     });
   });
 }

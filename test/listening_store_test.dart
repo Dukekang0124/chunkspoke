@@ -200,4 +200,108 @@ void main() {
     expect(s.reunions, 1);
     expect(s.articlesHeard, 1);
   });
+
+  group('磨耳朵 2.0 偏好（指令 S）', () {
+    test('今日浸泡只认当天日桶，不受历史天数影响', () async {
+      await store.addSeconds(120);
+      now = now.add(const Duration(days: 1));
+      await store.addSeconds(60);
+      expect(store.todaySeconds, 60);
+      expect(store.totalSeconds, 180);
+    });
+
+    test('变速按级别记忆：不跨级串味，重复设置取最后一次', () async {
+      expect(store.speedOverrideFor('A1'), isNull);
+      await store.setSpeedOverride('A1', 1.0);
+      expect(store.speedOverrideFor('A1'), 1.0);
+      expect(store.speedOverrideFor('C1'), isNull, reason: 'A1 的选择不该带到 C1');
+      await store.setSpeedOverride('A1', 1.25);
+      expect(store.speedOverrideFor('A1'), 1.25);
+    });
+
+    test('译文默认开；关掉后重开仍保持', () async {
+      expect(store.showTranslation, isTrue);
+      await store.setShowTranslation(false);
+      expect(store.showTranslation, isFalse);
+      final reopened = ListeningStore(
+        read: (k) => kv[k],
+        write: (k, v) async => kv[k] = v,
+        clock: () => now,
+      );
+      expect(reopened.showTranslation, isFalse);
+      await reopened.setShowTranslation(true);
+      expect(reopened.showTranslation, isTrue);
+    });
+  });
+
+  group('讲解版（指令 S+）', () {
+    test('模式偏好默认原版，切换后跨实例保持', () async {
+      expect(store.explainMode, isFalse);
+      await store.setExplainMode(true);
+      expect(store.explainMode, isTrue);
+      final reopened = ListeningStore(
+        read: (k) => kv[k],
+        write: (k, v) async => kv[k] = v,
+        clock: () => now,
+      );
+      expect(reopened.explainMode, isTrue);
+      await reopened.setExplainMode(false);
+      expect(store.explainMode, isFalse);
+    });
+
+    test('首遇记忆：去重、跨实例保留、超 1000 条只留最近', () async {
+      expect(store.explainedKeys, isEmpty);
+      await store.markExplained(['i:c01', 't:oat milk', 'i:c01']);
+      expect(store.explainedKeys, {'i:c01', 't:oat milk'});
+
+      await store.setExplainMode(true);
+      final reopened = ListeningStore(
+        read: (k) => kv[k],
+        write: (k, v) async => kv[k] = v,
+        clock: () => now,
+      );
+      expect(reopened.explainedKeys, containsAll(['i:c01', 't:oat milk']));
+
+      await reopened.markExplained(
+          [for (var i = 0; i < 1200; i++) 'i:k$i']);
+      final keys = reopened.explainedKeys;
+      expect(keys.length, ListeningStore.kMaxExplainedEntries);
+      expect(keys, isNot(contains('i:c01')));
+      expect(keys, contains('i:k1199'));
+    });
+
+    test('两模式秒数只认 o/x 且忽略非正值；脏数据不炸', () async {
+      await store.addModeSeconds('o', 30);
+      await store.addModeSeconds('x', 20);
+      await store.addModeSeconds('x', 10);
+      await store.addModeSeconds('z', 99);
+      await store.addModeSeconds('o', 0);
+      await store.addModeSeconds('o', -5);
+      expect(store.modeSeconds, {'o': 30, 'x': 30});
+
+      kv[ListeningStore.kModeSeconds] = '{bad';
+      expect(store.modeSeconds, isEmpty);
+      await store.addModeSeconds('x', 5);
+      expect(store.modeSeconds, {'x': 5});
+    });
+
+    test('续播点带模式：跨模式只信句索引，旧数据默认原版', () async {
+      await store.savePosition('L01', 4200, 3, mode: 'x');
+      final p = store.positionFor('L01')!;
+      expect(p.mode, 'x');
+      expect(p.sentenceIndex, 3);
+      expect(p.positionMs, 4200);
+
+      await store.savePosition('L01', 1000, 1);
+      expect(store.positionFor('L01')!.mode, 'o');
+
+      await store.savePosition('L01', 2000, 2, mode: 'Z');
+      expect(store.positionFor('L01')!.mode, 'o');
+
+      // 旧版本写入的续播点没有 m 字段。
+      kv[ListeningStore.kPositions] =
+          '{"L02":{"ms":800,"i":0,"ts":1}}';
+      expect(store.positionFor('L02')!.mode, 'o');
+    });
+  });
 }

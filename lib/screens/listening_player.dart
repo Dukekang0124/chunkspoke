@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -6,12 +7,16 @@ import 'package:provider/provider.dart';
 
 import '../models/content_pack.dart';
 import '../models/listening_article.dart';
+import '../services/asr_guard.dart';
 import '../services/chunk_asset.dart';
 import '../services/listening_audio.dart';
 import '../services/listening_learn.dart';
 import '../services/listening_palette.dart';
 import '../services/listening_player.dart';
+import '../services/listening_shadow.dart';
 import '../services/loaders.dart';
+import '../services/recording.dart';
+import '../services/speech.dart';
 import '../services/notification_service.dart';
 import '../steps/practice_loop.dart';
 import '../ui/feedback.dart';
@@ -24,13 +29,19 @@ import '../ui/theme.dart';
 /// longTerm/relearning）、金=已掌握；点击浮层写学习数据。
 class ListeningPlayerPage extends StatefulWidget {
   final ListeningArticle article;
-  const ListeningPlayerPage({super.key, required this.article});
+
+  /// 从「今日复习播单」进入：到期块琥珀脉动，点块仍走既有复习正路（§二.1）。
+  final bool reviewRun;
+
+  const ListeningPlayerPage(
+      {super.key, required this.article, this.reviewRun = false});
 
   @override
   State<ListeningPlayerPage> createState() => _ListeningPlayerPageState();
 }
 
-class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
+class _ListeningPlayerPageState extends State<ListeningPlayerPage>
+    with SingleTickerProviderStateMixin {
   late ListeningPlayerController _c;
   final ScrollController _scroll = ScrollController();
   final List<GlobalKey> _sentenceKeys = [];
@@ -39,24 +50,72 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
   bool _notifiedComplete = false;
   double? _dragMs;
 
+  /// 到期块琥珀脉动（指令 S §二.1）：仅复习播单进入时启动，避免常驻重绘。
+  late final AnimationController _pulse;
+  final Set<String> _dueChunkIds = {};
+  bool _chunksOpen = false;
+
+  /// 译文开关（§二.5）：默认开，偏好落库。
+  bool _showTranslation = true;
+
+  /// 讲解徽标里展示块面用（候选块也在 article.chunks 里）。
+  late final Map<String, String> _articleChunkText = {
+    for (final c in widget.article.chunks) c.id: c.text,
+  };
+
   @override
   void initState() {
     super.initState();
     for (var i = 0; i < widget.article.sentences.length; i++) {
       _sentenceKeys.add(GlobalKey());
     }
+    _pulse = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
+    _showTranslation =
+        Provider.of<ProgressService>(context, listen: false).listening
+            .showTranslation;
     _createController();
     _loadStates();
+    if (widget.reviewRun) unawaited(_loadDueChunks());
     unawaited(NotificationService.instance.requestPermission());
+  }
+
+  /// 复习播单入口：只读「哪些块到期」，不改任何到期时间（禁 force due-now）。
+  Future<void> _loadDueChunks() async {
+    final progress = Provider.of<ProgressService>(context, listen: false);
+    final rows = await progress.chunkStore.allRows();
+    if (!mounted) return;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final due = {
+      for (final r in rows)
+        if (r.dueDate > 0 && r.dueDate <= nowMs && r.assetState.isReviewable)
+          r.chunkKey
+    };
+    final inArticle = {
+      for (final a in widget.article.chunks)
+        if (due.contains(a.id)) a.id
+    };
+    setState(() {
+      _dueChunkIds
+        ..clear()
+        ..addAll(inArticle);
+    });
+    if (_dueChunkIds.isNotEmpty) _pulse.repeat(reverse: true);
   }
 
   void _createController() {
     final progress = Provider.of<ProgressService>(context, listen: false);
     final tts = Provider.of<TtsService>(context, listen: false);
+    final content = Provider.of<ContentPack>(context, listen: false);
     _c = ListeningPlayerController(
       progress: progress,
       tts: tts,
       article: widget.article,
+      content: content,
+      loadStates: () async {
+        final rows = await progress.chunkStore.allRows();
+        return {for (final r in rows) r.chunkKey: r.assetState};
+      },
     )
       ..onNotice = (m) {
         if (!mounted) return;
@@ -124,6 +183,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
 
   @override
   void dispose() {
+    _pulse.dispose();
     _c.removeListener(_onChange);
     _c.dispose();
     _scroll.dispose();
@@ -142,9 +202,20 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 17)),
-            Text(
-              '${widget.article.sceneLabel} · ${widget.article.sentences.length} 句',
-              style: const TextStyle(fontSize: 11, color: Colors.white38),
+            Row(
+              children: [
+                Text(
+                  '${widget.article.sceneLabel} · '
+                  '${widget.article.sentences.length} 句',
+                  style: const TextStyle(fontSize: 11, color: Colors.white38),
+                ),
+                const SizedBox(width: 6),
+                _levelBadge(widget.article.level),
+                const SizedBox(width: 6),
+                Text('默认 ${_c.baseRate}x',
+                    style: const TextStyle(
+                        fontSize: 11, color: Colors.white38)),
+              ],
             ),
           ],
         ),
@@ -187,7 +258,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
                 style: TextStyle(color: kText, fontSize: 16)),
             const SizedBox(height: 8),
             if (total > 0) ...[
-              Text('已合成 ${_c.prepDone} / $total 句',
+              Text('已合成 ${_c.prepDone} / $total 段',
                   style: const TextStyle(color: Colors.white54)),
               const SizedBox(height: 12),
               LinearProgressIndicator(
@@ -236,14 +307,106 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
     final plan = _c.plan!;
     return Column(
       children: [
+        _explainToggle(plan),
         _modeBanner(plan),
         _legend(),
+        _chunkStrip(),
         Expanded(child: _sentenceList(plan)),
         if (!_c.live && (_c.loopA != null || _c.abActive)) _abStatus(),
         _progress(plan),
         _transport(plan),
         _tools(),
       ],
+    );
+  }
+
+  /// 原版/讲解版 toggle（指令 S+ §一.1）：偏好落库；播放中切换只在句界生效。
+  Widget _explainToggle(ListeningAudioPlan plan) {
+    final enabled = _c.canExplain;
+    final explained = _c.explainMode;
+    final hint = _c.rebuilding
+        ? '正在切换…'
+        : (plan.totalMs <= 0
+            ? ''
+            : '约 ${(plan.totalMs / 60000).ceil().clamp(1, 999)} 分钟'
+                '${_c.explainedActive ? '（含讲解）' : ''}');
+    return Container(
+      key: const Key('listening_mode_toggle'),
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.fromLTRB(4, 4, 10, 4),
+      decoration: BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kUnlocked.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          _modeOption(
+            key: const Key('listening_mode_original'),
+            label: '原版',
+            selected: !explained,
+            enabled: enabled,
+            onTap: () => _c.setExplainMode(false),
+          ),
+          _modeOption(
+            key: const Key('listening_mode_explained'),
+            label: '讲解版',
+            selected: explained,
+            enabled: enabled,
+            onTap: () => _c.setExplainMode(true),
+          ),
+          const Spacer(),
+          Text(
+            enabled ? hint : '实时朗读不支持讲解版',
+            style: const TextStyle(color: Colors.white38, fontSize: 11),
+          ),
+          if (_c.inExplanation) ...[
+            const SizedBox(width: 8),
+            TextButton(
+              key: const Key('listening_expl_skip'),
+              onPressed: _c.skipExplanation,
+              style: TextButton.styleFrom(
+                foregroundColor: kPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: const Size(0, 28),
+              ),
+              child: const Text('跳过', style: TextStyle(fontSize: 12)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _modeOption({
+    required Key key,
+    required String label,
+    required bool selected,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      key: key,
+      onTap: enabled ? onTap : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? kPrimary.withValues(alpha: 0.16) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+              color: selected ? kPrimary.withValues(alpha: 0.6) : Colors.transparent),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: !enabled
+                ? Colors.white24
+                : (selected ? kPrimary : Colors.white54),
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
     );
   }
 
@@ -283,6 +446,12 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
     final detail = synthesized == 0
         ? '本地缓存命中 $reused 句'
         : '新合成 $synthesized 句 · 缓存 $reused 句';
+    final expl = _c.explainedActive
+        ? (plan.hasExplanations
+            ? ' · 讲解 ${plan.items.where((e) => e.isExplanation).length} 段'
+                '（新合成 ${plan.explanationSynthesized} / 缓存 ${plan.explanationReused}）'
+            : ' · 本篇暂无可讲解词块')
+        : '';
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -298,7 +467,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '句级离线音频已就绪（$detail）',
+              '句级离线音频已就绪（$detail）$expl',
               style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
           ),
@@ -345,88 +514,185 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
   }
 
   Widget _sentenceList(ListeningAudioPlan plan) {
-    return ListView.builder(
+    // 全量构建而非 ListView.builder：离屏句子若尚未构建，ensureVisible 拿不到
+    // context，自动滚动就失效，讲解中的徽标会停在屏幕外。
+    final list = SingleChildScrollView(
       controller: _scroll,
       padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
-      itemCount: plan.sentences.length,
-      itemBuilder: (context, i) {
-        final s = plan.sentences[i];
-        final active = i == _c.currentIndex;
-        return AnimatedContainer(
-          key: _sentenceKeys[i],
-          duration: const Duration(milliseconds: 220),
-          margin: const EdgeInsets.symmetric(vertical: 3),
-          padding: const EdgeInsets.fromLTRB(8, 9, 8, 9),
-          decoration: BoxDecoration(
-            color: active ? kCard : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: active
-                  ? kPrimary.withValues(alpha: 0.45)
-                  : Colors.transparent,
-            ),
+      child: Column(
+        children: [
+          for (var i = 0; i < plan.sentences.length; i++)
+            _sentenceTile(plan, i),
+        ],
+      ),
+    );
+    // 讲解中轻点正文区 = 跳过本段，直接进下一句（§二.1）。
+    // 包裹层常驻，只在讲解中挂 onTap：否则进入/退出讲解会重建滚动视图，列表跳回顶部。
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: _c.inExplanation ? _c.skipExplanation : null,
+      child: list,
+    );
+  }
+
+  Widget _sentenceTile(ListeningAudioPlan plan, int i) {
+    final s = plan.sentences[i];
+    final active = i == _c.currentIndex;
+    final src = plan.article.sentences[i];
+    final dueHere = widget.reviewRun &&
+        src.chunks.any((c) => _dueChunkIds.contains(c.id));
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, inner) => AnimatedContainer(
+        key: _sentenceKeys[i],
+        duration: const Duration(milliseconds: 220),
+        margin: const EdgeInsets.symmetric(vertical: 3),
+        padding: const EdgeInsets.fromLTRB(8, 9, 8, 9),
+        decoration: BoxDecoration(
+          color: dueHere
+              ? Color.alphaBlend(
+                  kListeningLearningText.withValues(
+                      alpha: 0.05 + 0.14 * _pulse.value),
+                  active ? kCard : kBg)
+              : (active ? kCard : Colors.transparent),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            width: dueHere ? 1.6 : 1.0,
+            color: dueHere
+                ? kListeningLearningText.withValues(
+                    alpha: 0.30 + 0.55 * _pulse.value)
+                : (active
+                    ? kPrimary.withValues(alpha: 0.45)
+                    : Colors.transparent),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        child: inner,
+      ),
+      child: _sentenceBody(plan, i, s, active, dueHere),
+    );
+  }
+
+  /// 单句正文：三色高亮 +（复习播单下）到期块脉动底色 + 译文开关 + 轻跟读。
+  Widget _sentenceBody(
+      ListeningAudioPlan plan, int i, dynamic s, bool active, bool dueHere) {
+    final src = plan.article.sentences[i];
+    final expl = _c.activeExplanation;
+    final explaining = expl != null && expl.sentenceIndex == i;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 40,
+          child: Column(
             children: [
-              SizedBox(
-                width: 40,
-                child: Column(
-                  children: [
-                    Text(
-                      '${i + 1}'.padLeft(2, '0'),
-                      style: TextStyle(
-                        color: active ? kPrimary : Colors.white24,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${plan.precise ? '' : '≈'}${(s.durationMs / 1000).toStringAsFixed(1)}s',
-                      style: const TextStyle(
-                          color: Colors.white24, fontSize: 9),
-                    ),
-                  ],
+              Text(
+                '${i + 1}'.padLeft(2, '0'),
+                style: TextStyle(
+                  color: active ? kPrimary : Colors.white24,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _SentenceRichText(
-                      sentence: s.text,
-                      chunks: plan.article.sentences[i].chunks,
-                      states: _states,
-                      active: active,
-                      onChunkTap: (chunk) => _showChunk(chunk, i),
-                    ),
-                    if (plan.article.sentences[i].meaningCN.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        plan.article.sentences[i].meaningCN,
-                        style: TextStyle(
-                          color: active ? Colors.white54 : Colors.white24,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                iconSize: 18,
-                tooltip: '重播本句',
-                color: active ? kPrimary : Colors.white24,
-                icon: const Icon(Icons.replay),
-                onPressed: () => _c.replaySentence(i),
+              const SizedBox(height: 4),
+              Text(
+                '${plan.precise ? '' : '≈'}${(s.durationMs / 1000).toStringAsFixed(1)}s',
+                style: const TextStyle(color: Colors.white24, fontSize: 9),
               ),
             ],
           ),
-        );
-      },
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SentenceRichText(
+                sentence: s.text,
+                chunks: src.chunks,
+                states: _states,
+                active: active,
+                dueIds: dueHere ? _dueChunkIds : const {},
+                emphasizedIds:
+                    explaining ? expl.chunkIds.toSet() : const {},
+                onChunkTap: (chunk) => _showChunk(chunk, i),
+              ),
+              if (explaining) ...[
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: _c.skipExplanation,
+                  child: Row(
+                    children: [
+                      Container(
+                        key: const Key('listening_explaining_badge'),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: kPrimary.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color: kPrimary.withValues(alpha: 0.55)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.graphic_eq, size: 12, color: kPrimary),
+                            SizedBox(width: 4),
+                            Text('讲解中',
+                                style:
+                                    TextStyle(color: kPrimary, fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          expl.chunkIds
+                              .map((id) => _articleChunkText[id] ?? id)
+                              .join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: Colors.white54, fontSize: 11),
+                        ),
+                      ),
+                      const Text('轻点跳过',
+                          style: TextStyle(
+                              color: Colors.white24, fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ],
+              if (_showTranslation && src.meaningCN.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  src.meaningCN,
+                  style: TextStyle(
+                    color: active ? Colors.white54 : Colors.white24,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          iconSize: 18,
+          tooltip: '跟读这一句',
+          key: Key('listening_shadow_$i'),
+          color: active ? kPrimary : Colors.white24,
+          icon: const Icon(Icons.mic_none),
+          onPressed: () => _openShadowRead(i),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          iconSize: 18,
+          tooltip: '重播本句',
+          color: active ? kPrimary : Colors.white24,
+          icon: const Icon(Icons.replay),
+          onPressed: () => _c.replaySentence(i),
+        ),
+      ],
     );
   }
 
@@ -625,6 +891,12 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
             active: _c.sleepOption != SleepTimerOption.off,
             onTap: _pickSleep,
           ),
+          _toolButton(
+            icon: Icons.translate,
+            label: '中',
+            active: _showTranslation,
+            onTap: _toggleTranslation,
+          ),
         ],
       ),
     );
@@ -818,6 +1090,133 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
     );
   }
 
+
+  /// 级别徽标（与首页同一套色：级别=篇目属性，不与三色块状态混义）。
+  Widget _levelBadge(ListeningLevel level) {
+    final tone = listeningLevelColor(level);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: tone.withValues(alpha: 0.6)),
+      ),
+      child: Text(level.key,
+          style: TextStyle(
+              color: tone, fontSize: 10, fontWeight: FontWeight.w700)),
+    );
+  }
+
+  /// 译文开关（§二.5）：偏好落库，默认开。
+  Future<void> _toggleTranslation() async {
+    final next = !_showTranslation;
+    setState(() => _showTranslation = next);
+    await Provider.of<ProgressService>(context, listen: false)
+        .listening
+        .setShowTranslation(next);
+  }
+
+  /// 本文词块条（§二.2）：可展开横滑 chips，按三色阶梯着色，
+  /// 点击复用既有浮层——不建第二套状态口径。
+  Widget _chunkStrip() {
+    final chunks = widget.article.chunks;
+    if (chunks.isEmpty) return const SizedBox.shrink();
+    final firstIndex = <String, int>{};
+    for (var i = 0; i < widget.article.sentences.length; i++) {
+      for (final c in widget.article.sentences[i].chunks) {
+        firstIndex.putIfAbsent(c.id, () => i);
+      }
+    }
+    return Column(
+      children: [
+        Material(
+          color: kCard,
+          child: InkWell(
+            key: const Key('listening_chunk_strip'),
+            onTap: () => setState(() => _chunksOpen = !_chunksOpen),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.category_outlined,
+                      size: 16, color: kPrimary),
+                  const SizedBox(width: 8),
+                  Text('本文 ${chunks.length} 块',
+                      style: const TextStyle(color: kText, fontSize: 13)),
+                  const Spacer(),
+                  Text(_chunksOpen ? '收起' : '展开',
+                      style: const TextStyle(
+                          color: Colors.white38, fontSize: 12)),
+                  Icon(_chunksOpen ? Icons.expand_less : Icons.expand_more,
+                      size: 18, color: Colors.white38),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (_chunksOpen)
+          SizedBox(
+            height: 46,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              itemCount: chunks.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, i) {
+                final c = chunks[i];
+                final tone = listeningChunkTone(c, _states);
+                final fg = switch (tone) {
+                  ListeningChunkTone.candidate => kListeningCandidateText,
+                  ListeningChunkTone.learning => kListeningLearningText,
+                  ListeningChunkTone.mastered => kListeningMasteredText,
+                  ListeningChunkTone.none => Colors.white38,
+                };
+                return ActionChip(
+                  key: Key('listening_strip_${c.id}'),
+                  label: Text(c.text,
+                      style: TextStyle(color: fg, fontSize: 12)),
+                  onPressed: () => _showChunk(c, firstIndex[c.id] ?? 0),
+                  backgroundColor: kCard,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: fg.withValues(alpha: 0.55)),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// 句级轻跟读（§二.4）：浮层内录音→判定→三态，关闭即删临时文件。
+  Future<void> _openShadowRead(int index) async {
+    final wasPlaying = _c.playing || _c.livePlaying;
+    await _c.pause();
+    if (!mounted) return;
+    final src = widget.article.sentences[index];
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: kCard,
+      isScrollControlled: true,
+      builder: (_) => _ShadowReadSheet(
+        sentence: src.text,
+        onAttempt: (passed, similarity) {
+          // 浸泡层不产资产：只记 attempt 事件，不改块状态、不写会话轴。
+          _c.progress.logEvent('listen_shadow_attempt', {
+            'article': widget.article.id,
+            'sentence': src.id,
+            'passed': passed,
+            'similarity': similarity,
+          });
+        },
+      ),
+    );
+    if (wasPlaying && mounted && !_c.playing && !_c.livePlaying) {
+      await _c.togglePlay();
+    }
+  }
+
   Future<void> _showChunk(ListeningChunk chunk, int sentenceIndex) async {
     final wasPlaying = _c.playing || _c.livePlaying;
     await _c.pause();
@@ -841,6 +1240,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
         service: service,
         initial: resolution,
         onChanged: _loadStates,
+        example: widget.article.sentences[sentenceIndex].text,
       ),
     );
     if (!mounted) return;
@@ -939,6 +1339,14 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
               Text('音源：${_sourceLabel(plan)}',
                   style: const TextStyle(color: Colors.white70, fontSize: 12)),
               const SizedBox(height: 4),
+              Text(
+                '播放模式：${_c.explainedActive ? '讲解版' : '原版'}'
+                '${plan.hasExplanations ? ' · 讲解 ${plan.items.where((e) => e.isExplanation).length} 段'
+                    '（新合成 ${plan.explanationSynthesized} / 缓存 ${plan.explanationReused}）' : ''}',
+                style:
+                    const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const SizedBox(height: 4),
               Text('缓存键音色：${plan.voiceKey}',
                   style: const TextStyle(
                       color: Colors.white38,
@@ -956,25 +1364,43 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
                 constraints: const BoxConstraints(maxHeight: 320),
                 child: ListView.builder(
                   shrinkWrap: true,
-                  itemCount: plan.sentences.length,
+                  itemCount: plan.items.isEmpty
+                      ? plan.sentences.length
+                      : plan.items.length,
                   itemBuilder: (_, i) {
-                    final s = plan.sentences[i];
+                    final item = plan.items.isEmpty ? null : plan.items[i];
+                    final s = item == null
+                        ? plan.sentences[i]
+                        : ListeningSentenceAudio(
+                            id: item.id,
+                            text: item.text,
+                            path: item.path,
+                            startMs: item.startMs,
+                            endMs: item.endMs,
+                          );
+                    final expl = item?.isExplanation ?? false;
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 3),
                       child: Row(
                         children: [
                           SizedBox(
                             width: 26,
-                            child: Text('${i + 1}',
-                                style: const TextStyle(
-                                    color: Colors.white38, fontSize: 11)),
+                            child: Text(
+                                expl
+                                    ? '讲'
+                                    : '${(item?.sentenceIndex ?? i) + 1}',
+                                style: TextStyle(
+                                    color: expl ? kPrimary : Colors.white38,
+                                    fontSize: 11)),
                           ),
                           Expanded(
-                            child: Text(s.text,
+                            child: Text(
+                                expl ? '讲解 · ${s.text}' : s.text,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    color: Colors.white54, fontSize: 11)),
+                                style: TextStyle(
+                                    color: expl ? kPrimary : Colors.white54,
+                                    fontSize: 11)),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -1016,6 +1442,12 @@ class _SentenceRichText extends StatefulWidget {
   final List<ListeningChunk> chunks;
   final Map<String, ChunkAssetState> states;
   final bool active;
+
+  /// 复习播单里到期的块：加一层更重的琥珀底色（脉动由外层容器负责）。
+  final Set<String> dueIds;
+
+  /// 正在讲解的块：底色/字重再加强一层（讲解中徽标已在外层展示）。
+  final Set<String> emphasizedIds;
   final void Function(ListeningChunk chunk) onChunkTap;
 
   const _SentenceRichText({
@@ -1023,6 +1455,8 @@ class _SentenceRichText extends StatefulWidget {
     required this.chunks,
     required this.states,
     required this.active,
+    this.dueIds = const {},
+    this.emphasizedIds = const {},
     required this.onChunkTap,
   });
 
@@ -1039,7 +1473,8 @@ class _SentenceRichTextState extends State<_SentenceRichText> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.sentence != widget.sentence ||
         oldWidget.states != widget.states ||
-        oldWidget.chunks != widget.chunks) {
+        oldWidget.chunks != widget.chunks ||
+        oldWidget.emphasizedIds != widget.emphasizedIds) {
       _disposeRecognizers();
     }
   }
@@ -1089,12 +1524,19 @@ class _SentenceRichTextState extends State<_SentenceRichText> {
         ListeningChunkTone.mastered => kListeningMasteredText,
         ListeningChunkTone.none => null,
       };
-      final Color? background = switch (tone) {
+      var background = switch (tone) {
         ListeningChunkTone.candidate => kListeningCandidateBg,
         ListeningChunkTone.learning => kListeningLearningBg,
         ListeningChunkTone.mastered => kListeningMasteredBg,
         ListeningChunkTone.none => null,
       };
+      if (widget.dueIds.contains(m.chunk.id)) {
+        background = kListeningLearningText.withValues(alpha: 0.34);
+      }
+      final emphasized = widget.emphasizedIds.contains(m.chunk.id);
+      if (emphasized) {
+        background = kPrimary.withValues(alpha: 0.30);
+      }
       final highlighted = tone != ListeningChunkTone.none;
       final recognizer = TapGestureRecognizer()
         ..onTap = () => widget.onChunkTap(m.chunk);
@@ -1103,15 +1545,20 @@ class _SentenceRichTextState extends State<_SentenceRichText> {
         text: text.substring(m.start, m.end),
         recognizer: recognizer,
         style: TextStyle(
-          color: color,
+          color: emphasized ? Colors.white : color,
           backgroundColor: background,
-          fontWeight: highlighted ? FontWeight.w600 : null,
-          decoration: highlighted ? TextDecoration.underline : null,
-          decorationStyle: tone == ListeningChunkTone.mastered
-              ? TextDecorationStyle.solid
-              : TextDecorationStyle.dotted,
-          decorationColor:
-              highlighted ? color?.withValues(alpha: 0.45) : null,
+          fontWeight: emphasized
+              ? FontWeight.w700
+              : (highlighted ? FontWeight.w600 : null),
+          decoration:
+              (highlighted || emphasized) ? TextDecoration.underline : null,
+          decorationStyle:
+              (tone == ListeningChunkTone.mastered || emphasized)
+                  ? TextDecorationStyle.solid
+                  : TextDecorationStyle.dotted,
+          decorationColor: emphasized
+              ? kPrimary
+              : (highlighted ? color?.withValues(alpha: 0.45) : null),
         ),
       ));
       at = m.end;
@@ -1164,10 +1611,14 @@ class _ChunkSheet extends StatefulWidget {
   final ListeningChunkResolution initial;
   final Future<void> Function() onChanged;
 
+  /// 从文章某句打开浮层时优先展示所在句（指令 S §二.3）。
+  final String example;
+
   const _ChunkSheet({
     required this.service,
     required this.initial,
     required this.onChanged,
+    this.example = '',
   });
 
   @override
@@ -1315,6 +1766,14 @@ class _ChunkSheetState extends State<_ChunkSheet> {
             const SizedBox(height: 4),
             Text(_r.chunk.meaningCN,
                 style: const TextStyle(color: Colors.white70, fontSize: 15)),
+            if (widget.example.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                '文中原句：${widget.example}',
+                key: const Key('chunkSheetExample'),
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+            ],
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1379,6 +1838,191 @@ class _ChunkSheetState extends State<_ChunkSheet> {
               ),
             ],
             const SizedBox(height: 6),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+/// 句级轻跟读浮层（指令 S §二.4）。
+///
+/// 复用六步④的判定与阈值（judgeSpeech + guardAsr + asrVerdictFor，闭合跟读文案），
+/// 但**不写词块资产、不写会话轴**：浸泡层只记一次 attempt 事件。
+/// 录音只落在系统临时目录，浮层关闭即删，不做任何留存（回放只针对当前这一次）。
+class _ShadowReadSheet extends StatefulWidget {
+  final String sentence;
+  final void Function(bool passed, int similarity) onAttempt;
+
+  const _ShadowReadSheet({required this.sentence, required this.onAttempt});
+
+  @override
+  State<_ShadowReadSheet> createState() => _ShadowReadSheetState();
+}
+
+class _ShadowReadSheetState extends State<_ShadowReadSheet> {
+  final RecordingService _rec = RecordingService();
+  final SpeechService _speech = SpeechService();
+
+  String? _path;
+  bool _recording = false;
+  bool _thinking = false;
+  ShadowVerdict? _verdict;
+
+  @override
+  void dispose() {
+    _discardWav();
+    super.dispose();
+  }
+
+  void _discardWav() {
+    final path = _path;
+    _path = null;
+    if (path == null) return;
+    unawaited(() async {
+      try {
+        await File(path).delete();
+      } catch (_) {
+        // 删不掉也交给系统临时目录回收；口径是「应用不主动留存」
+      }
+    }());
+  }
+
+  void _snack(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(text), duration: const Duration(seconds: 2)));
+  }
+
+  Future<void> _start() async {
+    final perm = await _rec.ensurePermission();
+    if (!mounted) return;
+    if (perm != MicPerm.granted) {
+      _snack(perm == MicPerm.permanentlyDenied
+          ? '麦克风被系统拒绝，去设置里开一下'
+          : '没拿到麦克风权限，先不录');
+      return;
+    }
+    final path = await _rec.start();
+    if (!mounted) return;
+    if (path == null) {
+      _snack('录音没起来，再试一次');
+      return;
+    }
+    setState(() {
+      _path = path;
+      _recording = true;
+      _verdict = null;
+    });
+  }
+
+  Future<void> _stopAndJudge() async {
+    if (!_recording) return;
+    setState(() {
+      _recording = false;
+      _thinking = true;
+    });
+    final stopped = await _rec.stop();
+    if (stopped != null) _path = stopped;
+    final path = _path;
+    if (path == null || !await _speech.initVosk()) {
+      if (!mounted) return;
+      setState(() => _thinking = false);
+      _snack('识别引擎没就绪，本次不判定');
+      return;
+    }
+    final r = await _speech.recognizeOpen(path);
+    final dur = await _speech.durationSec(path);
+    if (!mounted) return;
+    final v = judgeShadowRead(
+      target: widget.sentence,
+      recognized: r.text,
+      confidence: r.confidence,
+      durationSec: dur,
+      wordConfidences: r.wordConfidences,
+    );
+    setState(() {
+      _thinking = false;
+      _verdict = v;
+    });
+    widget.onAttempt(v.passed, (v.similarity * 100).round());
+  }
+
+  Future<void> _replay() async {
+    final path = _path;
+    if (path == null) return;
+    await _rec.play(path);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final v = _verdict;
+    final verdict = v?.verdict;
+    final color = switch (verdict?.kind) {
+      AsrVerdictKind.pass => kUnlocked,
+      AsrVerdictKind.retry => kPrimary,
+      _ => kError,
+    };
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+            20, 18, 20, 16 + MediaQuery.of(context).viewInsets.bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('跟读这一句',
+                style: TextStyle(
+                    color: kText, fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            Text(widget.sentence,
+                key: const Key('shadowTarget'),
+                style: const TextStyle(
+                    color: kText, fontSize: 18, height: 1.35)),
+            const SizedBox(height: 12),
+            if (v != null) ...[
+              Text('你说：${v.recognized}',
+                  key: const Key('shadowTranscript'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 15)),
+              const SizedBox(height: 6),
+              Text('相似度 ${(v.similarity * 100).round()}%',
+                  style: const TextStyle(color: Colors.white54, fontSize: 13)),
+            ],
+            if (verdict != null) ...[
+              const SizedBox(height: 8),
+              Text(verdict.text,
+                  key: const Key('shadowVerdict'),
+                  style: TextStyle(
+                      color: color, fontSize: 15, fontWeight: FontWeight.w600)),
+            ],
+            const SizedBox(height: 6),
+            const Text('只跟读，不计进度：这块的状态仍由六步和复习决定',
+                style: TextStyle(color: Colors.white30, fontSize: 12)),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    key: const Key('shadowRecordButton'),
+                    onPressed:
+                        _thinking ? null : (_recording ? _stopAndJudge : _start),
+                    icon: Icon(_recording ? Icons.stop : Icons.mic),
+                    label: Text(_thinking
+                        ? '识别中…'
+                        : (_recording ? '说完，判定' : '按住说完这句')),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  key: const Key('shadowReplay'),
+                  tooltip: '回放刚才那次',
+                  onPressed: _path == null ? null : _replay,
+                  icon: const Icon(Icons.play_circle_outline,
+                      color: kPrimary, size: 28),
+                ),
+              ],
+            ),
           ],
         ),
       ),

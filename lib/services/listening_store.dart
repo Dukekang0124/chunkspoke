@@ -18,8 +18,14 @@ class ListeningStore {
   static const kSixStarted = 'listen_six_started';
   static const kCandidateWishes = 'listen_candidate_wishes';
   static const kReunions = 'listen_reunions';
+  static const kSpeedOverrides = 'listen_speed_overrides';
+  static const kShowTranslation = 'listen_show_translation';
+  static const kExplainMode = 'listen_explain_mode';
+  static const kExplainedKeys = 'listen_explained_keys';
+  static const kModeSeconds = 'listen_mode_seconds';
   static const kMaxCollectEntries = 500;
   static const kMaxWishEntries = 500;
+  static const kMaxExplainedEntries = 1000;
   static const kDayKeep = 30;
 
   ListeningStore({
@@ -68,6 +74,68 @@ class ListeningStore {
       '${d.year}-${d.month.toString().padLeft(2, '0')}-'
       '${d.day.toString().padLeft(2, '0')}';
 
+  /// 今日浸泡秒数（指令 S §二.6 的顶部单数字卡；无目标、无打卡口径）。
+  int get todaySeconds => secondsByDay[_dayKey(_clock())] ?? 0;
+
+  /// 用户对某一级别手动变速的记忆（指令 S §一.5）：只覆盖该级默认语速，
+  /// 不跨级串味——在 A1 上调快，不会把 C1 的默认也带走。
+  double? speedOverrideFor(String levelKey) {
+    final v = _jsonMap(kSpeedOverrides)[levelKey];
+    return v is num ? v.toDouble() : null;
+  }
+
+  Future<void> setSpeedOverride(String levelKey, double rate) async {
+    final m = _jsonMap(kSpeedOverrides)..[levelKey] = rate;
+    await _write(kSpeedOverrides, jsonEncode(m));
+  }
+
+  /// 译文显示偏好（指令 S §二.5）：默认开，用户关掉后记住。
+  bool get showTranslation => _read(kShowTranslation) != '0';
+
+  Future<void> setShowTranslation(bool on) =>
+      _write(kShowTranslation, on ? '1' : '0');
+
+  /// 播放模式偏好（指令 S+ §一.1）：默认原版；开启后记住讲解版。
+  bool get explainMode => _read(kExplainMode) == '1';
+
+  Future<void> setExplainMode(bool on) => _write(kExplainMode, on ? '1' : '0');
+
+  /// 已讲解过的块（首遇记忆）：既有块按 id，候选块按文本键，跨篇去重。
+  Set<String> get explainedKeys {
+    final out = <String>{};
+    for (final e in _jsonList(kExplainedKeys)) {
+      if (e is String && e.isNotEmpty) out.add(e);
+    }
+    return out;
+  }
+
+  Future<void> markExplained(Iterable<String> keys) async {
+    final set = explainedKeys;
+    var changed = false;
+    for (final k in keys) {
+      if (k.isNotEmpty && set.add(k)) changed = true;
+    }
+    if (!changed) return;
+    final list = set.toList();
+    if (list.length > kMaxExplainedEntries) {
+      list.removeRange(0, list.length - kMaxExplainedEntries);
+    }
+    await _write(kExplainedKeys, jsonEncode(list));
+  }
+
+  /// 两模式实际播放秒数（'o'=原版，'x'=讲解版），供导出算占比。
+  Map<String, int> get modeSeconds => {
+        for (final e in _jsonMap(kModeSeconds).entries)
+          if (e.value is num) e.key: (e.value as num).toInt(),
+      };
+
+  Future<void> addModeSeconds(String mode, int seconds) async {
+    if (seconds <= 0 || (mode != 'o' && mode != 'x')) return;
+    final map = modeSeconds;
+    map[mode] = (map[mode] ?? 0) + seconds;
+    await _write(kModeSeconds, jsonEncode(map));
+  }
+
   /// 记录一段实际播放时长；负值/零值忽略。
   Future<void> addSeconds(int seconds, {DateTime? at}) async {
     if (seconds <= 0) return;
@@ -96,15 +164,19 @@ class ListeningStore {
       positionMs: ms.clamp(0, 1 << 30),
       sentenceIndex: (m['i'] as num?)?.toInt() ?? 0,
       updatedAt: ts,
+      mode: (m['m'] as String?) ?? 'o',
     );
   }
 
+  /// [mode] 记下保存时是原版（'o'）还是讲解版（'x'）。
+  /// 跨模式恢复只信句索引，避免两种时间轴混用把续播点算歪。
   Future<void> savePosition(String articleId, int positionMs, int sentenceIndex,
-      {DateTime? at}) async {
+      {DateTime? at, String mode = 'o'}) async {
     final map = _jsonMap(kPositions);
     map[articleId] = {
       'ms': positionMs < 0 ? 0 : positionMs,
       'i': sentenceIndex < 0 ? 0 : sentenceIndex,
+      'm': mode == 'x' ? 'x' : 'o',
       'ts': (at ?? _clock()).millisecondsSinceEpoch,
     };
     await _write(kPositions, jsonEncode(map));
@@ -329,10 +401,14 @@ class ListeningPosition {
   final int sentenceIndex;
   final int updatedAt;
 
+  /// 保存时的模式：'o' 原版 / 'x' 讲解版（旧数据按原版处理）。
+  final String mode;
+
   const ListeningPosition({
     required this.positionMs,
     required this.sentenceIndex,
     required this.updatedAt,
+    this.mode = 'o',
   });
 }
 

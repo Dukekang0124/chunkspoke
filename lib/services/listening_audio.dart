@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../models/listening_article.dart';
+import 'listening_explanation.dart';
 import 'wav_codec.dart';
 
 /// 音频缓存上限：首版 300MB，按「最久未听篇目」整篇清理。
@@ -13,6 +14,9 @@ const int kListeningCacheMaxBytes = 300 * 1024 * 1024;
 const int _kIndexVersion = 1;
 const int _kMinSentenceMs = 120;
 const int _kMaxSentenceMs = 120 * 1000;
+
+/// 讲解段硬上限：同句多块合并后总长不得超过 8 秒（指令 S+ §一.2）。
+const int kListeningExplanationMaxMs = 8000;
 
 /// 合成音色：缓存管线只依赖这一层，单测用假实现即可覆盖全部分支。
 abstract class ListeningVoice {
@@ -52,15 +56,53 @@ class ListeningSentenceAudio {
   int get durationMs => endMs - startMs;
 }
 
+enum ListeningPlaybackKind { sentence, explanation }
+
+/// 播放序列里的一个条目：正文句或句尾讲解段。
+///
+/// 讲解段插在所属句之后，因此 `sentenceIndex` 仍指向它服务的正文句；
+/// 页面/进度/续播都以句索引为锚，插入讲解不会打乱学习口径。
+class ListeningPlaybackItem {
+  final ListeningPlaybackKind kind;
+  final int sentenceIndex;
+  final String id;
+  final String text;
+  final String? path;
+  final int startMs;
+  final int endMs;
+  final List<String> chunkIds;
+  final List<String> memoryKeys;
+
+  const ListeningPlaybackItem({
+    required this.kind,
+    required this.sentenceIndex,
+    required this.id,
+    required this.text,
+    required this.path,
+    required this.startMs,
+    required this.endMs,
+    this.chunkIds = const [],
+    this.memoryKeys = const [],
+  });
+
+  bool get isExplanation => kind == ListeningPlaybackKind.explanation;
+
+  int get durationMs => endMs - startMs;
+}
+
 /// 一篇的播放计划：精确模式的时间轴由实测 WAV 时长累加，不含词数估算。
+/// [items] 含讲解段（若有），[sentences] 只含正文句，二者时间轴一致。
 class ListeningAudioPlan {
   final ListeningArticle article;
   final List<ListeningSentenceAudio> sentences;
+  final List<ListeningPlaybackItem> items;
   final String voiceKey;
   final ListeningAudioSource source;
   final bool precise;
   final int synthesized;
   final int reused;
+  final int explanationSynthesized;
+  final int explanationReused;
 
   const ListeningAudioPlan({
     required this.article,
@@ -68,36 +110,74 @@ class ListeningAudioPlan {
     required this.voiceKey,
     required this.source,
     required this.precise,
+    this.items = const [],
     this.synthesized = 0,
     this.reused = 0,
+    this.explanationSynthesized = 0,
+    this.explanationReused = 0,
   });
 
   bool get live => source == ListeningAudioSource.live;
 
-  int get totalMs => sentences.isEmpty ? 0 : sentences.last.endMs;
+  bool get hasExplanations =>
+      items.any((e) => e.kind == ListeningPlaybackKind.explanation);
+
+  int get totalMs {
+    if (items.isNotEmpty) return items.last.endMs;
+    return sentences.isEmpty ? 0 : sentences.last.endMs;
+  }
 
   int startMsOf(int index) {
     if (sentences.isEmpty) return 0;
-    if (index <= 0) return 0;
+    if (index <= 0) return sentences.first.startMs;
     if (index >= sentences.length) return totalMs;
     return sentences[index].startMs;
   }
 
+  /// 句索引（不是播放条目索引）：讲解段归到它所属的正文句。
   int indexForPositionMs(int ms) {
     if (sentences.isEmpty) return 0;
     if (ms <= 0) return 0;
+    if (items.isEmpty) return sentences.length - 1;
     if (ms >= totalMs) return sentences.length - 1;
+    return items[itemIndexForPositionMs(ms)].sentenceIndex;
+  }
+
+  int itemIndexForPositionMs(int ms) {
+    if (items.isEmpty) return 0;
+    if (ms <= 0) return 0;
+    if (ms >= totalMs) return items.length - 1;
     var lo = 0;
-    var hi = sentences.length - 1;
+    var hi = items.length - 1;
     while (lo < hi) {
       final mid = (lo + hi + 1) >> 1;
-      if (sentences[mid].startMs <= ms) {
+      if (items[mid].startMs <= ms) {
         lo = mid;
       } else {
         hi = mid - 1;
       }
     }
     return lo;
+  }
+
+  /// 某句正文条目的播放索引（跳过它后面的讲解段）。
+  int itemIndexForSentence(int sentenceIndex) {
+    if (items.isEmpty) return 0;
+    final target = sentenceIndex.clamp(0, sentences.length - 1);
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].sentenceIndex == target && !items[i].isExplanation) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
+  /// 某句句尾的讲解段；没有则 null。
+  ListeningPlaybackItem? explanationForSentence(int sentenceIndex) {
+    for (final it in items) {
+      if (it.isExplanation && it.sentenceIndex == sentenceIndex) return it;
+    }
+    return null;
   }
 }
 
@@ -161,23 +241,32 @@ class ListeningAudioPipeline {
 
   /// 准备整篇音频。任何一步失败都会尝试另一合成源；两者皆不可用时
   /// 返回 [ListeningAudioSource.live] 计划（时间轴退化为估算）。
+  ///
+  /// [explanations] 为 null 表示原版（不生成讲解，但保留已缓存的讲解段）；
+  /// 非 null 表示讲解版：只保留本次实际引用的讲解段，陈旧讲解缓存会被清理。
   Future<ListeningAudioPlan> prepare(
     ListeningArticle article,
     ListeningVoice voice, {
     void Function(int done, int total)? onProgress,
+    List<ListeningExplanationSegment>? explanations,
   }) {
-    return _serialized(() => _prepare(article, voice, onProgress));
+    return _serialized(
+        () => _prepare(article, voice, onProgress, explanations));
   }
 
   Future<ListeningAudioPlan> _prepare(
     ListeningArticle article,
     ListeningVoice voice,
     void Function(int done, int total)? onProgress,
+    List<ListeningExplanationSegment>? explanations,
   ) async {
     final dir = await _dir();
     final index = await _loadIndex(dir);
     final old = index.articles[article.id];
     final attempts = <bool>[if (voice.preferHd) true, false];
+    final bodyTotal = article.sentences.length;
+    final explTotal = explanations?.length ?? 0;
+    final progressTotal = bodyTotal + explTotal;
 
     for (final hd in attempts) {
       final key = hd ? voice.voiceKey : voice.systemVoiceKey;
@@ -189,12 +278,44 @@ class ListeningAudioPipeline {
         hd: hd,
         voiceKey: key,
         old: reusable,
-        onProgress: onProgress,
+        onProgress: onProgress == null
+            ? null
+            : (done, _) => onProgress(done, progressTotal),
       );
       if (built != null) {
+        final expl = explanations == null
+            ? null
+            : await _synthesizeExplanations(
+                dir,
+                article,
+                voice,
+                hd: hd,
+                voiceKey: key,
+                old: reusable,
+                segments: explanations,
+                onProgress: onProgress == null
+                    ? null
+                    : (done) => onProgress(bodyTotal + done, progressTotal),
+              );
+        final entries = [
+          ...built.entries,
+          if (expl != null) ...expl.entries,
+          // 原版只是不插入讲解，但同音色的已缓存讲解必须留在索引里，
+          // 否则每次切回讲解版都会白重合成一遍。
+          if (expl == null && reusable != null)
+            for (final s in reusable.sentences)
+              if (_isExplanationId(s.id)) s,
+        ];
         if (old != null) {
-          // 只清掉本次不再引用的旧文件；同音色命中缓存时文件仍在复用。
-          final keep = {for (final e in built.entries) e.file};
+          // 原版保留同音色讲解缓存；讲解版只保留本次引用，避免陈旧讲解占位。
+          final keep = <String>{
+            for (final e in built.entries) e.file,
+            if (expl != null)
+              for (final e in expl.entries) e.file
+            else if (reusable != null)
+              for (final s in old.sentences)
+                if (_isExplanationId(s.id)) s.file,
+          };
           for (final s in old.sentences) {
             if (!keep.contains(s.file)) {
               await _tryDelete(File(p.join(dir.path, s.file)));
@@ -204,17 +325,15 @@ class ListeningAudioPipeline {
         index.articles[article.id] = _CachedArticle(
           voice: key,
           lastUsedMs: _clock().millisecondsSinceEpoch,
-          sentences: built.entries,
+          sentences: entries,
         );
         await _enforceLimit(dir, index, keepArticleId: article.id);
-        return ListeningAudioPlan(
+        return _assemblePlan(
           article: article,
-          sentences: built.sentences,
+          body: built,
+          explanations: expl,
           voiceKey: key,
           source: hd ? ListeningAudioSource.hd : ListeningAudioSource.system,
-          precise: true,
-          synthesized: built.synthesized,
-          reused: built.reused,
         );
       }
       // 本次尝试失败：清掉该次生成的半成品，避免占空间。
@@ -307,23 +426,231 @@ class ListeningAudioPipeline {
     return _BuiltArticle(out, entries, synthesized, reused);
   }
 
+  /// 合成讲解段：同句多块已由 builder 合并成一段；实测超过 8 秒时
+  /// 从尾部丢块重合成，直到落进上限（单块仍超限则整段优雅跳过）。
+  Future<_BuiltExplanations> _synthesizeExplanations(
+    Directory dir,
+    ListeningArticle article,
+    ListeningVoice voice, {
+    required bool hd,
+    required String voiceKey,
+    required _CachedArticle? old,
+    required List<ListeningExplanationSegment> segments,
+    void Function(int done)? onProgress,
+  }) async {
+    final items = <_BuiltExplanationItem>[];
+    final entries = <_CachedSentence>[];
+    var synthesized = 0;
+    var reused = 0;
+    for (var i = 0; i < segments.length; i++) {
+      final built = await _synthesizeExplanation(
+        dir,
+        article,
+        voice,
+        hd: hd,
+        voiceKey: voiceKey,
+        old: old,
+        segment: segments[i],
+      );
+      if (built != null) {
+        items.add(built.item);
+        entries.add(built.entry);
+        if (built.reused) {
+          reused++;
+        } else {
+          synthesized++;
+        }
+      }
+      onProgress?.call(i + 1);
+    }
+    return _BuiltExplanations(items, entries, synthesized, reused);
+  }
+
+  Future<_BuiltExplanation?> _synthesizeExplanation(
+    Directory dir,
+    ListeningArticle article,
+    ListeningVoice voice, {
+    required bool hd,
+    required String voiceKey,
+    required _CachedArticle? old,
+    required ListeningExplanationSegment segment,
+  }) async {
+    final sentence = article.sentences[segment.sentenceIndex];
+    for (var count = segment.chunks.length; count > 0; count--) {
+      final picked = segment.chunks.take(count).toList();
+      final text = [for (final c in picked) c.text].join(' ');
+      final cacheId = _explanationId(
+          article.level.key, voiceKey, sentence.id, text);
+      final fileName = _explanationFileName(
+          article.id, sentence.id, article.level.key, voiceKey, text);
+      final file = File(p.join(dir.path, fileName));
+
+      final cached = _findCached(old, cacheId);
+      if (cached != null &&
+          cached.ms >= _kMinSentenceMs &&
+          cached.ms <= kListeningExplanationMaxMs &&
+          await file.exists()) {
+        return _BuiltExplanation(
+          item: _BuiltExplanationItem(
+            sentenceIndex: segment.sentenceIndex,
+            id: cacheId,
+            text: text,
+            path: file.path,
+            ms: cached.ms,
+            chunkIds: [for (final c in picked) c.chunk.id],
+            memoryKeys: [for (final c in picked) c.key],
+          ),
+          entry: cached,
+          reused: true,
+        );
+      }
+
+      try {
+        if (await file.exists()) await file.delete();
+      } catch (_) {}
+      var ok = false;
+      try {
+        ok = await voice.synthesizeToFile(text, file.path, hd: hd);
+      } catch (_) {
+        ok = false;
+      }
+      if (!ok) return null;
+      final seconds = await readWavDurationSeconds(file);
+      final measured = seconds == null ? 0 : (seconds * 1000).round();
+      if (measured < _kMinSentenceMs) {
+        try {
+          await file.delete();
+        } catch (_) {}
+        return null;
+      }
+      if (measured > kListeningExplanationMaxMs) {
+        // 超 8 秒：丢掉最后一块再试，保证插入段总长受控。
+        try {
+          await file.delete();
+        } catch (_) {}
+        continue;
+      }
+      int bytes = 0;
+      try {
+        bytes = await file.length();
+      } catch (_) {}
+      final item = _BuiltExplanationItem(
+        sentenceIndex: segment.sentenceIndex,
+        id: cacheId,
+        text: text,
+        path: file.path,
+        ms: measured,
+        chunkIds: [for (final c in picked) c.chunk.id],
+        memoryKeys: [for (final c in picked) c.key],
+      );
+      return _BuiltExplanation(
+        item: item,
+        entry: _CachedSentence(
+          id: cacheId,
+          file: fileName,
+          bytes: bytes,
+          ms: measured,
+        ),
+        reused: false,
+      );
+    }
+    return null;
+  }
+
+  ListeningAudioPlan _assemblePlan({
+    required ListeningArticle article,
+    required _BuiltArticle body,
+    required _BuiltExplanations? explanations,
+    required String voiceKey,
+    required ListeningAudioSource source,
+  }) {
+    final bySentence = <int, _BuiltExplanationItem>{
+      for (final e in explanations?.items ?? const <_BuiltExplanationItem>[])
+        e.sentenceIndex: e,
+    };
+    final sentences = <ListeningSentenceAudio>[];
+    final items = <ListeningPlaybackItem>[];
+    var cursor = 0;
+    for (var i = 0; i < body.sentences.length; i++) {
+      final b = body.sentences[i];
+      final end = cursor + b.durationMs;
+      sentences.add(ListeningSentenceAudio(
+        id: b.id,
+        text: b.text,
+        path: b.path,
+        startMs: cursor,
+        endMs: end,
+      ));
+      items.add(ListeningPlaybackItem(
+        kind: ListeningPlaybackKind.sentence,
+        sentenceIndex: i,
+        id: b.id,
+        text: b.text,
+        path: b.path,
+        startMs: cursor,
+        endMs: end,
+      ));
+      cursor = end;
+      final e = bySentence[i];
+      if (e != null) {
+        items.add(ListeningPlaybackItem(
+          kind: ListeningPlaybackKind.explanation,
+          sentenceIndex: i,
+          id: e.id,
+          text: e.text,
+          path: e.path,
+          startMs: cursor,
+          endMs: cursor + e.ms,
+          chunkIds: e.chunkIds,
+          memoryKeys: e.memoryKeys,
+        ));
+        cursor += e.ms;
+      }
+    }
+    return ListeningAudioPlan(
+      article: article,
+      sentences: sentences,
+      items: items,
+      voiceKey: voiceKey,
+      source: source,
+      precise: true,
+      synthesized: body.synthesized,
+      reused: body.reused,
+      explanationSynthesized: explanations?.synthesized ?? 0,
+      explanationReused: explanations?.reused ?? 0,
+    );
+  }
+
   ListeningAudioPlan _livePlan(ListeningArticle article, ListeningVoice voice) {
     final list = <ListeningSentenceAudio>[];
+    final items = <ListeningPlaybackItem>[];
     var cursor = 0;
-    for (final s in article.sentences) {
+    for (var i = 0; i < article.sentences.length; i++) {
+      final s = article.sentences[i];
       final ms = estimateLiveSentenceMs(s.text);
+      final end = cursor + ms;
       list.add(ListeningSentenceAudio(
         id: s.id,
         text: s.text,
         path: null,
         startMs: cursor,
-        endMs: cursor + ms,
+        endMs: end,
       ));
-      cursor += ms;
+      items.add(ListeningPlaybackItem(
+        kind: ListeningPlaybackKind.sentence,
+        sentenceIndex: i,
+        id: s.id,
+        text: s.text,
+        path: null,
+        startMs: cursor,
+        endMs: end,
+      ));
+      cursor = end;
     }
     return ListeningAudioPlan(
       article: article,
       sentences: list,
+      items: items,
       voiceKey: voice.systemVoiceKey,
       source: ListeningAudioSource.live,
       precise: false,
@@ -534,8 +861,63 @@ class _BuiltArticle {
       this.sentences, this.entries, this.synthesized, this.reused);
 }
 
+class _BuiltExplanationItem {
+  final int sentenceIndex;
+  final String id;
+  final String text;
+  final String path;
+  final int ms;
+  final List<String> chunkIds;
+  final List<String> memoryKeys;
+
+  const _BuiltExplanationItem({
+    required this.sentenceIndex,
+    required this.id,
+    required this.text,
+    required this.path,
+    required this.ms,
+    required this.chunkIds,
+    required this.memoryKeys,
+  });
+}
+
+class _BuiltExplanation {
+  final _BuiltExplanationItem item;
+  final _CachedSentence entry;
+  final bool reused;
+
+  const _BuiltExplanation({
+    required this.item,
+    required this.entry,
+    required this.reused,
+  });
+}
+
+class _BuiltExplanations {
+  final List<_BuiltExplanationItem> items;
+  final List<_CachedSentence> entries;
+  final int synthesized;
+  final int reused;
+
+  const _BuiltExplanations(
+      this.items, this.entries, this.synthesized, this.reused);
+}
+
 String _fileName(String articleId, String sentenceId, String voiceKey) =>
     '${_safe(articleId)}_${_safe(sentenceId)}_${_fnv1a(voiceKey)}.wav';
+
+/// 讲解缓存键：mode(expl) + level + voice + 实际朗读文本。
+/// 音色在文件名后缀、内容在 id 里各留一份，便于整篇清理与命中复用。
+String _explanationId(
+        String levelKey, String voiceKey, String sentenceId, String text) =>
+    'expl:${_safe(sentenceId)}:${_fnv1a('expl|$levelKey|$voiceKey|$text')}';
+
+String _explanationFileName(String articleId, String sentenceId,
+        String levelKey, String voiceKey, String text) =>
+    '${_safe(articleId)}_x${_safe(sentenceId)}_'
+    '${_fnv1a('expl|$levelKey|$text')}_${_fnv1a(voiceKey)}.wav';
+
+bool _isExplanationId(String id) => id.startsWith('expl:');
 
 String _safe(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
 
