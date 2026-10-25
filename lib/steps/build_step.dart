@@ -48,7 +48,7 @@ class _BuildStepState extends State<BuildStep>
     final byId = {for (final c in widget.level.chunks) c.id: c};
     _expected = widget.sentence.orderedChunkTexts(byId);
     _filled = List<String?>.filled(_expected.length, null);
-    _typeOf = {for (final c in widget.level.chunks) c.text: c.type};
+    _typeOf = {for (final c in widget.level.chunks) c.text: c.semantic};
 
     final distractors = widget.level.chunks
         .where((c) => !_expected.contains(c.text))

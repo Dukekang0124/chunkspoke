@@ -6,14 +6,14 @@ Chunk _plain(String id, String text, {String type = 'content'}) =>
     Chunk.fromJson({
       'id': id,
       'text': text,
-      'type': type,
+      'semantic': type,
       'meaningCN': text,
     });
 
 Chunk _withSwap() => Chunk(
       id: 'c1',
       text: 'Good morning',
-      type: 'content',
+      semantic: 'content',
       meaningCN: '早上好',
       sentence: ChunkSentence(
         text: 'Good morning everyone',

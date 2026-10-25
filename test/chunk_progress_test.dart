@@ -179,4 +179,36 @@ void main() {
     expect(m, contains('a'));
     expect(m, isNot(contains('b')));
   });
+
+  test('N-4 到期队列：T0 先排，且日上限在排序之后才截断', () async {
+    final db = _newDb();
+    await db.db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    Future<void> seed(String key, int dueAgoMs, {int fail = 0}) => db.upsertChunk(
+          ChunkRow(
+            chunkKey: key,
+            level: ChunkLevel.l4,
+            dueDate: now - dueAgoMs,
+            failCount: fail,
+            lastScore: 90,
+            reviewStage: 1,
+            assetState: ChunkAssetState.consolidating,
+          ),
+        );
+    // 普通块欠账更多、排得更久，若按 DB 原序会先占满上限。
+    await seed('n1', 9000, fail: 5);
+    await seed('n2', 8000, fail: 4);
+    await seed('t1', 3000);
+    await seed('t2', 2000);
+
+    final plain = await ChunkProgressStore(db).reviewQueue(DateTime.now(), cap: 2);
+    expect(plain.items.map((r) => r.chunkKey), ['n1', 'n2']);
+
+    final core = ChunkProgressStore(db, tierOf: (k) => k.startsWith('t') ? 'T0' : 'T2')
+        .reviewQueue(DateTime.now(), cap: 2);
+    final q = await core;
+    expect(q.items.map((r) => r.chunkKey), ['t1', 't2'],
+        reason: 'T0 到期块不能被普通块的欠账数挤出当日上限');
+    expect(q.dueTotal, 4);
+  });
 }

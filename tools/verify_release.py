@@ -426,23 +426,28 @@ def check_site():
 def check_remote_manifests(m):
     """三个清单源必须给出同一份内容（官网同源为 App 首选）。
 
-    注意用 @latest（跟随最新 tag）而不是 @main：仓库历史上提交过 71MB 分片，
-    @main 会触发 jsDelivr 50MB 包体上限并永久 403（v1.4.5 实测），
-    而 tag 指向清理后的小树，@latest 正常。新 tag 的别名解析可能滞后数小时，
-    因此 @latest 不一致只告警（App 已改为官网同源优先）。
+    1.5.7 起 App 回退别名 = @main（DDS §20.4）：tag 只作发布锚点，
+    主分支别名随发版提交前进。@main 三态判定：
+      ✅ 一致   —— 别名已跟随发版提交；
+      ⚠️ 滞后   —— 可读但版本落后（边缘缓存 TTL），App 首选官网同源，不受影响；
+      ⏭ EXEMPT —— 403/包体超限，按既有口径豁免（不判失败）。
     """
     print('== 7/7 远端三个清单源内容一致 ==')
     srcs = {
         '官网': f'{SITE}/version.json',
         'raw': f'https://raw.githubusercontent.com/{OWNER}/{REPO}/main/version.json',
-        'jsDelivr@latest': f'https://cdn.jsdelivr.net/gh/{OWNER}/{REPO}@latest/version.json',
+        'jsDelivr@main': f'https://cdn.jsdelivr.net/gh/{OWNER}/{REPO}@main/version.json',
     }
     got = {}
+    exempt = set()
     for label, url in srcs.items():
         try:
             got[label] = get_json(url + f'?t={int(time.time())}')
         except urllib.error.HTTPError as e:
-            if e.code < 500:
+            if e.code == 403 and label.startswith('jsDelivr'):
+                exempt.add(label)
+                warn(f'{label} EXEMPT：HTTP 403（包体超限口径，不判失败）')
+            elif e.code < 500:
                 fail(f'{label} 清单读取失败（HTTP {e.code}）')
             else:
                 warn(f'{label} 清单未读到（HTTP {e.code}，瞬时/代理）')
@@ -450,9 +455,9 @@ def check_remote_manifests(m):
             warn(f'{label} 清单未读到（连接层失败，稍后重跑）：{e}')
     for label, j in got.items():
         if str(j.get('versionCode')) != str(m.get('versionCode')):
-            if label == 'jsDelivr@latest':
-                warn(f'{label} 仍是 {j.get("versionName")}({j.get("versionCode")})，'
-                     '新 tag 别名缓存滞后；App 首选官网同源，不受影响')
+            if label.startswith('jsDelivr'):
+                warn(f'{label} ⚠️ 滞后：仍是 {j.get("versionName")}({j.get("versionCode")})；'
+                     '边缘缓存 TTL 内属预期，App 首选官网同源')
             else:
                 fail(f'{label} 仍是 {j.get("versionName")}({j.get("versionCode")})，本地是 '
                      f'{m.get("versionName")}({m.get("versionCode")})：清单没推上去')
@@ -460,18 +465,20 @@ def check_remote_manifests(m):
         if j.get('url') != m.get('url'):
             fail(f'{label} 的 url 与本地不同：{j.get("url")}')
         else:
-            ok(f'{label} = v{j.get("versionName")}，url 一致')
+            ok(f'{label} ✅ = v{j.get("versionName")}，url 一致')
     if 'raw' in got and '官网' in got:
         if (got['raw'].get('urls') or []) != (got['官网'].get('urls') or []):
             fail('raw 与官网的 urls 备用源不一致：用户会在不同源之间拿到不同下载地址')
         else:
             ok('raw 与官网内容一致')
-    jd = got.get('jsDelivr@latest')
+    jd = got.get('jsDelivr@main')
     if jd and str(jd.get('versionCode')) == str(m.get('versionCode')):
         if (jd.get('urls') or []) != (m.get('urls') or []):
-            fail('jsDelivr 与本地清单的 urls 备用源不一致（缓存未刷新）')
+            fail('jsDelivr@main 与本地清单的 urls 备用源不一致（缓存未刷新）')
         else:
-            ok('jsDelivr 与本地清单一致')
+            ok('jsDelivr@main 与本地清单一致')
+    elif 'jsDelivr@main' in exempt:
+        ok('jsDelivr@main 已豁免（403 包体口径）')
 
 
 def main():

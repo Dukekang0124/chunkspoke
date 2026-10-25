@@ -26,6 +26,8 @@ class Level {
   final String id;
   final String theme;
   final String sceneImage;
+  final List<String> requiresChunks; // 前序级别依赖（DDS §19.1）
+  final List<String> combos; // 本篇共现组合
   final List<Chunk> chunks;
   /// 本场景目标句清单（句句标注由哪些词块拼成），供「块拼句 / 句子闯关」使用。
   final List<TargetSentence> sentences;
@@ -34,14 +36,20 @@ class Level {
     required this.theme,
     required this.sceneImage,
     required this.chunks,
+    this.requiresChunks = const [],
+    this.combos = const [],
     this.sentences = const [],
   });
 
   factory Level.fromJson(Map<String, dynamic> json) {
+    List<String> ids(String key) =>
+        (json[key] as List? ?? []).map((e) => e as String).toList();
     return Level(
       id: json['id'] as String,
       theme: json['theme'] as String,
       sceneImage: json['sceneImage'] as String,
+      requiresChunks: ids('requires_chunks'),
+      combos: ids('combos'),
       chunks: (json['chunks'] as List)
           .map((e) => Chunk.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -55,27 +63,44 @@ class Level {
 class Chunk {
   final String id;
   final String text; // 词块短语，如 "Good morning"
-  final String type; // content | function | connector | timeplace
+  /// 语义色分类（旧字段名 `type`）：content | function | timeplace | greeting。
+  final String semantic;
+  /// 语言学类型（JSON `type`）：固定搭配 | 短语动词 | 句型框架 | 惯用表达。
+  final String chunkType;
+  final String tier; // T0 核心 | T1 常用 | T2 场景
+  final String funcCat; // 八类功能（寒暄开场…委婉缓冲）
+  final int freqRank; // google-10000 词频排名；0 = 未入表
+  final List<String> sources; // 证据来源（包内篇目 / 文章 / 频表）
   final String meaningCN;
   final ChunkSentence sentence; // 旧场景单句训练用；新场景解析时回退为词块文本本身
   Chunk({
     required this.id,
     required this.text,
-    required this.type,
+    required this.semantic,
     required this.meaningCN,
     required this.sentence,
+    this.chunkType = '固定搭配',
+    this.tier = 'T2',
+    this.funcCat = '',
+    this.freqRank = 0,
+    this.sources = const [],
   });
+
+  /// 是否为 T0 核心库成员（复习播单优先与覆盖统计共用）。
+  bool get isCore => tier == 'T0';
 
   factory Chunk.fromJson(Map<String, dynamic> json) {
     final text = json['text'] as String;
-    final type = (json['type'] as String?) ?? 'content';
+    final semantic =
+        (json['semantic'] as String?) ?? (json['type'] as String?) ?? 'content';
+    final chunkType = (json['type'] as String?) ?? '固定搭配';
     final meaningCN = (json['meaningCN'] as String?) ?? '';
     final sentJson = json['sentence'] as Map<String, dynamic>?;
     final sentence = sentJson != null
         ? ChunkSentence.fromJson(sentJson)
         : ChunkSentence(
             text: text,
-            slots: [Slot(text: text, type: type)],
+            slots: [Slot(text: text, type: semantic)],
             coreWords: text
                 .toLowerCase()
                 .split(RegExp(r"[^a-z0-9']+"))
@@ -87,11 +112,45 @@ class Chunk {
     return Chunk(
       id: json['id'] as String,
       text: text,
-      type: type,
+      semantic: semantic,
+      chunkType: chunkType,
+      tier: (json['tier'] as String?) ?? 'T2',
+      funcCat: (json['funcCat'] as String?) ?? '',
+      freqRank: (json['freqRank'] as num?)?.toInt() ?? 0,
+      sources:
+          (json['sources'] as List? ?? []).map((e) => e as String).toList(),
       meaningCN: meaningCN,
       sentence: sentence,
     );
   }
+}
+
+/// 内容包引用完整性校验（DDS §19.2 入口守门）：
+/// requires_chunks 必须指向前序级别，combos / 句子 chunkIds 必须在本篇内。
+List<String> validateContentPackReferences(ContentPack pack) {
+  final errors = <String>[];
+  final earlier = <String>{};
+  for (var i = 0; i < pack.levels.length; i++) {
+    final lv = pack.levels[i];
+    final own = {for (final c in lv.chunks) c.id};
+    for (final id in lv.requiresChunks) {
+      if (!earlier.contains(id)) {
+        errors.add('${lv.id}: requires_chunks 指向非前序块 $id');
+      }
+    }
+    for (final id in lv.combos) {
+      if (!own.contains(id)) errors.add('${lv.id}: combos 指向篇外块 $id');
+    }
+    for (final s in lv.sentences) {
+      for (final id in s.chunkIds) {
+        if (!own.contains(id)) {
+          errors.add('${lv.id}/${s.id}: 句子引用篇外块 $id');
+        }
+      }
+    }
+    earlier.addAll(own);
+  }
+  return errors;
 }
 
 /// 目标句：由若干词块按序拼装而成。

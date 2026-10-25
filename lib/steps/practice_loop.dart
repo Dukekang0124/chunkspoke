@@ -26,6 +26,20 @@ import '../ui/motion.dart';
 /// 闯关切句的 State key：必须随句 id 变化，禁止复用上一句的判定/尝试次数。
 Key challengeStepKey(String sentenceId) => ValueKey('challenge_$sentenceId');
 
+/// 句子闯关只属于「完整关卡」会话（X-4 移除后的单一语义）。
+/// 收听收词/复习传入显式 chunks → 按块返回；主线关卡 chunks 为空 → 末尾进句挑战。
+bool challengeAfterChunks({
+  required bool fullLevel,
+  required bool mastered,
+  required int chunkIndex,
+  required int chunkTotal,
+  required int sentenceTotal,
+}) =>
+    fullLevel &&
+    mastered &&
+    chunkIndex == chunkTotal - 1 &&
+    sentenceTotal > 0;
+
 /// 闯关句索引推进：返回 -1 表示本关最后一句已完成。
 int nextChallengeIndex(int current, int total) =>
     current < total - 1 ? current + 1 : -1;
@@ -48,14 +62,11 @@ class PracticeLoop extends StatefulWidget {
   /// 复习模式：后四步全走，结果写入词块资产状态机。
   final bool reviewMode;
 
-  /// 收听收词的单块六步不进句子闯关：六步完成即返回文章。
-  final bool sentenceChallenge;
   final void Function(SessionReport report) onDone;
   const PracticeLoop(
       {required this.level,
       this.chunks,
       this.reviewMode = false,
-      this.sentenceChallenge = true,
       required this.onDone,
       super.key});
 
@@ -104,6 +115,7 @@ class _PracticeLoopState extends State<PracticeLoop>
   int get _total => _chunks.length;
   int get _progressCount => widget.reviewMode ? _reviewed : _completed;
   int get _challengeTotal => widget.level.sentences.length;
+  bool get _isFullLevel => widget.chunks == null && !widget.reviewMode;
   List<String> get _keys => _chunks.map((c) => c.id).toList(growable: false);
 
   List<int> get _order => phaseOrder(reviewMode: widget.reviewMode);
@@ -459,10 +471,14 @@ class _PracticeLoopState extends State<PracticeLoop>
       encourage: assetMastered
           ? '${_cheers[_ci % _cheers.length]} 四星全绿 · 还剩 $remaining 个'
           : '拿到 ${_stars.count}/4 星 · $dueText',
-      next: (widget.sentenceChallenge &&
-              mastered &&
-              _ci == _total - 1 &&
-              _challengeTotal > 0)
+      // 单一语义（X-4 移除）：句子闯关只属于「完整关卡」会话；
+      // 单块六步（收听收词/复习）按块返回，不触发句挑战。
+      next: challengeAfterChunks(
+              fullLevel: _isFullLevel,
+              mastered: mastered,
+              chunkIndex: _ci,
+              chunkTotal: _total,
+              sentenceTotal: _challengeTotal)
           ? const WalkNext.challenge()
           : _afterChunkNext(),
     );

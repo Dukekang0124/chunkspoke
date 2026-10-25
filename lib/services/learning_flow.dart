@@ -278,7 +278,7 @@ SubstitutionPlan buildSubstitutionPlan({
   for (final c in allChunks) {
     if (c.id == chunk.id) continue;
     if (c.text.trim().isEmpty || c.text == chunk.text) continue;
-    if (c.type == chunk.type) alternatives.add(c);
+    if (c.semantic == chunk.semantic) alternatives.add(c);
   }
   if (alternatives.isEmpty) {
     for (final c in allChunks) {

@@ -39,9 +39,12 @@ class ChunkProgressStore {
   final AppDatabase db;
   /// 词块「当日新学」计数钩子（P0-一.1）：新掌握一个词块时回调。
   final void Function()? onNewMastery;
+  /// 层级查表钩子（指令 N §四.1）：T0 核心块在复习播单中优先。
+  final String Function(String key)? tierOf;
   final DateTime Function() _clock;
 
-  ChunkProgressStore(this.db, {this.onNewMastery, DateTime Function()? clock})
+  ChunkProgressStore(this.db,
+      {this.onNewMastery, DateTime Function()? clock, this.tierOf})
       : _clock = clock ?? DateTime.now;
 
   DateTime get now => _clock();
@@ -310,12 +313,26 @@ class ChunkProgressStore {
     final dueTotal = await db.countDueChunks(nowMs);
     final items = remaining == 0
         ? const <ChunkRow>[]
-        : await db.dueChunks(nowMs, limit: remaining);
+        : await _dueTierFirst(nowMs, remaining);
     return ReviewQueue(
         items: items,
         dueTotal: dueTotal,
         reviewedToday: reviewedToday,
         cap: cap);
+  }
+
+  /// 到期块排序：注入层级表时 T0 先行，组内保持 DB 原序（欠账多者先）。
+  /// 上限在排序之后才截断，避免 T0 到期块被普通块挤出当日队列。
+  Future<List<ChunkRow>> _dueTierFirst(int nowMs, int remaining) async {
+    final lookup = tierOf;
+    if (lookup == null) return db.dueChunks(nowMs, limit: remaining);
+    final all = await db.dueChunks(nowMs);
+    final core = <ChunkRow>[];
+    final rest = <ChunkRow>[];
+    for (final r in all) {
+      (lookup(r.chunkKey) == 'T0' ? core : rest).add(r);
+    }
+    return [...core, ...rest].take(remaining).toList();
   }
 
   /// All chunk keys currently at the mastered level (scene-unlock / stats).

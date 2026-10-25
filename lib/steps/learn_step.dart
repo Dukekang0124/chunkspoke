@@ -77,7 +77,7 @@ class _LearnStepState extends State<LearnStep> {
                 children: [
                   Text(c.text,
                       style: TextStyle(
-                          color: chunkColor(c.type),
+                          color: chunkColor(c.semantic),
                           fontSize: 30,
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 18),

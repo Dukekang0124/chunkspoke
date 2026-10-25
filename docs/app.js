@@ -2,11 +2,12 @@
 (function () {
   'use strict';
 
-  // 版本清单按顺序尝试：同源副本最快且不受国内网络干扰，jsDelivr / raw 作兜底。
+  // 版本清单按顺序尝试：同源副本最快且不受国内网络干扰，jsDelivr@main / raw 作兜底。
   // 同源副本由 tools/publish_release.py 在每次发版时自动刷新，不会陈旧。
+  // 1.5.7 起别名统一为 @main（DDS §20.4）：tag 只作发布锚点。
   var VERSION_URLS = [
     './version.json',
-    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@latest/version.json',
+    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/version.json',
     'https://raw.githubusercontent.com/Dukekang0124/chunkspoke/main/version.json'
   ];
 

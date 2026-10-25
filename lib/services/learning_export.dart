@@ -8,7 +8,7 @@ import 'loaders.dart';
 
 /// 导出头部的版本号：发版时与 pubspec.yaml 同 bump。
 /// library_export_test 里有一条用例把它和 pubspec 对齐，漏改会让回归变红。
-const String kExportAppVersion = '1.5.6';
+const String kExportAppVersion = '1.5.7';
 
 /// 学习数据导出（波 2 · 模块 D）：只生成本机文本，不上报、不联网。
 /// 内容：资产分组、六步漏斗、复习保持率、节奏指标。
@@ -43,6 +43,10 @@ Future<LearningExport> buildLearningExport({
           (contentIds.length - rows.length);
   final learned =
       rows.where((r) => r.assetState != ChunkAssetState.learning).length;
+  // 核心库覆盖（指令 N §四.2）：分母按块面去重（与《T0 核心库清单》的 100 块
+  // 一致），同一块面任一条 id 掌握即算覆盖；总量随内容包，不写死 100。
+  final coreTotal = ProgressService.coreTotal(content);
+  final coreMastered = await progress.coreMastered(content);
 
   final all = await progress.chunkStore.sessionOutcomeCounts();
   final learn = await progress.chunkStore.sessionOutcomeCounts(review: false);
@@ -126,6 +130,8 @@ Future<LearningExport> buildLearningExport({
         ' · 已掌握 ${stateCount[ChunkAssetState.mastered] ?? 0}'
         ' · 需重修 ${stateCount[ChunkAssetState.relearning] ?? 0}')
     ..writeln('已学完合计：$learned / ${contentIds.length} 块')
+    ..writeln('核心库覆盖：T0 $coreMastered/$coreTotal'
+        '（已掌握 / 核心库总量）')
     ..writeln()
     ..writeln('二、六步漏斗（累计完成次数）')
     ..writeln('听辨完成：${n(learn, 'assembleCorrect')}')

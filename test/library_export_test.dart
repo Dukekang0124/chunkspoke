@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -74,6 +75,50 @@ void main() {
     expect(rows['a0']!.assetState, ChunkAssetState.mastered);
     expect(rows['a1']!.assetState, ChunkAssetState.consolidated);
     expect(rows['a2'], isNull);
+  });
+
+  test('N-4 核心库覆盖：分母按块面去重为 100，导出同口径', () async {
+    final raw = jsonDecode(await File('assets/content_pack.json').readAsString())
+        as Map<String, dynamic>;
+    final pack = ContentPack.fromJson(raw);
+
+    // 分母看块面：T0 有 106 条 id，但只有 100 个不同块面。
+    final byText = <String, List<String>>{};
+    for (final lv in pack.levels) {
+      for (final c in lv.chunks) {
+        if (c.isCore) {
+          byText.putIfAbsent(c.text.trim().toLowerCase(), () => []).add(c.id);
+        }
+      }
+    }
+    expect(ProgressService.coreTotal(pack), 100);
+    expect(byText.length, 100);
+    final dup = byText.values.firstWhere((ids) => ids.length > 1);
+    final otherFace = byText.values
+        .firstWhere((ids) => ids.length == 1 && ids.first != dup.first)
+        .first;
+
+    final dir = await Directory.systemTemp.createTemp('w2_core_cov');
+    final progress = ProgressService(db: AppDatabase(path: '${dir.path}/t.db'));
+    await progress.init();
+    expect(await progress.coreMastered(pack), 0);
+
+    await _learnAndMaster(progress.chunkStore, dup.first);
+    expect(await progress.coreMastered(pack), 1);
+
+    // 同一块面的另一条 id 也掌握：覆盖数不重复计。
+    await _learnAndMaster(progress.chunkStore, dup[1]);
+    expect(await progress.coreMastered(pack), 1);
+
+    await _learnAndMaster(progress.chunkStore, otherFace);
+    expect(await progress.coreMastered(pack), 2);
+
+    final export = await buildLearningExport(
+      progress: progress,
+      content: pack,
+      now: DateTime(2026, 10, 25, 9, 5),
+    );
+    expect(export.text, contains('核心库覆盖：T0 2/100'));
   });
 
   test('导出：资产分组、六步漏斗与复习保持率数值正确，且不含原文', () async {

@@ -77,8 +77,14 @@ void main() {
       expect(res.status, CheckStatus.error);
     });
 
-    test('清单源降级：官网同源失败 → jsDelivr → raw 兜底（不误报已最新）', () async {
-      final svc = UpdateService();
+    test('清单源顺序：官网同源为首选，回退别名固定 @main（§20.4）', () {
+      const urls = UpdateService.manifestUrls;
+      expect(urls.first, contains('dukekang0124.github.io/chunkspoke/'));
+      expect(urls[1], contains('chunkspoke@main/version.json'));
+      expect(urls[1], isNot(contains('@latest')));
+    });
+
+    test('清单源降级：官网同源失败 → jsDelivr → raw 兜底（不误报已最新）', () async {      final svc = UpdateService();
       var cdnHits = 0;
       var rawHits = 0;
       final client = MockClient((req) async {

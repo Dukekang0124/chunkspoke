@@ -71,7 +71,7 @@ class _RecognizeStepState extends State<RecognizeStep> {
 
   @override
   Widget build(BuildContext context) {
-    final typeMap = {for (final c in widget.level.chunks) c.text: c.type};
+    final typeMap = {for (final c in widget.level.chunks) c.text: c.semantic};
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(

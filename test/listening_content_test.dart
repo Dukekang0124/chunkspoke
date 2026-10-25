@@ -21,8 +21,8 @@ void main() {
   });
 
   group('浸泡层内容 schema', () {
-    test('16 篇 · 按级别折算时长 45-210 秒 · 校验 0 错', () {
-      expect(pack.articles.length, 16);
+    test('24 篇 · 按级别折算时长 45-210 秒 · 校验 0 错', () {
+      expect(pack.articles.length, 24);
       expect(validateListeningPack(pack, content), isEmpty);
       for (final a in pack.articles) {
         final atNormal = a.wordCount / 150 * 60 + (a.sentences.length - 1) * 0.3;
@@ -32,14 +32,14 @@ void main() {
       }
     });
 
-    test('分级分布：A1×3 / B1×12 / C1×1，级别与默认语速成对出现', () {
+    test('分级分布：A1×5 / A2×2 / B1×14 / B2×1 / C1×2，级别与默认语速成对出现', () {
       final byLevel = <String, int>{};
       for (final a in pack.articles) {
         byLevel[a.level.key] = (byLevel[a.level.key] ?? 0) + 1;
         expect(a.levelRaw, a.level.key, reason: '${a.id} 级别字面量须规范');
         expect(a.baseRate, a.level.baseRate, reason: '${a.id} baseRate 须等于本级默认');
       }
-      expect(byLevel, {'A1': 3, 'B1': 12, 'C1': 1});
+      expect(byLevel, {'A1': 5, 'A2': 2, 'B1': 14, 'B2': 1, 'C1': 2});
       // A1 三篇必须真的更短更慢：词数与句均都低于 B1 任一篇
       final a1MaxWords =
           pack.articles.where((a) => a.level == ListeningLevel.a1).map((a) => a.wordCount).reduce((x, y) => x > y ? x : y);
@@ -48,7 +48,7 @@ void main() {
       expect(a1MaxWords, lessThan(b1MinWords));
     });
 
-    test('每篇标注 ≤ 收词上限，既有块占比 60-70%（全库口径）', () {
+    test('每篇标注 ≤ 收词上限，既有块占比守下限（核心库批次结构性上移）', () {
       var existing = 0, candidates = 0;
       for (final a in pack.articles) {
         final chunks = a.chunks;
@@ -62,7 +62,10 @@ void main() {
         candidates += chunks.where((c) => c.candidate).length;
       }
       final ratio = existing / (existing + candidates);
-      expect(ratio, inInclusiveRange(0.60, 0.70));
+      // 首批 16 篇的配比目标是 60–70%；第二批（指令 N §三）以 T0 待宿主池为主，
+      // 标注块几乎全部是库内块，全库占比结构性上移。此处只守下限与候选账本非空。
+      expect(ratio, greaterThanOrEqualTo(0.60));
+      expect(candidates, greaterThanOrEqualTo(20));
     });
 
     test('既有块 id 全部可解析，候选块 id 不撞车且带 lx_ 前缀', () {

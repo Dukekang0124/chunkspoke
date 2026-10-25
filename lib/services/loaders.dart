@@ -59,9 +59,19 @@ class ProgressService {
   final AppDatabase _db;
   final DateTime Function() _clock;
   final Map<String, String> _cache = {};
+  /// 词块层级表（id → T0/T1/T2），启动时由内容包灌入；复习播单据此 T0 优先。
+  Map<String, String> _chunkTiers = const {};
   ProgressService({AppDatabase? db, DateTime Function()? clock})
       : _clock = clock ?? DateTime.now,
         _db = db ?? AppDatabase(clock: clock);
+
+  /// 启动装配：内容包 → 层级表（只存 id/层级，无用户数据）。
+  void setChunkTiers(ContentPack content) {
+    _chunkTiers = {
+      for (final lv in content.levels)
+        for (final c in lv.chunks) c.id: c.tier,
+    };
+  }
 
   /// 统一时钟（E2E 时间加速/单测可注入；生产恒为真实时间）。
   DateTime get now => _clock();
@@ -501,9 +511,36 @@ class ProgressService {
   // onNewMastery：词块「当日新学」计数钩子（P0-一.1）。
   ChunkProgressStore get chunkStore => ChunkProgressStore(_db,
       clock: _clock,
+      tierOf: (key) => _chunkTiers[key] ?? '',
       onNewMastery: () {
         bumpDailyNew();
       });
+
+  /// T0 核心库总量（分母，随内容包变化）。同一块面在包内重复登记时只算一块，
+  /// 与《T0 核心库清单》的「100 块」口径一致。
+  static Map<String, List<String>> _coreByText(ContentPack content) {
+    final map = <String, List<String>>{};
+    for (final lv in content.levels) {
+      for (final c in lv.chunks) {
+        if (!c.isCore) continue;
+        map.putIfAbsent(c.text.trim().toLowerCase(), () => []).add(c.id);
+      }
+    }
+    return map;
+  }
+
+  static int coreTotal(ContentPack content) => _coreByText(content).length;
+
+  /// T0 核心库已掌握数（仅统计页/导出使用）。同块面任一条 id 掌握即算覆盖。
+  Future<int> coreMastered(ContentPack content) async {
+    final byText = _coreByText(content);
+    final rows = await chunkStore.allRows();
+    final mastered = {
+      for (final r in rows)
+        if (r.assetState == ChunkAssetState.mastered) r.chunkKey,
+    };
+    return byText.values.where((ids) => ids.any(mastered.contains)).length;
+  }
 
   /// 沙盒（自由造句）：通过校验的句子入库 + 串联计量 + 四项本地统计。
   late final SandboxStore sandbox =

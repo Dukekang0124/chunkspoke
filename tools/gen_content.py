@@ -7,6 +7,7 @@ schema 严格沿用 ContentPack.fromJson。每词块录入：
 """
 import json
 import os
+import subprocess
 import random
 import sys
 
@@ -646,6 +647,10 @@ def main():
     if bad_len or dup_cn:
         print("[GEN] FAILED self-checks; abort.")
         sys.exit(1)
+    # 进包闸门（DDS §19.2 / 指令 N §一）：先补齐核心库标签，再校验；失败即阻断。
+    here = os.path.dirname(os.path.abspath(__file__))
+    subprocess.run([sys.executable, os.path.join(here, "tag_core_library.py")], check=True)
+    subprocess.run([sys.executable, os.path.join(here, "validate_content_pack.py")], check=True)
     print(f"[GEN] OK -> wrote {OUT}")
 
 if __name__ == "__main__":

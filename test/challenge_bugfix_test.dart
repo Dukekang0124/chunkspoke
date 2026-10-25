@@ -58,4 +58,42 @@ void main() {
       expect(nextChallengeIndex(11, 12), -1);
     });
   });
+
+  group('X-4 句挑战归属（单一语义）', () {
+    bool decide({bool full = true, bool mastered = true, int i = 0}) =>
+        challengeAfterChunks(
+            fullLevel: full,
+            mastered: mastered,
+            chunkIndex: i,
+            chunkTotal: 1,
+            sentenceTotal: 1);
+
+    test('主线完整关卡：最后一块掌握且有关卡句 → 进句挑战', () {
+      expect(decide(), isTrue);
+    });
+
+    test('收听收词/复习（显式 chunks）→ 不进句挑战', () {
+      expect(decide(full: false), isFalse);
+    });
+
+    test('未掌握 / 非最后一块 / 无关卡句 → 不进', () {
+      expect(decide(mastered: false), isFalse);
+      expect(
+          challengeAfterChunks(
+              fullLevel: true,
+              mastered: true,
+              chunkIndex: 0,
+              chunkTotal: 2,
+              sentenceTotal: 1),
+          isFalse);
+      expect(
+          challengeAfterChunks(
+              fullLevel: true,
+              mastered: true,
+              chunkIndex: 0,
+              chunkTotal: 1,
+              sentenceTotal: 0),
+          isFalse);
+    });
+  });
 }

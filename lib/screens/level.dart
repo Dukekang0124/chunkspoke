@@ -13,6 +13,7 @@ import '../ui/theme.dart';
 import '../ui/labels.dart';
 import '../ui/feedback.dart';
 import '../ui/confetti.dart';
+import '../ui/motion.dart';
 import '../steps/practice_loop.dart';
 
 /// 场景会话页：直接进入「逐块闭环」练习（锚定→拆解→听辨→跟读→替换→造句）。
@@ -160,13 +161,22 @@ class CompletionView extends StatefulWidget {
 class _CompletionViewState extends State<CompletionView>
     with SingleTickerProviderStateMixin {
   late final AnimationController _badge;
+  bool _badgeStarted = false;
 
   @override
   void initState() {
     super.initState();
     _badge = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500))
-      ..forward();
+        vsync: this, duration: const Duration(milliseconds: 500));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_badgeStarted) return;
+    _badgeStarted = true;
+    // G-03 / DDS §24：奖杯接入中心动效闸，reduced-motion 直切静态图标。
+    if (Motion.of(context).animates) _badge.forward();
   }
 
   @override
@@ -189,13 +199,16 @@ class _CompletionViewState extends State<CompletionView>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // B5 徽章（scale-in 弹入）
-                ScaleTransition(
-                  scale: CurvedAnimation(
-                      parent: _badge, curve: Curves.easeOutBack),
-                  child:
-                      const Icon(Icons.emoji_events, color: kPrimary, size: 72),
-                ),
+                // B5 徽章（scale-in 弹入；减弱动画时直出静态图标）
+                if (Motion.of(context).animates)
+                  ScaleTransition(
+                    scale: CurvedAnimation(
+                        parent: _badge, curve: Curves.easeOutBack),
+                    child: const Icon(Icons.emoji_events,
+                        color: kPrimary, size: 72),
+                  )
+                else
+                  const Icon(Icons.emoji_events, color: kPrimary, size: 72),
                 const SizedBox(height: 14),
                 const Text('关卡完成！',
                     style: TextStyle(

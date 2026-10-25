@@ -36,6 +36,15 @@ class MeScreen extends StatelessWidget {
             );
           },
         ),
+        // 核心库覆盖（指令 N §四.2）：只在这里出现，首页不放进任何进度元素。
+        FutureBuilder<int>(
+          future: progress.coreMastered(content),
+          builder: (c, s) => _stat(
+            '核心库覆盖',
+            'T0 ${s.data ?? 0}/${ProgressService.coreTotal(content)}',
+            sub: 'T0 核心块已掌握 / 总量',
+          ),
+        ),
         _stat('连续打卡', '$streak', sub: '连续天数'),
         _stat('中文提示率', '$hintRate%', sub: '越低说明你越脱稿，继续加油'),
         FutureBuilder<int>(

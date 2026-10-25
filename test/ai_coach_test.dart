@@ -26,9 +26,9 @@ ContentPack _pack() => ContentPack(
           theme: 't',
           sceneImage: 's',
           chunks: [
-            Chunk(id: 'a', text: 'hello', type: 'function', meaningCN: '你好', sentence: _s('hello')),
-            Chunk(id: 'b', text: 'thanks', type: 'content', meaningCN: '谢谢', sentence: _s('thanks')),
-            Chunk(id: 'c', text: 'bye', type: 'content', meaningCN: '再见', sentence: _s('bye')),
+            Chunk(id: 'a', text: 'hello', semantic: 'function', meaningCN: '你好', sentence: _s('hello')),
+            Chunk(id: 'b', text: 'thanks', semantic: 'content', meaningCN: '谢谢', sentence: _s('thanks')),
+            Chunk(id: 'c', text: 'bye', semantic: 'content', meaningCN: '再见', sentence: _s('bye')),
           ],
         ),
       ],

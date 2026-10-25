@@ -45,8 +45,13 @@ Future<void> bootstrap() async {
     final progress = ProgressService();
     await progress.init();
     final content = await loadContentPack();
+    progress.setChunkTiers(content);
     final listening = await loadListeningPack();
     if (kDebugMode) {
+      final packErrors = validateContentPackReferences(content);
+      if (packErrors.isNotEmpty) {
+        throw StateError('内容包引用校验失败：${packErrors.take(5).join('；')}');
+      }
       final errors = validateListeningPack(listening, content);
       if (errors.isNotEmpty) {
         throw StateError('收听文章内容校验失败：${errors.take(5).join('；')}');

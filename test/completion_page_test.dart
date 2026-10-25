@@ -102,6 +102,35 @@ void main() {
     expect(find.text('返回地图'), findsOneWidget);
   });
 
+  testWidgets('G-03：reduced-motion 下奖杯直切静态，正常态才挂 ScaleTransition',
+      (tester) async {
+    Finder trophyScale() => find.ancestor(
+        of: find.byIcon(Icons.emoji_events),
+        matching: find.byType(ScaleTransition));
+
+    await pumpCompletion(tester);
+    expect(trophyScale(), findsOneWidget);
+
+    await tester.pumpWidget(MaterialApp(
+      home: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: Scaffold(
+          body: CompletionView(
+            level: level,
+            dims: const [true, true, true, true],
+            report: const SessionReport(),
+          ),
+        ),
+      ),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(tester.takeException(), isNull);
+    expect(trophyScale(), findsNothing);
+    expect(find.byIcon(Icons.emoji_events), findsOneWidget);
+  });
+
   testWidgets('最后一关无下一场景时不渲染解锁横幅', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(

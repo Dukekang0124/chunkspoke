@@ -151,7 +151,7 @@ class _ReviewItem extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            ChunkTile(chunk.text, chunk.type),
+            ChunkTile(chunk.text, chunk.semantic),
             const SizedBox(width: 10),
             Expanded(
               child: Text(chunk.meaningCN,

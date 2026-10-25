@@ -13,7 +13,7 @@ import 'package:chunkspoke_flutter/ui/motion.dart';
 Chunk _c(String id) => Chunk(
     id: id,
     text: id,
-    type: 'content',
+    semantic: 'content',
     meaningCN: id,
     sentence: ChunkSentence(
         text: id,

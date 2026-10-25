@@ -12,7 +12,7 @@ import 'package:chunkspoke_flutter/services/sandbox_store.dart';
 Chunk _c(String id, String text, {String cn = ''}) => Chunk(
       id: id,
       text: text,
-      type: 'content',
+      semantic: 'content',
       meaningCN: cn,
       sentence: ChunkSentence(
           text: text,

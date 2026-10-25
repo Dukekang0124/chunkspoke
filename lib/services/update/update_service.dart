@@ -222,12 +222,13 @@ class UpdateService {
   );
 
   /// 远端清单候选源：按顺序尝试，任一可用即返回（避免单源失败直接「检查失败」）。
-  /// - 官网同源副本：发版即生效，不受 jsDelivr tag 别名缓存滞后影响；
-  /// - jsDelivr @latest：国内可达，但新 tag 的别名解析可能滞后，降为第二源；
+  /// - 官网同源副本：发版即生效，不受 CDN 缓存滞后影响；
+  /// - jsDelivr @main：1.5.7 起回退别名（DDS §20.4）。tag 只作发布锚点，
+  ///   主分支别名随发版提交前进；国内可达，但边缘缓存可能滞后数分钟；
   /// - raw：内容即时生效，但国内真机常不可达，仅作最后兜底。
   static const List<String> manifestUrls = <String>[
     'https://dukekang0124.github.io/chunkspoke/version.json',
-    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@latest/version.json',
+    'https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/version.json',
     defaultRemoteUrl,
     // 'https://<你的OSS或CDN域名>/chunkspoke/version.json', // 建议补充为第一优先级
   ];

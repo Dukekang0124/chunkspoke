@@ -78,6 +78,9 @@ def main():
     ap.add_argument('--notes', required=True)
     a = ap.parse_args()
 
+    # 装配前闸门（DDS §19.2 / 指令 N §一）：内容包不合法就不许进包。
+    subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'validate_content_pack.py')], check=True)
+
     os.makedirs(os.path.join(a.out, 'parts'), exist_ok=True)
     gen = os.path.join(ROOT, 'tools', 'gen_release_manifest.py')
     arm64 = os.path.join(APK_DIR, 'app-arm64-v8a-release.apk')

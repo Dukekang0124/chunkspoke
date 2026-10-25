@@ -1,35 +1,35 @@
 {
-  "versionName": "1.5.6",
-  "versionCode": 4057,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.6/chunkspoke-latest.apk",
+  "versionName": "1.5.7",
+  "versionCode": 4058,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.7/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.6/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.5.6/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.7/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.5.7/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "4be1f6f427f5976adee4ce0ae648d989d41f732b754670c0a82e91aeca6f3de0",
-  "size": 59650435,
-  "notes": "v1.5.6：界面动效整体打磨——完成庆祝、播放/暂停切换、数字滚动与底部浮层进出场统一节奏，列表与卡片按下去有缩放反馈、首页播单/词块库/复习列表依次入场（系统开启「减少动态效果」时全部改为直接切换，庆祝不再播放）；麦克风与通知改为先说明用途再请求，不再一进播放页就静默索取通知权限；底部「磨耳朵」入口新增到期块角标；复制导出内容时按钮原地变勾，不再另弹提示条。",
+  "sha256": "dbe583b83d79542b948940bf48a4164128965e4987db96fb474bedfbe19d12f6",
+  "size": 59675403,
+  "notes": "v1.5.7：词块库升级为课程大纲——首批 100 个 T0 核心块按频率、通用性、可浮现与产出价值四项标准选出，词块卡新增 T0/T1/T2 分层、八大功能类筛选与频次排名；磨耳朵新增 8 篇分级内容（A1–C1，先选核心块再成篇，T0 全覆盖）；到期复习优先安排 T0，统计页新增「核心库覆盖 T0 x/100」（仅统计页，首页不显示进度）；等级完成页奖杯动效接入全局动效开关，系统开启「减少动态效果」时直接切换；更新源回退别名改为 @main。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.6/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.7/parts/apk.part0",
       "size": 15728640,
-      "sha256": "c003d7e008d34fa4c67baa879b5cbc4146d6483e250ffb8f65961b3b99f8954d"
+      "sha256": "9919f7e41227848fe96a9566116618b0e2e8d1ec26aa9c4af4864292621a1b09"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.6/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.7/parts/apk.part1",
       "size": 15728640,
       "sha256": "8d5875bacbc960bb15962571fbb3579a5218ba953d42d4cf7e45727a57e53237"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.6/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.7/parts/apk.part2",
       "size": 15728640,
       "sha256": "385d0426f9c5e55d11193426c7ba239ee4761f5f20ab05bc47e995e8d87db0e3"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.6/parts/apk.part3",
-      "size": 12464515,
-      "sha256": "2ee2bdf37200359c149d9a4ab223412292c83bb27ca8337a88b3ec5c4f5373a0"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.7/parts/apk.part3",
+      "size": 12489483,
+      "sha256": "241ae648269058adabf3bc95021f83745d11415b12f2e1c88053539b814440b3"
     }
   ],
   "model": {

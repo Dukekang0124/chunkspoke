@@ -1314,7 +1314,6 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         body: PracticeLoop(
           level: service.sixLevel(c),
           chunks: [c],
-          sentenceChallenge: false,
           onDone: (_) {
             completed = true;
             Navigator.of(routeCtx).pop();

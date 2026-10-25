@@ -37,6 +37,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
   /// 「磨耳朵来源」筛选（指令 S §二.3）：只看从收听文章里收进来的块。
   bool _fromListeningOnly = false;
 
+  /// 核心库筛选（指令 N §二.3）：层级 T0/T1/T2 + 功能八类。
+  String _tierFilter = '全部';
+  String _funcFilter = '全部';
+
+  static const _tiers = ['T0', 'T1', 'T2'];
+  static const _funcCats = [
+    '寒暄开场',
+    '应答回应',
+    '观点立场',
+    '请求协助',
+    '确认澄清',
+    '时间计划',
+    '情绪评价',
+    '委婉缓冲',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -136,20 +152,31 @@ class _LibraryScreenState extends State<LibraryScreen> {
               child:
                   Text('词块库加载失败，请重试', style: TextStyle(color: Colors.white54)));
         }
-        final shown = _fromListeningOnly
-            ? _LibraryData(
-                chunks: data.chunks
-                    .where((c) => data.sources.containsKey(c.id))
-                    .toList(),
-                rows: data.rows,
-                combos: data.combos,
-                sources: data.sources,
-              )
-            : data;
+        final shown = _LibraryData(
+          chunks: data.chunks.where((c) {
+            if (_fromListeningOnly && !data.sources.containsKey(c.id)) {
+              return false;
+            }
+            if (_tierFilter != '全部' && c.tier != _tierFilter) return false;
+            if (_funcFilter != '全部' && c.funcCat != _funcFilter) return false;
+            return true;
+          }).toList(),
+          rows: data.rows,
+          combos: data.combos,
+          sources: data.sources,
+        );
         final groups = _buildGroups(shown);
         final sourceCount =
             data.chunks.where((c) => data.sources.containsKey(c.id)).length;
         final total = data.chunks.length;
+        final tierCounts = <String, int>{};
+        final funcCounts = <String, int>{};
+        for (final c in data.chunks) {
+          tierCounts[c.tier] = (tierCounts[c.tier] ?? 0) + 1;
+          if (c.funcCat.isNotEmpty) {
+            funcCounts[c.funcCat] = (funcCounts[c.funcCat] ?? 0) + 1;
+          }
+        }
         final contentIds = {for (final c in data.chunks) c.id};
         final learned = data.rows.values
             .where((r) =>
@@ -185,6 +212,34 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _tierChip('全部', total),
+                  for (final t in _tiers)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: _tierChip(t, tierCounts[t] ?? 0),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _funcChip('全部', total),
+                  for (final f in _funcCats)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: _funcChip(f, funcCounts[f] ?? 0),
+                    ),
+                ],
+              ),
+            ),
             const SizedBox(height: 18),
             if (groups.every((g) => g.chunks.isEmpty))
               _emptyState()
@@ -206,6 +261,59 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _tierChip(String tier, int count) {
+    final selected = _tierFilter == tier;
+    return PressableScale(
+      scale: 0.94,
+      child: FilterChip(
+        key: Key('library_filter_tier_$tier'),
+        label: Text(tier == '全部' ? '全部层级' : '$tier $count',
+            style: const TextStyle(fontSize: 12)),
+        selected: selected,
+        onSelected: (_) => setState(() => _tierFilter = tier),
+        showCheckmark: false,
+      ),
+    );
+  }
+
+  Widget _funcChip(String func, int count) {
+    final selected = _funcFilter == func;
+    return PressableScale(
+      scale: 0.94,
+      child: FilterChip(
+        key: Key('library_filter_func_$func'),
+        label: Text(func == '全部' ? '全部功能' : '$func $count',
+            style: const TextStyle(fontSize: 12)),
+        selected: selected,
+        onSelected: (_) => setState(() => _funcFilter = func),
+        showCheckmark: false,
+      ),
+    );
+  }
+
+  static Color _tierColor(String tier) => switch (tier) {
+        'T0' => kPrimary,
+        'T1' => const Color(0xFF7FB4FF),
+        _ => Colors.white54,
+      };
+
+  Widget _tierBadge(Chunk c) {
+    final color = _tierColor(c.tier);
+    return Container(
+      key: Key('library_tier_${c.id}'),
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(c.tier,
+          style: TextStyle(
+              color: color, fontSize: 10, fontWeight: FontWeight.w700)),
     );
   }
 
@@ -432,7 +540,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
         children: [
           Row(
             children: [
-              ChunkTile(c.text, c.type),
+              _tierBadge(c),
+              ChunkTile(c.text, c.semantic),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(c.meaningCN,
@@ -460,7 +569,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
           const SizedBox(height: 6),
           Text(
             '首学 $first · 复习 ${row?.reviewCount ?? 0} 次 · '
-            '连对 ${row?.correctStreak ?? 0} · 可组合 $combos 块 · $due',
+            '连对 ${row?.correctStreak ?? 0} · 可组合 $combos 块 · '
+            '频表 ${c.freqRank > 0 ? '#${c.freqRank}' : '未收录'} · $due',
             style: const TextStyle(color: Colors.white38, fontSize: 11),
           ),
           if (state == ChunkAssetState.relearning) ...[
