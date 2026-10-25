@@ -13,8 +13,8 @@
 
   // 全部清单源都失败时的兜底直链（GitHub Pages 镜像，无 20MB 限制、支持断点续传）。
   var FALLBACK_DOWNLOAD_URL =
-    'https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.2/chunkspoke-latest.apk';
-  var FALLBACK_VERSION = 'v1.5.2';
+    'https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.6/chunkspoke-latest.apk';
+  var FALLBACK_VERSION = 'v1.5.6';
 
   var downloadUrl = FALLBACK_DOWNLOAD_URL;
 
