@@ -54,6 +54,8 @@ class _FakeDownloader implements HdVoiceDownloader {
 
   @override
   void dispose() => disposeCalls++;
+
+  void emit(ModelProgress p) => _progress.add(p);
 }
 
 class _FakeSynth implements HdVoiceSynth {
@@ -64,6 +66,7 @@ class _FakeSynth implements HdVoiceSynth {
   int synthCalls = 0;
   int disposeCalls = 0;
   double? lastSpeed;
+  String? lastDir;
   HdAudio audio =
       HdAudio(Float32List.fromList([0.0, 0.5, -0.5, 0.25]), 22050);
 
@@ -71,6 +74,7 @@ class _FakeSynth implements HdVoiceSynth {
   Future<void> init(String modelDir) async {
     initCalls++;
     if (initError != null) throw initError!;
+    lastDir = modelDir;
     inited = true;
   }
 
@@ -115,6 +119,36 @@ ModelManifest _dummyManifest() => ModelManifest(
       size: 1,
       parts: const [ModelPart('https://example.test/voice.part0', 1)],
     );
+
+ModelManifest _voiceManifest(String name, int size) => ModelManifest(
+      name: name,
+      modelVersion: '$name-v1',
+      sha256: List.filled(64, 'd').join(),
+      size: size,
+      parts: [
+        ModelPart('https://cdn.test/$name/voice.part0', size ~/ 2),
+        ModelPart('https://cdn.test/$name/voice.part1', size - size ~/ 2),
+      ],
+      mirrorUrl: 'https://cdn.test/$name.zip',
+    );
+
+List<HdVoiceOption> _multiCatalog() => [
+      HdVoiceOption(
+        label: '清晰女声',
+        desc: '标准美音 · 清晰',
+        manifest: _voiceManifest('voice-a', 100),
+      ),
+      HdVoiceOption(
+        label: '温暖男声',
+        desc: '低沉 · 稍慢',
+        manifest: _voiceManifest('voice-b', 200),
+      ),
+      HdVoiceOption(
+        label: '轻快女声',
+        desc: '明亮 · 有起伏',
+        manifest: _voiceManifest('voice-c', 300),
+      ),
+    ];
 
 HdVoiceService _service({
   required _FakeDownloader downloader,
@@ -291,6 +325,120 @@ void main() {
         expect(p.fallbacks.length, 2);
       }
     });
+
+    test('磁盘写满错误统一提示存储不足', () {
+      expect(
+          friendlyHdError(const FileSystemException(
+              'write failed', '/data/x', OSError('No space left on device', 28))),
+          contains('存储空间不足'));
+      expect(friendlyHdError(StateError('ENOSPC')), contains('存储空间不足'));
+    });
+  });
+
+  group('自然人声目录', () {
+    Map<String, dynamic> voiceJson(String name, String label, String desc) => {
+          'name': name,
+          'label': label,
+          'desc': desc,
+          'modelVersion': '$name-v1',
+          'sha256': List.filled(64, 'e').join(),
+          'size': 30,
+          'parts': [
+            {'url': 'https://cdn.example/$name/voice.part0', 'size': 10},
+            {'url': 'https://cdn.example/$name/voice.part1', 'size': 20},
+          ],
+          'mirrorUrl': 'https://cdn.example/$name.zip',
+        };
+
+    String catalog(List<Map<String, dynamic>> voices) => jsonEncode({
+          'voiceModel': {
+            'voices': voices,
+            'name': 'legacy-single',
+            'modelVersion': 'legacy-v1',
+            'sha256': List.filled(64, 'f').join(),
+            'size': 30,
+            'parts': [
+              {'url': 'https://cdn.example/voice.part0', 'size': 10},
+              {'url': 'https://cdn.example/voice.part1', 'size': 20},
+            ],
+          }
+        });
+
+    test('voices[] 优先：顺序、标签、独立清单', () {
+      final list = parseHdVoiceCatalog(catalog([
+        voiceJson('voice-a', '清晰女声', '标准美音'),
+        voiceJson('voice-b', '温暖男声', '低沉'),
+      ]));
+      expect(list.map((e) => e.id), ['voice-a', 'voice-b']);
+      expect(list.map((e) => e.label), ['清晰女声', '温暖男声']);
+      expect(list.map((e) => e.desc), ['标准美音', '低沉']);
+      expect(list.every((e) => e.manifest.isValid), isTrue);
+      expect(list.first.manifest.modelVersion, 'voice-a-v1');
+    });
+
+    test('坏音色跳过；全坏报错；空数组回退顶层单音色', () {
+      final list = parseHdVoiceCatalog(catalog([
+        voiceJson('voice-a', '清晰女声', ''),
+        {
+          'name': 'broken',
+          'modelVersion': 'x',
+          'sha256': List.filled(64, 'e').join(),
+          'size': 99,
+          'parts': [
+            {'url': 'https://cdn.example/broken/voice.part0', 'size': 10}
+          ],
+        },
+      ]));
+      expect(list.map((e) => e.id), ['voice-a']);
+
+      expect(
+          () => parseHdVoiceCatalog(catalog([
+                {
+                  'name': 'broken',
+                  'modelVersion': 'x',
+                  'sha256': List.filled(64, 'e').join(),
+                  'size': 99,
+                  'parts': [
+                    {'url': 'https://cdn.example/broken/voice.part0', 'size': 10}
+                  ],
+                }
+              ])),
+          throwsFormatException);
+
+      final legacy = parseHdVoiceCatalog(catalog(const []));
+      expect(legacy.single.id, 'legacy-single');
+      expect(legacy.single.label, '清晰女声');
+    });
+
+    test('本地模拟通道按音色分目录重写 URL', () {
+      final list = parseHdVoiceCatalog(
+          catalog([voiceJson('voice-a', 'A', ''), voiceJson('voice-b', 'B', '')]),
+          base: 'http://10.0.2.2:8899');
+      expect(list[0].manifest.parts[0].url,
+          'http://10.0.2.2:8899/voice-a/voice.part0');
+      expect(list[1].manifest.parts[1].url,
+          'http://10.0.2.2:8899/voice-b/voice.part1');
+      expect(list[1].manifest.mirrorUrl,
+          'http://10.0.2.2:8899/voice-b/voice-b.zip');
+    });
+
+    test('随包 version.json 为 3 音色目录，且顶层仍兼容旧单音色', () {
+      final raw = File('assets/version.json').readAsStringSync();
+      final list = parseHdVoiceCatalog(raw);
+      expect(list.map((e) => e.id), [
+        'hd-voice-piper-en-us-medium',
+        'hd-voice-piper-en-us-kristin-medium',
+        'hd-voice-piper-en-us-joe-medium',
+      ]);
+      expect(list.map((e) => e.label), ['清晰女声', '温和女声', '沉稳男声']);
+      expect(list.every((e) => e.manifest.isValid), isTrue);
+      expect(list.every((e) => e.desc.isNotEmpty), isTrue);
+      // 1.5.7 客户端只读顶层：默认音色必须与 voices[] 首项同字节。
+      final legacy = parseHdVoiceManifest(raw);
+      expect(legacy.name, list.first.manifest.name);
+      expect(legacy.sha256, list.first.manifest.sha256);
+      expect(legacy.parts.first.sha256, list.first.manifest.parts.first.sha256);
+    });
   });
 
   group('HdVoiceService 状态机', () {
@@ -438,6 +586,194 @@ void main() {
       await svc.init();
       await svc.delete();
       expect(cached.existsSync(), isFalse);
+    });
+  });
+
+  group('HdVoiceService 多音色', () {
+    late Directory tmp;
+    late Map<String, _FakeDownloader> loaders;
+    late List<HdVoiceOption> voices;
+    late _FakePlayer player;
+    late bool enabled;
+    late String? persisted;
+    late List<List<Object>> events;
+    late List<_FakeSynth> created;
+    late HdVoiceService svc;
+
+    setUp(() async {
+      tmp = await Directory.systemTemp.createTemp('hd_voice_multi');
+      voices = _multiCatalog();
+      loaders = {};
+      for (final v in voices) {
+        final dir = Directory('${tmp.path}/${v.id}');
+        await dir.create(recursive: true);
+        loaders[v.id] = _FakeDownloader(dir.path);
+      }
+      player = _FakePlayer();
+      enabled = false;
+      persisted = null;
+      events = [];
+      created = [];
+      svc = HdVoiceService(
+        voices: voices,
+        downloaderFactory: (m) => loaders[m.name]!,
+        synthFactory: () {
+          final s = _FakeSynth();
+          created.add(s);
+          return s;
+        },
+        player: player,
+        cacheDir: () async => tmp,
+        isEnabled: () => enabled,
+        setEnabled: (v) async => enabled = v,
+        readVoiceId: () => persisted,
+        persistVoiceId: (id) async => persisted = id,
+        onEvent: (n, p) => events.add([n, p]),
+      );
+    });
+
+    tearDown(() async {
+      svc.dispose();
+      try {
+        await tmp.delete(recursive: true);
+      } catch (_) {}
+    });
+
+    test('启动时优先上次选择，其次第一个已装音色', () async {
+      loaders['voice-b']!.ready = true;
+      persisted = 'voice-b';
+      await svc.init();
+      expect(svc.activeVoiceId, 'voice-b');
+      expect(svc.activeVoice?.label, '温暖男声');
+      expect(svc.ready, isTrue);
+
+      persisted = 'voice-c';
+      final svc2 = HdVoiceService(
+        voices: voices,
+        downloaderFactory: (m) => loaders[m.name]!,
+        synthFactory: _FakeSynth.new,
+        player: _FakePlayer(),
+        cacheDir: () async => tmp,
+        isEnabled: () => false,
+        setEnabled: (_) async {},
+        readVoiceId: () => 'voice-c',
+      );
+      loaders['voice-c']!.ready = false;
+      await svc2.init();
+      expect(svc2.activeVoiceId, 'voice-b', reason: '未装的选择不生效，落到已装音色');
+      svc2.dispose();
+    });
+
+    test('下载指定音色：独立下载、立即生效并持久化', () async {
+      await svc.init();
+      expect(svc.activeVoiceId, 'voice-a');
+      await svc.downloadVoice('voice-b');
+      expect(loaders['voice-b']!.ensureCalls, 1);
+      expect(loaders['voice-a']!.ensureCalls, 0);
+      expect(svc.isReady('voice-b'), isTrue);
+      expect(svc.isReady('voice-a'), isFalse);
+      expect(svc.activeVoiceId, 'voice-b');
+      expect(persisted, 'voice-b');
+      expect(svc.enabled, isTrue);
+      expect(enabled, isTrue);
+      expect(events.map((e) => e[0]), contains('hd_dl_done'));
+    });
+
+    test('未下载音色不可切换；切换已装音色重置引擎并持久化', () async {
+      loaders['voice-a']!.ready = true;
+      loaders['voice-b']!.ready = true;
+      enabled = true;
+      await svc.init();
+      expect(svc.activeVoiceId, 'voice-a');
+
+      await svc.selectVoice('voice-c');
+      expect(svc.activeVoiceId, 'voice-a');
+      expect(events.map((e) => e[0]), isNot(contains('hd_voice_select')));
+
+      expect(await svc.speak('hello'), isTrue);
+      expect(created.single.lastDir, '${tmp.path}/voice-a');
+      final firstSynth = created.single;
+
+      await svc.selectVoice('voice-b');
+      expect(svc.activeVoiceId, 'voice-b');
+      expect(persisted, 'voice-b');
+      expect(firstSynth.disposeCalls, 1);
+      expect(events.map((e) => e[0]), contains('hd_voice_select'));
+
+      expect(await svc.speak('hello'), isTrue);
+      expect(created.last.lastDir, '${tmp.path}/voice-b');
+    });
+
+    test('删除生效音色回落到其他已装音色；删光关闭接管', () async {
+      loaders['voice-a']!.ready = true;
+      loaders['voice-b']!.ready = true;
+      enabled = true;
+      await svc.init();
+      expect(svc.activeVoiceId, 'voice-a');
+
+      await svc.deleteVoice('voice-a');
+      expect(loaders['voice-a']!.discardCalls, 1);
+      expect(svc.isReady('voice-a'), isFalse);
+      expect(svc.activeVoiceId, 'voice-b');
+      expect(persisted, 'voice-b');
+      expect(svc.enabled, isTrue);
+
+      await svc.deleteVoice('voice-b');
+      expect(svc.ready, isFalse);
+      expect(svc.enabled, isFalse);
+      expect(enabled, isFalse);
+    });
+
+    test('单音色下载失败不污染其他音色状态', () async {
+      loaders['voice-b']!.ensureError =
+          const ModelDownloadException('高清发音包下载失败，请检查网络后重试');
+      await svc.init();
+      await svc.downloadVoice('voice-b');
+      expect(svc.errorFor('voice-b'), '高清发音包下载失败，请检查网络后重试');
+      expect(svc.errorFor('voice-a'), isNull);
+      expect(svc.isReady('voice-a'), isFalse);
+      expect(svc.activeVoiceId, 'voice-a');
+      expect(svc.ready, isFalse);
+    });
+
+    test('下载进度按音色隔离', () async {
+      await svc.init();
+      loaders['voice-b']!.emit(const ModelProgress(
+          phase: ModelPhase.downloading, received: 5, total: 200));
+      await Future<void>.delayed(Duration.zero);
+      expect(svc.progressFor('voice-b')?.received, 5);
+      expect(svc.progressFor('voice-a'), isNull);
+    });
+
+    test('占用统计按音色累加已装包', () async {
+      loaders['voice-a']!.ready = true;
+      loaders['voice-b']!.ready = true;
+      await svc.init();
+      await File('${tmp.path}/voice-a/model.bin').writeAsBytes(List.filled(10, 1));
+      await File('${tmp.path}/voice-a/tokens.txt').writeAsBytes([1, 2]);
+      await File('${tmp.path}/voice-b/model.bin').writeAsBytes(List.filled(20, 1));
+      expect(await svc.sizeOf('voice-a'), 12);
+      expect(await svc.sizeOf('voice-b'), 20);
+      expect(await svc.installedBytes(), 32);
+    });
+
+    test('引擎加载失败自动落到另一已装音色并记事件', () async {
+      loaders['voice-a']!.ready = true;
+      loaders['voice-b']!.ready = true;
+      persisted = 'voice-b';
+      enabled = true;
+      await svc.init();
+      expect(svc.activeVoiceId, 'voice-b');
+      final firstSynth = created.single;
+      firstSynth.initError = StateError('bad model dir');
+
+      expect(await svc.speak('hello'), isTrue);
+      expect(svc.activeVoiceId, 'voice-a');
+      expect(persisted, 'voice-a');
+      expect(firstSynth.disposeCalls, 1);
+      expect(created.last.lastDir, '${tmp.path}/voice-a');
+      expect(events.map((e) => e[0]), contains('hd_voice_fallback'));
+      expect(player.played.length, 1);
     });
   });
 

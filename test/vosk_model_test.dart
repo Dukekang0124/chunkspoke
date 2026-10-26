@@ -131,6 +131,25 @@ void main() {
       expect(await mgr.isReady(), isTrue);
     });
 
+    test('磁盘写满（ENOSPC）→ 明确提示存储不足，不误报网络', () async {
+      final zip = _makeZip();
+      final manifest = _manifest(zip, 2);
+      final client = MockClient((req) async {
+        throw const FileSystemException(
+            'write failed', '/data/x.part0', OSError('No space left on device', 28));
+      });
+      final tmp = Directory.systemTemp.createTempSync('model_nospace_');
+      addTearDown(() => tmp.deleteSync(recursive: true));
+      final mgr = ModelManager(manifest: manifest, client: client, baseDir: () async => tmp, retryDelay: Duration.zero, autoRetryRounds: 0);
+
+      await expectLater(
+        mgr.ensureModel(),
+        throwsA(isA<ModelDownloadException>().having(
+            (e) => e.message, 'message', contains('存储空间不足'))),
+      );
+      expect(File('${tmp.path}/mymodel.zip').existsSync(), isFalse);
+    });
+
     test('discard：删除目录与 zip 分片，回到缺失态', () async {
       final zip = _makeZip();
       final manifest = _manifest(zip, 2);

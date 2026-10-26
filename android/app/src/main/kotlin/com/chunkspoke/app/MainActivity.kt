@@ -12,6 +12,9 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.util.Base64
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -21,6 +24,11 @@ import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 import kotlin.math.abs
 
 class MainActivity : FlutterActivity() {
@@ -30,6 +38,8 @@ class MainActivity : FlutterActivity() {
     private val POWER_CH = "chunkspoke/power"
     private val TTS_CH = "chunkspoke/tts"
     private val VOICE_CH = "chunkspoke/voice"
+    private val SECURE_CH = "chunkspoke/secure_store"
+    private val LLM_KEY_ALIAS = "chunkspoke_llm_key_v1"
     private val LISTEN_CH = "chunkspoke/listening_playback"
     private val LISTEN_EVENT_CH = "chunkspoke/listening_playback_events"
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -259,6 +269,38 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
+        // —— 本机密文通道：自定义模型 Key 用 Android Keystore（AES/GCM）加解密 ——
+        // 明文只在 Dart 内存与本次调用参数里短暂存在，落库永远是 enc:v1: 密文。
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SECURE_CH)
+            .setMethodCallHandler { call, result ->
+                val value = call.argument<String>("value")
+                when (call.method) {
+                    "encrypt" -> {
+                        if (value.isNullOrEmpty()) {
+                            result.error("ARGS", "value is null", null)
+                        } else {
+                            try {
+                                result.success(encryptSecret(value))
+                            } catch (e: Exception) {
+                                result.error("ENC", e.message, null)
+                            }
+                        }
+                    }
+                    "decrypt" -> {
+                        if (value.isNullOrEmpty()) {
+                            result.error("ARGS", "value is null", null)
+                        } else {
+                            try {
+                                result.success(decryptSecret(value))
+                            } catch (e: Exception) {
+                                result.error("DEC", e.message, null)
+                            }
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
         // —— 磨耳朵后台播放通道：前台服务 + 通知栏/锁屏动作 ——
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, LISTEN_CH)
             .setMethodCallHandler { call, result ->
@@ -436,6 +478,49 @@ class MainActivity : FlutterActivity() {
     private fun writeShortLE(dos: DataOutputStream, v: Int) {
         dos.writeByte(v and 0xFF)
         dos.writeByte((v shr 8) and 0xFF)
+    }
+
+    // Keystore 里的 AES-256-GCM 密钥永不出设备；这里只搬运 iv||ciphertext 的 Base64。
+    private fun llmSecretKey(): SecretKey {
+        val ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        (ks.getEntry(LLM_KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)
+            ?.let { return it.secretKey }
+        val gen = KeyGenerator.getInstance(
+            KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore"
+        )
+        gen.init(
+            KeyGenParameterSpec.Builder(
+                LLM_KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .build()
+        )
+        return gen.generateKey()
+    }
+
+    private fun encryptSecret(plain: String): String {
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, llmSecretKey())
+        val iv = cipher.iv
+        val ct = cipher.doFinal(plain.toByteArray(Charsets.UTF_8))
+        val buf = ByteArray(iv.size + ct.size)
+        System.arraycopy(iv, 0, buf, 0, iv.size)
+        System.arraycopy(ct, 0, buf, iv.size, ct.size)
+        return Base64.encodeToString(buf, Base64.NO_WRAP)
+    }
+
+    private fun decryptSecret(payload: String): String {
+        val buf = Base64.decode(payload, Base64.NO_WRAP)
+        if (buf.size <= 12) throw IllegalArgumentException("ciphertext too short")
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(
+            Cipher.DECRYPT_MODE, llmSecretKey(),
+            GCMParameterSpec(128, buf.copyOfRange(0, 12))
+        )
+        return String(cipher.doFinal(buf.copyOfRange(12, buf.size)), Charsets.UTF_8)
     }
 
     private fun wavHeader(dataLen: Int, sampleRate: Int, channels: Int, bits: Int): ByteArray {

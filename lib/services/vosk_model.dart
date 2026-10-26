@@ -146,6 +146,14 @@ String _brief(Object e) {
   return s.length > 80 ? '${s.substring(0, 80)}…' : s;
 }
 
+/// 磁盘写满：Linux/Android ENOSPC=28，Windows ERROR_DISK_FULL=112。
+bool _isNoSpace(Object e) {
+  if (e is! FileSystemException) return false;
+  final err = e.osError;
+  if (err != null && (err.errorCode == 28 || err.errorCode == 112)) return true;
+  return e.message.toLowerCase().contains('no space');
+}
+
 /// 模型 zip 的分块下载、SHA-256 校验、解压落盘与 model.json 元数据。
 ///
 /// B3 加固：
@@ -251,7 +259,9 @@ class ModelManager {
         debugPrint('[model] 第 ${round + 1} 轮失败：${e.message}');
         await _deleteQuietly(zip);
       } catch (e) {
-        lastError = const ModelDownloadException('语音包下载失败，请检查网络后重试');
+        lastError = ModelDownloadException(_isNoSpace(e)
+            ? '设备存储空间不足，请清理后重试'
+            : '语音包下载失败，请检查网络后重试');
         debugPrint('[model] 第 ${round + 1} 轮异常：$e');
         await _deleteQuietly(zip);
       }
@@ -274,7 +284,9 @@ class ModelManager {
       try {
         await modelDir.delete(recursive: true);
       } catch (_) {}
-      throw const ModelDownloadException('语音包解压失败，请重试');
+      throw ModelDownloadException(_isNoSpace(e)
+          ? '设备存储空间不足，请清理后重试'
+          : '语音包解压失败，请重试');
     }
 
     // 写 model.json（modelVersion + sha256），随后删除 zip（短路只认解压目录）。
@@ -399,6 +411,11 @@ class ModelManager {
         await _deleteQuietly(file);
         resumeAt = 0;
       } catch (e) {
+        if (_isNoSpace(e)) {
+          debugPrint('[model] 分块 $index 写入失败：磁盘空间不足');
+          await _deleteQuietly(file);
+          throw const ModelDownloadException('设备存储空间不足，请清理后重试');
+        }
         // 网络中断：只认已落盘字节数，下一源从这里对齐续传，绝不盲 append。
         resumeAt = await _fileLength(file);
         debugPrint(
@@ -610,6 +627,7 @@ class ModelManager {
 
   /// 把底层网络异常转成用户可读文案（避免 SocketException 原样弹到 UI）。
   static String _friendlyNetError(Object e) {
+    if (_isNoSpace(e)) return '设备存储空间不足，请清理后重试';
     final s = e.toString();
     if (s.contains('Connection reset') || s.contains('Connection refused')) {
       return '网络连接被中断，请检查网络后重试';

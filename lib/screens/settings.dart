@@ -5,8 +5,11 @@ import '../services/loaders.dart';
 import '../services/update/update_service.dart';
 import '../services/update/update_flow.dart';
 import '../services/llm_provider.dart';
-import '../services/builtin_llm.dart';
+import '../services/llm_config.dart';
 import '../services/hd_voice.dart';
+import '../services/hd_voice_engine.dart';
+import '../services/hd_voice_types.dart';
+import '../services/voice_bench.dart';
 import '../services/vosk_engine.dart';
 import '../services/vosk_model.dart';
 import '../services/tts_voice.dart';
@@ -23,6 +26,7 @@ import 'listening_debug.dart';
 import 'tts_guide.dart';
 
 const bool _kListeningPreview = bool.fromEnvironment('LISTENING_PREVIEW');
+const bool _kVoiceBench = bool.fromEnvironment('VOICE_BENCH');
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -38,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final TextEditingController _customModel;
   late final TextEditingController _customKey;
   bool _customOn = false;
+  String _presetId = glmPreset.id;
   bool _testing = false;
   String? _testMsg;
   bool? _testOk;
@@ -50,7 +55,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _soundOn = true; // B7：音效开关（震动跟随系统，无独立开关）
   bool _aiNetOn = true; // 隐私：AI 联网点评开关（关闭后自由造句只用本机规则引擎）
   TtsStatus _ttsStatus = TtsStatus.unknown; // 语音朗读检测状态（可从这里再次修复）
-  bool _hdPreviewing = false;
+  String? _previewingVoiceId;
+  Map<String, int> _voiceSizes = const {};
+  String _voiceSig = '';
+  bool _benchRunning = false;
 
   @override
   void initState() {
@@ -62,6 +70,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _customUrl = TextEditingController(text: p.customLlmUrl ?? '');
     _customModel = TextEditingController(text: p.customLlmModel ?? '');
     _customKey = TextEditingController(text: p.customLlmKey ?? '');
+    // 回显时判断用户当初走的是哪个预设：智谱地址（或留空）算 GLM，其它算自定义。
+    final u = (p.customLlmUrl ?? '').trim();
+    _presetId = (u.isEmpty || u == glmPreset.baseUrl) ? glmPreset.id : customPreset.id;
     _notifOn = p.notifEnabled;
     _reviewNotifOn = p.reviewNotifEnabled;
     _notifHour = p.notifHour;
@@ -160,8 +171,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _testing = false;
       _testOk = r.ok;
       _testMsg = r.ok ? '已连接：${r.reason}' : r.reason;
-      _customOn = prevEnabled;
+      // 只回滚落库配置，不回滚界面上的开关：否则「开启→填 Key→测试」这一常用路径
+      // 会在结果出来前把整段折叠掉，用户看不到 401/429/超时那一行分类提示。
     });
+  }
+
+  /// 切换服务商预设：GLM 直接带出官方地址与默认模型，用户只需粘 Key。
+  void _applyPreset(LlmPreset pr) {
+    setState(() {
+      _presetId = pr.id;
+      if (pr.id == glmPreset.id) {
+        _customUrl.text = pr.baseUrl;
+        _customModel.text = pr.model;
+      } else {
+        _customUrl.clear();
+        _customModel.clear();
+      }
+      _testMsg = null;
+      _testOk = null;
+    });
+  }
+
+  Future<void> _showGlmKeyGuide() async {
+    const style = TextStyle(color: Colors.white70, fontSize: 13, height: 1.55);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: kBg,
+        title: const Text('三分钟填 GLM Key', style: TextStyle(color: kText)),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('1. 手机或电脑浏览器打开 open.bigmodel.cn，注册并登录。', style: style),
+              SizedBox(height: 8),
+              Text('2. 进入「API Keys」→「新建 API Key」，复制生成的 Key（形如 xxxx.yyyy，通常只显示一次）。',
+                  style: style),
+              SizedBox(height: 8),
+              Text('3. 回到本页：服务商选「智谱 GLM」，把 Key 粘进 API Key 框（地址与模型已自动填好）。',
+                  style: style),
+              SizedBox(height: 8),
+              Text('4. 点「测试连接」，显示「已连接：glm-4.7-flash」即成功；之后在 AI 助手里用即可。',
+                  style: style),
+              SizedBox(height: 12),
+              Text('说明：Key 只存本机（Android Keystore 加密），不上传、不进日志；额度与计费以智谱官方为准，本应用不代收费用。',
+                  style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.5)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('知道了', style: TextStyle(color: kPrimary)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _clearCustom() async {
@@ -178,7 +244,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-          content: Text('已清除自定义配置，回落内置服务'), duration: Duration(seconds: 1)),
+          content: Text('已清除自定义配置，未填 Key 时仅用规则点评'),
+          duration: Duration(seconds: 2)),
     );
   }
 
@@ -254,17 +321,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final provider = LlmProvider(p);
     final String status;
     final Color statusColor;
-    if (provider.builtinUnavailable) {
-      status = '内置 AI 服务暂不可用（已降级本地）';
-      statusColor = kError;
-    } else if (provider.customEnabled) {
-      status = '已开启（自定义：${p.customLlmModel ?? '未命名模型'}）';
-      statusColor = kUnlocked;
-    } else if (hasBuiltin()) {
-      status = '已开启（内置服务）';
+    if (provider.customEnabled) {
+      status = '已开启（${p.customLlmModel ?? glmPreset.model}）';
       statusColor = kUnlocked;
     } else {
-      status = '本地降级（无内置密钥，可在高级中配置自定义模型）';
+      status = '本地统计模式（未配置 AI，可在高级中填 GLM Key）';
       statusColor = Colors.white54;
     }
     return Container(
@@ -334,7 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _ttsRow(BuildContext context) {
     final tts = Provider.of<TtsService>(context, listen: false);
     final (text, color) = tts.hdActive
-        ? ('语音朗读：高清发音包（离线）', kUnlocked)
+        ? ('语音朗读：自然人声（离线）', kUnlocked)
         : switch (_ttsStatus) {
             TtsStatus.ready => ('语音朗读：正常（${tts.language ?? "英文"}）', kUnlocked),
             TtsStatus.noEngine => ('语音朗读：未检测到语音引擎，点此修复', kError),
@@ -362,7 +423,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: () async {
             if (tts.hdActive && tts.status != TtsStatus.ready) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('语音朗读正常：高清发音包（全离线合成）'),
+                content: Text('语音朗读正常：自然人声（全离线合成）'),
                 duration: Duration(seconds: 2),
               ));
               return;
@@ -410,51 +471,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// 高清发音包：按需下载（约 60MB），下载完成后自动启用；可随时切回系统引擎。
-  Widget _hdVoiceCard(BuildContext context) {
+  /// 「自然人声」组：多音色按需下载（每个音色独立成包），下载完成即生效；
+  /// 可随时切回系统发音，删除音色即回收空间。
+  Widget _naturalVoiceCard(BuildContext context) {
     final hd = Provider.of<HdVoiceService>(context);
     final tts = Provider.of<TtsService>(context, listen: false);
-    final p = hd.progress;
+    _syncVoiceSizes(hd);
     final busy = hd.downloading || hd.deleting;
-    final extracting = p?.phase == ModelPhase.extracting;
-    final percent = p != null && p.total > 0
-        ? (p.received / p.total * 100).clamp(0.0, 100.0)
-        : 0.0;
+    final installed = hd.voices.where((v) => hd.isReady(v.id)).length;
+    final totalBytes = _voiceSizes.values.fold<int>(0, (a, b) => a + b);
     // 系统只提供英式等非美式英文时，明确导流到真人质感美式高清包。
     final sel = tts.selectedVoice;
     final upsell = sel != null &&
         sel.isEnglish &&
         !sel.isUsEnglish &&
         !tts.hdActive;
+    final target = hd.activeVoice ?? (hd.voices.isEmpty ? null : hd.voices.first);
 
     String subtitle;
-    Widget? trailing;
-    if (hd.ready) {
-      subtitle = hd.enabled ? '已启用 · 真人质感美音 · 全离线合成' : '已下载 · 当前使用系统发音';
-      trailing = Switch(
-        value: hd.enabled,
-        activeThumbColor: kPrimary,
-        onChanged: busy ? null : (v) => hd.setEnabled(v),
-      );
-    } else if (hd.downloading) {
-      subtitle = extracting ? '正在解压高清发音包…' : '正在下载高清发音包…';
-      trailing = const SizedBox(
-        width: 18,
-        height: 18,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-    } else if (hd.error != null) {
-      subtitle = hd.error!;
-      trailing = TextButton(
-        onPressed: busy ? null : () => hd.download(retry: true),
-        child: const Text('重试', style: TextStyle(color: kPrimary)),
-      );
+    if (hd.active) {
+      subtitle = '已启用 · ${hd.activeVoice?.label ?? "自然人声"} · 全离线合成';
+    } else if (installed > 0) {
+      subtitle = '已下载 $installed 个音色 · 当前使用系统发音';
     } else {
-      subtitle = '真人质感美音 · 约 60MB · 建议 Wi-Fi（移动网络也可）';
-      trailing = TextButton(
-        onPressed: busy ? null : () => _confirmHdDownload(hd),
-        child: const Text('下载', style: TextStyle(color: kPrimary)),
-      );
+      subtitle = '真人质感 · 全离线合成 · 不发送录音';
     }
 
     return Container(
@@ -474,13 +514,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ListTile(
               leading: const Icon(Icons.record_voice_over,
                   color: kPrimary, size: 20),
-              title: const Text('高清发音包（离线 · 美式）',
+              title: const Text('自然人声（离线 · 美式）',
                   style: TextStyle(color: kText, fontSize: 14)),
               subtitle: Text(subtitle,
                   style: const TextStyle(color: Colors.white54, fontSize: 12)),
-              trailing: trailing,
+              trailing: installed == 0
+                  ? null
+                  : Switch(
+                      value: hd.enabled,
+                      activeThumbColor: kPrimary,
+                      onChanged: busy ? null : (v) => hd.setEnabled(v),
+                    ),
             ),
-            if (upsell)
+            if (hd.engineError != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+                child: Text(hd.engineError!,
+                    style: const TextStyle(color: kError, fontSize: 12)),
+              ),
+            for (final v in hd.voices) _voiceRow(context, hd, tts, v, busy),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
+              child: Text(
+                installed > 0
+                    ? '已安装 $installed 个音色 · 共 ${_fmtHdBytes(totalBytes)}。'
+                        '切换即时生效；加载失败会自动回落到其他已安装音色。'
+                    : '音色包不随安装包分发，按需下载；可随时切回系统发音。',
+                style: const TextStyle(
+                    color: Colors.white38, fontSize: 11, height: 1.5),
+              ),
+            ),
+            if (upsell && target != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: Column(
@@ -500,100 +564,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onPressed: busy
                             ? null
                             : () async {
-                                if (hd.ready) {
-                                  await hd.setEnabled(true);
+                                if (hd.isReady(target.id)) {
+                                  await hd.selectVoice(target.id);
                                 } else {
-                                  await _confirmHdDownload(hd);
+                                  await _confirmHdDownload(hd, target);
                                 }
                               },
                         icon: const Icon(Icons.graphic_eq, size: 18),
-                        label: Text(
-                            hd.ready ? '启用高清美音包（美式）' : '下载高清美音包（美式）'),
+                        label: Text(hd.isReady(target.id)
+                            ? '启用高清美音包（美式）'
+                            : '下载高清美音包（美式）'),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            if (hd.downloading)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (p?.message != null) ...[
-                      Text(p!.message!,
-                          style:
-                              const TextStyle(color: kPrimary, fontSize: 12)),
-                      const SizedBox(height: 8),
-                    ],
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: extracting
-                            ? null
-                            : (p != null && p.total > 0
-                                ? p.received / p.total
-                                : 0.0),
-                        minHeight: 6,
-                        backgroundColor: Colors.white12,
-                        color: kPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (!extracting)
-                      Text(
-                        '${percent.toStringAsFixed(1)}%  ·  '
-                        '${_fmtHdBytes(p?.received ?? 0)} / ${_fmtHdBytes(p?.total ?? 0)}  ·  '
-                        '${_fmtHdSpeed(p?.bytesPerSecond ?? 0)}  ·  剩余 ${_fmtHdEta(p?.remaining)}',
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 11),
-                      ),
-                  ],
-                ),
-              ),
-            if (hd.error != null && !hd.downloading)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 8, 4),
-                  child: TextButton(
-                    onPressed: busy ? null : () => _confirmHdDelete(hd),
-                    child: const Text('删除未完成下载',
-                        style: TextStyle(color: Colors.white54, fontSize: 12)),
-                  ),
-                ),
-              ),
-            if (hd.engineError != null && hd.ready)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: Text(hd.engineError!,
-                    style: const TextStyle(color: kError, fontSize: 12)),
-              ),
-            if (hd.ready)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                child: Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: busy || _hdPreviewing
-                          ? null
-                          : () => _previewHdVoice(hd),
-                      icon: _hdPreviewing
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.volume_up, size: 18),
-                      label: Text(_hdPreviewing ? '加载中…' : '试听'),
-                      style: TextButton.styleFrom(foregroundColor: kPrimary),
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: busy ? null : () => _confirmHdDelete(hd),
-                      style:
-                          TextButton.styleFrom(foregroundColor: Colors.white54),
-                      child: const Text('删除'),
                     ),
                   ],
                 ),
@@ -604,16 +585,216 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _confirmHdDownload(HdVoiceService hd) async {
+  /// 单个音色行：状态、体积、下载进度、试听/删除/切换。
+  Widget _voiceRow(BuildContext context, HdVoiceService hd, TtsService tts,
+      HdVoiceOption v, bool busy) {
+    final ready = hd.isReady(v.id);
+    final active = hd.isActive(v.id);
+    final downloading = hd.isDownloading(v.id);
+    final p = hd.progressFor(v.id);
+    final err = hd.errorFor(v.id);
+    final previewing = _previewingVoiceId == v.id;
+    final extracting = p?.phase == ModelPhase.extracting;
+    final percent = p != null && p.total > 0
+        ? (p.received / p.total * 100).clamp(0.0, 100.0)
+        : 0.0;
+    final size = _voiceSizes[v.id] ?? v.manifest.size;
+
+    Widget trailing;
+    if (downloading) {
+      trailing = const SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    } else if (ready) {
+      trailing = TextButton(
+        onPressed: busy || active ? null : () => hd.selectVoice(v.id),
+        child: Text(
+          active ? '正在使用' : '使用',
+          style: TextStyle(
+              color: active ? kUnlocked : kPrimary, fontSize: 12),
+        ),
+      );
+    } else if (err != null) {
+      trailing = TextButton(
+        onPressed: busy ? null : () => _confirmHdDownload(hd, v, retry: true),
+        child: const Text('重试', style: TextStyle(color: kPrimary)),
+      );
+    } else {
+      trailing = TextButton(
+        onPressed: busy ? null : () => _confirmHdDownload(hd, v),
+        child: const Text('下载', style: TextStyle(color: kPrimary)),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(active ? Icons.check_circle : Icons.circle_outlined,
+                  size: 16, color: active ? kPrimary : Colors.white24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(v.label,
+                        style: TextStyle(
+                            color: active ? kText : Colors.white70,
+                            fontSize: 13)),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${v.desc.isEmpty ? "真人质感" : v.desc} · ${_fmtHdBytes(size)}'
+                      '${ready ? "" : " · 未下载"}',
+                      style:
+                          const TextStyle(color: Colors.white38, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              trailing,
+            ],
+          ),
+          if (downloading)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 4, 0, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (p?.message != null) ...[
+                    Text(p!.message!,
+                        style:
+                            const TextStyle(color: kPrimary, fontSize: 12)),
+                    const SizedBox(height: 6),
+                  ],
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: extracting
+                          ? null
+                          : (p != null && p.total > 0
+                              ? p.received / p.total
+                              : 0.0),
+                      minHeight: 6,
+                      backgroundColor: Colors.white12,
+                      color: kPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  if (!extracting)
+                    Text(
+                      '${percent.toStringAsFixed(1)}%  ·  '
+                      '${_fmtHdBytes(p?.received ?? 0)} / ${_fmtHdBytes(p?.total ?? 0)}  ·  '
+                      '${_fmtHdSpeed(p?.bytesPerSecond ?? 0)}  ·  剩余 ${_fmtHdEta(p?.remaining)}',
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 11),
+                    ),
+                ],
+              ),
+            ),
+          if (err != null && !downloading)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 2, 0, 2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(err,
+                        style:
+                            const TextStyle(color: kError, fontSize: 11)),
+                  ),
+                  if (!ready)
+                    TextButton(
+                      onPressed: busy ? null : () => hd.deleteVoice(v.id),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white38,
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 30),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('清除残包',
+                          style: TextStyle(fontSize: 11)),
+                    ),
+                ],
+              ),
+            ),
+          if (ready && !downloading)
+            Row(
+              children: [
+                TextButton.icon(
+                  onPressed:
+                      busy || previewing ? null : () => _previewHdVoice(hd, tts, v),
+                  icon: previewing
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.volume_up, size: 16),
+                  label: Text(previewing ? '加载中…' : '试听',
+                      style: const TextStyle(fontSize: 12)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: kPrimary,
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                TextButton(
+                  onPressed: busy ? null : () => _confirmHdDelete(hd, v),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white38,
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child:
+                      const Text('删除', style: TextStyle(fontSize: 12)),
+                ),
+              ],
+            ),
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+
+  /// 已装音色体积：就绪集合变化时异步重算（下载/删除后自动刷新）。
+  void _syncVoiceSizes(HdVoiceService hd) {
+    final sig = [
+      for (final v in hd.voices)
+        if (hd.isReady(v.id)) v.id,
+    ].join(',');
+    if (sig == _voiceSig) return;
+    _voiceSig = sig;
+    Future(() async {
+      final m = <String, int>{};
+      for (final v in hd.voices) {
+        if (hd.isReady(v.id)) m[v.id] = await hd.sizeOf(v.id);
+      }
+      if (!mounted || sig != _voiceSig) return;
+      setState(() => _voiceSizes = m);
+    });
+  }
+
+  Future<void> _confirmHdDownload(HdVoiceService hd, HdVoiceOption v,
+      {bool retry = false}) async {
+    final size = _fmtHdBytes(v.manifest.size);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text('下载高清发音包', style: TextStyle(color: kText)),
-        content: const Text(
-          '约 60MB，建议在 Wi-Fi 下下载（移动网络也可）。\n'
-          '下载完成后自动启用，可随时切回系统发音；删除后需重新下载。',
-          style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+        title: Text(retry ? '重新下载${v.label}' : '下载${v.label}',
+            style: const TextStyle(color: kText)),
+        content: Text(
+          '$size 左右，建议在 Wi-Fi 下下载（移动网络也可）。\n'
+          '下载完成后自动切到此音色并启用，可随时切回系统发音；删除后需重新下载。',
+          style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
         ),
         actions: [
           TextButton(
@@ -627,19 +808,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
-    if (ok == true) await hd.download();
+    if (ok == true) await hd.downloadVoice(v.id, retry: retry);
   }
 
-  Future<void> _confirmHdDelete(HdVoiceService hd) async {
+  Future<void> _confirmHdDelete(HdVoiceService hd, HdVoiceOption v) async {
+    final active = hd.isActive(v.id);
+    final others =
+        hd.voices.where((o) => o.id != v.id && hd.isReady(o.id)).length;
+    final note = active
+        ? (others > 0
+            ? '删除后自动切到其他已安装音色，需要时可重新下载。'
+            : '删除后立即切回系统发音，需要时可重新下载。')
+        : '删除后需要时可重新下载。';
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text('删除高清发音包？', style: TextStyle(color: kText)),
-        content: const Text(
-          '删除后立即切回系统发音，需要时可重新下载（约 60MB）。',
-          style: TextStyle(color: Colors.white70, fontSize: 13),
-        ),
+        title: Text('删除${v.label}？', style: const TextStyle(color: kText)),
+        content: Text(note,
+            style: const TextStyle(color: Colors.white70, fontSize: 13)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -652,19 +839,125 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
-    if (ok == true) await hd.delete();
+    if (ok == true) await hd.deleteVoice(v.id);
   }
 
-  Future<void> _previewHdVoice(HdVoiceService hd) async {
-    final tts = Provider.of<TtsService>(context, listen: false);
-    setState(() => _hdPreviewing = true);
+  Future<void> _previewHdVoice(
+      HdVoiceService hd, TtsService tts, HdVoiceOption v) async {
+    if (!hd.isActive(v.id)) await hd.selectVoice(v.id);
+    if (!mounted) return;
+    setState(() => _previewingVoiceId = v.id);
     final ok = await tts.speak(HdVoiceService.kAuditionText);
     if (!mounted) return;
-    setState(() => _hdPreviewing = false);
+    setState(() => _previewingVoiceId = null);
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('高清发音暂不可用，请删除后重新下载'),
+        content: Text('该音色暂不可用，请删除后重新下载'),
         duration: Duration(seconds: 3),
+      ));
+    }
+  }
+
+  /// 真机基准入口（仅调试 / VOICE_BENCH 构建可见）：逐音色测加载、首音、RTF、内存。
+  Widget _voiceBenchEntry(BuildContext context) {
+    final hd = Provider.of<HdVoiceService>(context);
+    final ready = hd.voices.where((v) => hd.isReady(v.id)).length;
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          leading: const Icon(Icons.speed, color: kPrimary),
+          title: const Text('自然人声基准（测试）',
+              style: TextStyle(color: kText)),
+          subtitle: Text(
+            ready == 0
+                ? '先下载至少一个音色'
+                : '加载 / 首音 / RTF / 内存 · RTF ≤ 0.5 保留（已装 $ready 个）',
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
+          ),
+          trailing: _benchRunning
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.arrow_forward_ios,
+                  size: 16, color: Colors.white38),
+          onTap: _benchRunning ? null : () => _runVoiceBench(hd),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _runVoiceBench(HdVoiceService hd) async {
+    final ready = [
+      for (final v in hd.voices)
+        if (hd.isReady(v.id)) v,
+    ];
+    if (ready.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('请先下载至少一个音色'),
+        duration: Duration(seconds: 2),
+      ));
+      return;
+    }
+    setState(() => _benchRunning = true);
+    final out = <VoiceBenchResult>[];
+    String? failure;
+    try {
+      for (final v in ready) {
+        final dir = hd.modelDirFor(v.id);
+        if (dir == null) continue;
+        final synth = IsolateHdVitsEngine();
+        try {
+          out.add(await VoiceBench.run(
+              synth: synth, voiceId: v.id, modelDir: dir));
+        } finally {
+          await synth.dispose();
+        }
+      }
+      final path = await VoiceBench.writeResults(out);
+      if (!mounted) return;
+      final body = out
+          .map((r) => '${r.voiceId}\n'
+              '加载 ${r.loadMs} ms · 冷首音 ${r.coldFirstAudioMs} ms · '
+              '热首音 ${r.warmFirstAudioMs} ms\n'
+              '音频 ${r.audioSecs.toStringAsFixed(2)} s · '
+              'RTF ${r.rtf.toStringAsFixed(3)} · 内存 ${r.rssMb} MB\n'
+              '${r.pass ? "保留" : "淘汰（RTF > 0.5）"}')
+          .join('\n\n');
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1A2E),
+          title: const Text('自然人声基准', style: TextStyle(color: kText)),
+          content: SingleChildScrollView(
+            child: Text('$body\n\n已写入：\n$path',
+                style: const TextStyle(
+                    color: Colors.white70, fontSize: 12, height: 1.5)),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('好', style: TextStyle(color: kPrimary)),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      failure = '$e';
+    } finally {
+      if (mounted) setState(() => _benchRunning = false);
+    }
+    if (failure != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('基准失败：$failure'),
+        duration: const Duration(seconds: 3),
       ));
     }
   }
@@ -991,7 +1284,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: const Text('AI 联网点评', style: TextStyle(color: kText)),
           subtitle: Text(
             _aiNetOn
-                ? '开启：自由造句会把识别出的句子文本发送到开发者代理生成点评（不含录音与设备信息）'
+                ? '开启：自由造句会把句子文本发送到你配置的 AI 服务商生成点评（不含录音与设备信息）'
                 : '已关闭：自由造句仅用本机规则判定，不发送任何数据',
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
@@ -1092,7 +1385,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
             _ttsRow(context),
             const SizedBox(height: 12),
-            _hdVoiceCard(context),
+            _naturalVoiceCard(context),
             if (_ttsStatus == TtsStatus.ready) ...[
               const SizedBox(height: 12),
               _voiceCard(context),
@@ -1115,6 +1408,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _aiNetCard(context),
             const SizedBox(height: 14),
             _advancedCard(context),
+            if (kDebugMode || _kVoiceBench) ...[
+              const SizedBox(height: 12),
+              _voiceBenchEntry(context),
+            ],
             const SizedBox(height: 12),
             _legalEntry(context),
             const SizedBox(height: 20),
@@ -1172,27 +1469,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
             initiallyExpanded: _customOn,
             title:
                 const Text('高级', style: TextStyle(color: kText, fontSize: 15)),
-            subtitle: const Text('自定义 AI 模型（OpenAI 兼容，默认关）',
+            subtitle: const Text('AI 模型（智谱 GLM / 自定义，默认关）',
                 style: TextStyle(color: Colors.white54, fontSize: 12)),
             childrenPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             children: [
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('使用自定义模型', style: TextStyle(color: kText)),
-                subtitle: const Text('开启后优先级高于内置服务；关闭即回落内置',
+                title: const Text('启用在线 AI 助手', style: TextStyle(color: kText)),
+                subtitle: const Text('开启后 AI 助手才会联网；关闭即只用本机规则引擎',
                     style: TextStyle(color: Colors.white54, fontSize: 12)),
                 value: _customOn,
                 activeThumbColor: kPrimary,
                 onChanged: (v) => setState(() => _customOn = v),
               ),
               if (_customOn) ...[
+                _label('服务商'),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final pr in kLlmPresets)
+                      ChoiceChip(
+                        label: Text(pr.label),
+                        selected: _presetId == pr.id,
+                        onSelected: (_) => _applyPreset(pr),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
                 _label('接口地址'),
                 const SizedBox(height: 6),
                 TextField(
                   controller: _customUrl,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
-                  decoration: _dec('https://open.bigmodel.cn/api/paas/v4'),
+                  decoration: _dec(_presetId == glmPreset.id
+                      ? glmPreset.urlHint
+                      : customPreset.urlHint),
                 ),
                 const SizedBox(height: 10),
                 _label('模型名'),
@@ -1200,8 +1513,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 TextField(
                   controller: _customModel,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
-                  decoration: _dec('例如 glm-4-flash'),
+                  decoration: _dec(_presetId == glmPreset.id
+                      ? glmPreset.modelHint
+                      : customPreset.modelHint),
                 ),
+                if (_presetId == glmPreset.id)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text(
+                        '默认 glm-4.7-flash 为免费档；名称含 flashX 的为付费档，请按需选择。\n'
+                        '备选模型：glm-4-flash-250414（主模型不可用时手动切换）',
+                        style: TextStyle(color: Colors.white38, fontSize: 11)),
+                  ),
                 const SizedBox(height: 10),
                 _label('API Key'),
                 const SizedBox(height: 6),
@@ -1209,9 +1532,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   controller: _customKey,
                   obscureText: true,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
-                  decoration: _dec('粘贴自定义服务 Key'),
+                  decoration: _dec(_presetId == glmPreset.id
+                      ? '粘贴智谱 API Key'
+                      : '粘贴服务商的 API Key'),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 6),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: _showGlmKeyGuide,
+                    style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                    child: const Text('三分钟填 GLM Key →',
+                        style: TextStyle(color: kPrimary, fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     ElevatedButton(
@@ -1231,7 +1569,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(width: 10),
                     OutlinedButton(
                       onPressed: _clearCustom,
-                      child: const Text('清除自定义配置',
+                      child: const Text('清除配置',
                           style: TextStyle(color: kPrimary)),
                     ),
                   ],
@@ -1246,8 +1584,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 const SizedBox(height: 8),
                 const Text(
-                  '自定义 Key / 模型名永不写入日志；清除后回落内置服务。',
-                  style: TextStyle(color: Colors.white38, fontSize: 11),
+                  '会发送：你说的句子文本 + 学习统计摘要（不发送录音音频，不上传学习记录）。\n'
+                  'Key 只存本机（Android Keystore 加密），不上传、不进日志、不进导出；失败不会自动改用别的服务商。',
+                  style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.5),
                 ),
               ],
               const Divider(color: Colors.white12),

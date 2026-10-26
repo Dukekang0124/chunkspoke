@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_common_ffi.dart';
+import 'package:chunkspoke_flutter/services/database.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
 import 'package:chunkspoke_flutter/services/ai_coach.dart';
 import 'package:chunkspoke_flutter/services/glm_client.dart';
 import 'package:chunkspoke_flutter/services/llm_provider.dart';
-import 'package:chunkspoke_flutter/services/llm_config.dart';
 import 'package:chunkspoke_flutter/models/content_pack.dart';
+import 'support/fake_key_cipher.dart';
 
 // 受控假客户端：固定返回文本（200）。
 class _FakeGlm extends GlmClient {
@@ -46,12 +47,15 @@ void main() {
   group('AiCoach 降级与本地逻辑', () {
     late ProgressService p;
     setUp(() async {
-      p = ProgressService();
+      // 每个用例独立的内存库：避免与其它测试文件共用磁盘库互相污染。
+      p = ProgressService(
+          db: AppDatabase(path: inMemoryDatabasePath),
+          cipher: FakeKeyCipher());
       await p.init();
     });
 
     test('无可用模型 → weeklyReport / variantTask 返回 null（降级、不阻塞）', () async {
-      // 内置编译期未注入 + 自定义关 → 自动降级。
+      // 1.5.8 起无内置 Key；自定义关 → 自动降级本地。
       final coach = AiCoach(p);
       expect(await coach.weeklyReport(p, _pack()), isNull);
       expect(await coach.variantTask(p, _pack()), isNull);
@@ -70,17 +74,15 @@ void main() {
       // 即便开了自定义但无 mastered，仍降级。
       await p.setCustomLlmEnabled(true);
       await p.setCustomLlmKey('K');
-      final coach = AiCoach(p,
-          provider: LlmProvider(p, client: _FakeGlm(), builtinsOverride: const []));
+      final coach = AiCoach(p, provider: LlmProvider(p, client: _FakeGlm()));
       expect(await coach.variantTask(p, _pack()), isNull);
       await p.clearCustomLlm();
     });
 
-    test('有可用模型 → weeklyReport 返回文本（内置或自定义）', () async {
-      const cfg = LlmConfig(baseUrl: 'b', model: 'A', key: 'K');
-      final coach = AiCoach(p,
-          provider: LlmProvider(p,
-              client: _FakeGlm('诊断文本'), builtinsOverride: [cfg]));
+    test('有可用模型 → weeklyReport 返回文本（自定义层）', () async {
+      await p.setCustomLlmEnabled(true);
+      await p.setCustomLlmKey('K');
+      final coach = AiCoach(p, provider: LlmProvider(p, client: _FakeGlm('诊断文本')));
       final r = await coach.weeklyReport(p, _pack());
       expect(r, '诊断文本');
     });

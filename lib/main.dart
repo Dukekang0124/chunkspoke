@@ -60,6 +60,8 @@ Future<void> bootstrap() async {
     final hdVoice = HdVoiceService(
       isEnabled: () => progress.hdVoiceEnabled,
       setEnabled: progress.setHdVoiceEnabled,
+      readVoiceId: () => progress.hdVoiceId,
+      persistVoiceId: progress.setHdVoiceId,
       // 高清包下载完成率单独成口径（与 Vosk 模型分开），抛错不影响下载。
       onEvent: (e, p) {
         progress.logEvent(e, p);

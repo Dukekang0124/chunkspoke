@@ -13,6 +13,7 @@ import 'hd_voice_types.dart';
 import 'listening_audio.dart';
 import 'listening_store.dart';
 import 'sandbox_store.dart';
+import 'secure_store.dart';
 import 'session.dart';
 import 'tts_voice.dart';
 
@@ -58,11 +59,15 @@ class Appeal {
 class ProgressService {
   final AppDatabase _db;
   final DateTime Function() _clock;
+  final KeyCipher _cipher;
   final Map<String, String> _cache = {};
+  /// 自定义模型 Key 的明文只活在内存；落库永远是 enc:v1: 密文。
+  String? _llmKeyPlain;
   /// 词块层级表（id → T0/T1/T2），启动时由内容包灌入；复习播单据此 T0 优先。
   Map<String, String> _chunkTiers = const {};
-  ProgressService({AppDatabase? db, DateTime Function()? clock})
+  ProgressService({AppDatabase? db, DateTime Function()? clock, KeyCipher? cipher})
       : _clock = clock ?? DateTime.now,
+        _cipher = cipher ?? const KeystoreCipher(),
         _db = db ?? AppDatabase(clock: clock);
 
   /// 启动装配：内容包 → 层级表（只存 id/层级，无用户数据）。
@@ -79,8 +84,30 @@ class ProgressService {
   Future<void> init() async {
     await _db.db;
     _cache.addAll(await _db.getAllKv());
+    await _loadLlmKey();
     await ensureMigrated();
     await _migrateSchema();
+  }
+
+  /// 启动时把 Key 解到内存；历史明文值就地加密回写（一次性迁移）。
+  Future<void> _loadLlmKey() async {
+    final raw = _kv('customLlmKey');
+    if (raw == null || raw.isEmpty) {
+      _llmKeyPlain = null;
+      return;
+    }
+    if (raw.startsWith(kEncPrefix)) {
+      _llmKeyPlain = await _cipher.decrypt(raw);
+      return;
+    }
+    _llmKeyPlain = raw;
+    try {
+      await _put('customLlmKey', await _cipher.encrypt(raw));
+    } catch (_) {
+      // 加密不可用：宁可丢弃让用户重填，也不把明文留在磁盘。
+      _llmKeyPlain = null;
+      await _put('customLlmKey', '');
+    }
   }
 
   /// 非破坏式 schema 版本管理（A0 红线）：只做增量/幂等升级，绝不破坏现有进度。
@@ -144,6 +171,14 @@ class ProgressService {
   Future<void> setHdVoiceEnabled(bool v) =>
       _put('hdVoiceEnabled', v.toString());
 
+  /// 当前选中的自然人声音色（模型目录名）；未选过为空。
+  String? get hdVoiceId {
+    final v = _kv('hdVoiceId');
+    return (v == null || v.isEmpty) ? null : v;
+  }
+
+  Future<void> setHdVoiceId(String? id) => _put('hdVoiceId', id ?? '');
+
   // Empty/unset key reads back as null to keep "无 Key 回显" behavior identical.
   String? get azureKey {
     final v = _kv('azureKey');
@@ -159,10 +194,10 @@ class ProgressService {
 
   Future<void> setAzureRegion(String? r) => _put('azureRegion', r ?? '');
 
-  // —— M7 双层 AI 服务配置 ——
-  // 自定义层：用户自配 OpenAI 兼容服务（baseUrl + model + key），开关默认关。
-  // 内置层：编译期注入（见 builtin_llm.dart），此处只存「失败时间戳 / 整体不可用」状态。
-  // 所有 Key 仅存于本地 kv，绝不打印 / 写日志；仓库内永不出现明文。
+  // —— AI 服务配置（1.5.8 起只有用户自定义层）——
+  // 用户自配 OpenAI 兼容服务（baseUrl + model + key），开关默认关。
+  // Key 落库为 Android Keystore 密文（见 secure_store.dart），内存里才短暂是明文；
+  // 绝不打印 / 写日志 / 进导出。未配置时 AI 功能走本机规则引擎，不联网。
 
   String? _blank(String? v) => (v == null || v.isEmpty) ? null : v;
 
@@ -176,25 +211,20 @@ class ProgressService {
   String? get customLlmModel => _blank(_kv('customLlmModel'));
   Future<void> setCustomLlmModel(String? v) => _put('customLlmModel', v ?? '');
 
-  String? get customLlmKey => _blank(_kv('customLlmKey'));
-  Future<void> setCustomLlmKey(String? v) => _put('customLlmKey', v ?? '');
+  String? get customLlmKey => _blank(_llmKeyPlain);
+  Future<void> setCustomLlmKey(String? v) async {
+    final k = _blank(v);
+    _llmKeyPlain = k;
+    await _put('customLlmKey', k == null ? '' : await _cipher.encrypt(k));
+  }
 
-  /// 清除自定义配置（含开关关闭），回落到内置层。
+  /// 清除自定义配置（含开关关闭），回落到本地统计。
   Future<void> clearCustomLlm() async {
     await setCustomLlmEnabled(false);
     await setCustomLlmUrl(null);
     await setCustomLlmModel(null);
     await setCustomLlmKey(null);
   }
-
-  // —— 内置层可用性状态（失败时间戳用于 ≥60s 退避，避免重试风暴）——
-  int builtinFailTs(int i) => int.tryParse(_kv('builtinFail_$i') ?? '') ?? 0;
-  Future<void> setBuiltinFailTs(int i, int ts) =>
-      _put('builtinFail_$i', ts.toString());
-
-  bool get builtinUnavailable => _kv('builtinUnavailable') == 'true';
-  Future<void> setBuiltinUnavailable(bool v) =>
-      _put('builtinUnavailable', v.toString());
 
   String? get updateUrl {
     final v = _kv('updateUrl');

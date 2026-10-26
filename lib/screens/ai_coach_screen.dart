@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
 import 'package:chunkspoke_flutter/services/ai_coach.dart';
 import 'package:chunkspoke_flutter/services/llm_provider.dart';
-import 'package:chunkspoke_flutter/services/builtin_llm.dart';
 import 'package:chunkspoke_flutter/models/content_pack.dart';
 import 'package:chunkspoke_flutter/ui/theme.dart';
 
@@ -34,17 +33,11 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
     final provider = LlmProvider(p);
     final String text;
     final Color color;
-    if (provider.builtinUnavailable) {
-      text = '内置 AI 服务暂不可用，已降级为本地统计（不影响主流程）';
-      color = kError;
-    } else if (provider.customEnabled) {
-      text = 'AI 服务：自定义（${p.customLlmModel ?? '未命名模型'}）';
-      color = kUnlocked;
-    } else if (hasBuiltin()) {
-      text = 'AI 服务：内置（自动兜底链）';
+    if (provider.customEnabled) {
+      text = 'AI 服务：${p.customLlmModel ?? '自定义模型'}';
       color = kUnlocked;
     } else {
-      text = 'AI 服务：本地降级（未配置内置密钥，可在设置高级中启用自定义模型）';
+      text = '本地统计模式（未配置 AI，可在设置高级中填 GLM Key）';
       color = Colors.white54;
     }
     return Container(

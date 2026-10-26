@@ -1465,7 +1465,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
   }
 
   String _sourceLabel(ListeningAudioPlan plan) => switch (plan.source) {
-        ListeningAudioSource.hd => '高清发音包（VITS 离线）',
+        ListeningAudioSource.hd => '自然人声（VITS 离线）',
         ListeningAudioSource.system => '系统 TTS 离线合成',
         ListeningAudioSource.live => '系统 TTS 实时朗读（降级）',
       };

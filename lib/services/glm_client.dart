@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// GLM-4-Flash 可选 AI 助手客户端（M7）。
+import 'llm_config.dart';
+
+/// OpenAI 兼容客户端（默认智谱 GLM，1.5.8 起不再有任何内置 Key）。
 ///
 /// 红线（务必遵守）：
 ///   - 不传任何录音原文；调用方只传词块 ID 与统计摘要（见 ai_coach.dart）。
 ///   - API Key 只用于 Authorization 头，绝不打印 / 写入日志。
-///   - 任何失败（无 Key / 超时 / 非 200 / 解析异常）一律静默降级返回 null，
-///     绝不抛出，绝不阻塞主流程。
+///   - 失败一律返回状态码由调用方分类提示（401/403 鉴权、429 限流、-1 超时），
+///     绝不抛出，绝不阻塞主流程，也不自动改走别的服务商。
 ///
 /// 端点遵循 OpenAI 兼容协议： POST {endpoint}/chat/completions
 class GlmClient {
@@ -17,8 +19,8 @@ class GlmClient {
   final http.Client _client;
 
   GlmClient({
-    this.endpoint = 'https://open.bigmodel.cn/api/paas/v4',
-    this.model = 'glm-4-flash',
+    this.endpoint = kGlmBaseUrl,
+    this.model = kGlmModel,
     this.timeout = const Duration(seconds: 10),
     http.Client? client,
   }) : _client = client ?? http.Client();

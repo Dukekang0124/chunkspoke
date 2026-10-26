@@ -53,39 +53,9 @@ FLUTTER = r'D:\tools\flutter\bin\flutter.bat'
 # JAVA_HOME：优先取环境变量；否则落到已知可用嵌套路径（D:\tools\jdk17-full\jdk-17.0.12+7）。
 JAVA_HOME = os.environ.get('JAVA_HOME') or r'D:\tools\jdk17-full\jdk-17.0.12+7'
 
-# 内置 AI 服务密钥（构建期经 --dart-define=BUILTIN_LLM_KEYS 注入）。
-# 仅从环境变量或本地 .env（已被 .gitignore 排除）读取；明文只进编译产物，绝不打印。
-BUILTIN_KEY_ENV = 'BUILTIN_LLM_KEYS'
-
-
-def read_builtin_keys():
-    """读取内置 LLM 密钥 JSON（优先级：环境变量 > 本地 .env）。返回字符串或 None。"""
-    v = os.environ.get(BUILTIN_KEY_ENV)
-    if v:
-        return v.strip().strip("'").strip('"')
-    env_path = os.path.join(SRC, '.env')
-    if os.path.isfile(env_path):
-        try:
-            txt = open(env_path, encoding='utf-8').read()
-            m = re.search(r"%s\s*=\s*'([^']*)'" % BUILTIN_KEY_ENV, txt)
-            if m:
-                return m.group(1)
-            m = re.search(r'%s\s*=\s*"([^"]*)"' % BUILTIN_KEY_ENV, txt)
-            if m:
-                return m.group(1)
-        except OSError:
-            pass
-    return None
-
-
-def builtin_define():
-    """构造 --dart-define 参数（若注入则脱敏打印，绝不输出明文）。"""
-    v = read_builtin_keys()
-    if not v:
-        print('  (内置 LLM 密钥：未注入，使用本地降级 / 自定义模型路径)')
-        return ''
-    print('  ✓ 内置 LLM 密钥注入：已启用（长度 %d，已脱敏）' % len(v))
-    return ' --dart-define=%s=%s' % (BUILTIN_KEY_ENV, v)
+# 1.5.8 起**不内置任何 AI Key**（B4 红线：Key 只由用户在自己设备上填写，
+# 落 Android Keystore 密文）。构建不再读取 .env / 环境变量里的密钥，
+# 也就不存在「密钥进编译产物」的通道。
 
 
 def ensure_vosk_model():
@@ -322,7 +292,7 @@ def do_preview(bd, out_arg, build_number=10):
     shutil.copy(apk, out_path)
     print(f'  ✓ 预览包已输出：{out_path}')
     print(f'  体积 {size} B | SHA {sha}')
-    keys = read_builtin_keys() or ''
+    keys = ''  # 1.5.8 起不内置 Key，自检自然跳过
     print('--- 构建自检（尽力而为，如实报告）---')
     print('  包内：', bundle_selfcheck(out_path, keys))
     print('  git ：', git_leak_check(keys))
@@ -346,7 +316,7 @@ def main():
                     help='预览构建 versionCode 覆盖（默认 10）')
     a = ap.parse_args()
 
-    bd = builtin_define()
+    bd = ''  # 1.5.8 起不注入任何内置 Key
     ensure_vosk_model()
     patch_vosk_plugin()
     if a.preview:
