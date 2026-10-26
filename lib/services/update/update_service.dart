@@ -302,9 +302,15 @@ class UpdateService {
               debugPrint('[update] $url 缺少有效 versionCode，换源');
               break;
             }
-            return isNewerVersion(cur.versionCode, latest.versionCode)
-                ? CheckResult(CheckStatus.update, latest)
-                : CheckResult(CheckStatus.latest, cur);
+            // 只认同 ABI 槽位的更新：清单主推荐包恒为 arm64，跨槽位弹了也装不上（NO_MATCHING_ABIS）。
+            if (!isUpdateForThisDevice(cur.versionCode, latest.versionCode)) {
+              if (abiSlotOf(cur.versionCode) != abiSlotOf(latest.versionCode)) {
+                debugPrint('[update] 本机 ABI 槽位 ${abiSlotOf(cur.versionCode)} ≠ 清单槽位 '
+                    '${abiSlotOf(latest.versionCode)}，不弹应用内更新');
+              }
+              return CheckResult(CheckStatus.latest, cur);
+            }
+            return CheckResult(CheckStatus.update, latest);
           } catch (e) {
             debugPrint('[update] $url 第 ${attempt + 1} 次失败：${_brief(e)}');
             // 两次都失败才换源
