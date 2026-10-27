@@ -51,3 +51,5 @@
 `diff -u baseline_cs_build.txt current_cs_build.txt` → 无差异（`APP_TREE_UNCHANGED=verified`），
 当前快照 sha256 = `9e828e390292479e7f3b5cffec4533ea3b85ce9c5506f2d3af965697c340ce7f`
 （分支 `dev/sandbox-153`、HEAD `1d4468e`，7 modified + 1 untracked 均为预置前既有）。
+
+提交 `baa84aa` 之后复跑同一比对：仍无差异（`APP_TREE_UNCHANGED_AFTER_COMMIT=verified`），快照 sha256 同上。
