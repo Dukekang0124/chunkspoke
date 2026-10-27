@@ -1,0 +1,231 @@
+{
+  "version": "0.9.0-web",
+  "time": "2026-10-27T10:48:37+08:00",
+  "sourceCommit": "a29fd1f",
+  "baseHref": "/chunkspoke/web/",
+  "appSha256": "2be828448b20b7679e0812a635072e0990b6e7c8c5418eff8540ea287e99bdbc",
+  "files": 44,
+  "bytes": 43014028,
+  "entries": [
+    {
+      "path": ".last_build_id",
+      "bytes": 32,
+      "sha256": "5a99c9b2c612e9de2071a01f29c57438d017a27a2ec4028e57bb70f06be0e312"
+    },
+    {
+      "path": "assets/AssetManifest.bin",
+      "bytes": 443,
+      "sha256": "e124d08b1df70bba45914e825dc812cfcfc0ac0dac75bb8dc9f2f62dc12acdb3"
+    },
+    {
+      "path": "assets/AssetManifest.bin.json",
+      "bytes": 594,
+      "sha256": "47702b1c1d4d970debbca44530c3fdd0d376e9762f33812cbd05e915058ebd64"
+    },
+    {
+      "path": "assets/assets/content/articles.json",
+      "bytes": 128997,
+      "sha256": "5c1d69f4df2f4f4ddf91007139f1c3493326bed89425e2dc5e2f494f443bd8cb"
+    },
+    {
+      "path": "assets/assets/content/chunks.json",
+      "bytes": 137516,
+      "sha256": "4af5a566ee6a8b12746d16d9e193762e8e2c7b743d875aaaf13a12832101d04f"
+    },
+    {
+      "path": "assets/assets/fonts/NotoSansSC-Subset.otf",
+      "bytes": 352736,
+      "sha256": "7da99e5b39545abc4b9b5757d2201b83e1080eff9b260b844e6f4e89a47e1832"
+    },
+    {
+      "path": "assets/FontManifest.json",
+      "bytes": 365,
+      "sha256": "6b23970e51a392e1d0404b0c513d3a33db3ac0844e966a6bd288011488f0056c"
+    },
+    {
+      "path": "assets/fonts/fallback/Roboto-Regular.ttf",
+      "bytes": 171676,
+      "sha256": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95"
+    },
+    {
+      "path": "assets/fonts/MaterialIcons-Regular.otf",
+      "bytes": 8892,
+      "sha256": "d1c44cc642c655cfe2993e7fc0985db2dc9cc71e40ce33e3d6a6770f101b9044"
+    },
+    {
+      "path": "assets/NOTICES",
+      "bytes": 1307528,
+      "sha256": "43bccba2bdb0949c2cee71d6ac3c63885697084b45c5d6541705410ff5dec391"
+    },
+    {
+      "path": "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf",
+      "bytes": 1472,
+      "sha256": "3d90c370aa4cf00dc57ee2b902f6652147c0f81e03e483df584a9c08b1687c9d"
+    },
+    {
+      "path": "assets/packages/material_ui/shaders/ink_sparkle.frag",
+      "bytes": 8890,
+      "sha256": "2dca5ab93d4ec29e963f996f3916320ba60825e9537dfb149a68008c7a16b026"
+    },
+    {
+      "path": "assets/shaders/ink_sparkle.frag",
+      "bytes": 8890,
+      "sha256": "2dca5ab93d4ec29e963f996f3916320ba60825e9537dfb149a68008c7a16b026"
+    },
+    {
+      "path": "assets/shaders/stretch_effect.frag",
+      "bytes": 6737,
+      "sha256": "ab412f07a5b9b50b67a885b24dbe16929738ae28630407d6490c924caf0a3220"
+    },
+    {
+      "path": "canvaskit/canvaskit.js",
+      "bytes": 86987,
+      "sha256": "bb559f6080c7d312ac2a912b4abec9f68ff3d3022d4a603c7796b9b31460642b"
+    },
+    {
+      "path": "canvaskit/canvaskit.js.symbols",
+      "bytes": 1356926,
+      "sha256": "384f80b392972c83fd4f262527e3d06215a297d33ed59732c726721e9d9311bd"
+    },
+    {
+      "path": "canvaskit/canvaskit.wasm",
+      "bytes": 7284602,
+      "sha256": "fbed517a43e82452404446683f00f2e876d835aed84410695759e67b6bb01cd3"
+    },
+    {
+      "path": "canvaskit/chromium/canvaskit.js",
+      "bytes": 86226,
+      "sha256": "6018b12bd8ed37e6952eee72d59c1cf7ad707ccdb74a0a45190010f77edd9068"
+    },
+    {
+      "path": "canvaskit/chromium/canvaskit.js.symbols",
+      "bytes": 1235870,
+      "sha256": "31c86fac6042dd8b756150832c1d15495d0d07742e2718f75dbdde5a5a91455e"
+    },
+    {
+      "path": "canvaskit/chromium/canvaskit.wasm",
+      "bytes": 5428806,
+      "sha256": "ae8ff1d858140f7b1300ced3fa89fb8c9dce0a400a0f4f1e11f6dcfb3315fdcf"
+    },
+    {
+      "path": "canvaskit/skwasm.js",
+      "bytes": 63537,
+      "sha256": "71d7d3e34bf71b52bdba3b588b103bba8148ba28de5754083e01b3398e7a6e1c"
+    },
+    {
+      "path": "canvaskit/skwasm.js.symbols",
+      "bytes": 1540006,
+      "sha256": "9137f1a3ae744dea575043abfc6e063a047e910e6dab1ee53e496c975d1c033e"
+    },
+    {
+      "path": "canvaskit/skwasm.wasm",
+      "bytes": 3593715,
+      "sha256": "e540fd5e8303b7b68ec2718cb49e9c421f8ade3075b15e02a7059a62654df9a1"
+    },
+    {
+      "path": "canvaskit/skwasm_heavy.js",
+      "bytes": 63650,
+      "sha256": "cec554b46ddcf4c0e63d799e0556d546f42d2c3f69316fb4f67ed776f6104558"
+    },
+    {
+      "path": "canvaskit/skwasm_heavy.js.symbols",
+      "bytes": 1672152,
+      "sha256": "b6b79ed497e11d4cd13cc46724f9e289eacc744d2d185e31c72d595cdf62772b"
+    },
+    {
+      "path": "canvaskit/skwasm_heavy.wasm",
+      "bytes": 5216217,
+      "sha256": "565f5cc1cca6ab120f11934b105f01fec4b58b480c82e0889dca93af8e6f8635"
+    },
+    {
+      "path": "canvaskit/webparagraph/canvaskit.js",
+      "bytes": 76114,
+      "sha256": "3110e3e4d9b7b5657d336f253aaca8acca5777cde9319fb69ac302d6ff5a8b23"
+    },
+    {
+      "path": "canvaskit/webparagraph/canvaskit.js.symbols",
+      "bytes": 963641,
+      "sha256": "44d6c47919106235cf32252252490cdf798d907ee874ba343ab53dc94bc2a9dc"
+    },
+    {
+      "path": "canvaskit/webparagraph/canvaskit.wasm",
+      "bytes": 3729129,
+      "sha256": "0ce1b05082efdc8529550e8a01f6ff0593972d55525035010e26f5600aa9f254"
+    },
+    {
+      "path": "canvaskit/wimp.js",
+      "bytes": 59127,
+      "sha256": "8fd8a47480c6eb0a374d159912d0b3fb15661b41f5c113ecdd39c2f01f2bee46"
+    },
+    {
+      "path": "canvaskit/wimp.js.symbols",
+      "bytes": 1813030,
+      "sha256": "b4907ebd33131302a8cd99f7c55f52357bdfde04f421b605a616ba8764ae1de4"
+    },
+    {
+      "path": "canvaskit/wimp.wasm",
+      "bytes": 3581677,
+      "sha256": "e924eaafd801d41e017d178f3fd5cf8a417f641fe35c9ed34a4e1d7582283e0c"
+    },
+    {
+      "path": "favicon.png",
+      "bytes": 917,
+      "sha256": "7ab2525f4b86b65d3e4c70358a17e5a1aaf6f437f99cbcc046dad73d59bb9015"
+    },
+    {
+      "path": "flutter.js",
+      "bytes": 12136,
+      "sha256": "2beb1ce6b159c71540aa66030af1d7964b6a92377cc78473745e02f97b74effe"
+    },
+    {
+      "path": "flutter_bootstrap.js",
+      "bytes": 13119,
+      "sha256": "f6b7db94e4d733831dac865328af2b040cdc07077df1ba98f11c0513c95885a2"
+    },
+    {
+      "path": "flutter_service_worker.js",
+      "bytes": 815,
+      "sha256": "dbfbe64ae5be5b462abb97338eb9af783ed4ed57a8c73a53c2a44488a26f6416"
+    },
+    {
+      "path": "icons/Icon-192.png",
+      "bytes": 5292,
+      "sha256": "3dce99077602f70421c1c6b2a240bc9b83d64d86681d45f2154143310c980be3"
+    },
+    {
+      "path": "icons/Icon-512.png",
+      "bytes": 8252,
+      "sha256": "baccb205ae45f0b421be1657259b4943ac40c95094ab877f3bcbe12cd544dcbe"
+    },
+    {
+      "path": "icons/Icon-maskable-192.png",
+      "bytes": 5594,
+      "sha256": "d2c842e22a9f4ec9d996b23373a905c88d9a203b220c5c151885ad621f974b5c"
+    },
+    {
+      "path": "icons/Icon-maskable-512.png",
+      "bytes": 20998,
+      "sha256": "6aee06cdcab6b2aef74b1734c4778f4421d2da100b0ff9e52b21b55240202929"
+    },
+    {
+      "path": "index.html",
+      "bytes": 2562,
+      "sha256": "89475dadc82be856411db9725421745064008acaa1cbe3d5028f910c4588d861"
+    },
+    {
+      "path": "main.dart.js",
+      "bytes": 2957222,
+      "sha256": "2be828448b20b7679e0812a635072e0990b6e7c8c5418eff8540ea287e99bdbc"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 843,
+      "sha256": "875797768a2a8b9bec863713a74f69cc815a8e25c6d0ae56b0052e1eee7ca58b"
+    },
+    {
+      "path": "version.json",
+      "bytes": 98,
+      "sha256": "c7a1a12740086c927b55f4f514866c7d483eba727e4fa13a634de2635237bd4b"
+    }
+  ]
+}
