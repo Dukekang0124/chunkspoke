@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "app": "chunkspoke",
+  "origin": "web",
+  "origin_version": "0.9.0",
+  "exported_at": "2026-10-27T10:38:49.325",
+  "device_tag": "web-8d11b7",
+  "packs": {
+    "content_pack": "1.2.0",
+    "listening_articles": "2"
+  },
+  "chunks": [
+    {
+      "id": "a01",
+      "tier": "T0",
+      "asset_state": "consolidating",
+      "asset_return_state": null,
+      "asset_return_stage": null,
+      "review_stage": 0,
+      "due_date": 1793155121614,
+      "last_review_at": 1793068721614,
+      "correct_streak": 0,
+      "updated_at": 1793068721614
+    }
+  ],
+  "stats": {
+    "reviewed_today": 0,
+    "reviewed_total": 0,
+    "learned_total": 1
+  },
+  "events": [
+    {
+      "event_id": "1793068721614-0-4nea",
+      "at": 1793068721614,
+      "name": "learn_chunk",
+      "props": {
+        "chunk_id": "a01",
+        "tier": "T0"
+      }
+    }
+  ],
+  "settings": {}
+}

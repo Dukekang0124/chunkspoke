@@ -32,13 +32,15 @@ void main() {
     expect(out.updatedAt, _now);
   });
 
-  test('3 通过：档位到 4 后封顶，间隔取 14 天', () {
+  test('3 通过：档位到 4 即已掌握，封顶且不再排期', () {
     final out = applyReviewGrade(_row(stage: 3, streak: 3), ReviewGrade.pass, _now);
     expect(out.reviewStage, kMasteredStage);
-    expect(out.dueDate, _now + 14 * kDayMs);
+    expect(out.assetState, AssetState.mastered);
+    expect(out.dueDate, 0); // 与 App `nextDue` 一致：已掌握不排期
     final capped = applyReviewGrade(out, ReviewGrade.pass, _now);
     expect(capped.reviewStage, kMasteredStage);
     expect(capped.correctStreak, 5);
+    expect(capped.dueDate, 0);
   });
 
   test('1 重学：档位不变、streak 归零、+1 天', () {

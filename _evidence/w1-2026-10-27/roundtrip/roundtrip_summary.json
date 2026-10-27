@@ -1,0 +1,35 @@
+{
+  "steps": [
+    {
+      "step": "make-state",
+      "text": "已认识"
+    },
+    {
+      "step": "export-A",
+      "chunks": 1,
+      "events": 1
+    },
+    {
+      "step": "cleared",
+      "text": "ChunkSpoke 网页版 Beta | 今日已复习 0 块 | 门户 | 词块库 | 阅读 | 复习 | 数据 | 数据 | 学习数据存本机浏览器（IndexedDB），文件不出浏览器。 | 本机存储：IndexedDB 可用 | 本机进度：0 块 / 0 条复习事件 · 内容包 1.2.0 | 本机学习数据已清空 | 导出 | 选择文件 | 清空 | App 的 JSON"
+    },
+    {
+      "step": "export-C-empty",
+      "chunks": 0,
+      "events": 0
+    },
+    {
+      "step": "imported",
+      "ok": true
+    },
+    {
+      "step": "export-B",
+      "chunks": 1,
+      "events": 1
+    }
+  ],
+  "consoleErrors": [],
+  "external": [],
+  "diffCount": 0,
+  "diffs": []
+}

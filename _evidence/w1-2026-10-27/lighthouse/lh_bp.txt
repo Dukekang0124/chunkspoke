@@ -1,0 +1,9 @@
+bp score 0.81
+== deprecations 0 1 warning found
+    {"value": "IntlV8BreakIterator", "source": {"type": "source-location", "url": "http://127.0.0.1:8099/main.dart.js", "urlProvider": "network", "line": 6927, "column": 17}}
+== valid-source-maps 0 None
+    {"scriptUrl": "http://127.0.0.1:8099/main.dart.js", "subItems": {"type": "subitems", "items": [{"error": "Large JavaScript file is missing a source map"}]}}
+    {"scriptUrl": "http://127.0.0.1:8099/canvaskit/chromium/canvaskit.wasm", "subItems": {"type": "subitems", "items": [{"error": "Large JavaScript file is missing a source map"}]}}
+    {"scriptUrl": "http://127.0.0.1:8099/flutter_bootstrap.js", "sourceMapUrl": "http://127.0.0.1:8099/flutter.js.map", "subItems": {"type": "subitems", "items": [{"error": "Error: Failed fetching source map (404)"}]}}
+perf score None LCP audit {"largest-contentful-paint": null}
+errors-in-console 1

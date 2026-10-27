@@ -1,0 +1,12 @@
+mobile_first   perf=N/A a11y=100 bp=81 seo=100 pwa=100
+               FIR=1.0 s LAR=None TOT=910 ms CUM=0 SPE=27.7 s INT=44.2 s TOT=Total size was 9,082 KiB
+desktop_first  perf=N/A a11y=100 bp=81 seo=100 pwa=100
+               FIR=0.2 s LAR=None TOT=40 ms CUM=0 SPE=4.0 s INT=7.3 s TOT=Total size was 9,082 KiB
+mobile_retest  perf=70 a11y=100 bp=81 seo=100 pwa=100
+               FIR=1.0 s LAR=1.6 s TOT=840 ms CUM=0.013 SPE=21.3 s INT=44.1 s TOT=Total size was 9,083 KiB
+desktop_retest perf=93 a11y=100 bp=81 seo=100 pwa=100
+               FIR=0.3 s LAR=0.4 s TOT=50 ms CUM=0 SPE=3.0 s INT=7.3 s TOT=Total size was 9,083 KiB
+mobile_final   perf=70 a11y=100 bp=81 seo=100 pwa=N/A
+               FIR=1.0 s LAR=1.9 s TOT=820 ms CUM=0.013 SPE=21.3 s INT=44.1 s TOT=Total size was 9,082 KiB
+desktop_final  perf=93 a11y=100 bp=81 seo=100 pwa=N/A
+               FIR=0.2 s LAR=0.3 s TOT=50 ms CUM=0 SPE=2.9 s INT=7.3 s TOT=Total size was 9,082 KiB

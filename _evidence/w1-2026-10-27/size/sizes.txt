@@ -1,0 +1,16 @@
+index.html                                           raw=     2547 gz=     1458
+flutter_bootstrap.js                                 raw=    13118 gz=     5190
+flutter.js                                           raw=    12136 gz=     4650
+main.dart.js                                         raw=  2958485 gz=   845411
+assets/FontManifest.json                             raw=      365 gz=      175
+assets/AssetManifest.bin.json                        raw=      594 gz=      344
+assets/NOTICES                                       raw=  1307528 gz=    98335
+assets/assets/fonts/NotoSansSC-Subset.otf            raw=   352912 gz=   299869
+assets/fonts/MaterialIcons-Regular.otf               raw=     8892 gz=     4449
+assets/assets/content/chunks.json                    raw=   137516 gz=    21119
+assets/assets/content/articles.json                  raw=   128997 gz=    37901
+manifest.json                                        raw=      843 gz=      388
+favicon.png                                          raw=      917 gz=      825
+APP-LEVEL TOTAL                                      raw=  4924850 gz=  1320114
+ENGINE BASELINE (canvaskit.js+wasm, declared separately) raw=7371589 gz=2938605
+gate 3MB = 3145728 B ; app-level gz ratio = 0.42

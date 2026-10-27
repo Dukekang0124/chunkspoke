@@ -1,0 +1,17 @@
+Flutter assets will be downloaded from https://storage.flutter-io.cn. Make sure you trust this source!
+Resolving dependencies...
+Downloading packages...
+  cupertino_icons 1.0.9 (2.0.0 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  test_api 0.7.12 (0.7.15 available)
+  web 1.1.1 (1.1.2 available)
+Got dependencies!
+4 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Compiling lib\main.dart for the Web...                          
+Wasm dry run succeeded. Consider building and testing your application with the `--wasm` flag. See docs for more info: https://docs.flutter.dev/platform-integration/web/wasm
+Use --no-wasm-dry-run to disable these warnings.
+Font asset "CupertinoIcons.ttf" was tree-shaken, reducing it from 257628 to 1472 bytes (99.4% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 8892 bytes (99.5% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Compiling lib\main.dart for the Web...                             35.8s
+√ Built build\web

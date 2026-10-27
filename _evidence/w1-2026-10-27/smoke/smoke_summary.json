@@ -1,0 +1,264 @@
+{
+  "at": "2026-10-27T02:35:59.994Z",
+  "externalTotal": [],
+  "results": {
+    "chrome": {
+      "browser": "chrome",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "external": [],
+      "steps": [
+        {
+          "step": "portal",
+          "ok": true
+        },
+        {
+          "step": "after-portal",
+          "at": "2026-10-27T02:35:46.522Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "library",
+          "ok": true
+        },
+        {
+          "step": "after-library",
+          "at": "2026-10-27T02:35:47.543Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "articles",
+          "ok": true
+        },
+        {
+          "step": "after-articles",
+          "at": "2026-10-27T02:35:49.413Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "reader",
+          "ok": true
+        },
+        {
+          "step": "after-reader",
+          "at": "2026-10-27T02:35:50.979Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "review-learn",
+          "ok": true
+        },
+        {
+          "step": "after-review",
+          "at": "2026-10-27T02:35:54.825Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "after-data",
+          "at": "2026-10-27T02:35:56.325Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "export",
+          "ok": true
+        },
+        {
+          "step": "import-preview",
+          "ok": true
+        },
+        {
+          "step": "import",
+          "ok": true
+        }
+      ],
+      "exportFile": "chrome_export.json",
+      "exportChunks": 1,
+      "exportEvents": 1,
+      "finalText": "ChunkSpoke 网页版 Beta\n今日已复习 0 块\n门户\n词块库\n阅读\n复习\n数据\n数据\n学习数据存本机浏览器（IndexedDB），文件不出浏览器。\n本机存储：IndexedDB 可用\n本机进度：1 块 / 1 条复习事件 · 内容包 1.2.0\n导入完成：新增 0 / 更新 0 / 跳过 1 / 孤儿 0\n导出\n选择文件\n清空\nApp 的 JSON 导出将在 1.5.10 提供；互通上线前，网页版与 App 数据各自独立。"
+    },
+    "edge": {
+      "browser": "edge",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "external": [],
+      "steps": [
+        {
+          "step": "portal",
+          "ok": true
+        },
+        {
+          "step": "after-portal",
+          "at": "2026-10-27T02:35:46.514Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "library",
+          "ok": true
+        },
+        {
+          "step": "after-library",
+          "at": "2026-10-27T02:35:47.563Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "articles",
+          "ok": true
+        },
+        {
+          "step": "after-articles",
+          "at": "2026-10-27T02:35:49.444Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "reader",
+          "ok": true
+        },
+        {
+          "step": "after-reader",
+          "at": "2026-10-27T02:35:51.010Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "review-learn",
+          "ok": true
+        },
+        {
+          "step": "after-review",
+          "at": "2026-10-27T02:35:54.826Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "after-data",
+          "at": "2026-10-27T02:35:56.328Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "export",
+          "ok": true
+        },
+        {
+          "step": "import-preview",
+          "ok": true
+        },
+        {
+          "step": "import",
+          "ok": true
+        }
+      ],
+      "exportFile": "edge_export.json",
+      "exportChunks": 1,
+      "exportEvents": 1,
+      "finalText": "ChunkSpoke 网页版 Beta\n今日已复习 0 块\n门户\n词块库\n阅读\n复习\n数据\n数据\n学习数据存本机浏览器（IndexedDB），文件不出浏览器。\n本机存储：IndexedDB 可用\n本机进度：1 块 / 1 条复习事件 · 内容包 1.2.0\n导入完成：新增 0 / 更新 0 / 跳过 1 / 孤儿 0\n导出\n选择文件\n清空\nApp 的 JSON 导出将在 1.5.10 提供；互通上线前，网页版与 App 数据各自独立。"
+    },
+    "firefox": {
+      "browser": "firefox",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "external": [],
+      "steps": [
+        {
+          "step": "portal",
+          "ok": true
+        },
+        {
+          "step": "after-portal",
+          "at": "2026-10-27T02:35:47.736Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "library",
+          "ok": true
+        },
+        {
+          "step": "after-library",
+          "at": "2026-10-27T02:35:48.731Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "articles",
+          "ok": true
+        },
+        {
+          "step": "after-articles",
+          "at": "2026-10-27T02:35:50.894Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "reader",
+          "ok": true
+        },
+        {
+          "step": "after-reader",
+          "at": "2026-10-27T02:35:52.803Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "review-learn",
+          "ok": true
+        },
+        {
+          "step": "after-review",
+          "at": "2026-10-27T02:35:56.787Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "after-data",
+          "at": "2026-10-27T02:35:58.409Z",
+          "consoleErrors": 0,
+          "external": 0,
+          "externals": []
+        },
+        {
+          "step": "export",
+          "ok": true
+        },
+        {
+          "step": "import-preview",
+          "ok": true
+        },
+        {
+          "step": "import",
+          "ok": true
+        }
+      ],
+      "exportFile": "firefox_export.json",
+      "exportChunks": 1,
+      "exportEvents": 1,
+      "finalText": "ChunkSpoke 网页版 Beta\n今日已复习 0 块\n门户\n词块库\n阅读\n复习\n数据\n数据\n学习数据存本机浏览器（IndexedDB），文件不出浏览器。\n本机存储：IndexedDB 可用\n本机进度：1 块 / 1 条复习事件 · 内容包 1.2.0\n导入完成：新增 0 / 更新 0 / 跳过 1 / 孤儿 0\n导出\n选择文件\n清空\nApp 的 JSON 导出将在 1.5.10 提供；互通上线前，网页版与 App 数据各自独立。"
+    }
+  }
+}

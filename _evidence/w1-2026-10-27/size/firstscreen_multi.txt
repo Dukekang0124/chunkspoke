@@ -1,0 +1,55 @@
+
+### chrome  files=13 raw=9290490 gz=3421965
+  / → index.html  raw=2547 gz=1473
+  assets/FontManifest.json  raw=365 gz=174
+  assets/assets/content/articles.json  raw=128997 gz=38183
+  assets/assets/content/chunks.json  raw=137516 gz=21220
+  assets/assets/fonts/NotoSansSC-Subset.otf  raw=352736 gz=301872
+  assets/fonts/MaterialIcons-Regular.otf  raw=8892 gz=4558
+  assets/fonts/fallback/Roboto-Regular.ttf  raw=171676 gz=91546
+  assets/packages/cupertino_icons/assets/CupertinoIcons.ttf  raw=1472 gz=1023
+  canvaskit/chromium/canvaskit.js  raw=86226 gz=27444
+  canvaskit/chromium/canvaskit.wasm  raw=5428806 gz=2080477
+  favicon.png  raw=917 gz=838
+  flutter_bootstrap.js  raw=13118 gz=5187
+  main.dart.js  raw=2957222 gz=847970
+  -- engine(canvaskit) raw=5515032 gz=2107921
+  -- content json     raw=266513 gz=59403
+  -- app+content w/o engine raw=3775458 gz=1314044
+
+### edge  files=13 raw=9290490 gz=3421965
+  / → index.html  raw=2547 gz=1473
+  assets/FontManifest.json  raw=365 gz=174
+  assets/assets/content/articles.json  raw=128997 gz=38183
+  assets/assets/content/chunks.json  raw=137516 gz=21220
+  assets/assets/fonts/NotoSansSC-Subset.otf  raw=352736 gz=301872
+  assets/fonts/MaterialIcons-Regular.otf  raw=8892 gz=4558
+  assets/fonts/fallback/Roboto-Regular.ttf  raw=171676 gz=91546
+  assets/packages/cupertino_icons/assets/CupertinoIcons.ttf  raw=1472 gz=1023
+  canvaskit/chromium/canvaskit.js  raw=86226 gz=27444
+  canvaskit/chromium/canvaskit.wasm  raw=5428806 gz=2080477
+  favicon.png  raw=917 gz=838
+  flutter_bootstrap.js  raw=13118 gz=5187
+  main.dart.js  raw=2957222 gz=847970
+  -- engine(canvaskit) raw=5515032 gz=2107921
+  -- content json     raw=266513 gz=59403
+  -- app+content w/o engine raw=3775458 gz=1314044
+
+### firefox  files=14 raw=11152339 gz=4288710
+  / → index.html  raw=2547 gz=1473
+  assets/FontManifest.json  raw=365 gz=174
+  assets/assets/content/articles.json  raw=128997 gz=38183
+  assets/assets/content/chunks.json  raw=137516 gz=21220
+  assets/assets/fonts/NotoSansSC-Subset.otf  raw=352736 gz=301872
+  assets/fonts/MaterialIcons-Regular.otf  raw=8892 gz=4558
+  assets/fonts/fallback/Roboto-Regular.ttf  raw=171676 gz=91546
+  assets/packages/cupertino_icons/assets/CupertinoIcons.ttf  raw=1472 gz=1023
+  canvaskit/canvaskit.js  raw=86987 gz=27648
+  canvaskit/canvaskit.wasm  raw=7284602 gz=2941805
+  favicon.png  raw=917 gz=838
+  flutter_bootstrap.js  raw=13118 gz=5187
+  icons/Icon-192.png  raw=5292 gz=5213
+  main.dart.js  raw=2957222 gz=847970
+  -- engine(canvaskit) raw=7371589 gz=2969453
+  -- content json     raw=266513 gz=59403
+  -- app+content w/o engine raw=3780750 gz=1319257

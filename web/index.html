@@ -41,6 +41,34 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+
+  <!-- CanvasKit 引擎有固定基线（canvaskit.wasm 约 7.3 MB），首帧前原本是纯黑空白。
+       这层 HTML 提示让用户先看到「在加载」，首帧一到立即移除。 -->
+  <style>
+    #boot-hint {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #0F0F1A;
+      color: rgba(255, 255, 255, 0.54);
+      font: 14px/1.6 -apple-system, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    }
+    #boot-hint strong { color: #FFB84D; font-size: 16px; font-weight: 600; }
+  </style>
+  <div id="boot-hint">
+    <strong>ChunkSpoke 网页版</strong>
+    <span>正在加载学习内容…</span>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('boot-hint');
+      if (el) el.remove();
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

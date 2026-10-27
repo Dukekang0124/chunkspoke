@@ -1,0 +1,27 @@
+LH 11.7.1 formFactor mobile emulated None
+cat performance None
+cat accessibility 100
+cat best-practices 81
+cat seo 100
+cat pwa 100
+first-contentful-paint | 1.0 s |score 1
+largest-contentful-paint | None |score None
+total-blocking-time | 910 ms |score 0.31
+cumulative-layout-shift | 0 |score 1
+speed-index | 27.7 s |score 0
+interactive | 44.2 s |score 0
+total-byte-weight | Total size was 9,082 KiB |score 0.5
+unused-javascript | None |score None
+bootup-time | 2.0 s |score 0
+mainthread-work-breakdown | 2.4 s |score 0
+render-blocking-resources | None |score 1
+server-response-time | Root document took 0 ms |score 1
+font-display | None |score 1
+--- failing audit ids ---
+first-meaningful-paint 0.03 8.6 s
+speed-index 0 27.7 s
+total-blocking-time 0.31 910 ms
+max-potential-fid 0.25 350 ms
+interactive 0 44.2 s
+deprecations 0 1 warning found
+valid-source-maps 0 None

@@ -15,8 +15,18 @@ int nextStage(int stage) => (stage + 1).clamp(0, kMasteredStage);
 int intervalDaysForStage(int stage) =>
     kIntervalsDays[stage.clamp(0, kIntervalsDays.length - 1)];
 
+/// 档位 → 资产状态，与 App `ChunkAssetMachine` 的可行组合一致：
+/// 0 巩固中 / 1 已巩固 / 2-3 长期 / 4 已掌握。
+AssetState assetStateForStage(int stage) {
+  if (stage <= 0) return AssetState.consolidating;
+  if (stage == 1) return AssetState.consolidated;
+  if (stage < kMasteredStage) return AssetState.longTerm;
+  return AssetState.mastered;
+}
+
 /// 自评 1-3 → 调度迁移（方案 v1.1 §六-2）。
 /// 只产生 App 已有的三种迁移：档位不变 / +1，**不引入档位回退**。
+/// 与 App 对齐的细节：档位推进同时推进资产状态；到第 4 档即已掌握，不再排期（due_date=0）。
 ChunkRecord applyReviewGrade(ChunkRecord r, ReviewGrade grade, int nowMs) {
   switch (grade) {
     case ReviewGrade.retry:
@@ -34,11 +44,25 @@ ChunkRecord applyReviewGrade(ChunkRecord r, ReviewGrade grade, int nowMs) {
         updatedAt: nowMs,
       );
     case ReviewGrade.pass:
+      // 需重修通过：回到失败前原位（App `reviewPass` 的 relearning 分支）。
+      if (r.assetState == AssetState.relearning && hasReturnPosition(r)) {
+        return r.copyWith(
+          assetState: r.assetReturnState,
+          reviewStage: r.assetReturnStage,
+          assetReturnStateIndex: -1,
+          assetReturnStage: -1,
+          correctStreak: r.correctStreak + 1,
+          dueDate: nowMs + intervalDaysForStage(r.assetReturnStage) * kDayMs,
+          lastReviewAt: nowMs,
+          updatedAt: nowMs,
+        );
+      }
       final stage = nextStage(r.reviewStage);
       return r.copyWith(
+        assetState: assetStateForStage(stage),
         reviewStage: stage,
         correctStreak: r.correctStreak + 1,
-        dueDate: nowMs + intervalDaysForStage(stage) * kDayMs,
+        dueDate: stage >= kMasteredStage ? 0 : nowMs + intervalDaysForStage(stage) * kDayMs,
         lastReviewAt: nowMs,
         updatedAt: nowMs,
       );
