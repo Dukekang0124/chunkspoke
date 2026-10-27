@@ -1,17 +1,12 @@
 {
   "version": "0.9.0-web",
-  "time": "2026-10-27T10:48:37+08:00",
+  "time": "2026-10-27T11:11:44+08:00",
   "sourceCommit": "a29fd1f",
   "baseHref": "/chunkspoke/web/",
   "appSha256": "2be828448b20b7679e0812a635072e0990b6e7c8c5418eff8540ea287e99bdbc",
-  "files": 44,
-  "bytes": 43014028,
+  "files": 43,
+  "bytes": 43013996,
   "entries": [
-    {
-      "path": ".last_build_id",
-      "bytes": 32,
-      "sha256": "5a99c9b2c612e9de2071a01f29c57438d017a27a2ec4028e57bb70f06be0e312"
-    },
     {
       "path": "assets/AssetManifest.bin",
       "bytes": 443,
