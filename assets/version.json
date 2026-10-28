@@ -1,35 +1,35 @@
 {
-  "versionName": "1.5.8",
-  "versionCode": 4059,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8/chunkspoke-latest.apk",
+  "versionName": "1.5.8.1",
+  "versionCode": 4060,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.5.8/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.5.8.1/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "a14eb007ca6c87329084fc60b050612b7cf75fc00283a75156a47f5858accabf",
-  "size": 59741815,
-  "notes": "v1.5.8：朗读人声升级——新增 3 个自然人声音色包（清晰女声 / 温和女声 / 沉稳男声），按需下载，可试听、切换和删除，不占安装包体积；删除音色或关闭自然人声后自动回到系统发音。AI 造句点评支持自定义模型：可选智谱 GLM 预设，也可填任意 OpenAI 兼容接口；API Key 只加密保存在本机，不上传、不写日志，设置页新增连接测试与发送内容说明。未配置 AI 时，六步学习、复习、解锁与磨耳朵照常可用。修复：应用内更新只认本机 ABI 的安装包。",
+  "sha256": "942919e5b6bb10e20acc7567ae8e1ec4f8b7a0e160611fef83e1a63f9c32914f",
+  "size": 59741843,
+  "notes": "v1.5.8.1 热修：① 安装包/语音包下载中断后不再出现「校验失败」死循环——自动删档换源、按实际落盘长度续传，失败页可一键复制诊断信息；② 设置页 GLM 连接测试超时放宽到 35 秒，限流与超时原因如实显示（含服务端错误码），测试中按钮不可点，防止连点。仅修复下载与连接问题，无新增功能。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part0",
       "size": 15728640,
-      "sha256": "6f631fed1eb771d4edca47f076d3c5c537478bba45611e6719005a7dec13f569"
+      "sha256": "65b308c318370e24fea01c1b3c75a87f53d67438d72e00fa889993193fc1a024"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part1",
       "size": 15728640,
       "sha256": "6202361b9381abf4532b8d17665fba92a7598e00ff218df652261e0c52cf7ce2"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part2",
       "size": 15728640,
       "sha256": "02150ceceeb20cbcf275dbb6c8a8e9f4e7329155a1485bd90551c5e72866de0f"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8/parts/apk.part3",
-      "size": 12555895,
-      "sha256": "63ded628fe5962c725cb613cf83e6a657f51f44013b7b094dbfa1c803ed66dd9"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part3",
+      "size": 12555923,
+      "sha256": "52542d015622868fc35047d3f453f9954431ebe5866cbdf76b0b2ebff88f04e5"
     }
   ],
   "model": {

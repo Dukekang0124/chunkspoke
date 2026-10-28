@@ -30,6 +30,9 @@
     var fv = document.getElementById('footerVersion'); if (fv) fv.textContent = v;
     var fs = document.getElementById('footerSize'); if (fs) fs.textContent = mb ? ('约 ' + mb) : '';
     var hs = document.getElementById('heroSize'); if (hs && mb) hs.textContent = '约 ' + mb;
+    // 明示 sha256：与三条下载链同一文件，下载后可自行核对（页内烘焙值作离线兜底）。
+    var fs2 = document.getElementById('footerSha');
+    if (fs2 && j.sha256) fs2.textContent = j.sha256;
     // 下载地址取自清单，发版后无需改本文件；urls 为备用源列表。
     var u = j.url || ((j.urls && j.urls[0]) || '');
     if (u) downloadUrl = u;

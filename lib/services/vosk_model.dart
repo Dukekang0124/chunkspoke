@@ -9,6 +9,8 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
 import 'update/sha256_util.dart';
+import 'download/download_diag.dart';
+import 'download/segment_fetch.dart';
 
 /// 模型进度阶段。
 enum ModelPhase { downloading, extracting }
@@ -187,6 +189,17 @@ class ModelManager {
   final StreamController<ModelProgress> _progress =
       StreamController<ModelProgress>.broadcast();
   Stream<ModelProgress> get progress => _progress.stream;
+
+  /// 本次任务的下载诊断（失败时 UI 取用，用户点「复制诊断信息」带走；不上传）。
+  late final DownloadDiag diag = DownloadDiag(
+    task: '语音模型 ${manifest.name}',
+    expectedBytes: manifest.size,
+    sha256: manifest.sha256,
+  );
+
+  /// 诊断文本：失败页直接展示/复制（含各源尝试、HTTP 码、字节数、sha 前缀）。
+  String diagText({String app = '', String net = '', String? conclusion}) =>
+      diag.render(app: app, net: net, conclusion: conclusion);
 
   Stopwatch _roundClock = Stopwatch();
   int _lastEmitted = 0;
@@ -396,6 +409,12 @@ class ModelManager {
         await _fetch(url, file, resumeAt, part.size, completedBefore);
         if (part.hasHash && !await _blockValid(file, part)) {
           debugPrint('[model] 分块 $index 哈希不符，整块重下（第 ${attempt + 1} 次）');
+          diag.add(
+              phase: '校验',
+              source: url,
+              expected: part.size,
+              actual: await _fileLength(file),
+              note: '分块 $index 哈希不符，删档从零换源');
           await _deleteQuietly(file);
           resumeAt = 0;
           if (attempt < sources.length - 1) {
@@ -406,6 +425,8 @@ class ModelManager {
         return;
       } on _SourceMiss catch (e) {
         debugPrint('[model] 分块 $index 源不可用（$url）：$e');
+        // 换源前按落盘真实长度重新对齐：416 分支可能已经删过档。
+        resumeAt = await _fileLength(file);
       } on _ShortBlock catch (e) {
         debugPrint('[model] 分块 $index 长度不符（$url）：$e，整块作废重下');
         await _deleteQuietly(file);
@@ -451,67 +472,36 @@ class ModelManager {
     return out;
   }
 
-  /// 把一个源写入分块文件。偏移以磁盘实际长度为准；成功后长度必须精确匹配。
+  /// 把一个源写入分块文件（1.5.8.1：统一走 [fetchSegment] 的共享核心）。
+  ///
+  /// 共享核心负责：显式 identity、缺失 Content-Length 容忍、416 特判、
+  /// 续传按落盘长度对齐、停滞两段式判定。本方法只做「长度必须精确」的断言。
   Future<void> _fetch(
       String url, File file, int startAt, int expectedSize, int completedBefore) async {
-    var from = await _fileLength(file);
-    if (from > expectedSize) {
-      await _deleteQuietly(file);
-      from = 0;
-    }
-    if (from != startAt) {
-      debugPrint('[model] 续传偏移对齐：调用方 $startAt → 落盘 $from');
-    }
-    if (from == expectedSize) return;
-
-    final sink = file.openWrite(mode: FileMode.append);
-    var written = from;
     try {
-      final req = http.Request('GET', Uri.parse(url));
-      req.headers['accept-encoding'] = 'identity';
-      if (from > 0) req.headers['range'] = 'bytes=$from-';
-      final resp = await _client.send(req).timeout(_connectTimeout);
-      if (resp.statusCode != 200 && resp.statusCode != 206) {
-        throw _SourceMiss('HTTP ${resp.statusCode}');
-      }
-      if (resp.statusCode == 206) {
-        final range = resp.headers['content-range'];
-        final m = range == null
-            ? null
-            : RegExp(r'bytes\s+(\d+)-').firstMatch(range);
-        if (m != null && int.parse(m.group(1)!) != from) {
-          throw _SourceMiss('Content-Range 起点 ${m.group(1)} ≠ $from');
-        }
-      }
-      // 服务器忽略 Range（200 整块返回）时，本地跳过已落盘前缀。
-      var skip = (resp.statusCode == 200 && from > 0) ? from : 0;
-      await for (final chunk in resp.stream) {
-        List<int> data = chunk;
-        if (skip > 0) {
-          if (chunk.length <= skip) {
-            skip -= chunk.length;
-            continue;
+      final r = await fetchSegment(
+        client: _client,
+        url: url,
+        file: file,
+        expectedSize: expectedSize,
+        diag: diag,
+        diagPhase: '分块',
+        connectTimeout: _connectTimeout,
+        onProgress: (written, _) {
+          final global = completedBefore + written;
+          if (global - _lastEmitted >= _progressStep) {
+            _lastEmitted = global;
+            _emit(global);
           }
-          data = chunk.sublist(skip);
-          skip = 0;
-        }
-        sink.add(data);
-        written += data.length;
-        if (written > expectedSize) {
-          throw _ShortBlock('分块超出预期长度（$written/$expectedSize）');
-        }
-        final global = completedBefore + written;
-        if (global - _lastEmitted >= _progressStep) {
-          _lastEmitted = global;
-          _emit(global);
-        }
+        },
+      );
+      if (expectedSize > 0 && r.bytes != expectedSize) {
+        throw _ShortBlock('分块长度不符（${r.bytes}/$expectedSize）');
       }
-    } finally {
-      await sink.close();
-    }
-    final disk = await _fileLength(file);
-    if (disk != expectedSize) {
-      throw _ShortBlock('分块长度不符（$disk/$expectedSize）');
+    } on SourceMiss catch (e) {
+      throw _SourceMiss(e.message);
+    } on ShortRead catch (e) {
+      throw _ShortBlock(e.message);
     }
   }
 

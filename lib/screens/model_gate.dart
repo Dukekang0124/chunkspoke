@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:provider/provider.dart';
 
 import '../services/loaders.dart';
@@ -78,6 +79,17 @@ class _ModelGateState extends State<ModelGate> {
     await _ensure(retry: true);
   }
 
+  /// 失败页「复制诊断信息」：把各源尝试记录/HTTP 码/字节数/网络类型拷到剪贴板。
+  /// 纯本地读取，不上传；由用户自己决定贴给谁。
+  Future<void> _copyDiag() async {
+    final text = await SpeechEngine.instance.diagText();
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('诊断信息已复制，可直接粘贴到群里'),
+        duration: Duration(seconds: 2)));
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_state == EngineState.ready) return widget.child;
@@ -115,6 +127,7 @@ class _ModelGateState extends State<ModelGate> {
       return Column(
         children: [
           Text(_error ?? '模型下载失败',
+              textAlign: TextAlign.center,
               style: const TextStyle(color: kError, fontSize: 13)),
           const SizedBox(height: 14),
           ElevatedButton(
@@ -122,6 +135,15 @@ class _ModelGateState extends State<ModelGate> {
             onPressed: _retry,
             child: const Text('重试', style: TextStyle(color: Colors.white)),
           ),
+          const SizedBox(height: 6),
+          TextButton.icon(
+            onPressed: _copyDiag,
+            icon: const Icon(Icons.copy, size: 15, color: Colors.white54),
+            label: const Text('复制诊断信息',
+                style: TextStyle(color: Colors.white54, fontSize: 12)),
+          ),
+          const Text('反馈时贴给开发者，能直接看出是哪一步失败',
+              style: TextStyle(color: Colors.white30, fontSize: 11)),
         ],
       );
     }

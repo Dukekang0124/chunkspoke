@@ -5,8 +5,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:vosk_flutter/vosk_flutter.dart' as vosk;
 
+import 'download/download_diag.dart' show networkLabel;
 import 'vosk_model.dart';
 
 /// Vosk 识别结果：文本 + 置信度。
@@ -283,6 +285,29 @@ class SpeechEngine implements Transcriber {
 
   /// 最近一次失败原因（供 UI 展示可读提示）。
   String? get lastError => _lastError;
+
+  /// 模型下载失败时的可复制诊断文本（1.5.8.1）：
+  /// 只读本机已知事实（源地址、HTTP 码、分块字节数、sha 前缀、网络类型），
+  /// 不发送、不落盘——由用户自己复制贴给开发者。
+  Future<String> diagText() async {
+    try {
+      final manager = await _ensureManager();
+      String net;
+      try {
+        net = await networkLabel();
+      } catch (_) {
+        net = '未知';
+      }
+      var app = '';
+      try {
+        final i = await PackageInfo.fromPlatform();
+        app = 'v${i.version}(${i.buildNumber})';
+      } catch (_) {}
+      return manager.diagText(app: app, net: net, conclusion: _lastError);
+    } catch (_) {
+      return 'ChunkSpoke 下载诊断\n（诊断信息生成失败：${_lastError ?? '未知原因'}）';
+    }
+  }
 
   /// 下载/解压进度流（供首启引导页展示 0.5% 节流进度 + 速度 + 剩余时间）。
   /// 需在 [init] 前调用，以拿到与 init 同一个 manager 的流，避免错过事件。

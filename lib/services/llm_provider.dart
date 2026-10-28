@@ -22,6 +22,9 @@ class LlmProvider {
   /// 429 最多再试 2 次（指数退避），鉴权/协议/超时不重试。
   static const int kMaxRateLimitRetries = 2;
 
+  /// 「测试连接」超时（1.5.8.1）：免费档高峰期首包可能 20s+，10s 会误报超时。
+  static const Duration probeTimeout = Duration(seconds: 35);
+
   /// 用户自定义层是否启用且 Key 有效。
   bool get customEnabled =>
       p.customLlmEnabled && (p.customLlmKey ?? '').isNotEmpty;
@@ -73,16 +76,50 @@ class LlmProvider {
     if (cfg.key.isEmpty) return (ok: false, reason: '请先填写 API Key');
     if (cfg.model.isEmpty) return (ok: false, reason: '请先填写模型名');
     final created = tmp == null;
-    final c = tmp ?? GlmClient(endpoint: cfg.baseUrl, model: cfg.model);
+    final c = tmp ??
+        GlmClient(
+            endpoint: cfg.baseUrl, model: cfg.model, timeout: probeTimeout);
     try {
-      final r = await c.chatDetailed(cfg.key, 'ping');
+      final r = await c.chatProbe(cfg.key, 'ping');
       if (created) c.dispose();
-      return classifyChatStatus(r.status, cfg.model);
+      return classifyProbe(r, cfg.model);
     } on Object {
       if (created) c.dispose();
-      return (ok: false, reason: '连接超时');
+      return (ok: false, reason: '连接失败（未知原因），请检查网络后重试');
     }
   }
+}
+
+/// 「测试连接」结果分类（1.5.8.1）：把服务端的错误码与错误信息如实透出，
+/// 并针对 429/超时给出可操作的建议；不做任何埋点、不上传。
+({bool ok, String reason}) classifyProbe(GlmReply r, String model) {
+  if (r.status == 200) return (ok: true, reason: model);
+  if (r.status == -1) {
+    return (
+      ok: false,
+      reason: r.timedOut
+          ? '连接超时（>${LlmProvider.probeTimeout.inSeconds} 秒）。高峰期模型可能较慢，请勿重复点击，稍后再试'
+          : '连接失败（未收到响应）${_serverDetail(r)}'
+    );
+  }
+  if (r.status == 401 || r.status == 403) {
+    return (ok: false, reason: 'Key 无效（${r.status}）${_serverDetail(r)}');
+  }
+  if (r.status == 429) {
+    return (
+      ok: false,
+      reason: '免费档限流（429）${_serverDetail(r)}。'
+          '稍后再试，或在上面把模型换成备选 glm-4-flash-250414'
+    );
+  }
+  return (ok: false, reason: '服务异常（${r.status}）${_serverDetail(r)}');
+}
+
+String _serverDetail(GlmReply r) {
+  final parts = <String>[];
+  if (r.code.isNotEmpty) parts.add('错误码 ${r.code}');
+  if (r.message.isNotEmpty) parts.add(r.message);
+  return parts.isEmpty ? '' : '：${parts.join('，')}';
 }
 
 /// 把一次 chat 调用的状态码翻成给用户看的一句话。

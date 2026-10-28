@@ -9,6 +9,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'version_compare.dart';
 import 'sha256_util.dart';
+import '../download/download_diag.dart';
+import '../download/segment_fetch.dart';
 
 /// 远端版本信息（对齐 version.json 规范）。
 class VersionInfo {
@@ -200,6 +202,22 @@ class UpdateDownloadException implements Exception {
 String _brief(Object e) {
   final s = e.toString();
   return s.length > 80 ? '${s.substring(0, 80)}…' : s;
+}
+
+/// 把「源不可用」翻成用户能看懂的一句话（诊断细节另有 diag 文本，不塞在这里）。
+String _humanize(SourceMiss e) {
+  switch (e.http) {
+    case 0:
+      return '连不上更新服务器（${e.message}），请检查网络后重试';
+    case 403:
+      return '更新服务器拒绝访问（403），可能是镜像限流，请稍后重试或换备用源';
+    case 404:
+      return '更新包不存在（服务器 404），请检查发布地址';
+    case 416:
+      return '续传位置已失效，已自动重新下载；若仍失败请点「复制诊断信息」反馈';
+    default:
+      return '服务器返回 HTTP ${e.http}，无法下载更新包';
+  }
 }
 
 /// 可取消的下载句柄。
@@ -419,194 +437,83 @@ class UpdateService {
 
   /// 流式下载 APK 到 `updates/`（FileProvider 可达），支持取消与断点续传。
   ///
-  /// 与旧实现的关键差异（对应线上「0% 卡死」）：
-  ///  1. 等响应头有 connectTimeout、无数据有 idleTimeout → 不再永久挂在 0%；
-  ///  2. 校验状态码与 Content-Type → 404 网页不会被当成 APK 写盘；
-  ///  3. 先写 `.part`，完成后 rename；中断/取消保留 `.part`，重试走 Range 续传；
-  ///     断点按 [partTag]（目标包 SHA 前 8 位）隔离，跨版本残片直接丢弃；
-  ///  4. 用 version.json 的 size 兜底总进度（服务端不给 Content-Length 时也能出进度）。
+  /// 1.5.8.1 起与语音模型/语音包共用 [fetchSegment] 同一套核心：
+  ///  - 显式 `Accept-Encoding: identity`（避免半截压缩流拼进 APK）；
+  ///  - Content-Length 缺失时以清单 size 为准，不因缺头失败；
+  ///  - **416 特判**：本地长度 == 清单全长 → 直接收尾进 SHA 校验；否则删档从零；
+  ///  - 断网中断保留 `.part`，换源按落盘长度续传；sha 失败由上层删档换源从零；
+  ///  - 每一次尝试都写入 [diag]，失败页可一键复制给开发者。
   DownloadHandle downloadApkCancellable(
     String url,
     String fileName,
     void Function(int received, int total) onProgress, {
     int expectedSize = 0,
     String partTag = '',
+    DownloadDiag? diag,
+    String diagPhase = '整包',
   }) {
     final client = http.Client();
     final completer = Completer<String>();
-    StreamSubscription<List<int>>? sub;
-    Timer? idleTimer;
-    IOSink? sink;
-    var stopped = false;
-
-    void finishError(Object e) {
-      idleTimer?.cancel();
-      idleTimer = null;
-      if (!completer.isCompleted) completer.completeError(e);
-    }
+    final token = DownloadCancelToken();
 
     Future<void> start() async {
       try {
         final dir = await getApplicationSupportDirectory();
         final dest = File('${dir.path}/updates/$fileName');
         await _dropStaleParts(dir.path, fileName, partTag);
-        final part = File(
-            '${dir.path}/updates/${apkPartName(fileName, partTag)}');
+        final part =
+            File('${dir.path}/updates/${apkPartName(fileName, partTag)}');
         await dest.parent.create(recursive: true);
-        if (stopped) return;
+        if (token.cancelled) throw const DownloadCancelled();
 
-        var startAt = await part.exists() ? await part.length() : 0;
-        if (expectedSize > 0 && startAt > expectedSize) {
-          await part.delete(); // 分段比整包还大：已损坏，重下
-          startAt = 0;
-        }
-        // 分段已完整（上次在 rename 前中断）：直接收尾，不发请求。
-        if (expectedSize > 0 && startAt == expectedSize) {
-          if (await dest.exists()) await dest.delete();
-          await part.rename(dest.path);
-          onProgress(startAt, expectedSize);
-          if (!completer.isCompleted) completer.complete(dest.path);
-          return;
-        }
-
-        final req = http.Request('GET', Uri.parse(url));
-        // 必须显式 identity：部分 CDN/代理会对 APK 返回 gzip 分块流，
-        // 断点续传拼出来的字节会变成半截压缩流（兄弟项目实测报 Filter error / SHA 必挂）。
-        req.headers['accept-encoding'] = 'identity';
-        if (startAt > 0) req.headers['range'] = 'bytes=$startAt-';
-
-        http.StreamedResponse resp;
-        try {
-          resp = await client.send(req).timeout(connectTimeout);
-        } on TimeoutException {
-          throw const UpdateDownloadException('连接更新服务器超时，请检查网络后重试');
-        } on SocketException catch (e) {
-          throw UpdateDownloadException(
-              '无法连接更新服务器（${e.osError?.message ?? '网络不可达'}）');
-        } on http.ClientException catch (e) {
-          throw UpdateDownloadException('下载请求失败：${e.message}');
-        }
-        if (stopped) return;
-
-        final code = resp.statusCode;
-        debugPrint('[update] GET $url → $code '
-            'len=${resp.contentLength} ct=${resp.headers['content-type']}');
-        if (startAt > 0 && code == 416) {
-          await part.delete();
-          throw const UpdateDownloadException('续传位置已失效，请重新下载');
-        }
-        if (code != 200 && code != 206) {
-          throw UpdateDownloadException(code == 404
-              ? '更新包不存在（服务器 404），请检查发布地址'
-              : '服务器返回 $code，无法下载更新包');
-        }
-        if (looksLikeHtmlPage(resp.headers['content-type'])) {
-          throw const UpdateDownloadException('下载地址返回的是网页，不是安装包');
-        }
-
-        final partial = code == 206 && startAt > 0;
-        final base = partial ? startAt : 0;
-        var total = resolveDownloadTotal(
+        final r = await fetchSegment(
+          client: client,
+          url: url,
+          file: part,
           expectedSize: expectedSize,
-          contentLength: resp.contentLength ?? 0,
-          resumedBytes: base,
-          partial: partial,
+          diag: diag,
+          diagPhase: diagPhase,
+          cancelToken: token,
+          onProgress: onProgress,
+          connectTimeout: connectTimeout,
+          idleTimeout: idleTimeout,
         );
-        // version.json 的 size 可能与线上 APK 短暂不一致：以服务端实际长度为准，
-        // 否则会把一个完整包误判成「下载不完整」。
-        final serverTotal = partial
-            ? base + (resp.contentLength ?? 0)
-            : (resp.contentLength ?? 0);
-        if (serverTotal > 0 && total > 0 && serverTotal != total) {
-          debugPrint('[update] size 不一致（json=$total / 服务端=$serverTotal），以服务端为准');
-          total = serverTotal;
+        if (token.cancelled) throw const DownloadCancelled();
+        if (expectedSize > 0 && r.bytes != expectedSize) {
+          throw UpdateDownloadException(
+              '下载不完整（${r.bytes ~/ 1024}KB / ${expectedSize ~/ 1024}KB），已保留进度');
         }
-
-        sink = part.openWrite(mode: partial ? FileMode.append : FileMode.write);
-        var received = base;
-        onProgress(received, total);
-
-        // 停滞判定采用「两段式」：休眠/切后台会让 Dart 计时器整体冻结，
-        // 恢复瞬间计时器往往先于数据到达触发（荣耀 MagicOS 等系统会冻结后台进程），
-        // 直接判失败会误杀正常下载；因此第一次超时只重新计时，连续两轮无数据才报错。
-        var idleStrikes = 0;
-        void armIdle() {
-          idleTimer?.cancel();
-          idleTimer = Timer(idleTimeout, () {
-            idleStrikes++;
-            if (idleStrikes < 2) {
-              armIdle();
-              return;
-            }
-            stopped = true;
-            sub?.cancel();
-            client.close();
-            sink?.close().catchError((_) {});
-            finishError(
-                const UpdateDownloadException('下载停滞：长时间收不到数据，请检查网络后重试'));
-          });
+        if (await dest.exists()) await dest.delete();
+        await part.rename(dest.path);
+        if (!completer.isCompleted) completer.complete(dest.path);
+      } on DownloadCancelled {
+        if (!completer.isCompleted) {
+          completer.completeError(const UpdateCancelledException());
         }
-
-        armIdle();
-        sub = resp.stream.listen(
-          (chunk) {
-            sink?.add(chunk);
-            received += chunk.length;
-            idleStrikes = 0; // 收到数据即清空停滞计数
-            armIdle();
-            onProgress(received, total);
-          },
-          onDone: () async {
-            idleTimer?.cancel();
-            if (stopped) return;
-            stopped = true;
-            try {
-              await sink?.close();
-              if (total > 0 && received < total) {
-                throw UpdateDownloadException(
-                    '下载不完整（${received ~/ 1024}KB / ${total ~/ 1024}KB），已保留进度，重试可续传');
-              }
-              if (await dest.exists()) await dest.delete();
-              await part.rename(dest.path);
-              if (!completer.isCompleted) completer.complete(dest.path);
-            } catch (e) {
-              finishError(e is UpdateDownloadException
-                  ? e
-                  : UpdateDownloadException('写入安装包失败：${_brief(e)}'));
-            }
-          },
-          onError: (Object e, StackTrace st) async {
-            idleTimer?.cancel();
-            stopped = true;
-            try {
-              await sink?.close();
-            } catch (_) {}
-            finishError(UpdateDownloadException('下载中断：${_brief(e)}'));
-          },
-          cancelOnError: true,
-        );
+      } on SourceMiss catch (e) {
+        if (!completer.isCompleted) {
+          completer.completeError(UpdateDownloadException(_humanize(e)));
+        }
+      } on ShortRead catch (e) {
+        if (!completer.isCompleted) {
+          completer.completeError(UpdateDownloadException(
+              '下载不完整（${e.message}），已保留进度，重试可续传'));
+        }
       } catch (e) {
-        try {
-          await sink?.close();
-        } catch (_) {}
-        finishError(e is UpdateDownloadException
-            ? e
-            : UpdateDownloadException('下载失败：${_brief(e)}'));
+        if (!completer.isCompleted) {
+          completer.completeError(e is UpdateDownloadException
+              ? e
+              : UpdateDownloadException('下载失败：${_brief(e)}'));
+        }
       }
     }
 
-    start(); // 触发下载（fire-and-forget，结果经 completer 传递）
+    start();
     return DownloadHandle(
       future: completer.future,
       cancel: () {
-        if (stopped) return;
-        stopped = true;
-        idleTimer?.cancel();
-        sub?.cancel();
+        token.cancel();
         client.close();
-        try {
-          sink?.close();
-        } catch (_) {}
         if (!completer.isCompleted) {
           completer.completeError(const UpdateCancelledException());
         }
@@ -616,41 +523,27 @@ class UpdateService {
 
   /// 分片下载：按顺序拉取 [parts] 拼到同一 .part（已有字节 = 完整文件前缀），
   /// 支持全局断点续传与取消；分片与整包直链是同一文件，因此分片失败换直链**无需重下**。
+  ///
+  /// 1.5.8.1 起同样走 [fetchSegment]（与整包直链、语音模型同一套）：
+  ///  - 每片按「整包内的起点」发 Range（`remoteBase`），不是片内盲续；
+  ///  - 416/长度不符/停滞的处置与整包一致，不把可疑残片拼进安装包；
+  ///  - 每次尝试都记进 [diag]，失败页可一键复制。
   DownloadHandle downloadApkPartsCancellable(
     List<ApkPart> parts,
     String fileName,
     void Function(int received, int total) onProgress, {
     int expectedSize = 0,
     String partTag = '',
+    DownloadDiag? diag,
   }) {
     final client = http.Client();
     final completer = Completer<String>();
-    var stopped = false;
-    IOSink? sink;
-    Timer? idleTimer;
-    var idleStrikes = 0;
+    final token = DownloadCancelToken();
+    final sizes = parts.map((p) => p.size).toList();
+    final plannedTotal = sizes.fold<int>(0, (a, b) => a + b);
+    final total = expectedSize > 0 ? expectedSize : plannedTotal;
 
-    void finishError(Object e) {
-      idleTimer?.cancel();
-      idleTimer = null;
-      if (!completer.isCompleted) completer.completeError(e);
-    }
-
-    void armIdle() {
-      idleTimer?.cancel();
-      idleTimer = Timer(idleTimeout, () {
-        idleStrikes++;
-        if (idleStrikes < 2) {
-          armIdle();
-          return;
-        }
-        stopped = true;
-        client.close(); // 打断在途流，run() 的 catch 会收尾
-        finishError(const UpdateDownloadException('下载停滞：长时间收不到数据，请检查网络后重试'));
-      });
-    }
-
-    Future<void> run() async {
+    Future<void> start() async {
       try {
         final dir = await getApplicationSupportDirectory();
         final dest = File('${dir.path}/updates/$fileName');
@@ -658,112 +551,105 @@ class UpdateService {
         final part = File(
             '${dir.path}/updates/${apkPartName(fileName, partTag)}');
         await dest.parent.create(recursive: true);
-        if (stopped) return;
+        if (token.cancelled) throw const DownloadCancelled();
 
         var startAt = await part.exists() ? await part.length() : 0;
-        if (expectedSize > 0 && startAt > expectedSize) {
-          await part.delete(); // 分段比整包还大：已损坏，重下
+        if (plannedTotal > 0 && startAt > plannedTotal) {
+          diag?.add(
+              phase: '分片拼接',
+              source: '本地残片',
+              expected: plannedTotal,
+              actual: startAt,
+              note: '比清单总长还大，已损坏，删档从零');
+          await part.delete();
           startAt = 0;
         }
-        final total = expectedSize > 0
-            ? expectedSize
-            : parts.fold<int>(0, (a, p) => a + p.size);
-        if (expectedSize > 0 && startAt == expectedSize) {
+        if (plannedTotal > 0 && startAt == plannedTotal) {
           if (await dest.exists()) await dest.delete();
           await part.rename(dest.path);
-          onProgress(startAt, total);
+          onProgress(startAt, total > 0 ? total : startAt);
           if (!completer.isCompleted) completer.complete(dest.path);
           return;
         }
 
-        sink = part.openWrite(mode: FileMode.append);
-        var received = startAt;
-        onProgress(received, total);
-        armIdle();
-
-        for (final (idx, inStart)
-            in partPlan(parts.map((p) => p.size).toList(), startAt)) {
-          if (stopped) return;
-          final p = parts[idx];
-          final req = http.Request('GET', Uri.parse(p.url));
-          req.headers['accept-encoding'] = 'identity';
-          if (inStart > 0) req.headers['range'] = 'bytes=$inStart-';
-
-          http.StreamedResponse resp;
-          try {
-            resp = await client.send(req).timeout(connectTimeout);
-          } on TimeoutException {
-            throw const UpdateDownloadException('连接更新服务器超时，请检查网络后重试');
-          } on SocketException catch (e) {
-            throw UpdateDownloadException(
-                '无法连接更新服务器（${e.osError?.message ?? '网络不可达'}）');
-          } on http.ClientException catch (e) {
-            throw UpdateDownloadException('下载请求失败：${e.message}');
-          }
-          if (stopped) return;
-          if (resp.statusCode != 200 && resp.statusCode != 206) {
-            throw UpdateDownloadException(
-                '分片下载失败（HTTP ${resp.statusCode}）');
-          }
-          if (looksLikeHtmlPage(resp.headers['content-type'])) {
-            throw const UpdateDownloadException('分片地址返回的是网页，不是安装包');
-          }
-
-          // 服务器不支持 Range（200 整片返回）时，跳过片内已有字节
-          var skip = (resp.statusCode == 200 && inStart > 0) ? inStart : 0;
-          await for (final chunk in resp.stream) {
-            if (stopped) return;
-            idleStrikes = 0;
-            armIdle();
-            if (skip > 0) {
-              if (chunk.length <= skip) {
-                skip -= chunk.length;
-                continue;
-              }
-              final rest = chunk.sublist(skip);
-              skip = 0;
-              sink?.add(rest);
-              received += rest.length;
-              onProgress(received, total);
-              continue;
-            }
-            sink?.add(chunk);
-            received += chunk.length;
-            onProgress(received, total);
-          }
-          if (stopped) return;
+        // 每片在整包中的起点（拼接顺序 = 清单顺序）。
+        final offsets = <int>[];
+        var acc = 0;
+        for (final s in sizes) {
+          offsets.add(acc);
+          acc += s;
         }
 
-        idleTimer?.cancel();
-        await sink?.close();
-        sink = null;
-        if (expectedSize > 0 && received < expectedSize) {
+        for (final (idx, _) in partPlan(sizes, startAt)) {
+          if (token.cancelled) throw const DownloadCancelled();
+          final size = sizes[idx];
+          final offset = offsets[idx];
+          if (size <= 0) {
+            throw UpdateDownloadException('更新清单分片长度异常（第 ${idx + 1} 片）');
+          }
+          final partEnd = offset + size;
+          final r = await fetchSegment(
+            client: client,
+            url: parts[idx].url,
+            file: part,
+            expectedSize: partEnd,
+            remoteBase: offset,
+            diag: diag,
+            diagPhase: '分片${idx + 1}/${parts.length}',
+            cancelToken: token,
+            onProgress: (written, _) => onProgress(written, total),
+            connectTimeout: connectTimeout,
+            idleTimeout: idleTimeout,
+          );
+          if (token.cancelled) throw const DownloadCancelled();
+          if (r.bytes != partEnd) {
+            throw UpdateDownloadException(
+                '下载不完整（${r.bytes ~/ 1024}KB / ${partEnd ~/ 1024}KB），已保留进度，重试可续传');
+          }
+        }
+
+        final disk = await part.exists() ? await part.length() : 0;
+        if (expectedSize > 0 && disk != expectedSize) {
+          diag?.add(
+              phase: '分片拼接',
+              source: '本地残片',
+              expected: expectedSize,
+              actual: disk,
+              note: '全部片拉完但拼出的长度不符');
           throw UpdateDownloadException(
-              '下载不完整（${received ~/ 1024}KB / ${expectedSize ~/ 1024}KB），已保留进度，重试可续传');
+              '下载不完整（${disk ~/ 1024}KB / ${expectedSize ~/ 1024}KB），已保留进度，重试可续传');
         }
         if (await dest.exists()) await dest.delete();
         await part.rename(dest.path);
         if (!completer.isCompleted) completer.complete(dest.path);
+      } on DownloadCancelled {
+        if (!completer.isCompleted) {
+          completer.completeError(const UpdateCancelledException());
+        }
+      } on SourceMiss catch (e) {
+        if (!completer.isCompleted) {
+          completer.completeError(UpdateDownloadException(_humanize(e)));
+        }
+      } on ShortRead catch (e) {
+        if (!completer.isCompleted) {
+          completer.completeError(UpdateDownloadException(
+              '下载不完整（${e.message}），已保留进度，重试可续传'));
+        }
       } catch (e) {
-        try {
-          await sink?.close();
-        } catch (_) {}
-        if (stopped) return; // 取消/停滞路径：completer 已完成
-        finishError(e is UpdateDownloadException
-            ? e
-            : UpdateDownloadException('下载失败：${_brief(e)}'));
+        if (!completer.isCompleted) {
+          completer.completeError(e is UpdateDownloadException
+              ? e
+              : UpdateDownloadException('下载失败：${_brief(e)}'));
+        }
       }
     }
 
-    run();
+    start();
     return DownloadHandle(
       future: completer.future,
       cancel: () {
-        if (stopped) return;
-        stopped = true;
-        idleTimer?.cancel();
+        token.cancel();
         client.close();
-        sink?.close().catchError((_) {});
         if (!completer.isCompleted) {
           completer.completeError(const UpdateCancelledException());
         }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_test/flutter_test.dart';
@@ -7,18 +8,22 @@ import 'package:chunkspoke_flutter/services/glm_client.dart';
 class _Fake extends http.BaseClient {
   final int status;
   final bool throwIt;
+  final String? rawBody;
+  final bool timeoutIt;
   http.BaseRequest? last;
-  _Fake({this.status = 200, this.throwIt = false});
+  _Fake({this.status = 200, this.throwIt = false, this.rawBody, this.timeoutIt = false});
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     last = request;
-    if (throwIt) throw Exception('boom'); // 模拟网络/超时失败
-    final body = jsonEncode({
-      'choices': [
-        {'message': {'content': '诊断文本'}}
-      ]
-    });
+    if (timeoutIt) throw TimeoutException('slow'); // 模拟超时
+    if (throwIt) throw Exception('boom'); // 模拟网络失败
+    final body = rawBody ??
+        jsonEncode({
+          'choices': [
+            {'message': {'content': '诊断文本'}}
+          ]
+        });
     // 带真实的内容类型头（含 charset=utf-8），模拟 GLM 实际响应。
     return http.StreamedResponse(
       Stream.value(utf8.encode(body)),
@@ -78,6 +83,47 @@ void main() {
       final r = await g.chatDetailed('KEY', 'p');
       expect(r.status, 500);
       expect(r.text, isNull);
+    });
+
+    test('chatProbe：429 透出服务端错误码与信息', () async {
+      final fake = _Fake(
+        status: 429,
+        rawBody: jsonEncode({
+          'error': {'code': '1302', 'message': '并发数过高'}
+        }),
+      );
+      final g = GlmClient(client: fake);
+      final r = await g.chatProbe('KEY', 'p');
+      expect(r.status, 429);
+      expect(r.code, '1302');
+      expect(r.message, '并发数过高');
+      expect(r.timedOut, isFalse);
+    });
+
+    test('chatProbe：错误体不是 JSON 也不抛，只回状态码', () async {
+      final fake = _Fake(status: 502, rawBody: '<html>bad gateway</html>');
+      final g = GlmClient(client: fake);
+      final r = await g.chatProbe('KEY', 'p');
+      expect(r.status, 502);
+      expect(r.code, isEmpty);
+      expect(r.message, isEmpty);
+    });
+
+    test('chatProbe：超时标记 timedOut（供界面给「别重复点」提示）', () async {
+      final fake = _Fake(timeoutIt: true);
+      final g = GlmClient(client: fake);
+      final r = await g.chatProbe('KEY', 'p');
+      expect(r.status, -1);
+      expect(r.text, isNull);
+      expect(r.timedOut, isTrue);
+    });
+
+    test('chatProbe：无 Key 不发请求', () async {
+      final fake = _Fake();
+      final g = GlmClient(client: fake);
+      final r = await g.chatProbe('', 'p');
+      expect(r.status, -1);
+      expect(fake.last, isNull);
     });
   });
 }

@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../../services/database.dart';
+import '../../services/download/download_diag.dart';
 import '../../ui/theme.dart';
 import 'update_service.dart';
 import 'update_dialog.dart';
 import 'sha256_util.dart';
+import 'version_compare.dart';
 
 /// 每次冷启动最多检查一次（避免重复弹窗/重复请求）。
 bool _didStartupCheck = false;
@@ -111,6 +114,14 @@ Future<void> _downloadAndInstall(
     return;
   }
 
+  // 诊断上下文（1.5.8.1）：每次尝试都记一条（源/HTTP 码/字节数/sha 前缀），
+  // 失败页由用户自己点「复制诊断信息」贴给开发者；本机不落盘、不上传任何内容。
+  final diag = DownloadDiag(
+    task: '安装包 v${info.versionName}',
+    expectedBytes: info.size,
+    sha256: info.sha256,
+  );
+
   // ④ 缓存复用：本地已有完整包（大小匹配 + SHA-256 通过）→ 直接安装，不重新下载。
   final cached = await svc.reusableCachedApk(info);
   if (!context.mounted) return;
@@ -178,17 +189,51 @@ Future<void> _downloadAndInstall(
   String? path;
   Object? lastError;
 
+  // 完整性校验（1.5.8.1）：sha 不符 → 删档，换下一源**从零**重下。
+  // 绝不带着「长度正好但内容不对」的残片续传（这正是线上「校验失败」的死循环来源）。
+  Future<bool> accept(String p) async {
+    if (info.sha256.isEmpty) return true;
+    String actual = '';
+    var len = 0;
+    try {
+      len = await File(p).length();
+      actual = await fileSha256(p);
+    } catch (_) {}
+    if (sha256Matches(actual, info.sha256)) return true;
+    diag.add(
+      phase: '校验',
+      source: '本地完整包',
+      expected: info.size,
+      actual: len,
+      shaPrefix: actual.isEmpty ? '' : actual.substring(0, 12),
+      note: 'SHA-256 不符（期望 ${info.sha256.substring(0, 8)}…），删档换源从零',
+    );
+    try {
+      await File(p).delete();
+    } catch (_) {}
+    return false;
+  }
+
   // —— 阶段 1：分片下载（jsDelivr/对象存储分块，单文件 ≤20MB，国内可达优先）——
   // 分片与整包直链是同一文件：.part 里已有的字节 = 完整文件前缀，
   // 因此分片失败换直链时**保留断点续传，不从头下**（对应真机「0% 卡死」的根治路径）。
   if (useParts) {
     canSwitch = candidates.isNotEmpty;
     baseBytes = 0;
+    startedAt = DateTime.now();
     current = svc.downloadApkPartsCancellable(
         info.parts, UpdateService.apkFileName, report,
-        expectedSize: info.size, partTag: apkPartTag(info.sha256));
+        expectedSize: info.size,
+        partTag: apkPartTag(info.sha256),
+        diag: diag);
     try {
-      path = await current.future;
+      final p = await current.future;
+      if (await accept(p)) {
+        path = p;
+      } else {
+        lastError = const UpdateDownloadException(
+            '分片包与清单不一致（校验失败），已删除并改用整包直链重下');
+      }
     } on UpdateCancelledException {
       if (slowSwitch) {
         slowSwitch = false;
@@ -203,7 +248,7 @@ Future<void> _downloadAndInstall(
     current = null;
   }
 
-  // —— 阶段 2：整包直链（GitHub Releases，逐源尝试）——
+  // —— 阶段 2：整包直链（GitHub Releases，逐源尝试；每源下载完立即校验）——
   for (var i = 0; i < candidates.length && path == null; i++) {
     canSwitch = i < candidates.length - 1;
     baseBytes = received.value; // 速度只统计本阶段新增
@@ -213,9 +258,17 @@ Future<void> _downloadAndInstall(
         : '切换备用下载源（${i + 1}/${candidates.length}）…';
     current = svc.downloadApkCancellable(
         candidates[i], UpdateService.apkFileName, report,
-        expectedSize: info.size, partTag: apkPartTag(info.sha256));
+        expectedSize: info.size,
+        partTag: apkPartTag(info.sha256),
+        diag: diag,
+        diagPhase: '整包${i + 1}/${candidates.length}');
     try {
-      path = await current.future;
+      final p = await current.future;
+      if (await accept(p)) {
+        path = p;
+      } else {
+        lastError = UpdateDownloadException('第 ${i + 1} 个源下载的包校验失败，已删除并换下一源从零重下');
+      }
     } on UpdateCancelledException {
       if (slowSwitch) {
         // 主动换源：分片与直链字节相同，保留 .part 断点，下一源续传
@@ -235,29 +288,19 @@ Future<void> _downloadAndInstall(
       Navigator.of(context).pop();
     }
     if (!context.mounted) return;
-    // 不再只弹一句 toast：直接给出「浏览器下载」这条更可靠的路。
+    // 不再只弹一句 toast：失败页给出人话原因 + 可复制的诊断信息 + 「浏览器下载」兜底。
     await _offerBrowserFallback(
         context,
         svc,
         info,
         lastError is UpdateDownloadException
             ? lastError.message
-            : '下载失败，请稍后再试');
+            : '下载失败，请稍后再试',
+        diag);
     return;
   }
   if (context.mounted && Navigator.of(context).canPop()) {
     Navigator.of(context).pop();
-  }
-
-  // 完整性校验：不匹配则删除损坏文件并提示，绝不安装。
-  if (info.sha256.isNotEmpty) {
-    final ok = await svc.verifySha256(path, info.sha256);
-    if (!context.mounted) return;
-    if (!ok) {
-      await _offerBrowserFallback(
-          context, svc, info, '安装包校验失败（下载中断或源被篡改）');
-      return;
-    }
   }
 
   if (!context.mounted) return;
@@ -361,14 +404,51 @@ String _eta(double seconds) {
   return '${m ~/ 60} 小时 ${m % 60} 分';
 }
 
-/// 应用内下载/校验失败后的兜底：问一句要不要改用浏览器下载。
+/// 应用内下载/校验失败后的兜底：人话原因 + 可复制的诊断信息 + 「浏览器下载」。
 Future<void> _offerBrowserFallback(BuildContext context, UpdateService svc,
-    VersionInfo info, String reason) async {
-  if (info.browserUrl.trim().isEmpty) {
-    _toast(context, reason);
-    return;
-  }
-  final go = await showBrowserFallbackDialog(context, reason);
+    VersionInfo info, String reason, DownloadDiag diag) async {
+  final text = await buildDownloadDiagText(svc, diag, conclusion: reason);
+  if (!context.mounted) return;
+  final go = await showDownloadFailureDialog(
+    context,
+    reason: reason,
+    diag: text,
+    allowBrowser: info.browserUrl.trim().isNotEmpty,
+  );
   if (!context.mounted || !go) return;
   await _openInBrowser(context, svc, info);
+}
+
+/// 把诊断上下文补上本机版本/ABI/网络类型，渲染成可粘贴文本（纯本地，不上传）。
+Future<String> buildDownloadDiagText(
+    UpdateService svc, DownloadDiag diag, {String? conclusion}) async {
+  var app = '';
+  var abi = '';
+  try {
+    final cur = await svc.local();
+    app = 'v${cur.versionName}(${cur.versionCode})';
+    abi = _abiLabel(cur.versionCode);
+  } catch (_) {}
+  String net;
+  try {
+    net = await networkLabel();
+  } catch (_) {
+    net = '未知';
+  }
+  return diag.render(app: app, abi: abi, net: net, conclusion: conclusion);
+}
+
+String _abiLabel(int versionCode) {
+  switch (abiSlotOf(versionCode)) {
+    case 4:
+      return 'arm64-v8a';
+    case 3:
+      return 'armeabi-v7a';
+    case 6:
+      return 'x86_64';
+    case 2:
+      return 'universal';
+    default:
+      return '';
+  }
 }

@@ -13,6 +13,9 @@ body{
 a{color:var(--orange);text-decoration:none}
 img{max-width:100%;display:block}
 .muted{color:var(--muted);font-size:.9rem}
+.sha{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;
+  color:var(--text);background:var(--bg2);border:1px solid var(--line);border-radius:8px;
+  padding:6px 10px;margin-top:4px;word-break:break-all;user-select:all}
 .container{max-width:var(--maxw);margin:0 auto;padding:0 20px}
 
 /* Header */

@@ -20,6 +20,14 @@ class _FakeGlm extends GlmClient {
     if (hit != null) return hit;
     return (text: 'ok:$apiKey', status: 200);
   }
+
+  @override
+  Future<GlmReply> chatProbe(String apiKey, String prompt) async {
+    calls.add(apiKey);
+    final hit = script[apiKey];
+    if (hit != null) return GlmReply(status: hit.status, text: hit.text);
+    return GlmReply(status: 200, text: 'ok:$apiKey');
+  }
 }
 
 // 按顺序返回预设结果的假客户端（用于 429 退避序列）。
@@ -33,6 +41,13 @@ class _SeqGlm extends GlmClient {
     final r = seq[calls < seq.length ? calls : seq.length - 1];
     calls++;
     return r;
+  }
+
+  @override
+  Future<GlmReply> chatProbe(String apiKey, String prompt) async {
+    final r = seq[calls < seq.length ? calls : seq.length - 1];
+    calls++;
+    return GlmReply(status: r.status, text: r.text);
   }
 }
 
@@ -196,6 +211,33 @@ void main() {
       expect(r.ok, isFalse);
       expect(r.reason, contains('API Key'));
       expect(fake.calls, isEmpty);
+    });
+  });
+
+  group('classifyProbe（1.5.8.1：透出服务端错误码/信息）', () {
+    test('429 带错误码与文案 → 透出并指路备选模型', () {
+      const r = GlmReply(
+          status: 429, code: '1302', message: '当前并发数过高，请稍后再试');
+      final c = classifyProbe(r, 'glm-4.7-flash');
+      expect(c.ok, isFalse);
+      expect(c.reason, contains('429'));
+      expect(c.reason, contains('1302'));
+      expect(c.reason, contains('并发数过高'));
+      expect(c.reason, contains('glm-4-flash-250414'));
+      expect(c.reason, contains('稍后'));
+    });
+
+    test('超时 → 明说 35 秒上限并提示不要重复点击', () {
+      const r = GlmReply(status: -1, timedOut: true);
+      final c = classifyProbe(r, 'm');
+      expect(c.ok, isFalse);
+      expect(c.reason, contains('35 秒'));
+      expect(c.reason, contains('请勿重复点击'));
+    });
+
+    test('200 → 只回模型名（成功文案由界面拼「已连接」）', () {
+      expect(classifyProbe(const GlmReply(status: 200), 'm1'),
+          (ok: true, reason: 'm1'));
     });
   });
 

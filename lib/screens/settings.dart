@@ -137,6 +137,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _testConnection() async {
+    // 单飞（1.5.8.1）：同一时刻最多一个测试请求在途，连点不会打出一串 429。
+    if (_testing) return;
     final p = Provider.of<ProgressService>(context, listen: false);
     // 记录测试前的配置，失败时回滚，避免把自定义层留在「已启用但不可用」状态（S11）。
     final prevEnabled = p.customLlmEnabled;
@@ -1557,14 +1559,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ElevatedButton.styleFrom(backgroundColor: kPrimary),
                       onPressed: _testing ? null : _testConnection,
                       child: _testing
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.black87),
+                          ? const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.black87),
+                                ),
+                                SizedBox(width: 8),
+                                Text('测试中…',
+                                    style: TextStyle(color: Colors.black87)),
+                              ],
                             )
-                          : const Text('测试连接',
-                              style: TextStyle(color: Colors.black87)),
+                          : Text(
+                              _testOk == null
+                                  ? '测试连接'
+                                  : (_testOk == true ? '重新测试' : '重试连接'),
+                              style: const TextStyle(color: Colors.black87)),
                     ),
                     const SizedBox(width: 10),
                     OutlinedButton(

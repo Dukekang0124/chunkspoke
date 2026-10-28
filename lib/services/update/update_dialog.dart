@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'update_service.dart';
 import '../../ui/theme.dart';
 
@@ -90,6 +91,83 @@ Future<bool> showBrowserFallbackDialog(
           onPressed: () => Navigator.pop(context, true),
           child: const Text('浏览器下载', style: TextStyle(color: Colors.white)),
         ),
+      ],
+    ),
+  );
+  return go ?? false;
+}
+
+/// 下载/校验失败页（1.5.8.1）：人话原因 + 诊断信息 + 一键复制，另给「浏览器下载」兜底。
+/// 返回 true 表示用户选择「用浏览器下载」。
+Future<bool> showDownloadFailureDialog(
+  BuildContext context, {
+  required String reason,
+  required String diag,
+  bool allowBrowser = true,
+}) async {
+  final go = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: const Color(0xFF1A1A2E),
+      title: const Text('下载没成功', style: TextStyle(color: Colors.white)),
+      content: SizedBox(
+        width: 360,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(reason, style: const TextStyle(color: Colors.white70)),
+            const SizedBox(height: 12),
+            const Text(
+              '点「复制诊断信息」发给开发者，能直接看出卡在哪一步（只含下载失败的技术记录：源地址、HTTP 码、字节数，不含学习内容）：',
+              style: TextStyle(color: Colors.white38, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxHeight: 160),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0D0D17),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  diag,
+                  style: const TextStyle(
+                      color: Colors.white54, fontSize: 11, height: 1.45),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('关闭', style: TextStyle(color: Colors.white54)),
+        ),
+        TextButton(
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: diag)).then((_) {
+              if (!ctx.mounted) return;
+              ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                  content: Text('诊断信息已复制'),
+                  duration: Duration(seconds: 2)));
+            });
+          },
+          child: const Text('复制诊断信息',
+              style: TextStyle(color: Colors.white70)),
+        ),
+        if (allowBrowser)
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+            onPressed: () => Navigator.pop(ctx, true),
+            child:
+                const Text('浏览器下载', style: TextStyle(color: Colors.white)),
+          ),
       ],
     ),
   );
