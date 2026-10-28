@@ -28,24 +28,27 @@
 | 项 | 值 |
 |---|---|
 | 工具链 | Flutter 3.47.5 / Dart 3.13.4（`/d/tools/flutter/bin`） |
-| 构建命令 | `bash tool/build_web.sh` → `flutter build web --release --no-web-resources-cdn --tree-shake-icons` |
-| 产物 | `web-app/build/web/`，44 个文件，42 MB |
+| 构建命令 | `bash tool/build_web.sh` → `flutter build web --release --no-web-resources-cdn --tree-shake-icons`；发版构建另加 `--base-href=/chunkspoke/web/` |
+| 产物 | `web-app/build/web/`，44 个文件（含 Flutter 工具链标记 `.last_build_id`，已排除出发版集）→ 发布集 **43 件 / 43,013,996 B** |
 | `version.json` | `{"app_name":"chunkspoke_web","version":"0.9.0","build_number":"1","package_name":"chunkspoke_web"}` |
 | 内容包 | 24 篇 / 487 块（`assets/content/{articles,chunks}.json`，包版本 1.2.0） |
 | 字体子集 | `NotoSansSC-Subset.otf` 1368 字 / 352,736 B（脚本：`tool/subset_cjk_font.py`） |
 
-关键产物 sha256（全量见 [size/build_sha256.txt](size/build_sha256.txt)）：
+关键产物 sha256（全量见 [size/build_sha256.txt](size/build_sha256.txt)；下表为**发版构建**实测值，见 §10）：
 
 | 文件 | sha256 |
 |---|---|
-| `index.html` | `30f9f4bec6e82a3a9dc1c2e1410d2cabc5d87b686c5af7bd830efe0b4361be92` |
+| `index.html` | `89475dadc82be856411db9725421745064008acaa1cbe3d5028f910c4588d861` |
 | `main.dart.js` | `2be828448b20b7679e0812a635072e0990b6e7c8c5418eff8540ea287e99bdbc` |
-| `flutter_bootstrap.js` | `a4a0d8eccd12a95767afef7b094bfa1bb52b973769c25d39e43f44a44341f883` |
+| `flutter_bootstrap.js` | `f6b7db94e4d733831dac865328af2b040cdc07077df1ba98f11c0513c95885a2` |
+| `flutter_service_worker.js` | `dbfbe64ae5be5b462abb97338eb9af783ed4ed57a8c73a53c2a44488a26f6416` |
 | `canvaskit/chromium/canvaskit.wasm` | `ae8ff1d858140f7b1300ced3fa89fb8c9dce0a400a0f4f1e11f6dcfb3315fdcf` |
 | `assets/assets/fonts/NotoSansSC-Subset.otf` | `7da99e5b39545abc4b9b5757d2201b83e1080eff9b260b844e6f4e89a47e1832` |
 | `assets/assets/content/chunks.json` | `4af5a566ee6a8b12746d16d9e193762e8e2c7b743d875aaaf13a12832101d04f` |
 | `assets/assets/content/articles.json` | `5c1d69f4df2f4f4ddf91007139f1c3493326bed89425e2dc5e2f494f443bd8cb` |
 | `version.json` | `c7a1a12740086c927b55f4f514866c7d483eba727e4fa13a634de2635237bd4b` |
+
+**发版构建与上述本机证据的关系**：加 `--base-href=/chunkspoke/web/` 重建后，只有 `index.html`（`30f9f4be…` → `89475dad…`，绝对前缀）、`flutter_bootstrap.js`、`flutter_service_worker.js` 三个文件变化；**`main.dart.js` 逐字节未变**（`2be82844…`），因此 §2 体积、§3 Lighthouse、§4 冒烟、§4.3 对拍、§5 红线、§6 门禁的结论对发布包同样成立。
 
 **今日一并清掉的 B4 项**：`lib/screens/settings_screen.dart` 仍写着「0.9.0-web（预置骨架）/ 内容包尚未接入」，且 `/settings` 路由在 UI 上无任何入口 —— 属「写了没实装的东西」，已删除该页与路由（现存五屏：门户 / 词块库 / 阅读（含阅读器）/ 复习 / 数据）。
 
@@ -82,6 +85,8 @@
 - **是引擎固定基线**：`canvaskit.wasm` 单文件 Chromium 2.01 MB、Firefox 2.83 MB。方案 §七 预算表「CanvasKit + 字体 ≤ 1.0 MB」这一行在写方案时未实测，**是计划假设错误，不是实施偏离**；`--no-web-resources-cdn` 只解决「从哪加载」，不解决「多大」。
 - **渲染器切换不可用**：`--wasm`（skwasm）需要 `crossOriginIsolated`（COOP/COEP 响应头），GitHub Pages 无法下发此类头，切过去会直接在线上不可用。
 - **未做**：内容切分（无效）、skwasm（不可用）、再压字体（CFF→glyf 至多省 ~150 KB，占 4%，且需重跑三浏览器渲染走查）。**按裁定⑤「一轮为限」，到此为止，记偏差。**
+
+> 线上实传复核（发布后补充）：Pages 实测 `Accept-Encoding: gzip` 下 Chromium 13 件 3,440,629 B（3.28 MiB）、Firefox 12 件 4,304,588 B（4.11 MiB），应用+内容 1,332,438 B（1.27 MiB）。与本节估算差 ≤1.4%，判定不变。见 [release/firstscreen_live.json](release/firstscreen_live.json) 与 [release/RELEASE-W1.md](release/RELEASE-W1.md) §2.1。
 
 ---
 
@@ -204,9 +209,9 @@ Lighthouse 11.7.1（12.x 在本机 `@paulirish/trace_engine` 崩溃，已降级�
 | D-2 | 移动 Lighthouse ≥ 75 | 70（桌面 93） | 移动模拟 1.6 Mbps 下 9 MB 引擎下载+编译 | 记偏差接受；Beta 面向桌面，入口注明「建议桌面浏览器」 |
 | D-3 | Best Practices ≥ 90 | 81 | dart2js `IntlV8BreakIterator` 弃用 + 缺 sourcemap | 记偏差接受；补 map 会让包 +5 MB |
 | D-4 | 移动 TTI / SI | 44.1 s / 21.3 s | 同 D-2 | 同上；不承诺移动端首载体验 |
-| D-5 | 体积测法 | 本机 `python http.server` 无压缩 → 按 gzip level 9 解析计算 | — | 线上若由 Pages 下发 Brotli，实际传输应更小；**发布后必须复核 `content-encoding`** |
+| D-5 | 体积测法 | 本机 `python http.server` 无压缩 → 按 gzip level 9 解析计算 | — | **已闭环（2026-10-27 发布后复核）**：Pages 实际下发 `Content-Encoding: gzip`，`main.dart.js` 866,927 B、`canvaskit/chromium/canvaskit.wasm` 2,080,793 B、`index.html` 1,465 B、`flutter_bootstrap.js` 5,195 B、`chunks.json` 22,305 B——与本机 level-9 估算同量级，未出现「线上比测得大」的反向偏差。见 [release/RELEASE-W1.md](release/RELEASE-W1.md) §2 |
 | D-6 | 终测未跑 PWA 类目 | 终测报告 `categories` 只有 perf/a11y/bp/seo（首测/复测含 pwa=100） | 终测命令用 `--only-categories` 限定了四个类目 | 该字段可复核：`lh_*_first` 有 pwa、`lh_*_final` 无；不影响 perf/a11y/bp/seo 四类结论 |
-| D-7 | service worker 与缓存 | 构建**确实**产出 `flutter_service_worker.js`，且 `index.html` 注册（`serviceWorkerVersion: "724019375"`） | Flutter release 默认行为 | 非「无 SW」；发布后复核须用全新上下文/禁用缓存首载，并确认新版本 `serviceWorkerVersion` 变更后 SW 能更新，避免旧缓存盖住新包 |
+| D-7 | service worker 与缓存 | 构建**确实**产出 `flutter_service_worker.js`（发布集 sha256 `dbfbe64a…`），且 `index.html` 注册 | Flutter release 默认行为 | 非「无 SW」。发版构建的 `serviceWorkerVersion` 随 `--base-href` 重建而变，旧客户端下一次访问会按新版本号更新缓存；本次是**首次上线**，线上不存在需要覆盖的旧缓存，故「旧缓存盖新包」风险在 0.9.0 这一版为空。下一版发布仍须按本条复核一次 |
 | D-8 | 冒烟环境 | `127.0.0.1:8099`，无 gzip、无 CDN；`127.0.0.1` 属安全上下文，SW 会注册，但每次冒烟用全新上下文、首载未被 SW 接管 | — | 首屏请求集即真实网络请求集，「外部命中 0」仍是**严格**判定而非被 CDN 掩盖 |
 
 ---

@@ -1,0 +1,70 @@
+{
+  "at": "2026-10-27T03:14:37.488Z",
+  "siteConsoleErrors": [],
+  "webConsoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [],
+  "hosts": {
+    "dukekang0124.github.io": 24
+  },
+  "encodings": {
+    "chunkspoke/version.json": {
+      "status": 200,
+      "contentEncoding": "gzip",
+      "contentLength": "2639"
+    },
+    "web/flutter_bootstrap.js": {
+      "status": 200,
+      "contentEncoding": "gzip",
+      "contentLength": "5195"
+    },
+    "chromium/canvaskit.wasm": {
+      "status": 200,
+      "contentEncoding": "gzip",
+      "contentLength": "2080793"
+    },
+    "web/main.dart.js": {
+      "status": 200,
+      "contentEncoding": "gzip",
+      "contentLength": "866927"
+    }
+  },
+  "steps": [
+    {
+      "name": "site-entry-visible",
+      "ok": true
+    },
+    {
+      "name": "entry-click-navigates",
+      "ok": true,
+      "url": "https://dukekang0124.github.io/chunkspoke/web/"
+    },
+    {
+      "name": "portal-content",
+      "ok": true
+    },
+    {
+      "name": "review-one-card",
+      "ok": true,
+      "snippet": "ChunkSpoke 网页版 Beta 今日已复习 0 块 门户 词块库 阅读 复习 数据 到期复习 0 新学 6 T2 寒暄开场 新学 Good evening 空格翻面看中文 新学 2/6 · 每日最多 6 块 已认识，加入复习"
+    },
+    {
+      "name": "export-schema-v1",
+      "ok": true,
+      "chunks": 1,
+      "events": 1
+    },
+    {
+      "name": "import-preview",
+      "ok": true
+    },
+    {
+      "name": "import-merge-done",
+      "ok": true
+    }
+  ],
+  "finalUrl": "https://dukekang0124.github.io/chunkspoke/web/#/data",
+  "siteConsoleErrorCount": 0,
+  "webConsoleErrorCount": 0,
+  "pageErrorCount": 0
+}

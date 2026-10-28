@@ -1,0 +1,23 @@
+=== web 0.9.0 purge 2026-10-27 11:12:21 ===
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/ -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/version_web.json -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/version_web.json -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/ -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/web/ -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/web/version_web.json -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/index.html -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/main.dart.js -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/flutter_bootstrap.js -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/flutter_service_worker.js -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/canvaskit/canvaskit.wasm -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/canvaskit/chromium/canvaskit.wasm -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/assets/AssetManifest.bin.json -> finished
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/sha256-manifest.json -> FAILED: curl: (35) Recv failure: Connection was reset
+https://purge.jsdelivr.net/gh/Dukekang0124/chunkspoke@main/docs/web/version_web.json -> finished
+@latest 现状（不 purge）：{
+  "versionName": "1.5.8",
+  "versionCode": 4059,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8/chunkspoke-latest.apk",
+  "urls": [
+    "https://dukekang0124.github.io/chunks
+PURGE_DONE bad=1 total=15

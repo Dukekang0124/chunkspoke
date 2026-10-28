@@ -1,0 +1,22 @@
+{
+  "pages": {
+    "ok": 43,
+    "total": 43,
+    "bad": []
+  },
+  "jsdelivr": {
+    "ok": 43,
+    "total": 43,
+    "bad": []
+  },
+  "raw_releases": {
+    "ok": 43,
+    "total": 43,
+    "bad": []
+  },
+  "raw_site": {
+    "ok": 43,
+    "total": 43,
+    "bad": []
+  }
+}

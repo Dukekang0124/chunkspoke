@@ -1,0 +1,197 @@
+{
+  "base": "https://dukekang0124.github.io/chunkspoke/web/",
+  "acceptEncoding": "gzip",
+  "chromeEdge": {
+    "browser": "chrome/edge",
+    "files": 13,
+    "transferTotal": 3440629,
+    "transferEngine": 2108191,
+    "transferAppContent": 1332438,
+    "rows": [
+      {
+        "path": "/",
+        "manifestBytes": 2562,
+        "transferBytes": 1465,
+        "gzipRatio": 0.5718,
+        "ok": true
+      },
+      {
+        "path": "assets/FontManifest.json",
+        "manifestBytes": 365,
+        "transferBytes": 175,
+        "gzipRatio": 0.4795,
+        "ok": true
+      },
+      {
+        "path": "assets/assets/content/articles.json",
+        "manifestBytes": 128997,
+        "transferBytes": 38827,
+        "gzipRatio": 0.301,
+        "ok": true
+      },
+      {
+        "path": "assets/assets/content/chunks.json",
+        "manifestBytes": 137516,
+        "transferBytes": 22305,
+        "gzipRatio": 0.1622,
+        "ok": true
+      },
+      {
+        "path": "assets/assets/fonts/NotoSansSC-Subset.otf",
+        "manifestBytes": 352736,
+        "transferBytes": 300162,
+        "gzipRatio": 0.851,
+        "ok": true
+      },
+      {
+        "path": "assets/fonts/MaterialIcons-Regular.otf",
+        "manifestBytes": 8892,
+        "transferBytes": 4453,
+        "gzipRatio": 0.5008,
+        "ok": true
+      },
+      {
+        "path": "assets/fonts/fallback/Roboto-Regular.ttf",
+        "manifestBytes": 171676,
+        "transferBytes": 91002,
+        "gzipRatio": 0.5301,
+        "ok": true
+      },
+      {
+        "path": "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf",
+        "manifestBytes": 1472,
+        "transferBytes": 1010,
+        "gzipRatio": 0.6861,
+        "ok": true
+      },
+      {
+        "path": "canvaskit/chromium/canvaskit.js",
+        "manifestBytes": 86226,
+        "transferBytes": 27398,
+        "gzipRatio": 0.3177,
+        "ok": true
+      },
+      {
+        "path": "canvaskit/chromium/canvaskit.wasm",
+        "manifestBytes": 5428806,
+        "transferBytes": 2080793,
+        "gzipRatio": 0.3833,
+        "ok": true
+      },
+      {
+        "path": "favicon.png",
+        "manifestBytes": 917,
+        "transferBytes": 917,
+        "gzipRatio": 1.0,
+        "ok": true
+      },
+      {
+        "path": "flutter_bootstrap.js",
+        "manifestBytes": 13119,
+        "transferBytes": 5195,
+        "gzipRatio": 0.396,
+        "ok": true
+      },
+      {
+        "path": "main.dart.js",
+        "manifestBytes": 2957222,
+        "transferBytes": 866927,
+        "gzipRatio": 0.2932,
+        "ok": true
+      }
+    ]
+  },
+  "firefox": {
+    "browser": "firefox",
+    "files": 12,
+    "transferTotal": 4304588,
+    "transferEngine": 2969240,
+    "transferAppContent": 1335348,
+    "rows": [
+      {
+        "path": "assets/FontManifest.json",
+        "manifestBytes": 365,
+        "transferBytes": 175,
+        "gzipRatio": 0.4795,
+        "ok": true
+      },
+      {
+        "path": "assets/assets/content/articles.json",
+        "manifestBytes": 128997,
+        "transferBytes": 38827,
+        "gzipRatio": 0.301,
+        "ok": true
+      },
+      {
+        "path": "assets/assets/content/chunks.json",
+        "manifestBytes": 137516,
+        "transferBytes": 22305,
+        "gzipRatio": 0.1622,
+        "ok": true
+      },
+      {
+        "path": "assets/assets/fonts/NotoSansSC-Subset.otf",
+        "manifestBytes": 352736,
+        "transferBytes": 300162,
+        "gzipRatio": 0.851,
+        "ok": true
+      },
+      {
+        "path": "assets/fonts/MaterialIcons-Regular.otf",
+        "manifestBytes": 8892,
+        "transferBytes": 4453,
+        "gzipRatio": 0.5008,
+        "ok": true
+      },
+      {
+        "path": "assets/fonts/fallback/Roboto-Regular.ttf",
+        "manifestBytes": 171676,
+        "transferBytes": 91002,
+        "gzipRatio": 0.5301,
+        "ok": true
+      },
+      {
+        "path": "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf",
+        "manifestBytes": 1472,
+        "transferBytes": 1010,
+        "gzipRatio": 0.6861,
+        "ok": true
+      },
+      {
+        "path": "flutter_bootstrap.js",
+        "manifestBytes": 13119,
+        "transferBytes": 5195,
+        "gzipRatio": 0.396,
+        "ok": true
+      },
+      {
+        "path": "main.dart.js",
+        "manifestBytes": 2957222,
+        "transferBytes": 866927,
+        "gzipRatio": 0.2932,
+        "ok": true
+      },
+      {
+        "path": "canvaskit/canvaskit.js",
+        "manifestBytes": 86987,
+        "transferBytes": 27609,
+        "gzipRatio": 0.3174,
+        "ok": true
+      },
+      {
+        "path": "canvaskit/canvaskit.wasm",
+        "manifestBytes": 7284602,
+        "transferBytes": 2941631,
+        "gzipRatio": 0.4038,
+        "ok": true
+      },
+      {
+        "path": "icons/Icon-192.png",
+        "manifestBytes": 5292,
+        "transferBytes": 5292,
+        "gzipRatio": 1.0,
+        "ok": true
+      }
+    ]
+  }
+}

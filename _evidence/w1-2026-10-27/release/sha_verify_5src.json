@@ -1,0 +1,61 @@
+{
+  "at": "2026-10-27T17:39+08:00",
+  "roots": [
+    "pages",
+    "jsdelivr(site)",
+    "raw(site)",
+    "raw(releases)",
+    "jsdelivr(releases)"
+  ],
+  "result": {
+    "pages": {
+      "ok": 43,
+      "total": 43,
+      "bad": []
+    },
+    "jsdelivr": {
+      "ok": 43,
+      "total": 43,
+      "bad": []
+    },
+    "raw_releases": {
+      "ok": 43,
+      "total": 43,
+      "bad": []
+    },
+    "raw_site": {
+      "ok": 43,
+      "total": 43,
+      "bad": []
+    },
+    "jsdelivr_releases": {
+      "ok": 41,
+      "total": 43,
+      "bad": [
+        {
+          "path": "canvaskit/skwasm.js.symbols",
+          "error": "http 000"
+        },
+        {
+          "path": "canvaskit/skwasm_heavy.js",
+          "error": "http 403"
+        }
+      ]
+    }
+  },
+  "retries": [
+    {
+      "root": "jsdelivr(releases)",
+      "path": "canvaskit/skwasm.js.symbols",
+      "first": "http 000 (连接被重置)",
+      "retry": "http=200 size=1540006 sha256 ok"
+    },
+    {
+      "root": "jsdelivr(releases)",
+      "path": "canvaskit/skwasm_heavy.js",
+      "first": "http 403",
+      "retry": "http=200 size=63650 sha256 ok"
+    }
+  ],
+  "verdict": "五源全部 43/43 逐字节一致（后两件为并发下的瞬时失败，串行重试即 200 且 sha256 匹配）"
+}
