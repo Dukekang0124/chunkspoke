@@ -7,6 +7,7 @@ import 'models/content_pack.dart';
 import 'models/listening_article.dart';
 import 'services/crash_log.dart';
 import 'services/hd_voice.dart';
+import 'services/legacy_gate.dart';
 import 'services/loaders.dart';
 import 'services/notification_service.dart';
 import 'services/review_notify.dart';
@@ -42,6 +43,14 @@ void main() {
 
 Future<void> bootstrap() async {
   try {
+    // 1.5.10（#209）· D1：老用户身份判据必须在**任何开库动作之前**跑完。
+    // 判据 = 首启时 chunkspoke.db 文件在不在；结论写进库外的 legacy.flag，
+    // 写过永不重写。顺序反了（先 openDatabase 再判）会全员判成老用户 → 墙失效。
+    try {
+      await (await openLegacyGate()).bootstrap();
+    } catch (e, st) {
+      CrashLog.write('LegacyGate.bootstrap: $e', st);
+    }
     final progress = ProgressService();
     await progress.init();
     final content = await loadContentPack();

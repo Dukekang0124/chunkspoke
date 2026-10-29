@@ -21,6 +21,7 @@ import '../ui/permission_preprompt.dart';
 import '../ui/theme.dart';
 import '../ui/feedback.dart';
 import 'ai_coach_screen.dart';
+import 'data_backup.dart';
 import 'legal_screen.dart';
 import 'listening_debug.dart';
 import 'tts_guide.dart';
@@ -350,6 +351,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AiCoachScreen()),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 1.5.10（#209）· 数据备份入口：JSON 导出/导入（合并）。
+  Widget _backupEntry(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.4)),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          leading: const Icon(Icons.save_alt, color: kPrimary),
+          title: const Text('数据备份', style: TextStyle(color: kText)),
+          subtitle: const Text('导出/导入 JSON：词块进度、学习记录、设置；只在本机',
+              style: TextStyle(color: Colors.white54, fontSize: 12)),
+          trailing: const Icon(Icons.arrow_forward_ios,
+              size: 16, color: Colors.white38),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DataBackupScreen()),
           ),
         ),
       ),
@@ -1475,6 +1502,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _soundCard(context),
             const SizedBox(height: 12),
             _recordingCard(context),
+            const SizedBox(height: 12),
+            _backupEntry(context),
             const SizedBox(height: 12),
             _feedbackEntry(context),
             const SizedBox(height: 20),

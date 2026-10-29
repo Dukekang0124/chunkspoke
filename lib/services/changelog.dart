@@ -22,6 +22,12 @@ String changelogTitle(String versionName) =>
 /// 规矩：**发版前必须为本版新增一条**，内容只写本版真实交付项，
 /// 不得沿用上一版；单测会核对当前 versionName 是否有条目。
 const Map<String, List<String>> changelogByVersion = {
+  '1.5.10': [
+    '· 数据备份：设置页新增「数据备份」，把本机学习数据导成一个 JSON 文件（词块进度 / 学习记录 / 设置）',
+    '· 导入是合并：只补不删——本机比备份新的进度保留，重复记录自动跳过，已有设置不覆盖',
+    '· 换机、重装或清过数据时，用这份 JSON 就能把进度接回来',
+    '· 备份只在本机生成，不联网、不上传，不含录音，也不含任何 API Key 明文',
+  ],
   '1.5.9': [
     '· 学习日历：进度页新增月视图，点某一天看当日三数（新学块 / 复习 / 通过）',
     '· 发音评测：选一句跟读，本机离线打分——逐词三档着色 + 整体分（绿=说对、黄=能听出、红=再说一遍）',
@@ -40,7 +46,7 @@ const Map<String, List<String>> changelogByVersion = {
 };
 
 /// 兜底版本（当前发布版）；表里查不到时用它，避免空弹窗。
-const String changelogFallbackVersion = '1.5.9';
+const String changelogFallbackVersion = '1.5.10';
 
 /// 一条可展示的更新清单。
 class Changelog {

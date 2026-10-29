@@ -442,6 +442,39 @@ class AppDatabase {
     });
   }
 
+  // —— 1.5.10 通道版（#209）：整表读写，只服务 JSON 导出/导入 ——
+  //
+  // 导出读全量历史；导入按 (chunk_key, ts, outcome, review) 去重后追加。
+  // 结构零改动（不建新表、不加列），1.5.9 的库可直接用。
+  Future<List<Map<String, Object?>>> allSessionRows() async =>
+      (await db).query('sessions', orderBy: 'ts ASC, id ASC');
+
+  /// 同一条会话事件已存在则跳过；返回是否真的写入。
+  Future<bool> insertSessionIfMissing(Map<String, Object?> row) async {
+    final d = await db;
+    final hit = await d.query(
+      'sessions',
+      columns: ['id'],
+      where: 'chunk_key = ? AND ts = ? AND outcome = ? AND review = ?',
+      whereArgs: [
+        row['chunk_key'],
+        row['ts'],
+        row['outcome'],
+        (row['review'] as int?) ?? 0,
+      ],
+      limit: 1,
+    );
+    if (hit.isNotEmpty) return false;
+    await d.insert('sessions', {
+      'chunk_key': row['chunk_key'],
+      'ts': row['ts'],
+      'outcome': row['outcome'],
+      'score': (row['score'] as int?) ?? 0,
+      'review': (row['review'] as int?) ?? 0,
+    });
+    return true;
+  }
+
   // —— 学习日历（1.5.9）——
   //
   // 口径见 `验收-v1.5.9/学习日历-口径-1.5.9.md`：

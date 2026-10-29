@@ -555,6 +555,9 @@ class ProgressService {
         bumpDailyNew();
       });
 
+  /// 1.5.10 通道版：JSON 导出/导入需要整表直读直写（只读 + 去重追加，不绕过状态机）。
+  AppDatabase get database => _db;
+
   /// T0 核心库总量（分母，随内容包变化）。同一块面在包内重复登记时只算一块，
   /// 与《T0 核心库清单》的「100 块」口径一致。
   static Map<String, List<String>> _coreByText(ContentPack content) {

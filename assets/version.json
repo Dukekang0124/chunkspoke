@@ -1,6 +1,6 @@
 {
-  "versionName": "1.5.9",
-  "versionCode": 4062,
+  "versionName": "1.5.10",
+  "versionCode": 4063,
   "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
   "urls": [
     "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
@@ -9,7 +9,7 @@
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
   "sha256": "942919e5b6bb10e20acc7567ae8e1ec4f8b7a0e160611fef83e1a63f9c32914f",
   "size": 59741843,
-  "notes": "v1.5.9：① 学习日历——「我的」进度页新增月视图，点某一天看当日三数（新学块 / 复习 / 通过），不发热力图；② 发音评测——选一句跟读，本机离线打分：逐词三档着色 + 整体分（绿=说对、黄=能听出、红=再说一遍），全在本机完成，不联网、不落库；③ 沿用 1.5.8.2 的拾音改进与语速 0.75/1.0/1.25。",
+  "notes": "v1.5.10：① 数据备份——设置页新增「数据备份」，把本机学习数据导出成一个 JSON 文件（词块进度 / 学习记录 / 设置），换机或重装时粘回来合并；② 合并只补不删——本机比备份新的进度会保留，重复记录自动跳过，已有设置不覆盖；③ 备份只在本机生成，不联网、不上传、不含录音，也不含任何 API Key 明文。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part0",
