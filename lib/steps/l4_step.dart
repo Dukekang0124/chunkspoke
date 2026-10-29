@@ -101,6 +101,10 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   // P1-2 反向产出（轻量版）：隐藏英文、只给中文，逼用户从中文产出英文。
   bool _reverse = false;
 
+  /// §30.3-5：本条判定来自「手改转写 / 打字作答」而非语音命中。
+  /// 为 true 时结果必须标注「未验证发音」，且不当成一次开口尝试记账。
+  bool _edited = false;
+
   double _level = 0;
   bool _levelActive = false;
   StreamSubscription<double>? _levelSub;
@@ -111,6 +115,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   Timer? _passTimer;
 
   static const double _levelThreshold = 0.08;
+
+  /// §30.3-9：只喂「靠近一点说」提示的舒适线，不参与端点判定与识别打分。
+  static const double _comfortLevel = 0.15;
 
   ProgressService get _p => Provider.of<ProgressService>(context, listen: false);
   TtsService get _tts => Provider.of<TtsService>(context, listen: false);
@@ -191,6 +198,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     _followPlaying = false;
     _followPath = null;
     _reverse = false;
+    _edited = false;
     _level = 0;
     _levelActive = false;
     _listenStart = null;
@@ -371,6 +379,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       _passed = false;
       _showAnswer = false;
       _passPending = false;
+      _edited = false;
     });
     if (Motion.of(context).animates) {
       _breathCtrl.repeat(reverse: true); // B3 呼吸脉动（M1 起统一过闸）
@@ -546,6 +555,70 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
 
   void _selfConfirm(bool ok) => _resolveAttempt(ok, selfEval: ok);
 
+  /// 有波动但明显偏弱 → 「靠近一点说」。纯提示，不改判定、不打断采集。
+  bool get _tooQuiet => _levelActive && _level < _comfortLevel;
+
+  /// §30.3-5：可编辑转写 + 打字作答。识别不准时不逼用户重录——允许把文本改对
+  /// 后按「文本判定」再看一次；文本结果标注「未验证发音」，不计发音分，也不
+  /// 计入 3 次开口尝试（不污染掌握统计）。
+  Future<void> _judgeEdited() async {
+    if (_listening || _thinking) return;
+    final ctrl = TextEditingController(text: _transcript);
+    final text = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: kCard,
+        title: const Text('改转写 / 打字作答',
+            style: TextStyle(color: Colors.white, fontSize: 17)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              minLines: 1,
+              maxLines: 3,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+              decoration: const InputDecoration(
+                hintText: '把这句英文写出来',
+                hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text('按文本判定：不验证发音，也不计发音分',
+                style: TextStyle(color: Colors.white38, fontSize: 12)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text),
+            child: const Text('按文本判定', style: TextStyle(color: kPrimary)),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    final t = text?.trim() ?? '';
+    if (t.isEmpty || !mounted) return;
+    final outcome = judgeSpeech(target: widget.targetText, recognized: t);
+    final passed = outcome.pass;
+    if (passed) Motion.of(context).success();
+    setState(() {
+      _transcript = t;
+      _judge = outcome;
+      _guard = null;
+      _passed = passed;
+      _edited = true;
+    });
+    if (passed) await _resolveAttempt(true, accuracy: 0, selfEval: true);
+  }
+
   Future<void> _toggleReplay() async {
     if (_listening || _followListening) return;
     final path = _recPath;
@@ -589,6 +662,14 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
 
   Widget _micButton() => GestureDetector(
         onTap: _listening ? _stop : _start,
+        // §30.3-2 预卷：按下即起采（原生 400ms 环形缓冲），抬起进入正式录音时
+        // 回灌缓冲，避免句首弱读被切；取消/3s 超时由原生自动释放。
+        onTapDown: (_) {
+          if (!_listening && !_thinking && !_selfAssess && _ready) {
+            _rec.arm();
+          }
+        },
+        onTapCancel: () => _rec.disarm(),
         child: AnimatedBuilder(
           animation: _breathCtrl,
           builder: (ctx, _) {
@@ -868,11 +949,16 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 LevelMeter(level: _level),
                 const SizedBox(height: 10),
                 Text(
-                  _levelActive
-                      ? '正在录音 ● 点圆形按钮结束'
-                      : '正在录音 · 等待声音…（波形不动=麦克风异常）',
+                  _tooQuiet
+                      ? '声音有点小，靠近一点说'
+                      : (_levelActive
+                          ? '正在录音 ● 点圆形按钮结束'
+                          : '正在录音 · 等待声音…（波形不动=麦克风异常）'),
                   style: TextStyle(
-                      color: _levelActive ? kUnlocked : Colors.white54, fontSize: 13),
+                      color: _tooQuiet
+                          ? kPrimary
+                          : (_levelActive ? kUnlocked : Colors.white54),
+                      fontSize: 13),
                 ),
                 const SizedBox(height: 14),
                 _micButton(),
@@ -894,7 +980,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 if (_transcript.trim().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
-                    child: Text("你说：'$_transcript'",
+                    child: Text("${_edited ? '你写' : '你说'}：'$_transcript'",
                         key: const Key('l4AsrRaw'),
                         style: const TextStyle(
                             color: Colors.white70, fontSize: 13)),
@@ -903,12 +989,18 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Text(
-                        '相似度：${(_judge!.similarity * 100).round()}%（词级匹配）',
+                        _edited
+                            ? '按文本判定 · 未验证发音（不计分）'
+                            : '相似度：${(_judge!.similarity * 100).round()}%（词级匹配）',
                         style: const TextStyle(
                             color: Colors.white54, fontSize: 12)),
                   ),
                 Text(
-                  _levelActive ? '离麦克风近一点，语速自然' : '麦克风可能被占用或未授权，去设置检查',
+                  _edited
+                      ? '手打的文本按文本比对，不算一次开口尝试'
+                      : (_levelActive
+                          ? '离麦克风近一点，语速自然'
+                          : '麦克风可能被占用或未授权，去设置检查'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white54, fontSize: 13),
                 ),
@@ -953,6 +1045,11 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                     child: const Text('先跟着读，不评分也可以 →',
                         style: TextStyle(color: kPrimary)),
                   ),
+                TextButton(
+                  onPressed: _judgeEdited,
+                  child: const Text('改转写 / 打字作答（不计发音分）',
+                      style: TextStyle(color: Colors.white54)),
+                ),
               ],
             )
           else if (_judge != null && _passed)
@@ -964,7 +1061,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 if (_transcript.trim().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text("你说：'$_transcript'",
+                    child: Text("${_edited ? '你写' : '你说'}：'$_transcript'",
                         key: const Key('l4AsrRaw'),
                         style: const TextStyle(
                             color: Colors.white70, fontSize: 13)),
@@ -973,7 +1070,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                        '相似度：${(_judge!.similarity * 100).round()}%（词级匹配）',
+                        _edited
+                            ? '按文本通过 · 未验证发音（不计分）'
+                            : '相似度：${(_judge!.similarity * 100).round()}%（词级匹配）',
                         style: const TextStyle(
                             color: Colors.white54, fontSize: 12)),
                   ),
@@ -1002,7 +1101,19 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               ],
             )
           else
-            _micButton(),
+            Column(
+              children: [
+                _micButton(),
+                const SizedBox(height: 8),
+                const Text('语速适中、吐字清晰识别更准',
+                    style: TextStyle(color: Colors.white38, fontSize: 12)),
+                TextButton(
+                  onPressed: _judgeEdited,
+                  child: const Text('说不了？打字作答',
+                      style: TextStyle(color: kPrimary, fontSize: 13)),
+                ),
+              ],
+            ),
           if (!_showAnswer &&
               !_passPending &&
               !_passed &&

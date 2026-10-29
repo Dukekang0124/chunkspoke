@@ -29,12 +29,24 @@ const double kListenSlowRate = 0.14;
 const double kListenNormalRate = 0.22;
 const double kListenFastRate = 0.32;
 
-List<double> listenRates({required bool reviewMode}) =>
-    reviewMode ? const [kListenSlowRate, kListenNormalRate] : const [
-      kListenSlowRate,
-      kListenNormalRate,
-      kListenFastRate,
-    ];
+/// 三档的**相对**倍率：慢 0.64× / 常 1.0× / 快 1.45×（以标准档为 1.0）。
+///
+/// [scale] 传用户语速档位（[VoiceProfile]）的倍率，三档整体跟着缩放：
+/// 教学意图是「同一句在三档之间的相对差异」，绝对语速则服从用户设置
+/// （§30.5 发音一致性——用户选了慢，听辨里不该突然冒出一句原速）。
+List<double> listenRates({required bool reviewMode, double scale = 1.0}) {
+  final base = reviewMode
+      ? const [kListenSlowRate, kListenNormalRate]
+      : const [kListenSlowRate, kListenNormalRate, kListenFastRate];
+  if ((scale - 1.0).abs() < 0.001) return base;
+  double q(double r) => (r * scale * 1000).round() / 1000;
+  return [for (final r in base) q(r)];
+}
+
+/// 档位倍率下某一档的绝对语速阈值（听辨 UI 判「慢/常/快」标签用，
+/// 与 [listenRates] 同源缩放，别在 UI 里直接比裸常量）。
+double listenRateCut(double base, double scale) =>
+    (base * scale * 1000).round() / 1000;
 
 List<int> phaseOrder({required bool reviewMode}) => reviewMode
     ? const [

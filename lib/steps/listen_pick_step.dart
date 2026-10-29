@@ -44,6 +44,8 @@ class ListenPickStep extends StatefulWidget {
 
 class _ListenPickStepState extends State<ListenPickStep> {
   late final List<double> _rates;
+  /// 用户语速档位倍率：三档绝对语速与「慢/常/快」标签阈值同源缩放。
+  late final double _scale;
   late List<String> _options;
   int _round = 0;
   int _hits = 0;
@@ -59,15 +61,16 @@ class _ListenPickStepState extends State<ListenPickStep> {
   double get _rate => _rates[_round.clamp(0, _rates.length - 1)];
 
   String get _speedLabel {
-    if (_rate <= kListenSlowRate + 0.001) return '慢速';
-    if (_rate >= kListenFastRate - 0.001) return '快速';
+    if (_rate <= listenRateCut(kListenSlowRate, _scale) + 0.001) return '慢速';
+    if (_rate >= listenRateCut(kListenFastRate, _scale) - 0.001) return '快速';
     return '常速';
   }
 
   @override
   void initState() {
     super.initState();
-    _rates = listenRates(reviewMode: widget.rounds <= 2);
+    _scale = _tts.profile.speed.factor;
+    _rates = listenRates(reviewMode: widget.rounds <= 2, scale: _scale);
     _buildOptions();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _play();
@@ -284,8 +287,8 @@ class _ListenPickStepState extends State<ListenPickStep> {
 
   String _nextSpeedLabel() {
     final next = _rates[(_round + 1).clamp(0, _rates.length - 1)];
-    if (next <= kListenSlowRate + 0.001) return '慢速';
-    if (next >= kListenFastRate - 0.001) return '快速';
+    if (next <= listenRateCut(kListenSlowRate, _scale) + 0.001) return '慢速';
+    if (next >= listenRateCut(kListenFastRate, _scale) - 0.001) return '快速';
     return '常速';
   }
 }

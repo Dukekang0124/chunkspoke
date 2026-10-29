@@ -60,6 +60,10 @@ class _SayWidgetState extends State<SayWidget> {
 
   static const double _levelThreshold = 0.04;
 
+  /// §30.3-9：这是「靠近一点说」提示的舒适线，**只喂 UI 提示**——
+  /// 不参与端点判定、不参与识别打分，也不打断录音。
+  static const double _comfortLevel = 0.12;
+
   @override
   void initState() {
     super.initState();
@@ -286,8 +290,74 @@ class _SayWidgetState extends State<SayWidget> {
         content: Text('申诉已记录，我们会复核'), duration: Duration(seconds: 1)));
   }
 
-  double _scoreOf(SayOutcome o) =>
-      (o.azure != null ? o.azure!.accuracy : (o.textMatchScore ?? 0)).toDouble();
+  /// 走上报的分数：手改/打字的文本不计发音分（§30.3-5 不许把文本结果伪装成
+  /// 语音命中），与 L3 自确认同为 0 分；文字结果只用来推进流程。
+  double _scoreOf(SayOutcome o) {
+    if (o.edited) return 0.0;
+    return (o.azure != null ? o.azure!.accuracy : (o.textMatchScore ?? 0))
+        .toDouble();
+  }
+
+  /// §30.3-5：可编辑转写 + 常驻打字入口。识别不准时不逼用户重录——允许把文本
+  /// 改对后按「文本作答」再判一次；结果标注「未验证发音」，且不计发音分。
+  Future<void> _editTranscript() async {
+    final ctrl = TextEditingController(text: _outcome?.recognized ?? '');
+    final text = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        title: const Text('改转写 / 打字作答',
+            style: TextStyle(color: Colors.white, fontSize: 17)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              minLines: 1,
+              maxLines: 3,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+              decoration: const InputDecoration(
+                hintText: '把你要说的句子写出来',
+                hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text('按文本判定：不验证发音，也不计发音分',
+                style: TextStyle(color: Colors.white38, fontSize: 12)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text),
+            child: const Text('按文本判定', style: TextStyle(color: kPrimary)),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    final t = text?.trim() ?? '';
+    if (t.isEmpty || !mounted) return;
+    final j =
+        judgeSpeech(target: widget.sentence, recognized: t, confidence: null);
+    setState(() {
+      _outcome = SayOutcome(
+        passed: j.pass,
+        level: 'L2',
+        recognized: t,
+        textMatchScore: (j.similarity * 100).round(),
+        targetMatched: j.targetMatched,
+        wrong: !j.pass,
+        edited: true,
+      );
+    });
+  }
 
   Future<void> _confirmSkip(BuildContext context) async {
     final ok = await showDialog<bool>(
@@ -320,6 +390,9 @@ class _SayWidgetState extends State<SayWidget> {
   }
 
   bool get _diagIsPerm => !_engineFailed && !_levelActive;
+
+  /// 有波动但明显偏弱 → 「靠近一点说」。纯提示，不改判定、不打断采集。
+  bool get _tooQuiet => _levelActive && _level < _comfortLevel;
 
   Widget _scoreRow(String label, double v) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -407,12 +480,16 @@ class _SayWidgetState extends State<SayWidget> {
       return _card(border: kUnlocked, children: [
         const Icon(Icons.check_circle, color: kUnlocked, size: 36),
         const SizedBox(height: 8),
-        const Text('你说：', style: TextStyle(color: Colors.white, fontSize: 16)),
+        Text(o.edited ? '你写的：' : '你说：',
+            style: const TextStyle(color: Colors.white, fontSize: 16)),
         const SizedBox(height: 6),
         Text("'${o.recognized}'",
             style: const TextStyle(color: kUnlocked, fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
-        Text('得分：${o.textMatchScore}（文本匹配）',
+        Text(
+            o.edited
+                ? '按文本通过 · 未验证发音（不计分）'
+                : '得分：${o.textMatchScore}（文本匹配）',
             style: const TextStyle(color: Colors.white70, fontSize: 14)),
         const SizedBox(height: 14),
         SizedBox(
@@ -449,6 +526,11 @@ class _SayWidgetState extends State<SayWidget> {
             onPressed: () => _rec.openSettings(),
             child: const Text('去设置检查麦克风权限', style: TextStyle(color: Colors.white54)),
           ),
+        TextButton(
+          onPressed: _editTranscript,
+          child: const Text('说不了？打字作答',
+              style: TextStyle(color: Colors.white54)),
+        ),
       ]);
     }
     if (o.level == 'L2') {
@@ -479,6 +561,15 @@ class _SayWidgetState extends State<SayWidget> {
           ),
         ),
         const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: _editTranscript,
+            child: const Text('改转写再判（不计发音分）',
+                style: TextStyle(color: Colors.white70)),
+          ),
+        ),
+        const SizedBox(height: 6),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
@@ -557,9 +648,14 @@ class _SayWidgetState extends State<SayWidget> {
           LevelMeter(level: _level),
           const SizedBox(height: 10),
           Text(
-            _levelActive ? '麦克风在采集 ● 正常' : '等待声音…（波形不动=麦克风异常）',
+            _tooQuiet
+                ? '声音有点小，靠近一点说'
+                : (_levelActive ? '麦克风在采集 ● 正常' : '等待声音…（波形不动=麦克风异常）'),
             style: TextStyle(
-                color: _levelActive ? kUnlocked : Colors.white54, fontSize: 13),
+                color: _tooQuiet
+                    ? kPrimary
+                    : (_levelActive ? kUnlocked : Colors.white54),
+                fontSize: 13),
           ),
           const SizedBox(height: 18),
           ElevatedButton(
@@ -613,6 +709,10 @@ class _SayWidgetState extends State<SayWidget> {
             Column(
               children: [
                 GestureDetector(
+                  // §30.3-2 预卷：按下即起采（原生 400ms 环形缓冲），抬起进入正式
+                  // 录音时把缓冲回灌进 WAV，避免句首弱读被切；取消/3s 超时原生自释放。
+                  onTapDown: (_) => _rec.arm(),
+                  onTapCancel: () => _rec.disarm(),
                   onTap: _start,
                   child: Container(
                     width: 96,
@@ -628,6 +728,14 @@ class _SayWidgetState extends State<SayWidget> {
                 const SizedBox(height: 10),
                 const Text('点按，然后说出来',
                     style: TextStyle(color: Colors.white70)),
+                const SizedBox(height: 4),
+                const Text('语速适中、吐字清晰识别更准',
+                    style: TextStyle(color: Colors.white38, fontSize: 12)),
+                TextButton(
+                  onPressed: _editTranscript,
+                  child: const Text('说不了？打字作答',
+                      style: TextStyle(color: kPrimary, fontSize: 13)),
+                ),
               ],
             ),
           const SizedBox(height: 20),

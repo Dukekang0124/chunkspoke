@@ -166,6 +166,10 @@ class ProgressService {
 
   Future<void> setTtsVoiceKey(String? key) => _put('ttsVoice', key ?? '');
 
+  /// 朗读语速档位（§30.5 S-1 单源）：默认标准；脏值回落标准。
+  TtsSpeed get ttsSpeed => TtsSpeed.fromKey(_kv('ttsSpeed'));
+  Future<void> setTtsSpeed(TtsSpeed s) => _put('ttsSpeed', s.name);
+
   /// 高清发音包开关：默认开（下载完成后即生效，可随时切回系统引擎）。
   bool get hdVoiceEnabled => _kv('hdVoiceEnabled') != 'false';
   Future<void> setHdVoiceEnabled(bool v) =>
@@ -595,6 +599,64 @@ enum TtsStatus {
   error, // 检测过程异常（非致命）
 }
 
+/// 用户可选朗读语速档位（§30.5 S-1 参数单源化的第一层）。
+///
+/// 只描述「相对标准档的倍率」，不直接存引擎 rate——引擎参数由 [VoiceProfile]
+/// 从 [TtsService.kRate] 派生。此前六个发声入口各写一遍 `setSpeechRate(kRate)`，
+/// 改一处漏五处，正是「设置里选了慢速、浸泡层还是原速」的根因。
+enum TtsSpeed {
+  slow(0.75, '慢', '慢一些'),
+  normal(1.0, '标准', '标准'),
+  fast(1.25, '快', '快一些');
+
+  const TtsSpeed(this.factor, this.label, this.hint);
+
+  /// 相对标准档的倍率。
+  final double factor;
+
+  /// 设置页短标签。
+  final String label;
+
+  /// 设置页一行说明（写感受，不写倍数，不让用户换算）。
+  final String hint;
+
+  /// 持久化键 → 档位。未知/缺失一律回落标准档：脏数据不许把朗读变成静音。
+  static TtsSpeed fromKey(String? key) {
+    for (final s in values) {
+      if (s.name == key) return s;
+    }
+    return normal;
+  }
+}
+
+/// 发音参数单源（§30.5 S-1..S-4）。
+///
+/// **唯一**允许计算 rate/pitch 的地方。[TtsService] 的每个发声入口
+/// （speak / speakAtRate / speakAndWait / auditionVoice / synthesizeToFile）
+/// 都必须从这里取参数；新增入口绕开它，等于又造了一个硬编码。
+///
+/// 边界（裁定）：浸泡层文章播放的 `baseRate` 属**内容轴**（每级由内容声明并由
+/// 校验器断言），不叠加用户档位；高清包是固定语速（`HdVoiceService.kSpeed`
+/// 对齐标准档），用户改了档位就只走系统引擎，避免「选了慢却听到原速」。
+class VoiceProfile {
+  const VoiceProfile({this.speed = TtsSpeed.normal});
+
+  final TtsSpeed speed;
+
+  static const VoiceProfile standard = VoiceProfile();
+
+  /// 引擎 rate（flutter_tts 口径）。标准档 = [TtsService.kRate]。
+  double get rate => TtsService.kRate * speed.factor;
+
+  double get pitch => TtsService.kPitch;
+
+  bool get isStandard => speed == TtsSpeed.normal;
+
+  @override
+  String toString() =>
+      'VoiceProfile(${speed.name}, rate=${rate.toStringAsFixed(3)})';
+}
+
 /// 薄适配层：把 flutter_tts 的平台调用隔离出来，检测分支可用假实现单测。
 abstract class TtsAdapter {
   Future<String?> getDefaultEngine();
@@ -731,10 +793,14 @@ class TtsService implements ListeningVoice {
   TtsService({
     TtsAdapter? adapter,
     String? Function()? preferredVoice,
+    VoiceProfile Function()? readProfile,
     HdVoiceSpeaker? hdVoice,
+    void Function(String event, Map<String, dynamic> params)? onEvent,
   })  : _tts = adapter ?? FlutterTtsAdapter(),
         _preferredVoice = preferredVoice,
-        _hdVoice = hdVoice;
+        _readProfile = readProfile,
+        _hdVoice = hdVoice,
+        _onEvent = onEvent;
 
   final TtsAdapter _tts;
 
@@ -744,9 +810,48 @@ class TtsService implements ListeningVoice {
   /// 读取用户持久化的音色（引擎|名称|locale）。为 null 表示自动优选。
   final String? Function()? _preferredVoice;
 
-  /// 自然朗读参数（见 DDS「发音体系」章）。flutter_tts 在 Android 侧把
-  /// rate×2 再交给系统引擎，0.22 → Android 0.44，实测 154 wpm（14 词 / 5.46s），
+  /// 读取当前语速档位。为 null 表示标准档（单测/无设置源的旧调用）。
+  /// 每次发声都现读，设置页改档后下一句即生效，不用重建服务。
+  final VoiceProfile Function()? _readProfile;
+
+  /// 观测埋点回调（高清回落等）；抛错绝不影响发声。
+  final void Function(String event, Map<String, dynamic> params)? _onEvent;
+
+  /// 本次运行高清包是否已回落到系统发音（设置页提示 + 诊断用）。
+  bool _hdFellBack = false;
+  bool get hdFellBack => _hdFellBack;
+
+  /// 当前发音参数（单源读取点）。
+  VoiceProfile get profile => _readProfile?.call() ?? VoiceProfile.standard;
+
+  /// 把当前档位写进系统引擎。**每个发声入口都要调**——不要依赖「init 时设过一次」，
+  /// 那时是标准档，用户之后改档就对不上了。
+  Future<void> _applyProfile([double? rateOverride]) async {
+    try {
+      await _tts.setSpeechRate(rateOverride ?? profile.rate);
+      await _tts.setPitch(profile.pitch);
+    } catch (_) {}
+  }
+
+  /// 高清包失败 → 回落系统发音（回落=甲）：仍照常发声，只记一次打点。
+  /// 同一运行期只记一次，避免每次点喇叭把同一故障刷成百条事件。
+  void _noteHdFallback() {
+    _lastError = 'hd-voice-failed';
+    if (_hdFellBack) return;
+    _hdFellBack = true;
+    final cb = _onEvent;
+    if (cb == null) return;
+    try {
+      cb('tts_hd_fallback', {'voice': voiceKey, 'status': _status.name});
+    } catch (_) {}
+  }
+
+  /// **标准档**的自然朗读参数（见 DDS「发音体系」章）。flutter_tts 在 Android 侧
+  /// 把 rate×2 再交给系统引擎，0.22 → Android 0.44，实测 154 wpm（14 词 / 5.46s），
   /// 落在真人对话 140–160 wpm 区间；旧值 0.9 实际是 1.8 倍速（约 420 wpm）。
+  ///
+  /// 这两个常量只是**基准**：真正下发到引擎的值一律经 [VoiceProfile] 派生
+  /// （用户档位 × 基准）。不要在发声入口直接引用它们。
   static const double kRate = 0.22;
   static const double kPitch = 1.0;
 
@@ -764,9 +869,11 @@ class TtsService implements ListeningVoice {
   static const String kAuditionText = "I'd like a cup of coffee.";
 
   /// 指定语速播放（六步听辨的慢/常/快三档）。高清包固定语速，
-  /// 变速一律走系统引擎；播放后恢复默认语速，避免污染后续朗读。
+  /// 变速一律走系统引擎；播放后恢复**当前档位**（不是写死的 kRate，
+  /// 否则用户选了慢速，听辨结束后下一句会突然变快）。
   Future<bool> speakAtRate(String text, double rate) async {
-    if ((rate - kRate).abs() < 0.001) return speak(text);
+    final base = profile.rate;
+    if ((rate - base).abs() < 0.001) return speak(text);
     if (_status != TtsStatus.ready) await init();
     if (_status != TtsStatus.ready) {
       // 系统引擎不可用但高清包可用：退回默认语速，至少能听到。
@@ -777,7 +884,7 @@ class TtsService implements ListeningVoice {
     }
     try {
       await _tts.stop();
-      await _tts.setSpeechRate(rate);
+      await _applyProfile(rate);
       final r = await _tts.speak(text);
       _lastError = r == 0 ? 'tts-speak-returned-0' : null;
       return r != 0;
@@ -787,7 +894,7 @@ class TtsService implements ListeningVoice {
       return false;
     } finally {
       try {
-        await _tts.setSpeechRate(kRate);
+        await _tts.setSpeechRate(profile.rate);
       } catch (_) {}
     }
   }
@@ -957,10 +1064,7 @@ class TtsService implements ListeningVoice {
         } catch (_) {}
       }
       if (ok) {
-        try {
-          await _tts.setSpeechRate(kRate);
-          await _tts.setPitch(kPitch);
-        } catch (_) {}
+        await _applyProfile();
         _language = lang;
         _status = TtsStatus.ready;
         _lastError = null;
@@ -1021,8 +1125,7 @@ class TtsService implements ListeningVoice {
     }
     try {
       await _tts.stop();
-      await _tts.setSpeechRate(kRate);
-      await _tts.setPitch(kPitch);
+      await _applyProfile();
       final r = await _tts.speak(text);
       if (r != 0) {
         _lastError = null;
@@ -1089,13 +1192,16 @@ class TtsService implements ListeningVoice {
   /// HyperOS 常见），这里在真正播放时按需重初始化；播放失败再重试一轮。
   Future<bool> speak(String text) async {
     final hd = _hdVoice;
-    if (hd != null && hd.active) {
+    final p = profile;
+    // 高清包是固定语速（kSpeed 对齐标准档）。用户调过档位就只走系统引擎，
+    // 否则「设置里选了慢、听出来还是原速」就是不诚实（§30.5 S-4）。
+    if (hd != null && hd.active && p.isStandard) {
       if (await hd.speak(text)) {
         _lastError = null;
         return true;
       }
-      // 高清包加载/合成失败：不裸报错，继续走系统引擎（若可用）。
-      _lastError = 'hd-voice-failed';
+      // 高清包加载/合成失败：不裸报错，继续走系统引擎（若可用），记一次回落。
+      _noteHdFallback();
     }
     if (_status != TtsStatus.ready) {
       await init(); // 现场重试：此刻引擎大概率已就绪（或用户刚装好语音包）
@@ -1105,6 +1211,8 @@ class TtsService implements ListeningVoice {
         return false;
       }
     }
+    // 每次发声都按档位写参数（init 时设的那次是当时的档位，之后改档就对不上）。
+    await _applyProfile();
     for (var attempt = 0; attempt < 2; attempt++) {
       try {
         final r = await _tts.speak(text);
@@ -1166,8 +1274,7 @@ class TtsService implements ListeningVoice {
       return false;
     }
     try {
-      await _tts.setSpeechRate(kRate);
-      await _tts.setPitch(kPitch);
+      await _applyProfile();
       final ok = await a.synthesizeToFile(t, fullPath);
       _lastError = ok ? null : 'tts-synth-failed';
       return ok;
@@ -1199,8 +1306,7 @@ class TtsService implements ListeningVoice {
     final timeout = Duration(
         milliseconds: (4000 + t.length * 90).clamp(6000, 30000));
     try {
-      await _tts.setSpeechRate(kRate);
-      await _tts.setPitch(kPitch);
+      await _applyProfile();
       final ok = await a.speakAndWait(t).timeout(timeout);
       _lastError = ok ? null : 'tts-speak-returned-0';
       return ok;

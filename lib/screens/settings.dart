@@ -534,6 +534,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Text(hd.engineError!,
                     style: const TextStyle(color: kError, fontSize: 12)),
               ),
+            // 回落=甲：高清包加载失败时仍照常发声，但必须让用户知道听到的是
+            // 系统发音，而不是以为高清仍然生效（静默回落=用户放弃的旧行为）。
+            if (tts.hdFellBack)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 6),
+                child: Text(
+                  '高清音色本次加载失败，已自动回落到系统发音。可删除该音色后重新下载，或先关掉开关。',
+                  style: TextStyle(color: kPrimary, fontSize: 12, height: 1.4),
+                ),
+              ),
             for (final v in hd.voices) _voiceRow(context, hd, tts, v, busy),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
@@ -985,6 +995,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return m > 0 ? '约 $m 分 $s 秒' : '约 $s 秒';
   }
 
+  /// 朗读语速（§30.5 单源）：三档写进 ProgressService，[TtsService] 每次发声
+  /// 现读现用——这里只改档位，不直接碰引擎参数，避免出现第二个参数源。
+  Widget _speedCard(BuildContext context) {
+    final progress = Provider.of<ProgressService>(context);
+    final cur = progress.ttsSpeed;
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(children: [
+            Icon(Icons.speed, color: kPrimary, size: 20),
+            SizedBox(width: 8),
+            Text('朗读语速', style: TextStyle(color: kText, fontSize: 14)),
+          ]),
+          const SizedBox(height: 4),
+          const Text('影响示范音、词块与讲解；磨耳朵文章按自己的倍速播放，不叠加这里',
+              style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.4)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final s in TtsSpeed.values)
+                ChoiceChip(
+                  label: Text(s.label,
+                      style: TextStyle(
+                          color: cur == s ? Colors.white : Colors.white70,
+                          fontSize: 13)),
+                  selected: cur == s,
+                  selectedColor: kPrimary.withValues(alpha: 0.28),
+                  backgroundColor: Colors.white10,
+                  side: BorderSide(
+                      color: cur == s ? kPrimary : Colors.white24),
+                  onSelected: (_) => _setSpeed(progress, s),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            cur.hint,
+            style: const TextStyle(color: Colors.white38, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _setSpeed(ProgressService progress, TtsSpeed s) async {
+    if (progress.ttsSpeed == s) return;
+    await progress.setTtsSpeed(s);
+    // 只记档位，不含文本内容。
+    progress.logEvent('voice_speed', {'speed': s.name});
+    if (!mounted) return;
+    setState(() {});
+  }
+
   /// 发音音色：自动优选 / 逐个试听。仅语音朗读就绪时展示。
   Widget _voiceCard(BuildContext context) {
     final tts = Provider.of<TtsService>(context, listen: false);
@@ -1392,6 +1463,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 12),
               _voiceCard(context),
             ],
+            const SizedBox(height: 12),
+            _speedCard(context),
             if (kDebugMode || _kListeningPreview) ...[
               const SizedBox(height: 12),
               _listeningDebugEntry(context),
@@ -1400,6 +1473,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _notificationCard(context),
             const SizedBox(height: 12),
             _soundCard(context),
+            const SizedBox(height: 12),
+            _recordingCard(context),
             const SizedBox(height: 12),
             _feedbackEntry(context),
             const SizedBox(height: 20),
@@ -1602,24 +1677,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.5),
                 ),
               ],
-              const Divider(color: Colors.white12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('保存最近一次录音（排障）',
-                    style: TextStyle(color: kText)),
-                subtitle: const Text(
-                    '默认关；开启后停止录音时复制到应用文档 asr_debug/last.wav',
-                    style: TextStyle(color: Colors.white54, fontSize: 12)),
-                value: RecordingService.keepLastWavForDebug,
-                activeThumbColor: kPrimary,
-                onChanged: (v) =>
-                    setState(() => RecordingService.keepLastWavForDebug = v),
-              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// 语音分组：录音留存（排障）+ 分享最近一次录音。
+  ///
+  /// 分享入口**只在开关打开时出现**，且只取最近一次留存的那份录音——
+  /// 不做历史列表、不做批量导出，避免把录音变成可翻查的资产。
+  Widget _recordingCard(BuildContext context) {
+    final on = RecordingService.keepLastWavForDebug;
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          children: [
+            SwitchListTile(
+              title: const Text('保存最近一次录音（排障）',
+                  style: TextStyle(color: kText)),
+              subtitle: const Text(
+                  '默认关；开启后停止录音时复制到应用文档 asr_debug/last.wav',
+                  style: TextStyle(color: Colors.white54, fontSize: 12)),
+              value: on,
+              activeThumbColor: kPrimary,
+              onChanged: (v) =>
+                  setState(() => RecordingService.keepLastWavForDebug = v),
+            ),
+            if (on) ...[
+              const Divider(color: Colors.white12, height: 1),
+              ListTile(
+                leading:
+                    const Icon(Icons.ios_share, color: kPrimary, size: 20),
+                title: const Text('分享最近一次录音',
+                    style: TextStyle(color: kText)),
+                subtitle: const Text(
+                    '只取最近一次录音 · 分享前请自行确认内容',
+                    style: TextStyle(color: Colors.white54, fontSize: 12)),
+                trailing: const Icon(Icons.arrow_forward_ios,
+                    size: 16, color: Colors.white38),
+                onTap: _shareLastRecording,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _shareLastRecording() async {
+    final ok = await RecordingService.shareLast();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ok ? '已打开系统分享面板，分享前请自行确认' : '还没有可分享的录音，先说一句再来'),
+      duration: const Duration(seconds: 2),
+    ));
   }
 }
 

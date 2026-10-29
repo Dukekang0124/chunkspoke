@@ -105,7 +105,16 @@ Future<void> main() async {
     await progress.init();
     final content = await loadContentPack();
     final listening = screen == 'q3' ? await loadListeningPack() : null;
-    final tts = TtsService();
+    // 与 main.dart 同源注入语速档位与埋点回调：否则 E2E 永远跑「标准档、
+    // 事件丢失」的假路径，测过了也证明不了设置页改档真的生效（测试不许测假路径）。
+    // 高清包不注入：压测机未必装过音色包，注入后 init 要先扫模型目录、拖慢启动腿；
+    // 「无高清包时回落系统发音」本身就是产品内正常路径。
+    final tts = TtsService(
+      readProfile: () => VoiceProfile(speed: progress.ttsSpeed),
+      onEvent: (e, p) {
+        progress.logEvent(e, p);
+      },
+    );
     // 压测腿不听示范音：Google TTS 冷启动可能几十秒不回调，别把整条流程卡在启动页。
     try {
       await tts.init().timeout(const Duration(seconds: 10));

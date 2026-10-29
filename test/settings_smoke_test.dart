@@ -106,14 +106,16 @@ void main() {
       expect(find.byType(TextField), findsNWidgets(2));
       // TTS 修复入口常驻设置页。
       expect(find.text('语音朗读（TTS）'), findsOneWidget);
+      // 录音留存开关已移入语音分组（常驻），分享入口默认不出现。
+      expect(find.text('保存最近一次录音（排障）'), findsOneWidget);
+      expect(find.text('分享最近一次录音'), findsNothing);
 
-      // 展开「高级」→ 关闭态的在线 AI 开关 + 两个默认关闭的排障开关。
+      // 展开「高级」→ 关闭态的在线 AI 开关（排障开关已不在高级区）。
       await tester.ensureVisible(find.text('高级'));
       await tester.pump(const Duration(milliseconds: 200));
       await tester.tap(find.text('高级'));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('启用在线 AI 助手'), findsOneWidget);
-      expect(find.text('保存最近一次录音（排障）'), findsOneWidget);
       expect(find.byType(TextField), findsNWidgets(2));
 
       // 开启在线 AI → 预设 + 地址/模型/Key 三件套 + 教程/测试/明示发送内容。

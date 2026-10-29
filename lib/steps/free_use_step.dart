@@ -309,19 +309,35 @@ class _FreeUseStepState extends State<FreeUseStep> {
             ),
           ),
           if (!_passed) ...[
+            const Padding(
+              padding: EdgeInsets.only(bottom: 6),
+              child: Text('语速适中、吐字清晰识别更准',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white38, fontSize: 11)),
+            ),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed:
-                        (_micBlocked || !_micReady || _thinking) ? null : _toggleMic,
-                    icon: Icon(_listening ? Icons.stop : Icons.mic,
-                        color: _listening ? kPrimary : Colors.white70, size: 18),
-                    label: Text(
-                        _thinking
-                            ? '识别中…'
-                            : (_listening ? '说完点这里' : '说出来'),
-                        style: const TextStyle(fontSize: 13)),
+                  child: Listener(
+                    // §30.3-2 预卷：手指按下即起采（原生 400ms 环形缓冲），
+                    // onPressed 进入正式录音时回灌缓冲；取消/3s 未开始由原生自释放。
+                    onPointerDown: (_) {
+                      if (!_listening && !_thinking && _micReady && !_micBlocked) {
+                        _rec.arm();
+                      }
+                    },
+                    onPointerCancel: (_) => _rec.disarm(),
+                    child: OutlinedButton.icon(
+                      onPressed:
+                          (_micBlocked || !_micReady || _thinking) ? null : _toggleMic,
+                      icon: Icon(_listening ? Icons.stop : Icons.mic,
+                          color: _listening ? kPrimary : Colors.white70, size: 18),
+                      label: Text(
+                          _thinking
+                              ? '识别中…'
+                              : (_listening ? '说完点这里' : '说出来'),
+                          style: const TextStyle(fontSize: 13)),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),

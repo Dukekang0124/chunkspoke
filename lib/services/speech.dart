@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'audio_format.dart';
 import 'vosk_engine.dart';
 
 /// Azure 发音评测结果（三项分数）。
@@ -31,6 +32,9 @@ class SayOutcome {
   final bool noSpeech;
   final bool asrUnclear; // B5：识别不可信（空/低置信/垃圾堆叠），需重说
   final List<bool>? targetMatched; // 目标句逐词命中标记（用于错词标红）
+  /// §30.3-5：这条结果来自「用户手改/打字」的文本，不是语音识别原文。
+  /// 用于结果卡如实标注「按文本通过（未验证发音）」，不许伪装成语音命中。
+  final bool edited;
   SayOutcome({
     required this.passed,
     required this.level,
@@ -41,6 +45,7 @@ class SayOutcome {
     this.noSpeech = false,
     this.asrUnclear = false,
     this.targetMatched,
+    this.edited = false,
   });
 }
 
@@ -158,7 +163,7 @@ class SpeechService {
             url,
             headers: {
               'Ocp-Apim-Subscription-Key': key,
-              'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+              'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=$kCaptureSampleRate',
               'Pronunciation-Assessment': paHeader,
               'Accept': 'application/json',
             },
@@ -197,7 +202,7 @@ class SpeechService {
             url,
             headers: {
               'Ocp-Apim-Subscription-Key': key,
-              'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+              'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=$kCaptureSampleRate',
               'Accept': 'application/json',
             },
             body: bytes,

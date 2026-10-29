@@ -1,6 +1,6 @@
 {
-  "versionName": "1.5.8.1",
-  "versionCode": 4060,
+  "versionName": "1.5.8.2",
+  "versionCode": 4061,
   "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
   "urls": [
     "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
@@ -9,7 +9,7 @@
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
   "sha256": "942919e5b6bb10e20acc7567ae8e1ec4f8b7a0e160611fef83e1a63f9c32914f",
   "size": 59741843,
-  "notes": "v1.5.8.1 热修：① 安装包/语音包下载中断后不再出现「校验失败」死循环——自动删档换源、按实际落盘长度续传，失败页可一键复制诊断信息；② 设置页 GLM 连接测试超时放宽到 35 秒，限流与超时原因如实显示（含服务端错误码），测试中按钮不可点，防止连点。仅修复下载与连接问题，无新增功能。",
+  "notes": "v1.5.8.2：① 拾音改进——正常手持距离更易识别（句首预卷、采集源与音量归一）；② 发音一致性——设置页新增语速 0.75/1.0/1.25，示范/点评/磨耳朵同源，高清音色加载失败时提示并回落系统发音；③ 录音页新增实时音量条，排障开关旁新增「分享最近一次录音」；识别结果可先改再发。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part0",

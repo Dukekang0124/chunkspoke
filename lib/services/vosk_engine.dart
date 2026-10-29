@@ -8,6 +8,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:vosk_flutter/vosk_flutter.dart' as vosk;
 
+import 'audio_format.dart';
 import 'download/download_diag.dart' show networkLabel;
 import 'vosk_model.dart';
 
@@ -184,7 +185,7 @@ class VoskTranscriber implements Transcriber {
   Future<VoskResult> _runRecognizer(Uint8List pcm, List<String>? grammar) async {
     final rec = await _plugin.createRecognizer(
       model: _model!,
-      sampleRate: 16000,
+      sampleRate: kCaptureSampleRate, // §30.3-8 单一真源：与录制/评测同源
       grammar: grammar,
     );
     // 词级时间/置信度：顶层 confidence 默认不产出，开启后 final JSON 的
@@ -234,14 +235,14 @@ VoskParsedJson parseVoskFinalJson(String rawJson) {
   return VoskParsedJson(text, top is num ? top.toDouble() : mean, confs);
 }
 
-/// 从 wav 文件估算录音时长（秒）：PCM 字节数 / 2 / 16000。
+/// 从 wav 文件估算录音时长（秒）：PCM 字节数 / 2 / [kCaptureSampleRate]。
 /// 供判定管线的「过短录音无效」防噪兜底使用；失败返回 0。
 Future<double> wavDurationSec(String wavPath) async {
   try {
     final wav = await File(wavPath).readAsBytes();
     final pcm = pcmFromWav(wav);
     if (pcm.isEmpty) return 0;
-    return pcm.length / 2 / 16000;
+    return pcm.length / 2 / kCaptureSampleRate;
   } catch (_) {
     return 0;
   }

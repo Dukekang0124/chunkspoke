@@ -70,7 +70,13 @@ Future<void> bootstrap() async {
     await hdVoice.init();
     final tts = TtsService(
       preferredVoice: () => progress.ttsVoiceKey,
+      // 语速档位现读现用（§30.5 单源）：设置页改档后下一句即生效。
+      readProfile: () => VoiceProfile(speed: progress.ttsSpeed),
       hdVoice: hdVoice,
+      // 高清回落等发音事件单独成口径（与下载事件分开），抛错不影响发声。
+      onEvent: (e, p) {
+        progress.logEvent(e, p);
+      },
     );
     await tts.init();
     // 音色分布（指令 H）：每次启动记一条当前实际生效的发声配置快照。
@@ -78,6 +84,7 @@ Future<void> bootstrap() async {
       final v = tts.selectedVoice;
       progress.logEvent('voice_state', {
         'hd': tts.hdActive,
+        'speed': tts.profile.speed.name,
         'auto': tts.preferredVoiceKey == null,
         'locale': v?.locale ?? '',
         'accent': v?.accentLabel ?? '',

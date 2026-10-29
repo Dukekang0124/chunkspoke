@@ -49,6 +49,14 @@ void main() {
       expect(listenRates(reviewMode: false), [0.14, 0.22, 0.32]);
       expect(listenRates(reviewMode: true), [0.14, 0.22]);
     });
+    test('用户档位缩放三档：比例不变、绝对语速服从设置（§30.5 一致性）', () {
+      expect(listenRates(reviewMode: false, scale: 0.75), [0.105, 0.165, 0.24]);
+      expect(listenRates(reviewMode: false, scale: 1.25), [0.175, 0.275, 0.4]);
+      expect(listenRates(reviewMode: true, scale: 0.75), [0.105, 0.165]);
+      // 标签阈值与列表同源：缩放的慢档仍判「慢速」、快档仍判「快速」。
+      expect(listenRateCut(kListenSlowRate, 0.75), 0.105);
+      expect(listenRateCut(kListenFastRate, 0.75), 0.24);
+    });
   });
 
   group('每日会话计划 dailyPlan', () {
