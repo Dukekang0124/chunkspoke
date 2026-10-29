@@ -1,0 +1,1207 @@
+{
+  "kind": "judge-parity",
+  "note": "由 tools/judge_parity.py 生成：Python 侧 tools/vosk_sim.py 判定前缀的结论。Dart 侧 test/judge_parity_test.dart 必须逐条同判；带 divergence 字段的是**已知差**，Dart 侧按该字段断言差异方向。",
+  "cases": [
+    {
+      "target": "good morning everyone",
+      "hyp": "good morning everyone",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "good morning everyone",
+      "hyp": "GOOD MORNING EVERYONE!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "good morning everyone",
+      "hyp": "morning everyone",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6667
+      }
+    },
+    {
+      "target": "good morning everyone",
+      "hyp": "good morning ever yone",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.5833
+      }
+    },
+    {
+      "target": "good morning everyone",
+      "hyp": "good everyone morning",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.5833
+      }
+    },
+    {
+      "target": "good morning everyone",
+      "hyp": "goot morning everyone",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "good morning everyone",
+      "hyp": "good morning everyone you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.8833
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would like a cup of coffee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "I WOULD LIKE A CUP OF COFFEE!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "would like a cup of coffee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9583
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would a cup of coffee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.7222
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would like a cup of cof fee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6944
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would like a cup coffee of",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9306
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would likt a cup of coffee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would like a cup of coffee you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9028
+      }
+    },
+    {
+      "target": "how much does it cost",
+      "hyp": "how much does it cost",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "how much does it cost",
+      "hyp": "HOW MUCH DOES IT COST!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "how much does it cost",
+      "hyp": "much does it cost",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9388
+      }
+    },
+    {
+      "target": "how much does it cost",
+      "hyp": "how does it cost",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.5918
+      }
+    },
+    {
+      "target": "how much does it cost",
+      "hyp": "how much does cost it",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.898
+      }
+    },
+    {
+      "target": "how much does it cost",
+      "hyp": "how muct does it cost",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "how much does it cost",
+      "hyp": "how much does it cost you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.8571
+      }
+    },
+    {
+      "target": "could you say that again please",
+      "hyp": "could you say that again please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "could you say that again please",
+      "hyp": "COULD YOU SAY THAT AGAIN PLEASE!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "could you say that again please",
+      "hyp": "you say that again please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9423
+      }
+    },
+    {
+      "target": "could you say that again please",
+      "hyp": "could you that again please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6154
+      }
+    },
+    {
+      "target": "could you say that again please",
+      "hyp": "could you say that please again",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9038
+      }
+    },
+    {
+      "target": "could you say that again please",
+      "hyp": "could you say that agait please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "could you say that again please",
+      "hyp": "could you say that again please you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.8654
+      }
+    },
+    {
+      "target": "i am looking for the train station",
+      "hyp": "i am looking for the train station",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i am looking for the train station",
+      "hyp": "I AM LOOKING FOR THE TRAIN STATION!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i am looking for the train station",
+      "hyp": "am looking for the train station",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9583
+      }
+    },
+    {
+      "target": "i am looking for the train station",
+      "hyp": "i am for the train station",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.7222
+      }
+    },
+    {
+      "target": "i am looking for the train station",
+      "hyp": "i am looking for the train sta tion",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6528
+      }
+    },
+    {
+      "target": "i am looking for the train station",
+      "hyp": "i am looking for the station train",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6528
+      }
+    },
+    {
+      "target": "i am looking for the train station",
+      "hyp": "i am lookint for the train station",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i am looking for the train station",
+      "hyp": "i am looking for the train station you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9028
+      }
+    },
+    {
+      "target": "she went to the park with her friends",
+      "hyp": "she went to the park with her friends",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "she went to the park with her friends",
+      "hyp": "SHE WENT TO THE PARK WITH HER FRIENDS!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "she went to the park with her friends",
+      "hyp": "went to the park with her friends",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.96
+      }
+    },
+    {
+      "target": "she went to the park with her friends",
+      "hyp": "she to the park with her friends",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.7333
+      }
+    },
+    {
+      "target": "she went to the park with her friends",
+      "hyp": "she went to the park with her fri ends",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6667
+      }
+    },
+    {
+      "target": "she went to the park with her friends",
+      "hyp": "she went to the park with friends her",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9333
+      }
+    },
+    {
+      "target": "she went to the park with her friends",
+      "hyp": "she wens to the park with her friends",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "she went to the park with her friends",
+      "hyp": "she went to the park with her friends you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9067
+      }
+    },
+    {
+      "target": "can i have the bill please",
+      "hyp": "can i have the bill please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "can i have the bill please",
+      "hyp": "CAN I HAVE THE BILL PLEASE!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "can i have the bill please",
+      "hyp": "i have the bill please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9143
+      }
+    },
+    {
+      "target": "can i have the bill please",
+      "hyp": "can i have the please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.4286
+      }
+    },
+    {
+      "target": "can i have the bill please",
+      "hyp": "can i have the please bill",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.8571
+      }
+    },
+    {
+      "target": "can i have the bill please",
+      "hyp": "can i have the bilt please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "can i have the bill please",
+      "hyp": "can i have the bill please you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.8
+      }
+    },
+    {
+      "target": "i will be there in ten minutes",
+      "hyp": "i will be there in ten minutes",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i will be there in ten minutes",
+      "hyp": "I WILL BE THERE IN TEN MINUTES!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i will be there in ten minutes",
+      "hyp": "will be there in ten minutes",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9455
+      }
+    },
+    {
+      "target": "i will be there in ten minutes",
+      "hyp": "i will be there in minutes",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6364
+      }
+    },
+    {
+      "target": "i will be there in ten minutes",
+      "hyp": "i will be there in ten min utes",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.5455
+      }
+    },
+    {
+      "target": "i will be there in ten minutes",
+      "hyp": "i will be there in minutes ten",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.5455
+      }
+    },
+    {
+      "target": "i will be there in ten minutes",
+      "hyp": "i will be there in ten minutet",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i will be there in ten minutes",
+      "hyp": "i will be there in ten minutes you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.8727
+      }
+    },
+    {
+      "target": "what time does the meeting start",
+      "hyp": "what time does the meeting start",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "what time does the meeting start",
+      "hyp": "WHAT TIME DOES THE MEETING START!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "what time does the meeting start",
+      "hyp": "time does the meeting start",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9565
+      }
+    },
+    {
+      "target": "what time does the meeting start",
+      "hyp": "what does the meeting start",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.7101
+      }
+    },
+    {
+      "target": "what time does the meeting start",
+      "hyp": "what time does the mee ting start",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6377
+      }
+    },
+    {
+      "target": "what time does the meeting start",
+      "hyp": "what time does the start meeting",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6377
+      }
+    },
+    {
+      "target": "what time does the meeting start",
+      "hyp": "what timt does the meeting start",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "what time does the meeting start",
+      "hyp": "what time does the meeting start you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.8986
+      }
+    },
+    {
+      "target": "thank you so much for your help",
+      "hyp": "thank you so much for your help",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "thank you so much for your help",
+      "hyp": "THANK YOU SO MUCH FOR YOUR HELP!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "thank you so much for your help",
+      "hyp": "thank so much for your help",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9583
+      }
+    },
+    {
+      "target": "thank you so much for your help",
+      "hyp": "you so much for your help",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.7222
+      }
+    },
+    {
+      "target": "thank you so much for your help",
+      "hyp": "thank you so much for help your",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9306
+      }
+    },
+    {
+      "target": "thank you so much for your help",
+      "hyp": "thant you so much for your help",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "thank you so much for your help",
+      "hyp": "thank you so much for your help you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9028
+      }
+    },
+    {
+      "target": "let me know if you need anything",
+      "hyp": "let me know if you need anything",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "let me know if you need anything",
+      "hyp": "LET ME KNOW IF YOU NEED ANYTHING!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "let me know if you need anything",
+      "hyp": "let know if you need anything",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9663
+      }
+    },
+    {
+      "target": "let me know if you need anything",
+      "hyp": "me know if you need anything",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowSim",
+        "similarity": 0.7753
+      }
+    },
+    {
+      "target": "let me know if you need anything",
+      "hyp": "let me know if you need anyt hing",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowSim",
+        "similarity": 0.7191
+      }
+    },
+    {
+      "target": "let me know if you need anything",
+      "hyp": "let me know if you anything need",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": false,
+        "reason": "lowSim",
+        "similarity": 0.7191
+      }
+    },
+    {
+      "target": "let me know if you need anything",
+      "hyp": "let me knot if you need anything",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "let me know if you need anything",
+      "hyp": "let me know if you need anything you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9213
+      }
+    },
+    {
+      "target": "we should leave before it gets dark",
+      "hyp": "we should leave before it gets dark",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "we should leave before it gets dark",
+      "hyp": "WE SHOULD LEAVE BEFORE IT GETS DARK!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "we should leave before it gets dark",
+      "hyp": "should leave before it gets dark",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9663
+      }
+    },
+    {
+      "target": "we should leave before it gets dark",
+      "hyp": "we should before it gets dark",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowSim",
+        "similarity": 0.7753
+      }
+    },
+    {
+      "target": "we should leave before it gets dark",
+      "hyp": "we should leave bef ore it gets dark",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowSim",
+        "similarity": 0.7191
+      }
+    },
+    {
+      "target": "we should leave before it gets dark",
+      "hyp": "we should leave before it dark gets",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": false,
+        "reason": "lowSim",
+        "similarity": 0.7191
+      }
+    },
+    {
+      "target": "we should leave before it gets dark",
+      "hyp": "we should leavt before it gets dark",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "we should leave before it gets dark",
+      "hyp": "we should leave before it gets dark you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9213
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would like a cup of coffee",
+      "confidence": 0.9,
+      "durationSec": null,
+      "note": "置信度高",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would like a cup of coffee",
+      "confidence": 0.2,
+      "durationSec": null,
+      "note": "置信度低但文本一致 → 完全匹配通道不看置信度",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "would like a cup of coffee",
+      "confidence": 0.2,
+      "durationSec": null,
+      "note": "文本近似 + 置信度低 → 拒判",
+      "expect": {
+        "passed": false,
+        "reason": "lowConf",
+        "similarity": 0.9583
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "would like a cup of coffee",
+      "confidence": 0.6,
+      "durationSec": null,
+      "note": "文本近似 + 置信度达标 → 通过",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9583
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "",
+      "confidence": null,
+      "durationSec": null,
+      "note": "空转写",
+      "expect": {
+        "passed": false,
+        "reason": "empty",
+        "similarity": 0.0
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would like a cup of coffee",
+      "confidence": null,
+      "durationSec": 0.2,
+      "note": "录音过短",
+      "expect": {
+        "passed": false,
+        "reason": "tooShort",
+        "similarity": 0.0
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "i would like a cup of coffee",
+      "confidence": null,
+      "durationSec": 3.0,
+      "note": "时长正常",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i would like a cup of coffee",
+      "hyp": "completely unrelated sentence here",
+      "confidence": null,
+      "durationSec": null,
+      "note": "跨句无关语音",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.0
+      }
+    },
+    {
+      "target": "good morning everyone",
+      "hyp": "good morning everyone and the so if to",
+      "confidence": null,
+      "durationSec": null,
+      "note": "噪声尾 5 个虚词：Dart 走未加权 0.5 底线拒判，Python 只看加权放行 → 已知差",
+      "divergence": "noiseFloor",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.8333
+      }
+    }
+  ]
+}

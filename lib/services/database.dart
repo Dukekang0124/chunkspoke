@@ -441,4 +441,98 @@ class AppDatabase {
       'review': review ? 1 : 0,
     });
   }
+
+  // —— 学习日历（1.5.9）——
+  //
+  // 口径见 `验收-v1.5.9/学习日历-口径-1.5.9.md`：
+  //   newChunks — 当日首次学完的块数（chunks.first_learned_at 落在该本地日）
+  //   reviews   — 当日复习会话事件数（sessions.review = 1）
+  //   passes    — 当日通过事件数（speakSuccess / accuracyPass）
+  //
+  // 只读既有两表，不建新表；按**本地日**分桶（ts 是 epoch ms，跨时区/夏令时由
+  // DateTime.toLocal() 处理，SQL 的 date() 不做时区换算，故在 Dart 侧分组）。
+  Future<Map<String, DayActivity>> dayActivityBetween(
+      DateTime from, DateTime to) async {
+    final start = DateTime(from.year, from.month, from.day);
+    final end = DateTime(to.year, to.month, to.day).add(const Duration(days: 1));
+    final startMs = start.millisecondsSinceEpoch;
+    final endMs = end.millisecondsSinceEpoch;
+    final db = await this.db;
+
+    final sessionRows = await db.query(
+      'sessions',
+      columns: ['ts', 'outcome', 'review'],
+      where: 'ts >= ? AND ts < ?',
+      whereArgs: [startMs, endMs],
+    );
+    final learnedRows = await db.query(
+      'chunks',
+      columns: ['first_learned_at'],
+      where: 'first_learned_at >= ? AND first_learned_at < ?',
+      whereArgs: [startMs, endMs],
+    );
+
+    final out = <String, DayActivity>{};
+    DayActivity bucket(String key) =>
+        out.putIfAbsent(key, () => const DayActivity());
+
+    String keyOf(int ms) {
+      final d = DateTime.fromMillisecondsSinceEpoch(ms).toLocal();
+      return dayKey(d);
+    }
+
+    for (final r in learnedRows) {
+      final ms = (r['first_learned_at'] as int?) ?? 0;
+      if (ms <= 0) continue;
+      final k = keyOf(ms);
+      final cur = bucket(k);
+      out[k] = cur.withNewChunks(cur.newChunks + 1);
+    }
+    for (final r in sessionRows) {
+      final ms = (r['ts'] as int?) ?? 0;
+      final k = keyOf(ms);
+      final cur = bucket(k);
+      final isReview = ((r['review'] as int?) ?? 0) == 1;
+      final outcome = (r['outcome'] as String?) ?? '';
+      final isPass = outcome == 'speakSuccess' || outcome == 'accuracyPass';
+      out[k] = cur.plus(
+        newChunks: 0,
+        reviews: isReview ? 1 : 0,
+        passes: isPass ? 1 : 0,
+      );
+    }
+    return out;
+  }
+}
+
+/// 学习日历的一天三数（1.5.9 最小定义，不含热力图）。
+class DayActivity {
+  final int newChunks;
+  final int reviews;
+  final int passes;
+
+  const DayActivity({this.newChunks = 0, this.reviews = 0, this.passes = 0});
+
+  bool get isEmpty => newChunks == 0 && reviews == 0 && passes == 0;
+
+  DayActivity withNewChunks(int n) =>
+      DayActivity(newChunks: n, reviews: reviews, passes: passes);
+
+  DayActivity plus({int newChunks = 0, int reviews = 0, int passes = 0}) =>
+      DayActivity(
+        newChunks: this.newChunks + newChunks,
+        reviews: this.reviews + reviews,
+        passes: this.passes + passes,
+      );
+
+  @override
+  String toString() =>
+      'DayActivity(new=$newChunks, reviews=$reviews, passes=$passes)';
+}
+
+/// 本地日键：`yyyy-MM-dd`（补零，便于排序与比较）。
+String dayKey(DateTime d) {
+  final m = d.month.toString().padLeft(2, '0');
+  final day = d.day.toString().padLeft(2, '0');
+  return '${d.year}-$m-$day';
 }

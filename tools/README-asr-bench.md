@@ -24,7 +24,29 @@
 `_functionWords` 与 `kConfusionPairs`，和 Python 侧逐项比对——任一边单独改都会红。
 
 改判定的正确姿势：`speech_judge.dart` 与 `vosk_sim.py` 两处同改 → 跑
-`python tools/test_asr_bench.py` → 再跑基准。
+`python tools/test_asr_bench.py` → 重生成对拍夹具 → 再跑基准。
+
+## 一·补、判定对拍（1.5.9 · §30.2）
+
+`DriftGuardTest` 只守**词表和阈值数字**，不守行为。行为对拍是另一条链：
+
+| 件 | 作用 |
+|---|---|
+| `tools/judge_parity.py` | 用 Python 侧判定跑固定用例表，生成夹具（`--check` 只比对） |
+| `test/fixtures/judge_parity.json` | 100 条：目标 / 识别文本 / 置信度 / 时长 / Python 期望结论 |
+| `test/judge_parity_test.dart` | Dart 侧逐条断言同判（`flutter test` 跑） |
+
+```bash
+python tools/judge_parity.py            # 改判定后重生成
+python tools/judge_parity.py --check    # 过期返回 5
+python tools/test_asr_bench.py -v       # 词表 + 阈值 + 夹具新鲜度
+flutter test test/judge_parity_test.dart
+```
+
+规矩：**变异后与目标同词不写入**（防「漏虚词 = 完全一致」的假用例）；
+七分支（`exact/fuzzy/lowCore/lowSim/lowConf/empty/tooShort`）少一条生成器就退出码 6。
+夹具里带 `divergence` 字段的是**已知差**——Dart 独有的未加权底线 `kMinSimilarity=0.5`，
+Python 基准不承担这条产品规则；差异方向由 Dart 侧断言钉住。
 
 > 为什么不直接 `import vosk_sim`：它模块级就 `Model(MODEL_DIR)` 并跑主流程，
 > import 即执行。为不惊动发版门禁，改用「执行源码前缀」的办法，零重复、零改动。

@@ -116,6 +116,10 @@ class JudgeOutcome {
   final List<String> recognizedWords;
   final List<bool> targetMatched;
 
+  /// 与 [targetMatched] 同长：命中的目标词里，哪些是**完全相同**（true）
+  /// 而不是近似命中（false）。仅供发音评测的三档着色展示，不参与判定。
+  final List<bool> targetExact;
+
   JudgeOutcome({
     required this.pass,
     required this.similarity,
@@ -127,6 +131,7 @@ class JudgeOutcome {
     required this.targetWords,
     required this.recognizedWords,
     required this.targetMatched,
+    this.targetExact = const [],
   });
 }
 
@@ -143,6 +148,7 @@ JudgeOutcome _reject(String reason, List<String> tgt, List<String> rec, double? 
       targetWords: tgt,
       recognizedWords: rec,
       targetMatched: List.filled(tgt.length, false),
+      targetExact: List.filled(tgt.length, false),
     );
 
 /// 三层漏斗判定。
@@ -184,6 +190,7 @@ JudgeOutcome judgeSpeech({
       targetWords: tgt,
       recognizedWords: rec,
       targetMatched: List.filled(tgt.length, true),
+      targetExact: List.filled(tgt.length, true),
     );
   }
 
@@ -221,6 +228,7 @@ JudgeOutcome judgeSpeech({
     targetWords: tgt,
     recognizedWords: rec,
     targetMatched: weighted.matched,
+    targetExact: weighted.exact,
   );
 }
 
@@ -235,7 +243,8 @@ bool _exactSequence(List<String> a, List<String> b) {
 class _Alignment {
   final double similarity;
   final List<bool> matched;
-  _Alignment(this.similarity, this.matched);
+  final List<bool> exact;
+  _Alignment(this.similarity, this.matched, this.exact);
 }
 
 /// 词级序列比对（等价于可容错的编辑距离），返回相似度与逐词命中标记。
@@ -264,11 +273,15 @@ _Alignment _align(List<String> rec, List<String> tgt) {
   final sim = denom == 0 ? 1.0 : 1 - dist / denom;
 
   final matched = List.filled(m, false);
+  final exact = List.filled(m, false);
   var i = n, j = m;
   while (i > 0 && j > 0) {
     final cost = wordClose(rec[i - 1], tgt[j - 1]) ? 0 : 1;
     if (dp[i][j] == dp[i - 1][j - 1] + cost) {
-      if (cost == 0) matched[j - 1] = true;
+      if (cost == 0) {
+        matched[j - 1] = true;
+        if (rec[i - 1] == tgt[j - 1]) exact[j - 1] = true;
+      }
       i--;
       j--;
     } else if (dp[i][j] == dp[i - 1][j] + 1) {
@@ -277,14 +290,15 @@ _Alignment _align(List<String> rec, List<String> tgt) {
       j--;
     }
   }
-  return _Alignment(sim, matched);
+  return _Alignment(sim, matched, exact);
 }
 
 class _WeightedAlignment {
   final double weightedSim;
   final double coreHitRate;
   final List<bool> matched;
-  _WeightedAlignment(this.weightedSim, this.coreHitRate, this.matched);
+  final List<bool> exact;
+  _WeightedAlignment(this.weightedSim, this.coreHitRate, this.matched, this.exact);
 }
 
 /// 内容词加权的词级比对。
@@ -329,10 +343,14 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
 
   // 回溯逐词命中标记（只标记真正的匹配项）。
   final matched = List.filled(m, false);
+  final exact = List.filled(m, false);
   var i = n, j = m;
   while (i > 0 && j > 0) {
     if (dp[i][j] == dp[i - 1][j - 1] + sub(rec[i - 1], tgt[j - 1])) {
-      if (wordClose(rec[i - 1], tgt[j - 1])) matched[j - 1] = true;
+      if (wordClose(rec[i - 1], tgt[j - 1])) {
+        matched[j - 1] = true;
+        if (rec[i - 1] == tgt[j - 1]) exact[j - 1] = true;
+      }
       i--;
       j--;
     } else if (dp[i][j] == dp[i - 1][j] + ins(rec[i - 1])) {
@@ -350,7 +368,7 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
   }
   final coreHitRate = contentCount == 0 ? 1.0 : contentHit / contentCount;
 
-  return _WeightedAlignment(weightedSim, coreHitRate, matched);
+  return _WeightedAlignment(weightedSim, coreHitRate, matched, exact);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

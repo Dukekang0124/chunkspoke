@@ -4,11 +4,13 @@
 跑法：
     python tools/test_asr_bench.py -v
 
-覆盖四件事：
+覆盖五件事：
   1. WER / 容错 WER 的数值口径（手算可核）；
   2. 虚词命中率与实词命中率（弱读判效指标）的语义：丢虚词不塌、切实词塌；
   3. judgeSpeech 同源行为（通过 / lowCore / 拒判）；
-  4. **口径漂移守卫**：Python 虚词表与混淆对必须与 `lib/services/speech_judge.dart` 逐项一致。
+  4. **口径漂移守卫**：Python 虚词表与混淆对必须与 `lib/services/speech_judge.dart` 逐项一致；
+  5. **判定对拍**（1.5.9）：阈值同值 + `test/fixtures/judge_parity.json` 不得过期
+     （Dart 侧由 `test/judge_parity_test.dart` 逐条断言同一结论）。
 """
 
 import io
@@ -112,6 +114,48 @@ class DriftGuardTest(unittest.TestCase):
                       for line in m.group(1).splitlines() if "{" in line}
         py_pairs = {frozenset(p) for p in asr_bench._J["CONFUSION_PAIRS"]}
         self.assertEqual(dart_pairs, py_pairs)
+
+    # ── 阈值漂移（1.5.9 增）：词表之外，数字也必须同值 ──────────────────────
+    # 表一致但阈值不同 = 同一句话两边判不一样，对拍等于白做。
+
+    def _dart_const(self, name):
+        m = re.search(name + r"\s*=\s*([0-9.]+)\s*;", self.dart)
+        self.assertIsNotNone(m, "speech_judge.dart 里找不到常量 %s" % name)
+        return float(m.group(1))
+
+    def test_conf_threshold_matches_python_behavior(self):
+        """Dart kConfThreshold 的两侧行为必须与 Python 在同一数上翻转。"""
+        t, near = "i would like a cup of coffee", "would like a cup of coffee"
+        c = self._dart_const("kConfThreshold")
+        judge = asr_bench._J["judge_speech"]
+        self.assertEqual(judge(t, near, c - 0.01)["reason"], "lowConf",
+                         "低于 Dart 阈值应拒判，Python 却放行了")
+        self.assertEqual(judge(t, near, c + 0.01)["reason"], "fuzzy",
+                         "高于 Dart 阈值应通过，Python 却拒了")
+
+    def test_min_duration_matches_python_behavior(self):
+        t = "i would like a cup of coffee"
+        d = self._dart_const("kMinDurationSec")
+        judge = asr_bench._J["judge_speech"]
+        self.assertEqual(judge(t, t, None, d - 0.01)["reason"], "tooShort")
+        self.assertEqual(judge(t, t, None, d + 0.01)["reason"], "exact")
+
+    def test_min_similarity_is_dart_only_floor(self):
+        """kMinSimilarity 是 Dart 独有底线（Python 基准不算未加权）→ 必须是已知差。
+
+        夹具里 divergence=noiseFloor 那条把差异钉住了；这里只守「它还在」，
+        免得哪天有人把它删了，Dart 侧「噪声里凑词」的口子重新打开。
+        """
+        self.assertGreater(self._dart_const("kMinSimilarity"), 0.0)
+
+
+class ParityFixtureTest(unittest.TestCase):
+    """Dart ⇄ Python 对拍夹具不能过期（改判定就得重跑生成器）。"""
+
+    def test_fixture_matches_python_side(self):
+        import judge_parity
+        self.assertEqual(judge_parity.main(["--check"]), 0,
+                         "夹具过期：python tools/judge_parity.py")
 
 
 class CliTest(unittest.TestCase):

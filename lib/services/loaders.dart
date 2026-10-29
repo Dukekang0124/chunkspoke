@@ -496,6 +496,11 @@ class ProgressService {
     await logEvent(name, params);
   }
 
+  /// 学习日历（1.5.9）：按本地日聚合既有 `chunks.first_learned_at` + `sessions`，
+  /// 不建新表、不做迁移。三数口径见 `验收-v1.5.9/学习日历-口径-1.5.9.md`。
+  Future<Map<String, DayActivity>> dayActivity(DateTime from, DateTime to) =>
+      _db.dayActivityBetween(from, to);
+
   String _dateKey(DateTime d) => '${d.year}-${d.month}-${d.day}';
 
   // —— 发音分数（用于 Accuracy average） ——
