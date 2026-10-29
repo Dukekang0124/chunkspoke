@@ -1,8 +1,13 @@
-/// A6：更新清单（changelog）动态生成。
+/// A6：更新清单（changelog）动态生成 + 按版本取语料。
 ///
-/// 历史问题：标题硬编码「本次更新 v1.4.0」，升级到 1.4.2 后清单仍显示旧版本号，
-/// 属「写死文案」。现将标题与内容改为由当前版本号（PackageInfo）动态生成，
-/// 删除写死文案；新增单测断言标题含当前版本号。
+/// 历史问题一：标题硬编码「本次更新 v1.4.0」，升级到 1.4.2 后清单仍显示旧版本号
+/// → 标题改为由当前版本号（PackageInfo）动态生成。
+///
+/// 历史问题二（1.5.9 真机自检发现）：标题已随版本变，**正文仍是上一版文案**
+/// ——1.5.9 包首启弹「本次更新 v1.5.9」，内容却写着 1.5.8 的音色包/AI 模型。
+/// 修法：正文按版本号取（[changelogByVersion]），并由
+/// `test/changelog_test.dart` 断言「包内 version.json 的 versionName 必须在表里」，
+/// 以后忘写新版本语料会直接单测红，而不是等到装到手机上才发现。
 library;
 
 /// 标题前缀（不含版本号）。
@@ -12,16 +17,30 @@ const String changelogTitlePrefix = '本次更新';
 String changelogTitle(String versionName) =>
     '$changelogTitlePrefix v$versionName';
 
-/// 本次更新亮点（内容项，与具体版本号解耦的静态语料）。
-/// 1.5.4 起写本版真实交付项；发版前须与对账表逐条核对，不得沿用上一版文案。
-const List<String> changelogItems = [
-  '· 朗读人声升级：新增 3 个自然人声音色包（清晰女声 / 温和女声 / 沉稳男声），按需下载，可试听、切换和删除',
-  '· 音色包不占安装包体积；删除音色或关闭自然人声后，自动回到系统发音',
-  '· AI 造句点评支持自定义模型：可选 GLM 预设，也可填任意 OpenAI 兼容接口',
-  '· API Key 只加密保存在本机，不上传、不写日志；设置页新增连接测试与发送内容说明',
-  '· 未配置 AI 时，六步学习、复习、解锁与磨耳朵照常可用',
-  '· 修复：应用内更新只认本机 ABI 的安装包，32 位设备不再收到装不上的更新',
-];
+/// 各版本文案（键 = `assets/version.json` 的 `versionName`）。
+///
+/// 规矩：**发版前必须为本版新增一条**，内容只写本版真实交付项，
+/// 不得沿用上一版；单测会核对当前 versionName 是否有条目。
+const Map<String, List<String>> changelogByVersion = {
+  '1.5.9': [
+    '· 学习日历：进度页新增月视图，点某一天看当日三数（新学块 / 复习 / 通过）',
+    '· 发音评测：选一句跟读，本机离线打分——逐词三档着色 + 整体分（绿=说对、黄=能听出、红=再说一遍）',
+    '· 评测全程在本机完成，不联网、不上传、不落库，不影响六步进度',
+    '· 沿用 1.5.8.2 的拾音改进：正常手持距离更稳，句首不再容易丢',
+    '· 语速三档：慢 0.75 / 标准 1.0 / 快 1.25，改完下一句生效，重开也记得',
+  ],
+  '1.5.8': [
+    '· 朗读人声升级：新增 3 个自然人声音色包（清晰女声 / 温和女声 / 沉稳男声），按需下载，可试听、切换和删除',
+    '· 音色包不占安装包体积；删除音色或关闭自然人声后，自动回到系统发音',
+    '· AI 造句点评支持自定义模型：可选 GLM 预设，也可填任意 OpenAI 兼容接口',
+    '· API Key 只加密保存在本机，不上传、不写日志；设置页新增连接测试与发送内容说明',
+    '· 未配置 AI 时，六步学习、复习、解锁与磨耳朵照常可用',
+    '· 修复：应用内更新只认本机 ABI 的安装包，32 位设备不再收到装不上的更新',
+  ],
+};
+
+/// 兜底版本（当前发布版）；表里查不到时用它，避免空弹窗。
+const String changelogFallbackVersion = '1.5.9';
 
 /// 一条可展示的更新清单。
 class Changelog {
@@ -31,5 +50,9 @@ class Changelog {
 }
 
 /// 由当前版本号构建完整更新清单。
-Changelog buildChangelog(String versionName) =>
-    Changelog(changelogTitle(versionName), changelogItems);
+Changelog buildChangelog(String versionName) => Changelog(
+      changelogTitle(versionName),
+      changelogByVersion[versionName] ??
+          changelogByVersion[changelogFallbackVersion] ??
+          const [],
+    );
