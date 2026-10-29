@@ -1,6 +1,6 @@
 {
-  "versionName": "1.5.8.2",
-  "versionCode": 4061,
+  "versionName": "1.5.9",
+  "versionCode": 4062,
   "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
   "urls": [
     "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
@@ -9,7 +9,7 @@
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
   "sha256": "942919e5b6bb10e20acc7567ae8e1ec4f8b7a0e160611fef83e1a63f9c32914f",
   "size": 59741843,
-  "notes": "v1.5.8.2：① 拾音改进——正常手持距离更易识别（句首预卷、采集源与音量归一）；② 发音一致性——设置页新增语速 0.75/1.0/1.25，示范/点评/磨耳朵同源，高清音色加载失败时提示并回落系统发音；③ 录音页新增实时音量条，排障开关旁新增「分享最近一次录音」；识别结果可先改再发。",
+  "notes": "v1.5.9：① 学习日历——「我的」进度页新增月视图，点某一天看当日三数（新学块 / 复习 / 通过），不发热力图；② 发音评测——选一句跟读，本机离线打分：逐词三档着色 + 整体分（绿=说对、黄=能听出、红=再说一遍），全在本机完成，不联网、不落库；③ 沿用 1.5.8.2 的拾音改进与语速 0.75/1.0/1.25。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part0",
