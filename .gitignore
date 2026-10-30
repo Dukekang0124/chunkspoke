@@ -67,3 +67,6 @@ voice_repo/
 shots/
 audit/
 chunkspoke-ai/
+
+# 1.6.0 真 secret（GATE-162 §三：只放本机，不入库；目录内为 unlock_secret.json）
+/secret/
