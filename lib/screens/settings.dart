@@ -409,11 +409,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ? '（已被停用）'
               : '';
       title = '专业版 · 已激活$verify';
-      subtitle = '码尾 $tail · 全场景 $totalChunks 块已解锁';
+      subtitle = '码尾 $tail · G–T 不需要解锁码（共 $totalChunks 块，按进度解锁）';
     } else if (unlocked) {
       // legacy = 1：1.5.10 之前就在用的老用户，终身全量。
       title = '老用户 · 全量权益';
-      subtitle = 'G–T 全部解锁（$totalChunks 块），不需要解锁码';
+      subtitle = 'G–T 不需要解锁码（共 $totalChunks 块，按进度解锁）';
     } else {
       title = '专业版';
       subtitle =
