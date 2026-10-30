@@ -130,14 +130,34 @@ void main() {
       );
     });
 
-    test('空备份拒绝（chunks 与 sessions 都空）', () {
+    test('空备份拒绝（三表全空）', () {
       final m = jsonEncode({
         'schema_version': 1,
         'kv': {},
         'chunks': [],
         'sessions': [],
       });
-      expect(() => decodeChannel(m), throwsA(isA<ChannelFormatError>()));
+      expect(
+        () => decodeChannel(m),
+        throwsA(predicate(
+            (e) => e is ChannelFormatError && e.reason.contains('是空的'))),
+      );
+    });
+
+    // D1 回归：早期判据是「chunks/sessions 都空就整份拒」，会把「只改过设置、
+    // 还没开始学」的老用户挡在门外——他的 legacy 标记就在备份里，整份被拒
+    // 等于清过一次数据身份就回不来。判据必须只认「三表全空」。
+    test('只有设置的备份可解析（老用户没学过也算有内容）', () {
+      final m = jsonEncode({
+        'schema_version': 1,
+        'kv': {'baseRate': '1.25'},
+        'chunks': [],
+        'sessions': [],
+      });
+      final decoded = decodeChannel(m);
+      expect(decoded['chunks'], isEmpty);
+      expect(decoded['sessions'], isEmpty);
+      expect((decoded['kv'] as Map)['baseRate'], '1.25');
     });
   });
 
@@ -310,6 +330,34 @@ void main() {
       probes = 0;
       await g.bootstrap(); // 幂等：有值就不再探库
       expect(probes, 0);
+    });
+
+    // 同一漏洞的端到端形态：老用户只改过设置、没学过，备份里没有 chunks/sessions，
+    // 但带着 legacy=1。这条路径必须能走通——否则清过数据的爷爷永远回不来。
+    test('只有设置 + legacy=1 的备份也能把身份接回来', () async {
+      final fresh = LegacyGate(
+        supportDir: support,
+        dbExists: () async {
+          probes++;
+          return false;
+        },
+      );
+      expect(await fresh.bootstrap(), kLegacyFlagNo);
+
+      final text = jsonEncode(buildChannelMap(
+        kv: const {'baseRate': '1.25', 'ttsVoice': 'warm'},
+        chunks: const [],
+        sessions: const [],
+        legacyFlag: kLegacyFlagYes,
+        now: DateTime.fromMillisecondsSinceEpoch(1700000000000),
+      ));
+
+      final plan = await applyChannelImport(db: db, gate: fresh, text: text);
+      expect(plan.newKv, 2);
+      expect(plan.newChunks, 0);
+      expect(await fresh.readRaw(), kLegacyFlagYes);
+      expect(probes, 1, reason: '只有设置也不能再去探库');
+      expect(await db.getKv('baseRate'), '1.25');
     });
   });
 }

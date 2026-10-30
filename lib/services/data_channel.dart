@@ -170,8 +170,11 @@ Map<String, dynamic> decodeChannel(String text) {
   if (chunks is! List) throw ChannelFormatError('缺 chunks，导出件不完整');
   final sessions = m['sessions'];
   if (sessions is! List) throw ChannelFormatError('缺 sessions，导出件不完整');
-  if (chunks.isEmpty && sessions.isEmpty) {
-    throw ChannelFormatError('这份备份里没有任何学习数据');
+  // 只有三表全空才判「导出件坏了」。
+  // 早期写法在 chunks/sessions 空时就拒——那会把「只用过设置、还没开始学」的
+  // 老用户挡在门外：他的 legacy 标记在备份里，却整份被拒，清过一次数据就回不来（D1）。
+  if (chunks.isEmpty && sessions.isEmpty && kv.isEmpty) {
+    throw ChannelFormatError('这份备份是空的（词块 / 学习记录 / 设置都没有），可能导出时出错了');
   }
   return m;
 }
