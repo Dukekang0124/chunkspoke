@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/chunk_progress.dart';
 import '../services/loaders.dart';
+import '../services/license_state.dart';
 import '../services/review_notify.dart';
 import '../services/session.dart';
 import '../ui/theme.dart';
@@ -49,6 +50,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
     return lookup;
   }
 
+  /// 1.6.0（LIC-1 / G-5）：chunk.id → 所属场景下标。复习播单只排「当前有权进入」
+  /// 的场景里的块（未解锁场景的块不占用每日 20 块上限）。
+  Map<String, int> _levelIndex() {
+    final content = Provider.of<ContentPack>(context, listen: false);
+    return {
+      for (var i = 0; i < content.levels.length; i++)
+        for (final c in content.levels[i].chunks) c.id: i,
+    };
+  }
+
   void _startReview(List<Chunk> due) {
     final content = Provider.of<ContentPack>(context, listen: false);
     final progress = Provider.of<ProgressService>(context, listen: false);
@@ -74,6 +85,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final lookup = _lookup();
+    final lic = Provider.of<LicenseState?>(context, listen: true);
+    final levelOf = lic == null ? const <String, int>{} : _levelIndex();
+    bool allowedChunk(String chunkKey) {
+      if (lic == null) return true;
+      final i = levelOf[chunkKey];
+      return i == null || lic.allowsLevel(i);
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('复习')),
       body: FutureBuilder<ReviewQueue>(
@@ -81,8 +100,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
         builder: (ctx, snap) {
           final q = snap.data ??
               const ReviewQueue(items: [], dueTotal: 0, reviewedToday: 0);
-          final items = q.items
-              .where((r) => lookup.containsKey(r.chunkKey))
+          final known = q.items.where((r) => lookup.containsKey(r.chunkKey));
+          final dropped = known.where((r) => !allowedChunk(r.chunkKey)).length;
+          final items = known
+              .where((r) => allowedChunk(r.chunkKey))
               .map((r) => lookup[r.chunkKey]!)
               .toList();
           if (items.isEmpty) {
@@ -124,7 +145,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
               const SizedBox(height: 10),
               Text(
                 '今日已复习 ${q.reviewedToday}/${q.cap} 块 · 今日到期 ${q.dueTotal} 块'
-                '${q.deferred > 0 ? ' · 超出上限 ${q.deferred} 块顺延到明天' : ''}',
+                '${q.deferred > 0 ? ' · 超出上限 ${q.deferred} 块顺延到明天' : ''}'
+                '${dropped > 0 ? ' · 另有 $dropped 块属于未解锁场景，暂不排入复习' : ''}',
                 style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
               const SizedBox(height: 16),

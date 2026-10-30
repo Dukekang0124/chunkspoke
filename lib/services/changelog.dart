@@ -22,6 +22,13 @@ String changelogTitle(String versionName) =>
 /// 规矩：**发版前必须为本版新增一条**，内容只写本版真实交付项，
 /// 不得沿用上一版；单测会核对当前 versionName 是否有条目。
 const Map<String, List<String>> changelogByVersion = {
+  '1.6.0': [
+    '· 免费区不变：A–F 共 6 个场景（137 块）照旧免费，不用任何码',
+    '· G 关起的场景需要解锁码：一次输入，全场景解锁；已学过的进度、复习和评测不受影响',
+    '· 设置页新增「专业版」：可查当前是否已解锁、码尾号与换机用的设备编号，也能在这里输码',
+    '· 1.5.10 之前就在用的老用户自动全量，不需要码，也不需要任何操作',
+    '· 本版不改变学习内容与六步流程；断网时已激活的设备照常可用',
+  ],
   '1.5.10': [
     '· 数据备份：设置页新增「数据备份」，把本机学习数据导成一个 JSON 文件（词块进度 / 学习记录 / 设置）',
     '· 导入是合并：只补不删——本机比备份新的进度保留，重复记录自动跳过，已有设置不覆盖',
@@ -46,7 +53,7 @@ const Map<String, List<String>> changelogByVersion = {
 };
 
 /// 兜底版本（当前发布版）；表里查不到时用它，避免空弹窗。
-const String changelogFallbackVersion = '1.5.10';
+const String changelogFallbackVersion = '1.6.0';
 
 /// 一条可展示的更新清单。
 class Changelog {

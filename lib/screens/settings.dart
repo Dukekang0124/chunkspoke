@@ -16,6 +16,9 @@ import '../services/tts_voice.dart';
 import '../services/notification_service.dart';
 import '../services/recording.dart';
 import '../services/review_notify.dart';
+import '../services/license_state.dart';
+import '../services/license_code.dart' show kFreeLevelCount;
+import '../models/content_pack.dart' show ContentPack, Level;
 import '../ui/sheet.dart';
 import '../ui/permission_preprompt.dart';
 import '../ui/theme.dart';
@@ -23,6 +26,7 @@ import '../ui/feedback.dart';
 import 'ai_coach_screen.dart';
 import 'data_backup.dart';
 import 'legal_screen.dart';
+import 'license_activate.dart';
 import 'listening_debug.dart';
 import 'tts_guide.dart';
 
@@ -378,6 +382,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             MaterialPageRoute(builder: (_) => const DataBackupScreen()),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// 1.6.0（LIC-1）· G-7：授权状态的**唯一可见出口**（设置页不看地图也能查）。
+  Widget _licenseCard(BuildContext context) {
+    final lic = Provider.of<LicenseState?>(context, listen: true);
+    final content = Provider.of<ContentPack?>(context, listen: false);
+    int countOf(Iterable<Level> lv) => lv.fold(0, (s, l) => s + l.chunks.length);
+    final freeChunks = content == null
+        ? 137
+        : countOf(content.levels.take(kFreeLevelCount));
+    final totalChunks =
+        content == null ? 487 : countOf(content.levels);
+
+    final bool unlocked = lic?.hasFullAccess ?? false;
+    final String title;
+    final String subtitle;
+    if (lic != null && lic.isPro) {
+      final tail = lic.tail.isEmpty ? '****' : '****${lic.tail}';
+      final verify = lic.verifyState == kVerifyUnverified
+          ? '（离线激活，联网后自动复核）'
+          : lic.verifyState == kVerifyRejected
+              ? '（已被停用）'
+              : '';
+      title = '专业版 · 已激活$verify';
+      subtitle = '码尾 $tail · 全场景 $totalChunks 块已解锁';
+    } else if (unlocked) {
+      // legacy = 1：1.5.10 之前就在用的老用户，终身全量。
+      title = '老用户 · 全量权益';
+      subtitle = 'G–T 全部解锁（$totalChunks 块），不需要解锁码';
+    } else {
+      title = '专业版';
+      subtitle =
+          '已解锁 A–F（$freeChunks/$totalChunks 块）· G 关起需要解锁码';
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: unlocked
+                ? kUnlocked.withValues(alpha: 0.45)
+                : kPrimary.withValues(alpha: 0.4)),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          leading: Icon(unlocked ? Icons.workspace_premium : Icons.lock_outline,
+              color: unlocked ? kUnlocked : kPrimary),
+          title: Text(title, style: const TextStyle(color: kText)),
+          subtitle: Text(subtitle,
+              style: const TextStyle(color: Colors.white54, fontSize: 12)),
+          trailing: unlocked
+              ? const Icon(Icons.arrow_forward_ios,
+                  size: 16, color: Colors.white38)
+              : const Text('输入解锁码',
+                  style: TextStyle(color: kPrimary, fontSize: 13)),
+          onTap: lic == null
+              ? null
+              : () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const LicenseActivateScreen()),
+                  ),
         ),
       ),
     );
@@ -1533,6 +1604,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 20),
             const Divider(color: Colors.white12),
+            _licenseCard(context),
+            const SizedBox(height: 16),
             _label('应用更新'),
             const SizedBox(height: 6),
             const Text('更新源已内置，无需配置。',

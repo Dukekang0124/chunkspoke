@@ -8,6 +8,7 @@ import '../services/state_machine.dart';
 import '../services/crash_log.dart';
 import '../services/review_notify.dart';
 import '../services/scene_progression.dart';
+import '../services/license_state.dart';
 import '../services/session_report.dart';
 import '../ui/theme.dart';
 import '../ui/labels.dart';
@@ -70,7 +71,13 @@ class _LevelScreenState extends State<LevelScreen> {
         for (final r in rows)
           if (ChunkProgressStore.isMastered(r)) r.chunkKey
       };
-      next = nextSceneState(content.levels, widget.level.id, masteredKeys);
+      // 1.6.0（LIC-1）：下一场景是否「可进入」也要过 license 门；锁住的场景
+      // 只提示、不给 CTA。null = 与 1.5.x 完全一致。
+      final lic = mounted
+          ? Provider.of<LicenseState?>(context, listen: false)
+          : null;
+      next = nextSceneState(content.levels, widget.level.id, masteredKeys,
+          allowed: lic?.allowsLevel);
     } catch (e, st) {
       CrashLog.write('Level.finish dims: $e', st);
     }
@@ -92,7 +99,16 @@ class _LevelScreenState extends State<LevelScreen> {
       _report = report;
       _nextReview = nextReview;
       _nextScene = next?.level;
-      _nextUnlocked = next?.unlocked ?? false;
+      // 墙外场景：即便进度达标也按「未解锁」呈现（CTA 会引导回 A–F），
+      // 避免结算页给一个点了就弹墙的按钮。
+      final licNow = Provider.of<LicenseState?>(context, listen: false);
+      final nextLevel = next?.level;
+      final nextIdx = nextLevel == null
+          ? -1
+          : content.levels.indexWhere((l) => l.id == nextLevel.id);
+      final nextAllowed =
+          nextIdx < 0 || licNow == null || licNow.allowsLevel(nextIdx);
+      _nextUnlocked = (next?.unlocked ?? false) && nextAllowed;
       _nextMissing = next?.missing ?? 0;
       setState(() => _done = true);
       _dims = dims;

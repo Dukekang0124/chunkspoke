@@ -8,6 +8,8 @@ import 'models/listening_article.dart';
 import 'services/crash_log.dart';
 import 'services/hd_voice.dart';
 import 'services/legacy_gate.dart';
+import 'services/license_gate.dart';
+import 'services/license_state.dart';
 import 'services/loaders.dart';
 import 'services/notification_service.dart';
 import 'services/review_notify.dart';
@@ -46,8 +48,10 @@ Future<void> bootstrap() async {
     // 1.5.10（#209）· D1：老用户身份判据必须在**任何开库动作之前**跑完。
     // 判据 = 首启时 chunkspoke.db 文件在不在；结论写进库外的 legacy.flag，
     // 写过永不重写。顺序反了（先 openDatabase 再判）会全员判成老用户 → 墙失效。
+    LegacyGate? legacyGate;
     try {
-      await (await openLegacyGate()).bootstrap();
+      legacyGate = await openLegacyGate();
+      await legacyGate.bootstrap();
     } catch (e, st) {
       CrashLog.write('LegacyGate.bootstrap: $e', st);
     }
@@ -118,6 +122,28 @@ Future<void> bootstrap() async {
       if (progress.streak >= 2) await progress.logOnce('day2_return');
       if (progress.streak >= 7) await progress.logOnce('day7_return');
     } catch (_) {}
+    // 1.6.0（LIC-1）：授权状态在 legacy 判据之后装配（老用户终身全量）。
+    // 读盘失败不阻塞启动 → 退化为「无授权」，A–F 照常免费。
+    var legacyEligible = false;
+    try {
+      legacyEligible =
+          legacyGate != null && LegacyGate.isLegacy(await legacyGate.readRaw());
+    } catch (e, st) {
+      CrashLog.write('LegacyGate.readRaw: $e', st);
+    }
+    final license = LicenseState(
+      db: progress.database,
+      legacyEligible: legacyEligible,
+    );
+    try {
+      await license.load();
+    } catch (e, st) {
+      CrashLog.write('LicenseState.load: $e', st);
+    }
+    // 白名单刷新不阻塞首屏；失败保持本地态（断网 ≠ 未登记）。
+    unawaited(LicenseGate().refresh(license).catchError((Object e, StackTrace st) {
+      CrashLog.write('LicenseGate.refresh: $e', st);
+    }));
     runApp(
       MultiProvider(
         providers: [
@@ -128,6 +154,7 @@ Future<void> bootstrap() async {
           ChangeNotifierProvider<HdVoiceService>.value(value: hdVoice),
           ChangeNotifierProvider<MotionService>(
               create: (_) => MotionService()),
+          ChangeNotifierProvider<LicenseState>.value(value: license),
         ],
         child: const ChunkSpokeApp(),
       ),

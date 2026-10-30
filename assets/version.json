@@ -1,6 +1,6 @@
 {
-  "versionName": "1.5.10",
-  "versionCode": 4063,
+  "versionName": "1.6.0",
+  "versionCode": 4064,
   "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
   "urls": [
     "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
@@ -9,7 +9,7 @@
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
   "sha256": "942919e5b6bb10e20acc7567ae8e1ec4f8b7a0e160611fef83e1a63f9c32914f",
   "size": 59741843,
-  "notes": "v1.5.10：① 数据备份——设置页新增「数据备份」，把本机学习数据导出成一个 JSON 文件（词块进度 / 学习记录 / 设置），换机或重装时粘回来合并；② 合并只补不删——本机比备份新的进度会保留，重复记录自动跳过，已有设置不覆盖；③ 备份只在本机生成，不联网、不上传、不含录音，也不含任何 API Key 明文。",
+  "notes": "v1.6.0（沙盒验证包）：① 免费区不变——A–F 共 6 个场景（137 块）照旧全免费，不用码；② G 关起的场景需要解锁码，输码后全场景可用；③ 设置页新增「专业版」卡：看当前是否已解锁、码尾号与换绑编号，也可在这里输码；④ 1.5.10 之前就在用的老用户自动全量，不需要码；⑤ 本包用测试 secret 构建，只能用于验收，不能对外分发。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part0",

@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/chunk_asset.dart';
 import '../services/loaders.dart';
+import '../services/license_state.dart';
 import '../services/scene_progression.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'level.dart';
+import 'license_activate.dart';
 import 'review.dart';
 import 'free_build_screen.dart';
 
@@ -90,6 +92,8 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final content = Provider.of<ContentPack>(context);
     final levels = content.levels;
+    // 1.6.0（LIC-1）：地图只读 gate 结论，不自建判断。
+    final lic = Provider.of<LicenseState?>(context, listen: true);
 
     return Scaffold(
       appBar: AppBar(title: const Text('练习')),
@@ -104,7 +108,9 @@ class _MapScreenState extends State<MapScreen> {
           final nextDue = data?.nextDue;
           final progress = Provider.of<ProgressService>(context);
           int masteredIn(Level lv) => masteredInLevel(lv, mastered);
-          bool unlockedAt(int i) => isSceneUnlocked(levels, i, mastered);
+          bool unlockedAt(int i) =>
+              isSceneUnlocked(levels, i, mastered, allowed: lic?.allowsLevel);
+          bool licenseLockedAt(int i) => lic != null && !lic.allowsLevel(i);
           String lockedHintFor(int i) {
             final prev = levels[i - 1];
             return '先完成「${_cn(prev)}」：本场景达标 '
@@ -135,6 +141,7 @@ class _MapScreenState extends State<MapScreen> {
                   due: due,
                   nextDue: nextDue,
                   dailyNew: progress.dailyNewCount,
+                  allowed: lic?.allowsLevel,
                   onReturn: _reload),
               const SizedBox(height: 12),
               _FreeBuildCard(
@@ -157,6 +164,7 @@ class _MapScreenState extends State<MapScreen> {
                             level: e.value,
                             index: e.key,
                             unlocked: unlockedAt(e.key),
+                            licenseLocked: licenseLockedAt(e.key),
                             lockedHint: e.key > 0 ? lockedHintFor(e.key) : null,
                             masteredCount: masteredIn(e.value),
                             onReturn: _reload,
@@ -278,6 +286,9 @@ class _SceneRow extends StatelessWidget {
   final Level level;
   final int index;
   final bool unlocked;
+
+  /// 1.6.0：这一关是因授权墙锁住（而不是没学够）。
+  final bool licenseLocked;
   final String? lockedHint;
   final int masteredCount;
   final VoidCallback onReturn;
@@ -285,12 +296,24 @@ class _SceneRow extends StatelessWidget {
       {required this.level,
       required this.index,
       required this.unlocked,
+      this.licenseLocked = false,
       this.lockedHint,
       required this.masteredCount,
       required this.onReturn});
 
   Future<void> _open(BuildContext context) async {
     if (!unlocked) {
+      if (licenseLocked) {
+        // 不打断学习、不弹窗拦截：只给一张说明 sheet。
+        await showLicenseWallSheet(
+          context,
+          title: 'G 关起需要解锁码',
+          detail: 'A–F 共 6 个场景（137 块）随便学，永久免费；'
+              'G 关起的场景需要一枚解锁码。'
+              '你已经学过的内容、复习和评测都不受影响。',
+        );
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(lockedHint ?? '先完成上一场景，达标到 80% 解锁'),
         duration: const Duration(seconds: 2),
@@ -413,6 +436,8 @@ class TodayCard extends StatelessWidget {
   final List<String> due;
   final int? nextDue; // 下一次资产复习到期（epoch ms；无则 null）
   final int dailyNew;
+  /// 1.6.0（LIC-1）：关卡轴权限（G 起要解锁码）。null = 不设限（与 1.5.x 一致）。
+  final bool Function(int index)? allowed;
   final VoidCallback onReturn;
   const TodayCard(
       {super.key,
@@ -423,14 +448,17 @@ class TodayCard extends StatelessWidget {
       required this.due,
       this.nextDue,
       this.dailyNew = 0,
+      this.allowed,
       required this.onReturn});
 
   @override
   Widget build(BuildContext context) {
     // A3：每日会话瘦身——新学 ≤6（跨场景按序取资产轴尚未学过的块），复习到期优先。
+    // 1.6.0（LIC-1）：锁住的场景不参与「新学」抽样，别把用户从免费区抽到墙外。
     final newChunks = <String>[];
-    for (final lv in content.levels) {
-      for (final c in lv.chunks) {
+    for (var i = 0; i < content.levels.length; i++) {
+      if (allowed != null && !allowed!(i)) continue;
+      for (final c in content.levels[i].chunks) {
         if (newChunks.length >= 6) break;
         if (!learned.contains(c.id)) newChunks.add(c.id);
       }
@@ -442,7 +470,8 @@ class TodayCard extends StatelessWidget {
     final anyLocked =
         content.levels.any((lv) => missingForUnlock(lv, levelMastered) > 0);
     final theme = anyLocked ? '今天开始 · 完成未解锁场景' : '今天也来练一练';
-    final target = progressionTarget(content.levels, levelMastered);
+    final target = progressionTarget(content.levels, levelMastered,
+        allowed: allowed);
     // 首页「下次复习」直接接资产复习引擎（无到期时展示下一次排期）。
     String nextDueText;
     if (due.isNotEmpty) {

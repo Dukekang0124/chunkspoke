@@ -332,6 +332,30 @@ void main() {
       expect(probes, 0);
     });
 
+    // COLLAPSE-161 三-2：判据已经把 legacy 写成 0 的新用户，导入带 legacy=1 的
+    // 备份后，身份**必须能改回来**；而已经 1 的绝不重复写。
+    test('adoptRestoresLegacyAfterZeroFlag', () async {
+      final g = LegacyGate(
+        supportDir: support,
+        dbExists: () async {
+          probes++;
+          return false;
+        },
+      );
+      expect(await g.bootstrap(), kLegacyFlagNo);
+      expect(await g.readRaw(), kLegacyFlagNo);
+
+      // 0 → 1：D1 的恢复通道
+      expect(await g.adoptFromImport(kLegacyFlagYes), isTrue);
+      expect(await g.readRaw(), kLegacyFlagYes);
+
+      // 已是 1：不重复写、返回 false
+      expect(await g.adoptFromImport(kLegacyFlagYes), isFalse);
+      expect(await g.readRaw(), kLegacyFlagYes);
+      // 全程只有首启那一次探库
+      expect(probes, 1);
+    });
+
     // 同一漏洞的端到端形态：老用户只改过设置、没学过，备份里没有 chunks/sessions，
     // 但带着 legacy=1。这条路径必须能走通——否则清过数据的爷爷永远回不来。
     test('只有设置 + legacy=1 的备份也能把身份接回来', () async {

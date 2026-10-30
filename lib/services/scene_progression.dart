@@ -10,8 +10,11 @@ int masteredInLevel(Level level, Set<String> masteredKeys) =>
 int sceneUnlockTarget(Level level) =>
     (level.chunks.length * kSceneUnlockRatio).ceil();
 
-bool isSceneUnlocked(List<Level> levels, int index, Set<String> masteredKeys) {
+bool isSceneUnlocked(List<Level> levels, int index, Set<String> masteredKeys,
+    {bool Function(int index)? allowed}) {
   if (index < 0 || index >= levels.length) return false;
+  // 1.6.0（LIC-1）：license 只做 AND 收窄；传 null 时行为与 1.5.x 完全一致。
+  if (allowed != null && !allowed(index)) return false;
   if (index == 0) return true;
   final prev = levels[index - 1];
   if (prev.chunks.isEmpty) return true;
@@ -28,15 +31,19 @@ int missingForUnlock(Level level, Set<String> masteredKeys) {
 
 /// 地图点击进入：只有已解锁场景返回 Level，锁定场景返回 null。
 Level? enterableScene(
-        List<Level> levels, int index, Set<String> masteredKeys) =>
-    isSceneUnlocked(levels, index, masteredKeys) ? levels[index] : null;
+        List<Level> levels, int index, Set<String> masteredKeys,
+        {bool Function(int index)? allowed}) =>
+    isSceneUnlocked(levels, index, masteredKeys, allowed: allowed)
+        ? levels[index]
+        : null;
 
 /// 主推进目标 = 已解锁链上的最后一个场景（进度前沿）。
 /// 全部通关（最后一关也 100% 掌握）时返回 null。
-Level? progressionTarget(List<Level> levels, Set<String> masteredKeys) {
+Level? progressionTarget(List<Level> levels, Set<String> masteredKeys,
+    {bool Function(int index)? allowed}) {
   Level? last;
   for (var i = 0; i < levels.length; i++) {
-    if (!isSceneUnlocked(levels, i, masteredKeys)) break;
+    if (!isSceneUnlocked(levels, i, masteredKeys, allowed: allowed)) break;
     last = levels[i];
   }
   if (last == null) return null;
@@ -63,13 +70,14 @@ class NextSceneState {
 }
 
 NextSceneState? nextSceneState(
-    List<Level> levels, String currentId, Set<String> masteredKeys) {
+    List<Level> levels, String currentId, Set<String> masteredKeys,
+    {bool Function(int index)? allowed}) {
   final idx = levels.indexWhere((lv) => lv.id == currentId);
   if (idx < 0 || idx >= levels.length - 1) return null;
   return NextSceneState(
     index: idx + 1,
     level: levels[idx + 1],
-    unlocked: isSceneUnlocked(levels, idx + 1, masteredKeys),
+    unlocked: isSceneUnlocked(levels, idx + 1, masteredKeys, allowed: allowed),
     missing: missingForUnlock(levels[idx], masteredKeys),
   );
 }

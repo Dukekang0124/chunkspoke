@@ -18,7 +18,7 @@ import 'legacy_gate.dart';
 const int kChannelSchema = 1;
 
 /// 导出头里的 App 版本：发版时与 pubspec / 包内清单同 bump。
-const String kChannelAppVersion = '1.5.10';
+const String kChannelAppVersion = '1.6.0';
 
 const List<String> _chunkKeys = [
   'chunk_key',
