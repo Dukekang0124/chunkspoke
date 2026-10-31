@@ -442,18 +442,51 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       String text, double? confidence, double durationSec,
       {List<double>? wordConfs}) async {
     final targetTokens = tokenizeSpeech(widget.targetText);
-    final g = guardAsr(
+    var g = guardAsr(
       raw: text,
       wordConfidences: wordConfs,
       targetBlock: widget.targetText,
       minWords: targetTokens.length <= 1 ? 1 : 2,
     );
-    final outcome = judgeSpeech(
+    var outcome = judgeSpeech(
         target: widget.targetText,
         recognized: text,
         confidence: confidence,
         durationSec: durationSec);
-    final passed = g.ok && outcome.pass;
+    var passed = g.ok && outcome.pass;
+    var finalText = text;
+    // —— ASR-188 缓解版：一过判不过时，锁目标句词表再跑一次受限解码（Vosk grammar）。
+    // 展示口径不变（一过原文优先），只有二过同时过守门+判定才改判「过」；
+    // 二过强制开 checkChunkStack——强制解码会把噪声拼成目标句且置信度虚高。
+    if (!passed && _recPath != null) {
+      final retry = await _speech.recognizeWithTargetGrammarRetry(
+        wavPath: _recPath!,
+        targetSentence: widget.targetText,
+        firstText: text,
+      );
+      if (retry != null) {
+        final g2 = guardAsr(
+          raw: retry.text,
+          wordConfidences: retry.wordConfidences,
+          targetBlock: widget.targetText,
+          minWords: targetTokens.length <= 1 ? 1 : 2,
+          checkChunkStack: true,
+        );
+        final o2 = judgeSpeech(
+            target: widget.targetText,
+            recognized: retry.text,
+            confidence: retry.confidence,
+            durationSec: durationSec);
+        if (g2.ok && o2.pass) {
+          debugPrint('ASR188|grammar-rescued|free=$text|grammar=${retry.text}');
+          g = g2;
+          outcome = o2;
+          passed = true;
+          finalText = retry.text;
+        }
+      }
+    }
+    if (!mounted) return; // 二过是异步的，回到 UI 前重新确认挂载
     if (passed) Motion.of(context).success();
     final accuracy = (outcome.similarity * 100).round();
     // A2① 平均准确度=文本匹配相似度：每次开口判定（通过与否）都记相似度，
@@ -465,7 +498,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     }
     setState(() {
       _thinking = false;
-      _transcript = text;
+      _transcript = finalText;
       _judge = outcome;
       _guard = g;
       _passed = passed;
