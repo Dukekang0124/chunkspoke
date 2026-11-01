@@ -139,6 +139,11 @@ Float32List pcm16ToFloat32(Uint8List pcm) {
 /// 生产后端：每个进程一个持久 isolate，模型只加载一次。
 /// 放到 isolate 的理由与 `hd_voice_engine` 同：43MB int8 模型加载/解码不能卡 UI 线程。
 class SherpaAsrBackend implements AsrBackend {
+  /// [bindingsPath] 仅测试用：Windows 宿主上指向 sherpa 动态库目录；
+  /// Android 生产路径传 null，按 sherpa 默认方式加载。
+  SherpaAsrBackend({String? bindingsPath}) : _bindingsPath = bindingsPath;
+
+  final String? _bindingsPath;
   Isolate? _iso;
   SendPort? _worker;
   ReceivePort? _rx;
@@ -178,7 +183,8 @@ class SherpaAsrBackend implements AsrBackend {
           c.complete(Map<String, dynamic>.from(msg));
         }
       });
-      _iso = await Isolate.spawn(_asrWorkerMain, rx.sendPort,
+      _iso = await Isolate.spawn(
+          _asrWorkerMain, <Object?>[rx.sendPort, _bindingsPath],
           debugName: 'zipformer-asr', errorsAreFatal: false);
       _worker = await handshake.future.timeout(const Duration(seconds: 10));
     }
@@ -239,10 +245,12 @@ class SherpaAsrBackend implements AsrBackend {
 
 /// Worker 入口（顶层函数，供 Isolate.spawn）。
 /// 消息协议：`{cmd: init|transcribe|dispose, id, ...}` → `{id, ok, ...}`。
-void _asrWorkerMain(SendPort mainPort) {
+void _asrWorkerMain(List<Object?> args) {
+  final mainPort = args[0] as SendPort;
+  final bindingsPath = args.length > 1 ? args[1] as String? : null;
   final rx = ReceivePort();
   mainPort.send(<String, dynamic>{'id': 0, 'port': rx.sendPort});
-  sherpa.initBindings();
+  sherpa.initBindings(bindingsPath);
   sherpa.OnlineRecognizer? rec;
 
   sherpa.OnlineRecognizer build(String modelDir) {

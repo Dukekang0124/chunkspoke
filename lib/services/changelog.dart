@@ -22,6 +22,12 @@ String changelogTitle(String versionName) =>
 /// 规矩：**发版前必须为本版新增一条**，内容只写本版真实交付项，
 /// 不得沿用上一版；单测会核对当前 versionName 是否有条目。
 const Map<String, List<String>> changelogByVersion = {
+  '1.6.1': [
+    '· 跟读判不过时，自动锁定这句的词表再听一遍，减少「明明念对了却显示没听到」',
+    '· 设置页新增「增强识别（实验）」开关：可自愿下载约 38MB 离线增强模型，不下载不占空间',
+    '· 开启后开放识别优先用增强模型；下载失败、加载失败或识别出错都自动回到原引擎，不影响学习流程',
+    '· 默认识别引擎与判定口径保持不变；本版不改学习内容与六步流程',
+  ],
   '1.6.0': [
     '· 免费区不变：A–F 共 6 个场景（137 块）照旧免费，不用任何码',
     '· G 关起的场景需要解锁码：输一次码，G–T 全部不再需要码（关卡仍按学习进度逐关开启）；已学过的进度、复习和评测不受影响',
@@ -53,7 +59,7 @@ const Map<String, List<String>> changelogByVersion = {
 };
 
 /// 兜底版本（当前发布版）；表里查不到时用它，避免空弹窗。
-const String changelogFallbackVersion = '1.6.0';
+const String changelogFallbackVersion = '1.6.1';
 
 /// 一条可展示的更新清单。
 class Changelog {
