@@ -1,35 +1,35 @@
 {
-  "versionName": "1.6.0",
-  "versionCode": 4064,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.0/chunkspoke-latest.apk",
+  "versionName": "1.6.1",
+  "versionCode": 4065,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.1/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.0/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.6.0/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.1/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.6.1/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "f831b8b14a4a7440cc963124dfeb8f50fbefde34de0f399a9247cba5dcc29bfe",
-  "size": 59938667,
-  "notes": "v1.6.0：① A–F 共 6 个场景（137 块）永久免费，装好就能学，不用码；② G 关起的场景需要一枚解锁码，输码后全部场景可用，关卡仍按你的学习进度逐关解锁；③ 设置页新增「专业版」卡，可看当前是否已解锁、码尾号与换绑编号，也可以在这里输码；④ 1.5.10 之前就在用的老用户自动保留全量权益，不用码、不用做任何操作。",
+  "sha256": "6ebac6faaa530afaf3baae84a44e3fa8072e2d877426af767dd7dcff5b151c61",
+  "size": 60004547,
+  "notes": "v1.6.1：① 跟读判不过时，自动锁定目标句词表再听一遍，减少「念对了却没听到」；② 设置页新增「增强识别（实验）」开关，可选下载约 38 MB 离线增强模型，开启后开放识别优先用它，任何异常自动回落默认引擎；③ 默认识别路径与词典口径不变，不下载不占空间；④ 其余为稳定性修复。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.0/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.1/parts/apk.part0",
       "size": 15728640,
-      "sha256": "0f624ad426a9732afbf8bcc699c721428142d4a2e2f347c0b0609b65eee20d2f"
+      "sha256": "a575602f2ced8eb938ee39ab61582653b8c9c91b8488e344d1461a2a52ec07ad"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.0/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.1/parts/apk.part1",
       "size": 15728640,
-      "sha256": "1985dacb92938b40543f7002026cc537894892666ce44d893ab2be9eaaee8b7f"
+      "sha256": "696e9fa6e6ca3f313d055ac8ed8571f537885098a93676de1e6942c9ca9a62ed"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.0/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.1/parts/apk.part2",
       "size": 15728640,
-      "sha256": "c5a17d7d221a9fc91fc22506d790fd54b3e2d2d3128d7c16f93d6cb8f41d977d"
+      "sha256": "3e1df094d8b6d75bd42894fc4b0d7cc856afa461bead0b36768edbbfd3c6d1c0"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.0/parts/apk.part3",
-      "size": 12752747,
-      "sha256": "006590a19c42bc50e08103431eb4c35bf21d0f60946f58bd849f9ce1b9b7b7c0"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.1/parts/apk.part3",
+      "size": 12818627,
+      "sha256": "d41f35e1abf7e0dc3285dc829d9cf5787ace490d8f6f9662cbf2bcb59f61ded8"
     }
   ],
   "model": {
@@ -254,5 +254,43 @@
         "desc": "美音 · 低沉"
       }
     ]
+  },
+  "asrModel": {
+    "name": "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+    "modelVersion": "2023-02-17-int8",
+    "sha256": "340998d71b1cb930c00c34c1857207692fb188957038a6c793331778ff6395bb",
+    "size": 38312950,
+    "parts": [
+      {
+        "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/models/asr-20m-2023-02-17/parts/asr.part0",
+        "size": 15728640,
+        "sha256": "9b0ca1be29f5c988d5f532914f2bdc1a9893bdaee2490d0eb6ea5b21805781be",
+        "fallbacks": [
+          "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/models/asr-20m-2023-02-17/parts/asr.part0",
+          "https://dukekang0124.github.io/chunkspoke-releases/models/asr-20m-2023-02-17/parts/asr.part0"
+        ]
+      },
+      {
+        "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/models/asr-20m-2023-02-17/parts/asr.part1",
+        "size": 15728640,
+        "sha256": "90cc23ec37da01d4de074cf5cd7280cb06e5a7142fa74d185759e0714190f828",
+        "fallbacks": [
+          "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/models/asr-20m-2023-02-17/parts/asr.part1",
+          "https://dukekang0124.github.io/chunkspoke-releases/models/asr-20m-2023-02-17/parts/asr.part1"
+        ]
+      },
+      {
+        "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/models/asr-20m-2023-02-17/parts/asr.part2",
+        "size": 6855670,
+        "sha256": "8d7527b924517aa9f047dd583e1b329614b6044176a2e10687d942e7677db3e3",
+        "fallbacks": [
+          "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/models/asr-20m-2023-02-17/parts/asr.part2",
+          "https://dukekang0124.github.io/chunkspoke-releases/models/asr-20m-2023-02-17/parts/asr.part2"
+        ]
+      }
+    ],
+    "mirrorUrl": "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/models/asr-20m-2023-02-17/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.zip",
+    "license": "Apache-2.0",
+    "source": "k2-fsa/sherpa-onnx (asr-models release), 20M tier"
   }
 }
