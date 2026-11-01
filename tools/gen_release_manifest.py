@@ -96,7 +96,8 @@ def main():
         'notes': a.notes,
         'parts': build_parts(a.apk, a.version_name),
     }
-    for k in ('model', 'voiceModel'):
+    # 这些块不随 APK 版本变，必须原样透传（ASR-191 起含增强识别模型 asrModel）。
+    for k in ('model', 'voiceModel', 'asrModel'):
         if tpl.get(k):
             m[k] = tpl[k]
 

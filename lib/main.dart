@@ -13,6 +13,7 @@ import 'services/license_state.dart';
 import 'services/loaders.dart';
 import 'services/notification_service.dart';
 import 'services/review_notify.dart';
+import 'services/zipformer_asr.dart';
 import 'ui/theme.dart';
 import 'ui/error_page.dart';
 import 'ui/motion.dart';
@@ -144,6 +145,9 @@ Future<void> bootstrap() async {
     unawaited(LicenseGate().refresh(license).catchError((Object e, StackTrace st) {
       CrashLog.write('LicenseGate.refresh: $e', st);
     }));
+    // ASR-191：增强识别预热不阻塞首屏；未开启/未下载时什么都不做，默认仍是 Vosk。
+    unawaited(EnhancedAsrService.instance.warmUp().catchError(
+        (Object e, StackTrace st) => CrashLog.write('EnhancedAsr.warmUp: $e', st)));
     runApp(
       MultiProvider(
         providers: [

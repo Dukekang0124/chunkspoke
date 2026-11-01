@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'audio_format.dart';
 import 'vosk_engine.dart';
+import 'zipformer_asr.dart';
 
 /// Azure 发音评测结果（三项分数）。
 class PronunciationResult {
@@ -114,11 +115,15 @@ class SpeechService {
   /// B5：开放输出统一走全模型（不传场景词表），展示层只认这个原始文本。
   /// [e2ePhrases] 仅供 debugTranscriberOverride 脚本化识别使用，生产路径忽略。
   Future<VoskResult> recognizeOpen(String wavPath,
-      {List<String>? e2ePhrases}) {
+      {List<String>? e2ePhrases}) async {
     final override = debugTranscriberOverride;
     if (override != null && identical(_transcriber, override)) {
       return override.transcribe(wavPath, e2ePhrases ?? const []);
     }
+    // ASR-191 模式 B：用户显式开启增强引擎后，开放式识别优先用它；
+    // 未开启/未就绪/任何异常返回 null → 立刻继续用默认 Vosk（不改变默认路径）。
+    final enhanced = await EnhancedAsrService.instance.transcribeOpen(wavPath);
+    if (enhanced != null) return enhanced;
     return _transcriber.transcribeOpen(wavPath);
   }
 

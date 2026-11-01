@@ -12,6 +12,7 @@ import '../services/hd_voice_types.dart';
 import '../services/voice_bench.dart';
 import '../services/vosk_engine.dart';
 import '../services/vosk_model.dart';
+import '../services/zipformer_asr.dart';
 import '../services/tts_voice.dart';
 import '../services/notification_service.dart';
 import '../services/recording.dart';
@@ -110,6 +111,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // 目录检查失败 → 退回未知，不阻塞设置页。
       if (mounted) setState(() => _engineState = EngineState.unknown);
     });
+    // ASR-191：增强识别只读清单/开关/磁盘存在性，不加载模型（卡片自己监听刷新）。
+    EnhancedAsrService.instance.refresh().catchError((_) {});
   }
 
   @override
@@ -488,6 +491,114 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// ASR-191 · 增强识别（sherpa-onnx zipformer 20M，可选第二后端）。
+  /// 默认仍是 Vosk；这里只负责下载/开关/切回，不改变跟读与评测的受限解码路径。
+  Widget _asrEnhanceCard() {
+    final svc = EnhancedAsrService.instance;
+    return AnimatedBuilder(
+      animation: svc,
+      builder: (context, _) {
+        final installed = svc.installed;
+        final enabled = svc.enabled;
+        final busy = svc.busy;
+        final color = enabled ? kUnlocked : Colors.white54;
+        String subtitle;
+        if (busy &&
+            svc.phase == ModelPhase.downloading &&
+            svc.progressTotal > 0) {
+          final pct =
+              (svc.progressReceived * 100 ~/ svc.progressTotal).clamp(0, 100);
+          subtitle = '正在下载增强模型 $pct%';
+        } else if (busy) {
+          subtitle = '正在准备增强引擎…';
+        } else if (enabled) {
+          subtitle = '已启用（实验）· 开放识别优先，失败自动回落 Vosk';
+        } else if (installed) {
+          subtitle = '已下载 · 当前仍用 Vosk，可随时切回';
+        } else {
+          subtitle = '可选增强 · 模型 ${svc.modelSizeLabel} · 不下载不占空间';
+        }
+        return Container(
+          decoration: BoxDecoration(
+            color: kBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: Icon(Icons.auto_awesome, color: color, size: 20),
+                title: const Text('增强识别（实验）',
+                    style: TextStyle(color: kText, fontSize: 14)),
+                subtitle:
+                    Text(subtitle, style: TextStyle(color: color, fontSize: 12)),
+                trailing: installed
+                    ? Switch(
+                        value: enabled,
+                        activeThumbColor: kPrimary,
+                        onChanged: busy
+                            ? null
+                            : (v) async {
+                                final ok = await svc.setEnabled(v);
+                                if (!ok && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(svc.lastError ??
+                                          '操作失败，已保持默认 Vosk'),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              },
+                      )
+                    : null,
+              ),
+              if (!installed)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 12, 8),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          '需下载模型；默认不启用，开启后只影响开放式识别。',
+                          style:
+                              TextStyle(color: Colors.white54, fontSize: 12),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: busy
+                            ? null
+                            : () async {
+                                final ok = await svc.downloadAndEnable();
+                                if (!ok && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(svc.lastError ??
+                                          '下载失败，已保持默认 Vosk'),
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              },
+                        child: Text(busy ? '处理中…' : '下载并启用'),
+                      ),
+                    ],
+                  ),
+                ),
+              if (svc.lastError != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: Text(svc.lastError!,
+                      style: const TextStyle(color: kError, fontSize: 12)),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1553,6 +1664,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 16),
             _engineRow(),
+            const SizedBox(height: 12),
+            _asrEnhanceCard(),
             const SizedBox(height: 12),
             _ttsRow(context),
             const SizedBox(height: 12),

@@ -4,6 +4,8 @@
 # 用法
 #   bash tools/build_license_release.sh --check    # 只校验 secret 就位并打印指纹，不构建
 #   bash tools/build_license_release.sh            # 构建三 ABI（split-per-abi）
+#   TARGET_PLATFORM=android-arm64,android-x64 BUILD_NUMBER=2065 \
+#     bash tools/build_license_release.sh          # 只出指定 ABI（1.6.1 用）
 #
 # 前置（放本机、不入 git、不入文档）
 #   主源（纯文本，与运营侧 cs_codes.py --secret-file 同一份）：
@@ -24,13 +26,19 @@ set -euo pipefail
 export PYTHONIOENCODING=utf-8
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Git Bash 下 `python` 是 Windows 解释器，不认 /d/... 形式；传参前转成 D:/... 形式。
+ROOT_PY="$(cygpath -m "$ROOT" 2>/dev/null || printf '%s' "$ROOT")"
 SECRET_DIR="${ROOT}/secret"
+SECRET_DIR_PY="${ROOT_PY}/secret"
 PLAIN="${SECRET_DIR}/unlock.secret"
 PLAIN_PREV="${SECRET_DIR}/unlock.prev.secret"
 JSON_SRC="${SECRET_DIR}/unlock_secret.json"
 DEFINES="${SECRET_DIR}/.dart_defines.json"
 FLUTTER="${FLUTTER:-D:/tools/flutter/bin/flutter.bat}"
 BUILD_NUMBER="${BUILD_NUMBER:-2064}"
+# 只构建指定 ABI（逗号分隔的 Flutter target-platform 名）。默认三 ABI 与旧行为一致；
+# 1.6.1 起按指令只出 arm64+x64。
+TARGET_PLATFORM="${TARGET_PLATFORM:-android-arm,android-arm64,android-x64}"
 
 mode="${1:-build}"
 
@@ -41,7 +49,7 @@ if [[ ! -f "$PLAIN" && ! -f "$JSON_SRC" ]]; then
 fi
 
 # 把来源归一成一份临时 defines（同目录、构建后删），并只打印指纹。
-python - "$PLAIN" "$PLAIN_PREV" "$JSON_SRC" "$DEFINES" <<'PY'
+python - "${SECRET_DIR_PY}/unlock.secret" "${SECRET_DIR_PY}/unlock.prev.secret" "${SECRET_DIR_PY}/unlock_secret.json" "${SECRET_DIR_PY}/.dart_defines.json" <<'PY'
 import hashlib, json, os, sys
 
 plain, plain_prev, json_src, out = sys.argv[1:5]
@@ -88,8 +96,9 @@ fi
 
 cd "$ROOT"
 "$FLUTTER" build apk --release --split-per-abi \
+  --target-platform="$TARGET_PLATFORM" \
   --build-number="$BUILD_NUMBER" \
-  --dart-define-from-file="$DEFINES"
+  --dart-define-from-file="${SECRET_DIR_PY}/.dart_defines.json"
 
 echo "[build] 完成：build/app/outputs/flutter-apk/chunkspoke-*-release.apk"
 echo "[build] 复核：装机后 kv license.secretFp 必须等于上面的指纹；不符即作废重打。"
