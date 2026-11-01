@@ -1,35 +1,35 @@
 {
-  "versionName": "1.5.8.1",
-  "versionCode": 4060,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
+  "versionName": "1.6.0",
+  "versionCode": 4064,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.0/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.5.8.1/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.5.8.1/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.0/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.6.0/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "b2d4b82c76993c4e5ad2952b69a88fa51c92f5d0f2548ecd76288f9683915ad8",
-  "size": 59741711,
-  "notes": "v1.5.8.1 热修：① 安装包/语音包下载中断后不再出现「校验失败」死循环——自动删档换源、按实际落盘长度续传，失败页可一键复制诊断信息；② 设置页 GLM 连接测试超时放宽到 35 秒，限流与超时原因如实显示（含服务端错误码），测试中按钮不可点，防止连点。仅修复下载与连接问题，无新增功能。",
+  "sha256": "f831b8b14a4a7440cc963124dfeb8f50fbefde34de0f399a9247cba5dcc29bfe",
+  "size": 59938667,
+  "notes": "v1.6.0：① A–F 共 6 个场景（137 块）永久免费，装好就能学，不用码；② G 关起的场景需要一枚解锁码，输码后全部场景可用，关卡仍按你的学习进度逐关解锁；③ 设置页新增「专业版」卡，可看当前是否已解锁、码尾号与换绑编号，也可以在这里输码；④ 1.5.10 之前就在用的老用户自动保留全量权益，不用码、不用做任何操作。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.0/parts/apk.part0",
       "size": 15728640,
-      "sha256": "65b308c318370e24fea01c1b3c75a87f53d67438d72e00fa889993193fc1a024"
+      "sha256": "0f624ad426a9732afbf8bcc699c721428142d4a2e2f347c0b0609b65eee20d2f"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.0/parts/apk.part1",
       "size": 15728640,
-      "sha256": "6202361b9381abf4532b8d17665fba92a7598e00ff218df652261e0c52cf7ce2"
+      "sha256": "1985dacb92938b40543f7002026cc537894892666ce44d893ab2be9eaaee8b7f"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.0/parts/apk.part2",
       "size": 15728640,
-      "sha256": "02150ceceeb20cbcf275dbb6c8a8e9f4e7329155a1485bd90551c5e72866de0f"
+      "sha256": "c5a17d7d221a9fc91fc22506d790fd54b3e2d2d3128d7c16f93d6cb8f41d977d"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.5.8.1/parts/apk.part3",
-      "size": 12555791,
-      "sha256": "962d0f00e3950efc396027e793e1ab22b5d8fa62c208eafdcccd8c159900a683"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.0/parts/apk.part3",
+      "size": 12752747,
+      "sha256": "006590a19c42bc50e08103431eb4c35bf21d0f60946f58bd849f9ce1b9b7b7c0"
     }
   ],
   "model": {
