@@ -173,17 +173,45 @@ class _SubstituteStepState extends State<SubstituteStep> {
           usePath, _p.azureKey!, _p.azureRegion!);
     }
     if (!mounted) return;
-    final g = guardAsr(
+    var g = guardAsr(
       raw: text,
       wordConfidences: confs,
       targetBlock: _guardTarget,
     );
-    final v = judgeSubstitution(recognized: text, plan: _plan);
-    final pass = g.ok && v.pass;
+    var v = judgeSubstitution(recognized: text, plan: _plan);
+    var pass = g.ok && v.pass;
+    var finalText = text;
+    // —— ASR-188 缓解版：一过判不过时，锁「替换后的整句」词表再跑一次受限解码。
+    // 词表用 replacedSentence（用户要说的整句），守门目标仍是 _guardTarget（槽位词）。
+    // 二过必须同时过 guardAsr（开 chunkStack）+ judgeSubstitution 才改判。
+    if (!pass) {
+      final retry = await _speech.recognizeWithTargetGrammarRetry(
+        wavPath: usePath,
+        targetSentence: _plan.replacedSentence,
+        firstText: text,
+      );
+      if (retry != null) {
+        final g2 = guardAsr(
+          raw: retry.text,
+          wordConfidences: retry.wordConfidences,
+          targetBlock: _guardTarget,
+          checkChunkStack: true,
+        );
+        final v2 = judgeSubstitution(recognized: retry.text, plan: _plan);
+        if (g2.ok && v2.pass) {
+          debugPrint('ASR188|grammar-rescued|free=$text|grammar=${retry.text}');
+          g = g2;
+          v = v2;
+          pass = true;
+          finalText = retry.text;
+        }
+      }
+    }
+    if (!mounted) return; // 二过是异步的，回到 UI 前重新确认挂载
     if (pass) Motion.of(context).success();
     setState(() {
       _thinking = false;
-      _transcript = text;
+      _transcript = finalText;
       _guard = g;
       _verdict = v;
       if (pass) {

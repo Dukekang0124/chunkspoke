@@ -122,6 +122,37 @@ class SpeechService {
     return _transcriber.transcribeOpen(wavPath);
   }
 
+  /// ASR-188 缓解版：**二过受限解码救回**（只在自由解码判不过之后追加一次）。
+  ///
+  /// 现状：所有生产跟读走 [recognizeOpen] = 无约束全模型，所以
+  /// "I'll order the same" 会被自由解码拼成 "an old do the same" 这类同音漂移。
+  /// 本方法用**目标句词表**跑一次 Vosk grammar（受限解码），词表由
+  /// [voskGrammarWords] 从整句展开（保留缩写里的 `'`，如 `i'll`）。
+  ///
+  /// 三条硬约束：
+  /// 1. **不替换一过**——一过的自由文本仍是展示口径（B5 展示与校验分立不破）；
+  ///    只有二过同时通过 `guardAsr` + 判定层，调用方才允许改判「过」。
+  /// 2. **不新增依赖**——grammar 通道早已存在
+  ///    （`transcribe(phrases)` → `createRecognizer(grammar:)`），零结果时引擎内部
+  ///    已回退自由解码（`vosk_engine.dart` 159–162），词表含 OOV 词也不会卡死。
+  /// 3. **不放松守门**——强制解码会把噪声拼成目标句且置信度虚高，
+  ///    所以调用方对二过必须额外开 `checkChunkStack: true`。
+  ///
+  /// 返回 null = 没有可用的二过结果（词表空 / 引擎未就绪 / 与一过文本相同），
+  /// 调用方保持一过结论即可。
+  Future<VoskResult?> recognizeWithTargetGrammarRetry({
+    required String wavPath,
+    required String targetSentence,
+    required String firstText,
+  }) async {
+    if (voskGrammarWords([targetSentence]).isEmpty) return null;
+    if (!_transcriber.isReady) return null;
+    final r = await _transcriber.transcribe(wavPath, [targetSentence]);
+    final text = r.text.trim();
+    if (text.isEmpty || text == firstText.trim()) return null;
+    return r;
+  }
+
   /// 录音时长（秒），供判定管线的「过短录音无效」防噪兜底。
   Future<double> durationSec(String wavPath) => wavDurationSec(wavPath);
 
