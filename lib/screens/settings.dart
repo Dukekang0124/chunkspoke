@@ -27,6 +27,7 @@ import '../ui/theme_card.dart';
 import '../ui/feedback.dart';
 import 'ai_coach_screen.dart';
 import 'data_backup.dart';
+import 'diagnostics.dart';
 import 'legal_screen.dart';
 import 'license_activate.dart';
 import 'listening_debug.dart';
@@ -1605,6 +1606,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// ASR-203 自检入口：设置 → 诊断。
+  Widget _diagnosticsEntry(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kBorder),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          key: const Key('diagnostics-entry'),
+          leading: Icon(Icons.bug_report_outlined, color: kPrimary),
+          title: Text('诊断与自检', style: TextStyle(color: kText)),
+          subtitle: Text(
+              '进度完整性（台账/断点/环/分数）、语音与音频资源、更新链路，'
+              '异常可一键修复并留档',
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
+          trailing: Icon(Icons.arrow_forward_ios,
+              size: 16, color: kTextFaint),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const DiagnosticsScreen()),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// GPLv3 合规入口：全文许可证 + 书面源码要约随 APK 分发并可见。
   Widget _legalEntry(BuildContext context) {
     return Container(
@@ -1690,6 +1719,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _soundCard(context),
             const SizedBox(height: 12),
             _themeCard(context),
+            const SizedBox(height: 12),
+            _diagnosticsEntry(context),
             const SizedBox(height: 12),
             _recordingCard(context),
             const SizedBox(height: 12),

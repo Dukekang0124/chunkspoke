@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import 'models/content_pack.dart';
 import 'models/listening_article.dart';
+import 'screens/diagnostics.dart';
 import 'screens/free_build_screen.dart';
 import 'screens/level.dart';
 import 'screens/library.dart';
@@ -23,6 +24,7 @@ import 'services/crash_log.dart';
 import 'services/listening_palette.dart';
 import 'services/database.dart';
 import 'services/learning_export.dart';
+import 'services/learning_flow.dart';
 import 'services/loaders.dart';
 import 'services/speech.dart';
 import 'services/state_machine.dart';
@@ -90,6 +92,10 @@ Future<void> main() async {
   const seedCount = int.fromEnvironment('E2E_SEED_COUNT', defaultValue: 0);
   const seedBCount = int.fromEnvironment('E2E_SEED_B_COUNT', defaultValue: 0);
   const screen = String.fromEnvironment('E2E_SCREEN', defaultValue: 'level');
+  // ASR-203 取证：目标模块 + 陈旧断点块号（-1 = 不写快照）。
+  const levelId = String.fromEnvironment('E2E_LEVEL', defaultValue: 'A');
+  const seedResumeAt =
+      int.fromEnvironment('E2E_SEED_RESUME_AT', defaultValue: -1);
   // 波 1 复习引擎时间加速：固定「今天」，配合 E2E_SEED_REVIEW 造一块昨天学的到期块。
   const fakeNowStr = String.fromEnvironment('E2E_FAKE_NOW', defaultValue: '');
   final fakeNow = fakeNowStr.isEmpty ? null : DateTime.tryParse(fakeNowStr);
@@ -120,7 +126,7 @@ Future<void> main() async {
       await tts.init().timeout(const Duration(seconds: 10));
     } catch (_) {}
     final level = content.levels
-        .firstWhere((l) => l.id == 'A', orElse: () => content.levels.first);
+        .firstWhere((l) => l.id == levelId, orElse: () => content.levels.first);
     if (resetChunks) {
       await progress.chunkStore.db.resetChunks();
       await progress.clearLearnResume(level.id);
@@ -157,9 +163,25 @@ Future<void> main() async {
         }
       }
     }
+    // ASR-203 取证：造一条「台账已推进、断点还停在旧块」的陈旧快照，
+    // 与线上现象同源（单块/锚定路径从不回写真实 level 的断点）。
+    if (seedResumeAt >= 0 && seedResumeAt < level.chunks.length) {
+      await progress.setLearnResume(
+          level.id,
+          LearnResume(
+            chunkIndex: seedResumeAt,
+            chunkId: level.chunks[seedResumeAt].id,
+            phase: 2,
+            stars: StarBoard.empty,
+            savedAt: progress.now.millisecondsSinceEpoch,
+          ).encode());
+      debugPrint('E2E_RESUME_SEED|${level.id}|$seedResumeAt');
+    }
     final home = screen == 'map'
         ? const MapScreen()
-        : screen == 'review'
+        : screen == 'diag'
+            ? const DiagnosticsScreen()
+            : screen == 'review'
             ? const ReviewScreen()
             : screen == 'cycle'
                 ? _CycleScreen(

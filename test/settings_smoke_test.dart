@@ -125,6 +125,11 @@ void main() {
       expect(tester.getTopLeft(find.text('外观与主题')).dy,
           greaterThan(tester.getTopLeft(find.text('音效')).dy),
           reason: '主题卡片必须在音效卡之后');
+      // ASR-203：设置 → 诊断入口，紧跟外观卡之后。
+      expect(find.byKey(const ValueKey('diagnostics-entry')), findsOneWidget);
+      expect(tester.getTopLeft(find.text('诊断与自检')).dy,
+          greaterThan(tester.getTopLeft(find.text('外观与主题')).dy),
+          reason: '诊断入口必须在主题卡之后');
       expect(find.text('保存最近一次录音（排障）'), findsOneWidget);
       expect(find.text('分享最近一次录音'), findsNothing);
 
