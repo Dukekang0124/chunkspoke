@@ -11,7 +11,9 @@ import 'wav_codec.dart';
 
 /// 音频缓存上限：首版 300MB，按「最久未听篇目」整篇清理。
 const int kListeningCacheMaxBytes = 300 * 1024 * 1024;
-const int _kIndexVersion = 1;
+
+/// v2：缓存键加入播放档位（ASR-200 慢速改为原生合成，旧的原速 WAV 不可复用）。
+const int _kIndexVersion = 2;
 const int _kMinSentenceMs = 120;
 const int _kMaxSentenceMs = 120 * 1000;
 
@@ -30,8 +32,11 @@ abstract class ListeningVoice {
   String get systemVoiceKey;
 
   /// 合成一句到 WAV 文件。失败返回 false，不抛异常。
+  ///
+  /// [rate] 为浸泡层档位（0.75/1.0/1.25）：高清走 VITS 原生 speed，
+  /// 系统引擎走 setSpeechRate 单层控速；播放端不再变速。
   Future<bool> synthesizeToFile(String text, String fullPath,
-      {required bool hd});
+      {required bool hd, required double rate});
 }
 
 enum ListeningAudioSource { hd, system, live }
@@ -98,6 +103,9 @@ class ListeningAudioPlan {
   final List<ListeningPlaybackItem> items;
   final String voiceKey;
   final ListeningAudioSource source;
+
+  /// 本计划的合成档位（0.75/1.0/1.25），用于诊断与切档断言。
+  final double rate;
   final bool precise;
   final int synthesized;
   final int reused;
@@ -110,6 +118,7 @@ class ListeningAudioPlan {
     required this.voiceKey,
     required this.source,
     required this.precise,
+    this.rate = 1.0,
     this.items = const [],
     this.synthesized = 0,
     this.reused = 0,
@@ -247,16 +256,18 @@ class ListeningAudioPipeline {
   Future<ListeningAudioPlan> prepare(
     ListeningArticle article,
     ListeningVoice voice, {
+    double rate = 1.0,
     void Function(int done, int total)? onProgress,
     List<ListeningExplanationSegment>? explanations,
   }) {
     return _serialized(
-        () => _prepare(article, voice, onProgress, explanations));
+        () => _prepare(article, voice, rate, onProgress, explanations));
   }
 
   Future<ListeningAudioPlan> _prepare(
     ListeningArticle article,
     ListeningVoice voice,
+    double rate,
     void Function(int done, int total)? onProgress,
     List<ListeningExplanationSegment>? explanations,
   ) async {
@@ -269,13 +280,14 @@ class ListeningAudioPipeline {
     final progressTotal = bodyTotal + explTotal;
 
     for (final hd in attempts) {
-      final key = hd ? voice.voiceKey : voice.systemVoiceKey;
+      final key = _keyFor(hd ? voice.voiceKey : voice.systemVoiceKey, rate);
       final reusable = old != null && old.voice == key ? old : null;
       final built = await _synthesizeAll(
         dir,
         article,
         voice,
         hd: hd,
+        rate: rate,
         voiceKey: key,
         old: reusable,
         onProgress: onProgress == null
@@ -290,6 +302,7 @@ class ListeningAudioPipeline {
                 article,
                 voice,
                 hd: hd,
+                rate: rate,
                 voiceKey: key,
                 old: reusable,
                 segments: explanations,
@@ -333,6 +346,7 @@ class ListeningAudioPipeline {
           body: built,
           explanations: expl,
           voiceKey: key,
+          rate: rate,
           source: hd ? ListeningAudioSource.hd : ListeningAudioSource.system,
         );
       }
@@ -348,7 +362,7 @@ class ListeningAudioPipeline {
       index.articles.remove(article.id);
     }
     await _enforceLimit(dir, index, keepArticleId: article.id);
-    return _livePlan(article, voice);
+    return _livePlan(article, voice, rate);
   }
 
   Future<_BuiltArticle?> _synthesizeAll(
@@ -356,6 +370,7 @@ class ListeningAudioPipeline {
     ListeningArticle article,
     ListeningVoice voice, {
     required bool hd,
+    required double rate,
     required String voiceKey,
     required _CachedArticle? old,
     void Function(int done, int total)? onProgress,
@@ -386,7 +401,8 @@ class ListeningAudioPipeline {
         } catch (_) {}
         var ok = false;
         try {
-          ok = await voice.synthesizeToFile(s.text, file.path, hd: hd);
+          ok = await voice.synthesizeToFile(s.text, file.path,
+              hd: hd, rate: rate);
         } catch (_) {
           ok = false;
         }
@@ -433,6 +449,7 @@ class ListeningAudioPipeline {
     ListeningArticle article,
     ListeningVoice voice, {
     required bool hd,
+    required double rate,
     required String voiceKey,
     required _CachedArticle? old,
     required List<ListeningExplanationSegment> segments,
@@ -448,6 +465,7 @@ class ListeningAudioPipeline {
         article,
         voice,
         hd: hd,
+        rate: rate,
         voiceKey: voiceKey,
         old: old,
         segment: segments[i],
@@ -471,6 +489,7 @@ class ListeningAudioPipeline {
     ListeningArticle article,
     ListeningVoice voice, {
     required bool hd,
+    required double rate,
     required String voiceKey,
     required _CachedArticle? old,
     required ListeningExplanationSegment segment,
@@ -510,7 +529,8 @@ class ListeningAudioPipeline {
       } catch (_) {}
       var ok = false;
       try {
-        ok = await voice.synthesizeToFile(text, file.path, hd: hd);
+        ok = await voice.synthesizeToFile(text, file.path,
+            hd: hd, rate: rate);
       } catch (_) {
         ok = false;
       }
@@ -562,6 +582,7 @@ class ListeningAudioPipeline {
     required _BuiltArticle body,
     required _BuiltExplanations? explanations,
     required String voiceKey,
+    required double rate,
     required ListeningAudioSource source,
   }) {
     final bySentence = <int, _BuiltExplanationItem>{
@@ -612,6 +633,7 @@ class ListeningAudioPipeline {
       sentences: sentences,
       items: items,
       voiceKey: voiceKey,
+      rate: rate,
       source: source,
       precise: true,
       synthesized: body.synthesized,
@@ -621,7 +643,8 @@ class ListeningAudioPipeline {
     );
   }
 
-  ListeningAudioPlan _livePlan(ListeningArticle article, ListeningVoice voice) {
+  ListeningAudioPlan _livePlan(
+      ListeningArticle article, ListeningVoice voice, double rate) {
     final list = <ListeningSentenceAudio>[];
     final items = <ListeningPlaybackItem>[];
     var cursor = 0;
@@ -651,7 +674,8 @@ class ListeningAudioPipeline {
       article: article,
       sentences: list,
       items: items,
-      voiceKey: voice.systemVoiceKey,
+      voiceKey: _keyFor(voice.systemVoiceKey, rate),
+      rate: rate,
       source: ListeningAudioSource.live,
       precise: false,
     );
@@ -902,6 +926,11 @@ class _BuiltExplanations {
   const _BuiltExplanations(
       this.items, this.entries, this.synthesized, this.reused);
 }
+
+/// 缓存键必须带档位：同一音色的 0.75/1.0/1.25 是三份不同 WAV，
+/// 键里不写档位就会互相顶替（表现为变速后还是旧语速）。
+String _keyFor(String base, double rate) =>
+    '$base@${rate.toStringAsFixed(2)}';
 
 String _fileName(String articleId, String sentenceId, String voiceKey) =>
     '${_safe(articleId)}_${_safe(sentenceId)}_${_fnv1a(voiceKey)}.wav';

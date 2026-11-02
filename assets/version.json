@@ -1,33 +1,33 @@
 {
-  "versionName": "1.6.1",
-  "versionCode": 4065,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.1/chunkspoke-latest.apk",
+  "versionName": "1.6.2",
+  "versionCode": 4066,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.2/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.1/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.6.1/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.2/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.6.2/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "3c3919f6837cd3d1d726b4e7df1abd5eab11e6968ded45baa19471e3b643ba08",
-  "size": 60004547,
-  "notes": "v1.6.1：① 跟读判不过时，自动锁定目标句词表再听一遍，减少「念对了却没听到」；② 设置页新增「增强识别（实验）」开关，可选下载约 38 MB 离线增强模型，开启后开放识别优先用它，任何异常自动回落默认引擎；③ 默认识别路径与词典口径不变，不下载不占空间；④ 其余为稳定性修复。",
+  "sha256": "dbac73e81268e3ff18ff0129905318de0d875af4b9aa9aaa9b6bb019efbd935a",
+  "size": 60004507,
+  "notes": "v1.6.2：① 慢速朗读改为合成时原生放慢，不再「标准速再拉伸」——金属回声与电流感消失，音高不变；② 装了高清音色包时慢速也用高清音色；③ 慢/标准/快三档各自缓存，切档立刻生效；④ 系统发音慢档只做一层放慢（不再是 0.56x 复合减速）；⑤ 不改学习内容与六步流程。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.1/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.2/parts/apk.part0",
       "size": 15728640,
       "sha256": "a575602f2ced8eb938ee39ab61582653b8c9c91b8488e344d1461a2a52ec07ad"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.1/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.2/parts/apk.part1",
       "size": 15728640,
       "sha256": "696e9fa6e6ca3f313d055ac8ed8571f537885098a93676de1e6942c9ca9a62ed"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.1/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.2/parts/apk.part2",
       "size": 15728640,
       "sha256": "3e1df094d8b6d75bd42894fc4b0d7cc856afa461bead0b36768edbbfd3c6d1c0"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.1/parts/apk.part3",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.2/parts/apk.part3",
       "size": 12818627,
       "sha256": "b43d9b8e7d6adcac1ac06dfed84df3c97b37535c5c38d67e39cc6a1a35e630be"
     }

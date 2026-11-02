@@ -40,7 +40,7 @@ class ListeningPlayerController extends ChangeNotifier {
     speedIndex = indexForRate(defaultRateFor(article, progress.listening));
   }
 
-  /// 本级默认语速的取值顺序；变速只走播放速率，不进音频缓存键。
+  /// 本级默认语速的取值顺序；档位直接进合成（缓存键带档位，见 ASR-200）。
   static double defaultRateFor(ListeningArticle a, ListeningStore store) =>
       store.speedOverrideFor(a.level.key) ?? a.baseRate ?? a.level.baseRate;
 
@@ -166,6 +166,7 @@ class ListeningPlayerController extends ChangeNotifier {
       final p = await pipeline.prepare(
         article,
         tts,
+        rate: speed,
         explanations: segments,
         onProgress: (done, total) {
           prepDone = done;
@@ -210,7 +211,8 @@ class ListeningPlayerController extends ChangeNotifier {
           initialIndex: currentItemIndex,
           initialPosition: Duration(milliseconds: within),
         );
-        await _player.setSpeed(speed);
+        // ASR-200：播放端固定 1.0，变速全部在合成侧完成（原生 speed），
+        // 不再走 ExoPlayer 的 setSpeed（会叠出金属回声）。
         _bindStreams();
         globalPosition.value = p.startMsOf(idx) + within;
       } else {
@@ -666,13 +668,20 @@ class ListeningPlayerController extends ChangeNotifier {
     final i = index.clamp(0, kSpeeds.length - 1);
     if (i == speedIndex) return;
     speedIndex = i;
-    if (!live) await _player.setSpeed(speed);
     // 手动变速按级别记忆，只影响本级文章的默认落点。
     await progress.listening.setSpeedOverride(article.level.key, speed);
     progress.logEvent('speed_change', {
       'article': article.id,
       'speed': speed,
     });
+    final p = plan;
+    if (!live && p != null && p.precise && !rebuilding) {
+      // ASR-200：每个档位是另一套 WAV（原生 speed 合成），切档必须重建
+      // 播放队列并回到同句；播放端不再叠加变速，所以 0.56x 复合消失。
+      final within = _currentExpl == null ? _player.position.inMilliseconds : 0;
+      _currentExpl = null;
+      await _rebuildForMode(currentIndex, withinMs: within, autoplay: true);
+    }
     _syncPlayback();
     _notify();
   }
@@ -746,6 +755,7 @@ class ListeningPlayerController extends ChangeNotifier {
       final p = await pipeline.prepare(
         article,
         tts,
+        rate: speed,
         explanations: segments,
         onProgress: (done, total) {
           prepDone = done;
@@ -773,7 +783,6 @@ class ListeningPlayerController extends ChangeNotifier {
           initialIndex: currentItemIndex,
           initialPosition: Duration(milliseconds: withinMs),
         );
-        await _player.setSpeed(speed);
         globalPosition.value = p.startMsOf(target) + withinMs;
         if (autoplay && wasPlaying) {
           _beginCounting();

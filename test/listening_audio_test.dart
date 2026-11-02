@@ -39,6 +39,9 @@ class _FakeVoice implements ListeningVoice {
   int hdCalls = 0;
   int sysCalls = 0;
 
+  /// 每次合成拿到的档位（ASR-200：档位必须直达合成侧）。
+  final List<double> rates = [];
+
   @override
   String get voiceKey => hdKey;
 
@@ -47,7 +50,8 @@ class _FakeVoice implements ListeningVoice {
 
   @override
   Future<bool> synthesizeToFile(String text, String fullPath,
-      {required bool hd}) async {
+      {required bool hd, required double rate}) async {
+    rates.add(rate);
     if (hd) {
       hdCalls++;
       if (hdFail || (hdFailAt >= 0 && hdCalls > hdFailAt)) return false;
@@ -56,9 +60,9 @@ class _FakeVoice implements ListeningVoice {
       if (sysFail) return false;
     }
     final ms = hd ? (msFor?.call(text) ?? hdMs) : sysMs;
-    const rate = 8000;
+    const hz = 8000;
     await writeWavFile(
-        File(fullPath), Float32List(rate * ms ~/ 1000), rate);
+        File(fullPath), Float32List(hz * ms ~/ 1000), hz);
     return true;
   }
 }
@@ -164,7 +168,7 @@ void main() {
     final fresh = await pipeline.prepare(article, voice);
     expect(fresh.synthesized, 2);
     expect(fresh.reused, 0);
-    expect(fresh.voiceKey, 'hd:v2');
+    expect(fresh.voiceKey, 'hd:v2@1.00');
     expect(fresh.totalMs, 3000);
     for (final s in old.sentences) {
       expect(await File(s.path!).exists(), isFalse);
@@ -180,7 +184,7 @@ void main() {
     expect(plan.source, ListeningAudioSource.system);
     expect(plan.precise, isTrue);
     expect(plan.synthesized, 2);
-    expect(plan.voiceKey, voice.sysKey);
+    expect(plan.voiceKey, '${voice.sysKey}@1.00');
     expect(plan.sentences.map((s) => s.durationMs), [400, 400]);
     expect(plan.totalMs, 800);
     expect(_wavs(dir).length, 2);
@@ -249,7 +253,42 @@ void main() {
     expect(plan.precise, isTrue);
     expect(plan.synthesized, 1);
     final index = await File('${dir.path}/index.json').readAsString();
-    expect(index, contains('"version":1'));
+    expect(index, contains('"version":2'));
+  });
+
+  test('档位进合成与缓存键：0.75/1.0 各自一套 WAV，不互相顶替', () async {
+    final voice = _FakeVoice(hdMs: 1000);
+    final article = _article('L01', ['One.', 'Two.']);
+
+    final slow = await pipeline.prepare(article, voice, rate: 0.75);
+    expect(slow.rate, 0.75);
+    expect(slow.source, ListeningAudioSource.hd, reason: '慢档也走高清包');
+    expect(voice.rates, [0.75, 0.75]);
+    expect(slow.voiceKey, 'hd:v1@0.75');
+    final slowPaths = [for (final s in slow.sentences) s.path!];
+
+    final normal = await pipeline.prepare(article, voice, rate: 1.0);
+    expect(normal.synthesized, 2, reason: '换档必须重新合成，不能拿慢档 WAV 冒充');
+    expect(normal.rate, 1.0);
+    expect(normal.voiceKey, 'hd:v1@1.00');
+    expect(voice.rates.sublist(2), [1.0, 1.0]);
+    for (final p in slowPaths) {
+      expect(await File(p).exists(), isFalse, reason: '旧档 WAV 应被清掉');
+    }
+    expect(_wavs(dir).length, 2);
+
+    final again = await pipeline.prepare(article, voice, rate: 1.0);
+    expect(again.reused, 2, reason: '同档再次打开命中缓存');
+    expect(voice.rates.length, 4);
+  });
+
+  test('直播降级计划也带档位，时间轴仍按估算', () async {
+    final voice = _FakeVoice(hdFail: true, sysFail: true);
+    final plan = await pipeline.prepare(
+        _article('L01', ['one two three']), voice, rate: 0.75);
+    expect(plan.live, isTrue);
+    expect(plan.rate, 0.75);
+    expect(plan.totalMs, estimateLiveSentenceMs('one two three'));
   });
 
   test('系统音色直连（无 HD）也能出精确时间轴', () async {

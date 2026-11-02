@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:chunkspoke_flutter/services/hd_voice_types.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
+import 'package:chunkspoke_flutter/services/voice_speed.dart';
 
 /// 可控的 TTS 适配器：按引擎声明语言集合，复现真机检测分支。
 class FakeTtsAdapter implements TtsAdapter {
@@ -78,10 +79,13 @@ class FakeHdSpeaker implements HdVoiceSpeaker {
   int speakCalls = 0;
 
   @override
-  Future<bool> speak(String text) async {
+  Future<bool> speak(String text, {double? speed}) async {
     speakCalls++;
+    lastSpeed = speed;
     return speakResult;
   }
+
+  double? lastSpeed;
 
   @override
   Future<void> stop() async {}
@@ -350,7 +354,7 @@ void main() {
       expect(adapter.rateAtSpeak.single, closeTo(0.275, 1e-9));
     });
 
-    test('档位非标准时不走高清（固定语速），只走系统引擎', () async {
+    test('慢档也走高清：用 VITS 原生 speed，不回落系统引擎', () async {
       final adapter = FakeTtsAdapter(
         voices: {
           'com.google.android.tts': {'en-US'},
@@ -360,8 +364,35 @@ void main() {
       final hd = FakeHdSpeaker();
       final s = withSpeed(TtsSpeed.slow, adapter: adapter, hd: hd);
       expect(await s.speak('Hello'), isTrue);
-      expect(hd.speakCalls, 0, reason: '高清是固定语速，选了慢就不能播原速');
-      expect(adapter.speakCalls, 1);
+      expect(hd.speakCalls, 1, reason: 'ASR-200：高清包全档接管，慢档不再退回系统引擎');
+      expect(hd.lastSpeed, VoiceSpeed.hdSlow);
+      expect(adapter.speakCalls, 0);
+    });
+
+    test('三档映射单源：0.75/1.0/1.25 → 0.41/0.58/0.76（单调、比例正确）', () {
+      expect(VoiceSpeed.hdForRate(0.75), VoiceSpeed.hdSlow);
+      expect(VoiceSpeed.hdForRate(1.0), VoiceSpeed.hdNormal);
+      expect(VoiceSpeed.hdForRate(1.25), VoiceSpeed.hdFast);
+      expect(VoiceSpeed.hdSlow < VoiceSpeed.hdNormal, isTrue);
+      expect(VoiceSpeed.hdNormal < VoiceSpeed.hdFast, isTrue);
+      // 实测标定：0.41/0.58≈0.707（目标 0.75，误差 −5.7%），
+      // 0.76/0.58≈1.31（目标 1.25，误差 +4.9%）——都在盲听可接受带内。
+      expect(VoiceSpeed.hdSlow / VoiceSpeed.hdNormal, closeTo(0.707, 0.05));
+      expect(VoiceSpeed.hdFast / VoiceSpeed.hdNormal, closeTo(1.31, 0.05));
+    });
+
+    test('系统引擎单层控速：慢档只下发 setSpeechRate(0.165)，无播放端倍速', () async {
+      final adapter = FakeTtsAdapter(
+        voices: {
+          'com.google.android.tts': {'en-US'},
+        },
+        defaultEngine: 'com.google.android.tts',
+      );
+      final s = withSpeed(TtsSpeed.slow, adapter: adapter);
+      expect(await s.speak('Hello'), isTrue);
+      expect(adapter.rateAtSpeak.single, closeTo(VoiceSpeed.systemForRate(0.75), 1e-9));
+      // 0.56x 复合的成因是「合成 0.165 + 播放 ×0.75」；单层后只剩一次。
+      expect(VoiceSpeed.systemForRate(0.75), closeTo(0.165, 1e-9));
     });
 
     test('同档同速：预渲染（synthesizeToFile）与 live（speakAndWait）一致', () async {
@@ -374,7 +405,10 @@ void main() {
       ]) {
         final a = FakeFullTts();
         final s = withSpeed(speed, adapter: a);
-        expect(await s.synthesizeToFile('A', '/tmp/a.wav', hd: false), isTrue);
+        expect(
+            await s.synthesizeToFile('A', '/tmp/a.wav',
+                hd: false, rate: speed.factor),
+            isTrue);
         expect(await s.speakAndWait('B'), isTrue);
         expect(a.rateAtSynth.single, closeTo(want, 1e-9));
         expect(a.rateAtAwait.single, closeTo(want, 1e-9));

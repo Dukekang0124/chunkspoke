@@ -382,7 +382,7 @@ class _FakeHd implements HdVoiceSpeaker {
   bool get active => true;
 
   @override
-  Future<bool> speak(String text) async {
+  Future<bool> speak(String text, {double? speed}) async {
     speakCalls++;
     return true;
   }

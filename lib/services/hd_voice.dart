@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'hd_voice_engine.dart';
 import 'hd_voice_player.dart';
 import 'hd_voice_types.dart';
+import 'voice_speed.dart';
 import 'vosk_model.dart';
 import 'wav_codec.dart';
 
@@ -47,7 +48,7 @@ class HdVoiceService extends ChangeNotifier
   }
 
   /// 14 词标定句 5.59s ≈ 150 wpm，与系统 TTS 0.22 档（5.46s ≈ 154 wpm）对齐。
-  static const double kSpeed = 0.58;
+  /// 实际档位由 [VoiceSpeed] 单源给出（ASR-200 已废除固定 kSpeed）。
   static const String kAuditionText = "I'd like a cup of coffee.";
 
   final bool Function() _isEnabled;
@@ -389,7 +390,7 @@ class HdVoiceService extends ChangeNotifier
 
   /// 试听/朗读入口。失败返回 false，由 TtsService 回落到系统引擎。
   @override
-  Future<bool> speak(String text) async {
+  Future<bool> speak(String text, {double? speed}) async {
     if (!active) return false;
     final t = text.trim();
     if (t.isEmpty) return false;
@@ -397,7 +398,7 @@ class HdVoiceService extends ChangeNotifier
     try {
       await _player.stop();
       if (!await _ensureEngine()) return false;
-      final audio = await _synth.synthesize(t, speed: kSpeed);
+      final audio = await _synth.synthesize(t, speed: speed ?? VoiceSpeed.hdNormal);
       if (token != _speakToken || _disposed) return false;
       final dir = await _cache();
       final f = File(p.join(dir.path, 'last.wav'));
@@ -416,12 +417,13 @@ class HdVoiceService extends ChangeNotifier
 
   /// 离线合成到指定 WAV（浸泡层缓存管线）。不占播放通道，不动 speakToken。
   @override
-  Future<bool> synthesizeToFile(String text, String fullPath) async {
+  Future<bool> synthesizeToFile(String text, String fullPath,
+      {double? speed}) async {
     final t = text.trim();
     if (t.isEmpty || !active) return false;
     try {
       if (!await _ensureEngine()) return false;
-      final audio = await _synth.synthesize(t, speed: kSpeed);
+      final audio = await _synth.synthesize(t, speed: speed ?? VoiceSpeed.hdNormal);
       await writeWavFile(File(fullPath), audio.samples, audio.sampleRate);
       return true;
     } catch (e) {

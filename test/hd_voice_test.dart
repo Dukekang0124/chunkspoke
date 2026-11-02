@@ -13,6 +13,7 @@ import 'package:chunkspoke_flutter/services/hd_voice.dart';
 import 'package:chunkspoke_flutter/services/hd_voice_types.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
 import 'package:chunkspoke_flutter/services/vosk_model.dart';
+import 'package:chunkspoke_flutter/services/voice_speed.dart';
 import 'package:chunkspoke_flutter/services/wav_codec.dart';
 
 class _FakeDownloader implements HdVoiceDownloader {
@@ -191,10 +192,13 @@ class _FakeHd implements HdVoiceSpeaker {
   int stopCalls = 0;
 
   @override
-  Future<bool> speak(String text) async {
+  Future<bool> speak(String text, {double? speed}) async {
     speakCalls++;
+    lastSpeed = speed;
     return speakResult;
   }
+
+  double? lastSpeed;
 
   @override
   Future<void> stop() async => stopCalls++;
@@ -488,7 +492,7 @@ void main() {
       expect(ok, isTrue);
       expect(synth.initCalls, 1);
       expect(synth.synthCalls, 1);
-      expect(synth.lastSpeed, HdVoiceService.kSpeed);
+      expect(synth.lastSpeed, VoiceSpeed.hdNormal);
       expect(player.played.length, 1);
       final f = File(player.played.single);
       expect(await f.exists(), isTrue);
