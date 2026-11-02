@@ -7,8 +7,8 @@
     "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.6.2/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "3c3919f6837cd3d1d726b4e7df1abd5eab11e6968ded45baa19471e3b643ba08",
-  "size": 60004547,
+  "sha256": "dbac73e81268e3ff18ff0129905318de0d875af4b9aa9aaa9b6bb019efbd935a",
+  "size": 60004507,
   "notes": "v1.6.2：① 慢速朗读改为合成时原生放慢，不再「标准速再拉伸」——金属回声与电流感消失，音高不变；② 装了高清音色包时慢速也用高清音色；③ 慢/标准/快三档各自缓存，切档立刻生效；④ 系统发音慢档只做一层放慢（不再是 0.56x 复合减速）；⑤ 不改学习内容与六步流程。",
   "parts": [
     {
