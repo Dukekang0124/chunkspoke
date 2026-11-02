@@ -218,19 +218,26 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
   }
 
   Widget _summary(SelfCheckReport? r, int reds) {
-    final ok = r != null && r.allGreen && !r.anyFail;
-    final hasWarn = r != null && r.sections.any((s) => s.hasWarn);
+    // 只有「断点红名单」或「硬失败」才判需要处理；错块留痕与可选包未下载算提示项。
+    final needAction = r != null && r.needsAction;
+    final hints = r?.hintCount ?? 0;
+    final accent = needAction ? kError : kSuccess;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ok ? kSuccess : kError),
+        border: Border.all(color: accent),
       ),
       child: Row(
         children: [
-          Icon(ok ? Icons.verified_outlined : Icons.error_outline,
-              color: ok ? kSuccess : kError, size: 30),
+          Icon(needAction
+              ? Icons.error_outline
+              : (hints > 0 ? Icons.verified_outlined : Icons.check_circle_outline),
+              color: needAction
+                  ? kError
+                  : (hints > 0 ? kWarning : kSuccess),
+              size: 30),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -239,9 +246,9 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                 Text(
                     r == null
                         ? '正在自检…'
-                        : (ok
-                            ? (hasWarn ? '自检通过：零红（有提示项）' : '自检通过：零红')
-                            : '需要处理'),
+                        : (needAction
+                            ? '需要处理'
+                            : (hints > 0 ? '自检通过：零红（$hints 项提示）' : '自检通过：零红')),
                     style: TextStyle(
                         color: kText,
                         fontSize: 17,
