@@ -207,17 +207,17 @@ Future<void> main() async {
               builder: (context, child) => Stack(
                 children: [
                   if (child != null) Positioned.fill(child: child),
-                  const Positioned(
+                  Positioned(
                     top: 0,
                     right: 0,
                     child: Material(
-                      color: Color(0xCC7A4DFF),
+                      color: kAccentViolet.withValues(alpha: 0.8),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         child: Text('E2E · 识别结果脚本注入',
                             style: TextStyle(
-                                color: Colors.white, fontSize: 11)),
+                                color: kText, fontSize: 11)),
                       ),
                     ),
                   ),
@@ -233,10 +233,10 @@ Future<void> main() async {
     CrashLog.write('E2E bootstrap: $e', st);
     runApp(MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: kBg,
         body: Center(
           child:
-              Text('E2E 启动失败：$e', style: const TextStyle(color: Colors.white)),
+              Text('E2E 启动失败：$e', style: TextStyle(color: kText)),
         ),
       ),
     ));
@@ -266,7 +266,7 @@ class _E2eMenu extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           Text('假时钟 ${fakeNow.year}-${fakeNow.month}-${fakeNow.day}',
-              style: const TextStyle(color: Colors.white54)),
+              style: TextStyle(color: kTextMuted)),
           const SizedBox(height: 20),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -274,8 +274,8 @@ class _E2eMenu extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16)),
             onPressed: () => _push(
                 context, _CycleScreen(progress: progress, start: fakeNow)),
-            child: const Text('① 资产全周期（时间加速 1d/3d/7d/14d）',
-                style: TextStyle(color: Colors.white)),
+            child: Text('① 资产全周期（时间加速 1d/3d/7d/14d）',
+                style: TextStyle(color: kOnPrimary)),
           ),
           const SizedBox(height: 12),
           ElevatedButton(
@@ -287,8 +287,8 @@ class _E2eMenu extends StatelessWidget {
                   fakeNow.subtract(const Duration(days: 1)), seedChunkId);
               if (context.mounted) _push(context, const ReviewScreen());
             },
-            child: const Text('② 今日复习（1 块到期，走真实四步 UI）',
-                style: TextStyle(color: Colors.white)),
+            child: Text('② 今日复习（1 块到期，走真实四步 UI）',
+                style: TextStyle(color: kText)),
           ),
           const SizedBox(height: 12),
           OutlinedButton(
@@ -299,7 +299,7 @@ class _E2eMenu extends StatelessWidget {
               await _seedReviewChunk(progress, fakeNow, seedChunkId);
               if (context.mounted) _push(context, const MapScreen());
             },
-            child: const Text('③ 首页「下次复习」字段（明天到期）',
+            child: Text('③ 首页「下次复习」字段（明天到期）',
                 style: TextStyle(color: kPrimary)),
           ),
         ],
@@ -385,7 +385,7 @@ class _W2ScreenState extends State<_W2Screen> {
           Text(
               '取用时钟 $_md · ${widget.review ? '次日复习' : '六步学习'}'
               '${fakeNowUsed ? '（E2E_FAKE_NOW 加速）' : '（设备真实时钟）'}',
-              style: const TextStyle(color: Colors.white54)),
+              style: TextStyle(color: kTextMuted)),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
@@ -394,18 +394,18 @@ class _W2ScreenState extends State<_W2Screen> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                   color:
-                      _done ? (_ok ? kUnlocked : Colors.redAccent) : kPrimary),
+                      _done ? (_ok ? kUnlocked : kError) : kPrimary),
             ),
             child: Text(_status,
                 style: TextStyle(
                     color:
-                        _done ? (_ok ? kUnlocked : Colors.redAccent) : kPrimary,
+                        _done ? (_ok ? kUnlocked : kError) : kPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700)),
           ),
           const SizedBox(height: 16),
-          const Text('流程：六步学习 → 词块库 → 次日复习升档 → 导出学习数据',
-              style: TextStyle(color: Colors.white38, fontSize: 12)),
+          Text('流程：六步学习 → 词块库 → 次日复习升档 → 导出学习数据',
+              style: TextStyle(color: kTextFaint, fontSize: 12)),
         ],
       ),
     );
@@ -932,7 +932,7 @@ class _CycleScreenState extends State<_CycleScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text('起点 ${_md(widget.start)} · 1d → 3d → 7d → 14d',
-              style: const TextStyle(color: Colors.white54, fontSize: 13)),
+              style: TextStyle(color: kTextMuted, fontSize: 13)),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(14),
@@ -942,7 +942,7 @@ class _CycleScreenState extends State<_CycleScreen> {
               border: Border.all(
                   color: allOk
                       ? kUnlocked
-                      : (_error.isEmpty ? kPrimary : Colors.redAccent)),
+                      : (_error.isEmpty ? kPrimary : kError)),
             ),
             child: Text(
               _running
@@ -955,7 +955,7 @@ class _CycleScreenState extends State<_CycleScreen> {
               style: TextStyle(
                   color: allOk
                       ? kUnlocked
-                      : (_error.isEmpty ? kPrimary : Colors.redAccent),
+                      : (_error.isEmpty ? kPrimary : kError),
                   fontSize: 20,
                   fontWeight: FontWeight.w800),
             ),
@@ -968,12 +968,12 @@ class _CycleScreenState extends State<_CycleScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(row.ok ? Icons.check_circle : Icons.error,
-                      color: row.ok ? kUnlocked : Colors.redAccent, size: 18),
+                      color: row.ok ? kUnlocked : kError, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text('${row.step}  ${row.detail}',
                         style:
-                            const TextStyle(color: Colors.white, fontSize: 14)),
+                            TextStyle(color: kText, fontSize: 14)),
                   ),
                 ],
               ),
@@ -1077,7 +1077,7 @@ class _SandboxStressState extends State<_SandboxStress> {
               border: Border.all(
                   color: _running
                       ? kPrimary
-                      : (allOk ? kUnlocked : Colors.redAccent)),
+                      : (allOk ? kUnlocked : kError)),
             ),
             child: Text(
               _running
@@ -1090,7 +1090,7 @@ class _SandboxStressState extends State<_SandboxStress> {
               style: TextStyle(
                   color: _running
                       ? kPrimary
-                      : (allOk ? kUnlocked : Colors.redAccent),
+                      : (allOk ? kUnlocked : kError),
                   fontSize: 19,
                   fontWeight: FontWeight.w800),
             ),
@@ -1103,12 +1103,12 @@ class _SandboxStressState extends State<_SandboxStress> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(r.ok ? Icons.check_circle : Icons.error,
-                      color: r.ok ? kUnlocked : Colors.redAccent, size: 18),
+                      color: r.ok ? kUnlocked : kError, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text('${r.name}\n${r.detail}',
                         style:
-                            const TextStyle(color: Colors.white, fontSize: 13)),
+                            TextStyle(color: kText, fontSize: 13)),
                   ),
                 ],
               ),
@@ -1633,15 +1633,15 @@ class _Q3ScreenState extends State<_Q3Screen> {
   @override
   Widget build(BuildContext context) {
     final color =
-        _done ? (_ok ? kUnlocked : Colors.redAccent) : kPrimary;
+        _done ? (_ok ? kUnlocked : kError) : kPrimary;
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(title: const Text('E2E · 波 3 验收控制台')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text('听文章 → 收词 → 六步 → 重逢 → 立即复习 → 升档',
-              style: TextStyle(color: Colors.white54)),
+          Text('听文章 → 收词 → 六步 → 重逢 → 立即复习 → 升档',
+              style: TextStyle(color: kTextMuted)),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
@@ -1674,7 +1674,7 @@ class _Q3ScreenState extends State<_Q3Screen> {
                           style: TextStyle(
                               color: c.endsWith('PASS')
                                   ? kUnlocked
-                                  : Colors.redAccent,
+                                  : kError,
                               fontSize: 12,
                               fontFamily: 'monospace')),
                     ),

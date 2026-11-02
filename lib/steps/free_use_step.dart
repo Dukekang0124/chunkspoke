@@ -189,7 +189,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text('第 6/6 步 · 自由造句',
                 style: TextStyle(
@@ -208,22 +208,22 @@ class _FreeUseStepState extends State<FreeUseStep> {
                     decoration: BoxDecoration(
                       color: kBg.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.white24),
+                      border: Border.all(color: kBorderStrong),
                     ),
                     child: Column(
                       children: [
                         Text('用「${widget.chunk.text}」说一句自己的话',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: Colors.white,
+                            style: TextStyle(
+                                color: kText,
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600)),
                         const SizedBox(height: 4),
                         Text('场景：${sceneCn(widget.level.theme)} · '
                             '${widget.chunk.meaningCN}',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: Colors.white54, fontSize: 12)),
+                            style: TextStyle(
+                                color: kTextMuted, fontSize: 12)),
                       ],
                     ),
                   ),
@@ -239,20 +239,20 @@ class _FreeUseStepState extends State<FreeUseStep> {
                       // 用户手动改字后按文本输入判定（原始识别行仍保留展示）。
                       if (_fromVoice) setState(() => _fromVoice = false);
                     },
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    style: TextStyle(color: kText, fontSize: 16),
                     decoration: InputDecoration(
                       hintText: '用英文写下或说出你的句子，把词块放进今天的场景…',
-                      hintStyle: const TextStyle(
-                          color: Colors.white38, fontSize: 13),
+                      hintStyle: TextStyle(
+                          color: kTextFaint, fontSize: 13),
                       filled: true,
                       fillColor: kCard,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.white24),
+                        borderSide: BorderSide(color: kBorderStrong),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.white24),
+                        borderSide: BorderSide(color: kBorderStrong),
                       ),
                     ),
                   ),
@@ -265,11 +265,11 @@ class _FreeUseStepState extends State<FreeUseStep> {
                       decoration: BoxDecoration(
                         color: kCard,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white24),
+                        border: Border.all(color: kBorderStrong),
                       ),
                       child: Text('你说：$_asrRaw',
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 13)),
+                          style: TextStyle(
+                              color: kTextSecondary, fontSize: 13)),
                     ),
                   const SizedBox(height: 10),
                   if (v != null)
@@ -309,11 +309,11 @@ class _FreeUseStepState extends State<FreeUseStep> {
             ),
           ),
           if (!_passed) ...[
-            const Padding(
-              padding: EdgeInsets.only(bottom: 6),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
               child: Text('语速适中、吐字清晰识别更准',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white38, fontSize: 11)),
+                  style: TextStyle(color: kTextFaint, fontSize: 11)),
             ),
             Row(
               children: [
@@ -331,7 +331,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
                       onPressed:
                           (_micBlocked || !_micReady || _thinking) ? null : _toggleMic,
                       icon: Icon(_listening ? Icons.stop : Icons.mic,
-                          color: _listening ? kPrimary : Colors.white70, size: 18),
+                          color: _listening ? kPrimary : kTextSecondary, size: 18),
                       label: Text(
                           _thinking
                               ? '识别中…'
@@ -345,23 +345,23 @@ class _FreeUseStepState extends State<FreeUseStep> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                     onPressed: _check,
-                    child: const Text('检查句子',
-                        style: TextStyle(color: Colors.black87)),
+                    child: Text('检查句子',
+                        style: TextStyle(color: kOnPrimary)),
                   ),
                 ),
               ],
             ),
             if (_micBlocked)
-              const Padding(
-                padding: EdgeInsets.only(top: 6),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
                 child: Text('麦克风或识别不可用，直接打字也可以',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white38, fontSize: 11)),
+                    style: TextStyle(color: kTextFaint, fontSize: 11)),
               ),
             TextButton(
               onPressed: widget.onSkip,
-              child: const Text('跳过这一步',
-                  style: TextStyle(color: Colors.white38, fontSize: 12)),
+              child: Text('跳过这一步',
+                  style: TextStyle(color: kTextFaint, fontSize: 12)),
             ),
           ] else ...[
             SizedBox(
@@ -372,9 +372,9 @@ class _FreeUseStepState extends State<FreeUseStep> {
                   padding: const EdgeInsets.symmetric(vertical: 13),
                 ),
                 onPressed: () => widget.onPass(100),
-                child: const Text('完成这一块',
+                child: Text('完成这一块',
                     style: TextStyle(
-                        color: Colors.black87,
+                        color: kOnPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w700)),
               ),
@@ -396,26 +396,26 @@ class _FreeUseStepState extends State<FreeUseStep> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('母语者参考',
+            Text('母语者参考',
                 style: TextStyle(color: kPrimary, fontSize: 12)),
             const SizedBox(height: 4),
             Text(
                 widget.referenceText.trim().isEmpty
                     ? widget.chunk.text
                     : widget.referenceText,
-                style: const TextStyle(color: Colors.white, fontSize: 15)),
+                style: TextStyle(color: kText, fontSize: 15)),
             if (widget.meaningCN.isNotEmpty) ...[
               const SizedBox(height: 2),
               Text(widget.meaningCN,
                   style:
-                      const TextStyle(color: Colors.white54, fontSize: 12)),
+                      TextStyle(color: kTextMuted, fontSize: 12)),
             ],
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 onPressed: _speakReference,
-                icon: const Icon(Icons.volume_up, color: kPrimary, size: 16),
-                label: const Text('听参考',
+                icon: Icon(Icons.volume_up, color: kPrimary, size: 16),
+                label: Text('听参考',
                     style: TextStyle(color: kPrimary, fontSize: 12)),
               ),
             ),

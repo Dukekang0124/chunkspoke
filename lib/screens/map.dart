@@ -194,7 +194,7 @@ class _TierHeader extends StatelessWidget {
                     color: kPrimary, borderRadius: BorderRadius.circular(2))),
             const SizedBox(width: 8),
             Text(label,
-                style: const TextStyle(
+                style: TextStyle(
                     color: kPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w600)),
@@ -237,8 +237,8 @@ class _FreeBuildCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF241A06), Color(0xFF1A1B2E)],
+            gradient: LinearGradient(
+              colors: [kPrimaryDeep, kCard],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -246,19 +246,19 @@ class _FreeBuildCard extends StatelessWidget {
             border: Border.all(
                 color: unlocked
                     ? kPrimary.withValues(alpha: 0.6)
-                    : Colors.white12),
+                    : kBorder),
           ),
           child: Row(
             children: [
-              const Icon(Icons.auto_awesome, color: kPrimary, size: 28),
+              Icon(Icons.auto_awesome, color: kPrimary, size: 28),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('自由造句沙盒 · 累计可组合句子 $combo+',
-                        style: const TextStyle(
-                            color: Colors.white,
+                        style: TextStyle(
+                            color: kText,
                             fontSize: 16,
                             fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
@@ -267,13 +267,13 @@ class _FreeBuildCard extends StatelessWidget {
                           ? '已学完 $learnedCount 块，选块拼句、开口判定'
                           : '累计学完 10 块解锁（当前 $learnedCount/10）',
                       style:
-                          const TextStyle(color: Colors.white54, fontSize: 12),
+                          TextStyle(color: kTextMuted, fontSize: 12),
                     ),
                   ],
                 ),
               ),
               Icon(unlocked ? Icons.arrow_forward_ios : Icons.lock,
-                  size: 16, color: unlocked ? kPrimary : Colors.white38),
+                  size: 16, color: unlocked ? kPrimary : kTextFaint),
             ],
           ),
         ),
@@ -346,7 +346,7 @@ class _SceneRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
                 color:
-                    done ? kUnlocked.withValues(alpha: 0.6) : Colors.white12),
+                    done ? kUnlocked.withValues(alpha: 0.6) : kBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,22 +364,22 @@ class _SceneRow extends StatelessWidget {
                                 color: kPrimary.withValues(alpha: 0.5)),
                           ),
                           child: done
-                              ? const Icon(Icons.check, color: kUnlocked)
+                              ? Icon(Icons.check, color: kUnlocked)
                               : Center(
                                   child: Text('${index + 1}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           color: kPrimary,
                                           fontWeight: FontWeight.w600)),
                                 ),
                         )
-                      : const Icon(Icons.lock, color: Colors.white38),
+                      : Icon(Icons.lock, color: kTextFaint),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(_cn(level),
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: kText,
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600)),
@@ -387,8 +387,8 @@ class _SceneRow extends StatelessWidget {
                         Row(
                           children: [
                             Text('$masteredCount/$total',
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 13)),
+                                style: TextStyle(
+                                    color: kTextSecondary, fontSize: 13)),
                             const SizedBox(width: 6),
                             Text(status, style: const TextStyle(fontSize: 13)),
                           ],
@@ -400,8 +400,8 @@ class _SceneRow extends StatelessWidget {
                   MasteryRing(total > 0 ? masteredCount / total : 0, size: 42),
                   const SizedBox(width: 8),
                   if (unlocked)
-                    const Icon(Icons.arrow_forward_ios,
-                        size: 16, color: Colors.white38),
+                    Icon(Icons.arrow_forward_ios,
+                        size: 16, color: kTextFaint),
                 ],
               ),
               const SizedBox(height: 8),
@@ -410,7 +410,7 @@ class _SceneRow extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: ratio.clamp(0.0, 1.0),
                   minHeight: 6,
-                  backgroundColor: Colors.white12,
+                  backgroundColor: kBorder,
                   valueColor:
                       AlwaysStoppedAnimation(done ? kUnlocked : kPrimary),
                 ),
@@ -485,16 +485,16 @@ class TodayCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A1B2E), Color(0xFF241A06)],
+        gradient: LinearGradient(
+          colors: [kCard, kPrimaryDeep],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: kPrimary.withValues(alpha: 0.45)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-              color: Colors.black45, blurRadius: 14, offset: Offset(0, 6)),
+              color: kShadow, blurRadius: 14, offset: const Offset(0, 6)),
         ],
       ),
       padding: const EdgeInsets.all(20),
@@ -511,20 +511,20 @@ class TodayCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(theme,
-                    style: const TextStyle(
-                        color: Colors.black87,
+                    style: TextStyle(
+                        color: kOnPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600)),
               ),
               const Spacer(),
-              const Text('今日会话',
+              Text('今日会话',
                   style: TextStyle(color: kPrimary, fontSize: 13)),
             ],
           ),
           const SizedBox(height: 12),
           CountUpText(assetMasteredCount,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: kText,
                   fontSize: 22,
                   fontWeight: FontWeight.w700),
               format: (v) => '已掌握 $v 个词块'),
@@ -532,12 +532,12 @@ class TodayCard extends StatelessWidget {
           Text(
             '复习 $reviewCount 个 + 新学 $newCount 个 · '
             '已学完 ${learned.length} 块',
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
+            style: TextStyle(color: kTextMuted, fontSize: 13),
           ),
           const SizedBox(height: 4),
           Text(
             '下次复习：$nextDueText',
-            style: const TextStyle(color: Colors.white38, fontSize: 12),
+            style: TextStyle(color: kTextFaint, fontSize: 12),
           ),
           if (due.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -562,13 +562,13 @@ class TodayCard extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.replay, color: kUnlocked, size: 18),
+                      Icon(Icons.replay, color: kUnlocked, size: 18),
                       const SizedBox(width: 8),
                       Text('今日复习 ${due.length} 个词块',
                           style:
-                              const TextStyle(color: kUnlocked, fontSize: 15)),
+                              TextStyle(color: kUnlocked, fontSize: 15)),
                       const Spacer(),
-                      const Icon(Icons.arrow_forward_ios,
+                      Icon(Icons.arrow_forward_ios,
                           size: 14, color: kUnlocked),
                     ],
                   ),
@@ -578,7 +578,7 @@ class TodayCard extends StatelessWidget {
           ],
           if (allClear) ...[
             const SizedBox(height: 12),
-            const Text('今日已清空，明天见 🎉',
+            Text('今日已清空，明天见 🎉',
                 style: TextStyle(
                     color: kUnlocked,
                     fontSize: 15,
@@ -593,7 +593,7 @@ class TodayCard extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
-                  foregroundColor: Colors.black87,
+                  foregroundColor: kOnPrimary,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),

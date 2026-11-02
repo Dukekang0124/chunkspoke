@@ -120,7 +120,7 @@ class _LevelScreenState extends State<LevelScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white70),
+          icon: Icon(Icons.close, color: kTextSecondary),
           // P0 修复：用 maybePop（栈底已保证是场景列表），退出后绝不空栈黑屏。
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -129,12 +129,12 @@ class _LevelScreenState extends State<LevelScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(sceneCn(widget.level.theme),
-                style: const TextStyle(
-                    color: Colors.white,
+                style: TextStyle(
+                    color: kText,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
             Text(widget.level.theme,
-                style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                style: TextStyle(color: kTextMuted, fontSize: 12)),
           ],
         ),
       ),
@@ -220,20 +220,20 @@ class _CompletionViewState extends State<CompletionView>
                   ScaleTransition(
                     scale: CurvedAnimation(
                         parent: _badge, curve: Curves.easeOutBack),
-                    child: const Icon(Icons.emoji_events,
+                    child: Icon(Icons.emoji_events,
                         color: kPrimary, size: 72),
                   )
                 else
-                  const Icon(Icons.emoji_events, color: kPrimary, size: 72),
+                  Icon(Icons.emoji_events, color: kPrimary, size: 72),
                 const SizedBox(height: 14),
-                const Text('关卡完成！',
+                Text('关卡完成！',
                     style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white)),
+                        color: kText)),
                 const SizedBox(height: 8),
-                const Text('星 = 本次真实达成，未达标的留给你补练',
-                    style: TextStyle(fontSize: 13, color: Colors.white54)),
+                Text('星 = 本次真实达成，未达标的留给你补练',
+                    style: TextStyle(fontSize: 13, color: kTextMuted)),
                 if (widget.nextScene != null) ...[
                   const SizedBox(height: 12),
                   if (canContinue)
@@ -251,11 +251,11 @@ class _CompletionViewState extends State<CompletionView>
                       child: Column(
                         children: [
                           Icon(ok ? Icons.star : Icons.star_border,
-                              color: ok ? kUnlocked : Colors.white24, size: 28),
+                              color: ok ? kUnlocked : kBorderStrong, size: 28),
                           const SizedBox(height: 4),
                           Text(labels[i],
                               style: TextStyle(
-                                  color: ok ? Colors.white70 : Colors.white38,
+                                  color: ok ? kTextSecondary : kTextFaint,
                                   fontSize: 12)),
                         ],
                       ),
@@ -282,26 +282,26 @@ class _CompletionViewState extends State<CompletionView>
                             ? '继续学习：${sceneCn(widget.nextScene!.theme)}'
                             : '返回地图',
                         style:
-                            const TextStyle(color: Colors.white, fontSize: 16)),
+                            TextStyle(color: kOnPrimary, fontSize: 16)),
                   ),
                 ),
                 const SizedBox(height: 10),
                 if (canContinue)
                   TextButton(
                     onPressed: () => Navigator.of(context).maybePop(),
-                    child: const Text('返回地图',
-                        style: TextStyle(color: Colors.white54, fontSize: 13)),
+                    child: Text('返回地图',
+                        style: TextStyle(color: kTextMuted, fontSize: 13)),
                   )
                 else if (hasMissingStars || widget.nextScene != null)
                   TextButton(
                     onPressed: _replay,
-                    child: const Text('再练一遍本场景',
-                        style: TextStyle(color: Colors.white38, fontSize: 13)),
+                    child: Text('再练一遍本场景',
+                        style: TextStyle(color: kTextFaint, fontSize: 13)),
                   ),
                 TextButton(
                   onPressed: () => showFeedbackSheet(context),
-                  child: const Text('反馈',
-                      style: TextStyle(color: Colors.white54, fontSize: 13)),
+                  child: Text('反馈',
+                      style: TextStyle(color: kTextMuted, fontSize: 13)),
                 ),
               ],
             ),
@@ -324,10 +324,10 @@ class _CompletionViewState extends State<CompletionView>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.lock_open, color: kPrimary, size: 16),
+          Icon(Icons.lock_open, color: kPrimary, size: 16),
           const SizedBox(width: 6),
           Text('下一场景已解锁：$name',
-              style: const TextStyle(color: kPrimary, fontSize: 13)),
+              style: TextStyle(color: kPrimary, fontSize: 13)),
         ],
       ),
     );
@@ -337,19 +337,19 @@ class _CompletionViewState extends State<CompletionView>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white10,
+        color: kBorderSoft,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: kBorderStrong),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.lock, color: Colors.white54, size: 16),
+          Icon(Icons.lock, color: kTextMuted, size: 16),
           const SizedBox(width: 6),
           Text(
               '再达标 $missing 块解锁「${sceneCn(next.theme)}」'
               '（上一场景需达 80%）',
-              style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              style: TextStyle(color: kTextSecondary, fontSize: 13)),
         ],
       ),
     );
@@ -376,12 +376,12 @@ class _CompletionViewState extends State<CompletionView>
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('本次战报',
+          Text('本次战报',
               style: TextStyle(
                   color: kPrimary, fontWeight: FontWeight.w700, fontSize: 15)),
           const SizedBox(height: 8),
@@ -399,11 +399,11 @@ class _CompletionViewState extends State<CompletionView>
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          Text(k, style: const TextStyle(color: Colors.white54, fontSize: 13)),
+          Text(k, style: TextStyle(color: kTextMuted, fontSize: 13)),
           const Spacer(),
           Text(v,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: kText,
                   fontSize: 13,
                   fontWeight: FontWeight.w600)),
         ],

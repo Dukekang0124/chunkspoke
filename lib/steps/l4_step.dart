@@ -17,7 +17,7 @@ import '../ui/motion.dart';
 import '../ui/permission_preprompt.dart';
 
 /// 琥珀高亮色（统一收口“目标词琥珀高亮”意图）。
-const Color kAmber = Color(0xFFFFB84D);
+Color get kAmber => kPrimary;
 
 /// 开口题型（复用收紧后的判定管线 judgeSpeech：规范化 + 词级序列比对 + 置信度门槛 + 空/静音拒绝）。
 /// 同一份代码服务于两个环节：
@@ -289,7 +289,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
 
   Widget _followAlongCard() => Column(
         children: [
-          const Text('跟读模式：不评分，自己对比',
+          Text('跟读模式：不评分，自己对比',
               style: TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Wrap(
@@ -304,7 +304,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                         context,
                         Provider.of<TtsService>(context, listen: false),
                         w),
-                child: Text(w, style: const TextStyle(color: kPrimary)),
+                child: Text(w, style: TextStyle(color: kPrimary)),
               );
             }).toList(),
           ),
@@ -313,14 +313,14 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
             onPressed: _followListening ? _stopFollow : _startFollow,
             child: Text(
               _followListening ? '🎤 停止录音' : '🎤 录一句跟读',
-              style: const TextStyle(color: kPrimary),
+              style: TextStyle(color: kPrimary),
             ),
           ),
           if (_followPath != null)
             TextButton(
               onPressed: _toggleFollowReplay,
               child: Text(_followPlaying ? '停止回放' : '回放我的录音',
-                  style: const TextStyle(color: kPrimary)),
+                  style: TextStyle(color: kPrimary)),
             ),
           const SizedBox(height: 8),
           Row(
@@ -329,12 +329,12 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
                 onPressed: _followPath == null ? null : _followConfirm,
-                child: const Text('我说对了', style: TextStyle(color: Colors.white)),
+                child: Text('我说对了', style: TextStyle(color: kText)),
               ),
               OutlinedButton(
                 onPressed: _exitFollow,
-                child: const Text('还是想被识别',
-                    style: TextStyle(color: Colors.white70)),
+                child: Text('还是想被识别',
+                    style: TextStyle(color: kTextSecondary)),
               ),
             ],
           ),
@@ -601,8 +601,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: kCard,
-        title: const Text('改转写 / 打字作答',
-            style: TextStyle(color: Colors.white, fontSize: 17)),
+        title: Text('改转写 / 打字作答',
+            style: TextStyle(color: kText, fontSize: 17)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -612,26 +612,26 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               autofocus: true,
               minLines: 1,
               maxLines: 3,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              decoration: const InputDecoration(
+              style: TextStyle(color: kText, fontSize: 16),
+              decoration: InputDecoration(
                 hintText: '把这句英文写出来',
-                hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
-                border: OutlineInputBorder(),
+                hintStyle: TextStyle(color: kTextFaint, fontSize: 13),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 8),
-            const Text('按文本判定：不验证发音，也不计发音分',
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            Text('按文本判定：不验证发音，也不计发音分',
+                style: TextStyle(color: kTextFaint, fontSize: 12)),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消', style: TextStyle(color: Colors.white54)),
+            child: Text('取消', style: TextStyle(color: kTextMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text),
-            child: const Text('按文本判定', style: TextStyle(color: kPrimary)),
+            child: Text('按文本判定', style: TextStyle(color: kPrimary)),
           ),
         ],
       ),
@@ -685,7 +685,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
         final ok = matched == null || i >= matched.length || matched[i];
         return Text(words[i],
             style: TextStyle(
-              color: ok ? Colors.white : Colors.redAccent,
+              color: ok ? kText : kError,
               fontSize: 22,
               fontWeight: ok ? FontWeight.normal : FontWeight.bold,
             ));
@@ -757,16 +757,16 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
         ),
         child: Column(
           children: [
-            const Icon(Icons.mic_off, color: kPrimary, size: 36),
+            Icon(Icons.mic_off, color: kPrimary, size: 36),
             const SizedBox(height: 8),
-            const Text('需要麦克风权限', style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text('需要麦克风权限', style: TextStyle(color: kText, fontSize: 18)),
             const SizedBox(height: 6),
             Text(
               _perm == MicPerm.permanentlyDenied
                   ? '麦克风权限已被关闭，请到系统设置里打开后返回'
                   : '未获得麦克风权限，无法进行开口练习',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
+              style: TextStyle(color: kTextSecondary, fontSize: 14),
             ),
             const SizedBox(height: 14),
             SizedBox(
@@ -786,7 +786,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                         });
                       },
                 child: Text(_perm == MicPerm.permanentlyDenied ? '去设置' : '允许麦克风',
-                    style: const TextStyle(color: Colors.white)),
+                    style: TextStyle(color: kText)),
               ),
             ),
           ],
@@ -802,22 +802,22 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
         ),
         child: Column(
           children: [
-            const Icon(Icons.error_outline, color: kPrimary, size: 36),
+            Icon(Icons.error_outline, color: kPrimary, size: 36),
             const SizedBox(height: 8),
-            const Text('识别引擎初始化失败',
-                style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text('识别引擎初始化失败',
+                style: TextStyle(color: kText, fontSize: 18)),
             const SizedBox(height: 6),
-            const Text('重启应用或反馈给我们',
+            Text('重启应用或反馈给我们',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 14)),
+                style: TextStyle(color: kTextSecondary, fontSize: 14)),
             const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                 onPressed: _loadEngine,
-                child: const Text('重试加载引擎',
-                    style: TextStyle(color: Colors.white)),
+                child: Text('重试加载引擎',
+                    style: TextStyle(color: kOnPrimary)),
               ),
             ),
           ],
@@ -827,8 +827,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   /// 看答案/3 次未过：展示正确答案，保留“再试一次”与“跳过”两条路。
   Widget _answerCard() => Column(
         children: [
-          const Text('正确答案 · 可听一遍',
-              style: TextStyle(color: Colors.white70), textAlign: TextAlign.center),
+          Text('正确答案 · 可听一遍',
+              style: TextStyle(color: kTextSecondary), textAlign: TextAlign.center),
           const SizedBox(height: 8),
           _targetSentence(),
           TextButton(
@@ -838,11 +838,11 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                     context,
                     Provider.of<TtsService>(context, listen: false),
                     widget.targetText),
-            child: const Text('🔊 听标准发音',
+            child: Text('🔊 听标准发音',
                 style: TextStyle(color: kPrimary, fontSize: 13)),
           ),
-          const Text('看答案不计入命中；可再试一次，或跳过本句',
-              style: TextStyle(color: Colors.white54, fontSize: 13),
+          Text('看答案不计入命中；可再试一次，或跳过本句',
+              style: TextStyle(color: kTextMuted, fontSize: 13),
               textAlign: TextAlign.center),
           const SizedBox(height: 10),
           Row(
@@ -851,16 +851,16 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
                   onPressed: _ready ? _start : null,
-                  child: const Text('再试一次',
-                      style: TextStyle(color: Colors.white)),
+                  child: Text('再试一次',
+                      style: TextStyle(color: kText)),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton(
                   onPressed: _emitSkip,
-                  child: const Text('跳过本句',
-                      style: TextStyle(color: Colors.white70)),
+                  child: Text('跳过本句',
+                      style: TextStyle(color: kTextSecondary)),
                 ),
               ),
             ],
@@ -870,8 +870,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
 
   Widget _selfAssessCard() => Column(
         children: [
-          const Text('离线 / 无 Key：录下来听听自己说得怎样',
-              style: TextStyle(color: Colors.white70), textAlign: TextAlign.center),
+          Text('离线 / 无 Key：录下来听听自己说得怎样',
+              style: TextStyle(color: kTextSecondary), textAlign: TextAlign.center),
           const SizedBox(height: 10),
           TextButton(
             onPressed: _speakBlocked
@@ -880,7 +880,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                     context,
                     Provider.of<TtsService>(context, listen: false),
                     widget.targetText),
-            child: const Text('🔊 揭目标句', style: TextStyle(color: kPrimary)),
+            child: Text('🔊 揭目标句', style: TextStyle(color: kPrimary)),
           ),
           const SizedBox(height: 6),
           SizedBox(
@@ -888,7 +888,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
             child: OutlinedButton(
               onPressed: _recPath == null ? null : _toggleReplay,
               child: Text(_playing ? '停止回放' : '回放我的录音',
-                  style: const TextStyle(color: kPrimary)),
+                  style: TextStyle(color: kPrimary)),
             ),
           ),
           const SizedBox(height: 10),
@@ -898,17 +898,17 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
                   onPressed: _recPath == null ? null : () => _selfConfirm(true),
-                  child: const Text('我说对了', style: TextStyle(color: Colors.white))),
+                  child: Text('我说对了', style: TextStyle(color: kText))),
               OutlinedButton(
                   onPressed: () => _selfConfirm(false),
-                  child: const Text('没说对', style: TextStyle(color: Colors.white70))),
+                  child: Text('没说对', style: TextStyle(color: kTextSecondary))),
             ],
           ),
           if (_recPath == null)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
               child: Text('请先录音，再确认“我说对了”',
-                  style: TextStyle(color: Colors.white38, fontSize: 12)),
+                  style: TextStyle(color: kTextFaint, fontSize: 12)),
             ),
         ],
       );
@@ -928,17 +928,17 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color: kBg.withValues(alpha: 0.5),
-              border: Border.all(color: Colors.white24),
+              border: Border.all(color: kBorderStrong),
             ),
             child: _reverse
                 ? Text(widget.chunk.meaningCN,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: kPrimary, fontSize: 18, fontWeight: FontWeight.w600))
                 : CnText(
                     widget.targetText,
                     widget.chunk.meaningCN,
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.w600),
                   ),
           ),
           Row(
@@ -947,13 +947,13 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               TextButton(
                 onPressed: () => setState(() => _reverse = !_reverse),
                 child: Text(_reverse ? '显示英文' : '看中文练 →',
-                    style: const TextStyle(color: kPrimary, fontSize: 13)),
+                    style: TextStyle(color: kPrimary, fontSize: 13)),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(_reverse ? '看中文，说出英文' : '开口说出来',
-              style: const TextStyle(color: Colors.white70)),
+              style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 10),
           if (_judge != null && !_selfAssess) _targetSentence(),
           const Spacer(),
@@ -968,12 +968,12 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
           else if (_followAlong)
             _followAlongCard()
           else if (_thinking)
-            const Column(
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 CircularProgressIndicator(color: kPrimary),
-                SizedBox(height: 10),
-                Text('识别中…', style: TextStyle(color: Colors.white54)),
+                const SizedBox(height: 10),
+                Text('识别中…', style: TextStyle(color: kTextMuted)),
               ],
             )
           else if (_listening)
@@ -990,7 +990,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                   style: TextStyle(
                       color: _tooQuiet
                           ? kPrimary
-                          : (_levelActive ? kUnlocked : Colors.white54),
+                          : (_levelActive ? kUnlocked : kTextMuted),
                       fontSize: 13),
                 ),
                 const SizedBox(height: 14),
@@ -1008,15 +1008,15 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                               _judge!.reason == 'tooShort'
                           ? '没有听清，请再说一遍'
                           : '再试一次（错词已标红）'),
-                  style: const TextStyle(color: kPrimary)),
+                  style: TextStyle(color: kPrimary)),
                 const SizedBox(height: 6),
                 if (_transcript.trim().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
                     child: Text("${_edited ? '你写' : '你说'}：'$_transcript'",
                         key: const Key('l4AsrRaw'),
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 13)),
+                        style: TextStyle(
+                            color: kTextSecondary, fontSize: 13)),
                   ),
                 if (_transcript.trim().isNotEmpty)
                   Padding(
@@ -1025,8 +1025,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                         _edited
                             ? '按文本判定 · 未验证发音（不计分）'
                             : '相似度：${(_judge!.similarity * 100).round()}%（词级匹配）',
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 12)),
+                        style: TextStyle(
+                            color: kTextMuted, fontSize: 12)),
                   ),
                 Text(
                   _edited
@@ -1035,7 +1035,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                           ? '离麦克风近一点，语速自然'
                           : '麦克风可能被占用或未授权，去设置检查'),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                  style: TextStyle(color: kTextMuted, fontSize: 13),
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -1044,24 +1044,24 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                         onPressed: _ready ? _start : null,
-                        child: const Text('再试一次',
-                            style: TextStyle(color: Colors.white)),
+                        child: Text('再试一次',
+                            style: TextStyle(color: kOnPrimary)),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton(
                         onPressed: _openAnswer,
-                        child: const Text('看答案',
-                            style: TextStyle(color: Colors.white70)),
+                        child: Text('看答案',
+                            style: TextStyle(color: kText)),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton(
                         onPressed: _emitSkip,
-                        child: const Text('跳过',
-                            style: TextStyle(color: Colors.white70)),
+                        child: Text('跳过',
+                            style: TextStyle(color: kTextSecondary)),
                       ),
                     ),
                   ],
@@ -1069,19 +1069,19 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 if (!_levelActive)
                   TextButton(
                     onPressed: () => _rec.openSettings(),
-                    child: const Text('去设置检查麦克风权限',
-                        style: TextStyle(color: Colors.white38)),
+                    child: Text('去设置检查麦克风权限',
+                        style: TextStyle(color: kTextFaint)),
                   ),
                 if (!_followAlong)
                   TextButton(
                     onPressed: () => setState(() => _followAlong = true),
-                    child: const Text('先跟着读，不评分也可以 →',
+                    child: Text('先跟着读，不评分也可以 →',
                         style: TextStyle(color: kPrimary)),
                   ),
                 TextButton(
                   onPressed: _judgeEdited,
-                  child: const Text('改转写 / 打字作答（不计发音分）',
-                      style: TextStyle(color: Colors.white54)),
+                  child: Text('改转写 / 打字作答（不计发音分）',
+                      style: TextStyle(color: kTextMuted)),
                 ),
               ],
             )
@@ -1089,15 +1089,15 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('✓ 命中！',
+                Text('✓ 命中！',
                     style: TextStyle(color: kUnlocked, fontSize: 20)),
                 if (_transcript.trim().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text("${_edited ? '你写' : '你说'}：'$_transcript'",
                         key: const Key('l4AsrRaw'),
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 13)),
+                        style: TextStyle(
+                            color: kTextSecondary, fontSize: 13)),
                   ),
                 if (_transcript.trim().isNotEmpty)
                   Padding(
@@ -1106,31 +1106,31 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                         _edited
                             ? '按文本通过 · 未验证发音（不计分）'
                             : '相似度：${(_judge!.similarity * 100).round()}%（词级匹配）',
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 12)),
+                        style: TextStyle(
+                            color: kTextMuted, fontSize: 12)),
                   ),
                 if (_passPending) ...[
                   const SizedBox(height: 6),
                   Text(
                     '${(widget.passAdvanceDelay!.inMilliseconds / 1000).toStringAsFixed(1)} 秒后自动进入下一句',
-                    style: const TextStyle(color: Colors.white54, fontSize: 13),
+                    style: TextStyle(color: kTextMuted, fontSize: 13),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
                     onPressed: _emitPass,
                     child: Text(widget.passActionLabel,
-                        style: const TextStyle(color: Colors.white)),
+                        style: TextStyle(color: kText)),
                   ),
                 ],
               ],
             )
           else if (waiting)
-            const Column(
+            Column(
               children: [
                 CircularProgressIndicator(color: kPrimary),
-                SizedBox(height: 10),
-                Text('引擎准备中…', style: TextStyle(color: Colors.white54)),
+                const SizedBox(height: 10),
+                Text('引擎准备中…', style: TextStyle(color: kTextMuted)),
               ],
             )
           else
@@ -1138,11 +1138,11 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               children: [
                 _micButton(),
                 const SizedBox(height: 8),
-                const Text('语速适中、吐字清晰识别更准',
-                    style: TextStyle(color: Colors.white38, fontSize: 12)),
+                Text('语速适中、吐字清晰识别更准',
+                    style: TextStyle(color: kTextFaint, fontSize: 12)),
                 TextButton(
                   onPressed: _judgeEdited,
-                  child: const Text('说不了？打字作答',
+                  child: Text('说不了？打字作答',
                       style: TextStyle(color: kPrimary, fontSize: 13)),
                 ),
               ],
@@ -1155,7 +1155,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
             TextButton(
               onPressed: _emitSkip,
               child: Text(widget.skipHint,
-                  style: const TextStyle(color: Colors.white38)),
+                  style: TextStyle(color: kTextFaint)),
             ),
           const SizedBox(height: 16),
         ],

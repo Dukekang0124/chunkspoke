@@ -49,7 +49,7 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: kCard,
-          title: const Text('备份已生成', style: TextStyle(color: kText, fontSize: 17)),
+          title: Text('备份已生成', style: TextStyle(color: kText, fontSize: 17)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,15 +57,15 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
               Text(
                   '${export.chunkCount} 个词块进度 · ${export.sessionCount} 条学习记录 · '
                   '${export.kvCount} 项设置',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  style: TextStyle(color: kTextSecondary, fontSize: 13)),
               const SizedBox(height: 8),
-              const Text('文件位置：', style: TextStyle(color: Colors.white54, fontSize: 12)),
+              Text('文件位置：', style: TextStyle(color: kTextMuted, fontSize: 12)),
               SelectableText(file.path,
-                  style: const TextStyle(color: kPrimary, fontSize: 12)),
+                  style: TextStyle(color: kPrimary, fontSize: 12)),
               const SizedBox(height: 10),
-              const Text('换机或重装时，用这份 JSON 在「导入备份」里合并回来。\n'
+              Text('换机或重装时，用这份 JSON 在「导入备份」里合并回来。\n'
                   '不含录音、不含任何 Key；是否备份由你决定。',
-                  style: TextStyle(color: Colors.white38, fontSize: 12)),
+                  style: TextStyle(color: kTextFaint, fontSize: 12)),
             ],
           ),
           actions: [
@@ -76,7 +76,7 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('完成', style: TextStyle(color: Colors.white54)),
+              child: Text('完成', style: TextStyle(color: kTextMuted)),
             ),
           ],
         ),
@@ -114,7 +114,7 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: kCard,
-          title: const Text('确认合并', style: TextStyle(color: kText, fontSize: 17)),
+          title: Text('确认合并', style: TextStyle(color: kText, fontSize: 17)),
           content: Text(
             '新增词块 ${plan.newChunks} 个、更新进度 ${plan.updatedChunks} 个、'
             '保留本机进度 ${plan.keptChunks} 个\n'
@@ -122,16 +122,16 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
             '补充设置 ${plan.newKv} 项（已有的不覆盖）\n'
             '${plan.adoptedLegacy == 1 ? '\n这份备份带老用户标记，会一并恢复。' : ''}\n'
             '合并只补不删，本机比备份新的进度会被保留。',
-            style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+            style: TextStyle(color: kTextSecondary, fontSize: 13, height: 1.5),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('取消', style: TextStyle(color: Colors.white54)),
+              child: Text('取消', style: TextStyle(color: kTextMuted)),
             ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('合并导入', style: TextStyle(color: kPrimary)),
+              child: Text('合并导入', style: TextStyle(color: kPrimary)),
             ),
           ],
         ),
@@ -175,11 +175,11 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('导出备份',
+                Text('导出备份',
                     style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                const Text('把本机学习数据存成一个 JSON 文件：词块进度、学习记录、设置。',
-                    style: TextStyle(color: Colors.white54, fontSize: 12)),
+                Text('把本机学习数据存成一个 JSON 文件：词块进度、学习记录、设置。',
+                    style: TextStyle(color: kTextMuted, fontSize: 12)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -187,7 +187,7 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
                       onPressed: _busy ? null : _export,
                       style: FilledButton.styleFrom(backgroundColor: kPrimary),
                       child: Text(_busy ? '处理中…' : '导出备份',
-                          style: const TextStyle(color: Colors.black87)),
+                          style: TextStyle(color: kOnPrimary)),
                     ),
                     const SizedBox(width: 8),
                     CopyMorphButton(
@@ -213,22 +213,22 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('导入备份（合并）',
+                Text('导入备份（合并）',
                     style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                const Text('把备份 JSON 粘贴到下面。只补不删：本机比备份新的进度会保留。',
-                    style: TextStyle(color: Colors.white54, fontSize: 12)),
+                Text('把备份 JSON 粘贴到下面。只补不删：本机比备份新的进度会保留。',
+                    style: TextStyle(color: kTextMuted, fontSize: 12)),
                 const SizedBox(height: 10),
                 TextField(
                   controller: _ctl,
                   maxLines: 6,
                   minLines: 4,
-                  style: const TextStyle(color: kText, fontSize: 12),
+                  style: TextStyle(color: kText, fontSize: 12),
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: kBg,
                     hintText: '{"schema_version":1, ...}',
-                    hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
+                    hintStyle: TextStyle(color: kBorderStrong, fontSize: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide.none,
@@ -240,7 +240,7 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
                   children: [
                     OutlinedButton(
                       onPressed: _busy ? null : _paste,
-                      child: const Text('从剪贴板粘贴',
+                      child: Text('从剪贴板粘贴',
                           style: TextStyle(color: kPrimary, fontSize: 13)),
                     ),
                     const SizedBox(width: 8),
@@ -248,7 +248,7 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
                       onPressed: _busy ? null : _import,
                       style: FilledButton.styleFrom(backgroundColor: kPrimary),
                       child: Text(_busy ? '处理中…' : '检查并合并',
-                          style: const TextStyle(color: Colors.black87)),
+                          style: TextStyle(color: kOnPrimary)),
                     ),
                   ],
                 ),
@@ -256,9 +256,9 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             '备份只在本机生成，不联网、不上传。它不会带录音，也不含任何 API Key 明文。',
-            style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.5),
+            style: TextStyle(color: kTextFaint, fontSize: 11, height: 1.5),
           ),
         ],
       ),

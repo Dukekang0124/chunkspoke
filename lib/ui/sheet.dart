@@ -55,14 +55,14 @@ class AppSheetTitle extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: kText,
                   fontSize: 17,
                   fontWeight: FontWeight.w700)),
           if (subtitle != null) ...[
             const SizedBox(height: 6),
             Text(subtitle!,
-                style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                style: TextStyle(color: kTextMuted, fontSize: 13)),
           ],
         ],
       ),

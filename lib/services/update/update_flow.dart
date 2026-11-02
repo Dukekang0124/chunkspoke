@@ -321,21 +321,21 @@ Future<void> _installWithPermission(
     context: context,
     barrierDismissible: false,
     builder: (_) => AlertDialog(
-      backgroundColor: const Color(0xFF1A1A2E),
-      title: const Text('需要安装权限', style: TextStyle(color: Colors.white)),
-      content: const Text(
+      backgroundColor: kCard,
+      title: Text('需要安装权限', style: TextStyle(color: kText)),
+      content: Text(
         '系统要求先授权 ChunkSpoke「安装未知应用」。\n点“前往设置”打开本应用权限页，打开后返回点“继续安装”。',
-        style: TextStyle(color: Colors.white70),
+        style: TextStyle(color: kTextSecondary),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('取消', style: TextStyle(color: Colors.white54)),
+          child: Text('取消', style: TextStyle(color: kTextMuted)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('前往设置', style: TextStyle(color: Colors.white)),
+          child: Text('前往设置', style: TextStyle(color: kOnPrimary)),
         ),
       ],
     ),
@@ -347,19 +347,19 @@ Future<void> _installWithPermission(
     context: context,
     barrierDismissible: false,
     builder: (_) => AlertDialog(
-      backgroundColor: const Color(0xFF1A1A2E),
-      title: const Text('继续安装', style: TextStyle(color: Colors.white)),
-      content: const Text('已授权？点“继续安装”调起系统安装界面。',
-          style: TextStyle(color: Colors.white70)),
+      backgroundColor: kCard,
+      title: Text('继续安装', style: TextStyle(color: kText)),
+      content: Text('已授权？点“继续安装”调起系统安装界面。',
+          style: TextStyle(color: kTextSecondary)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('稍后', style: TextStyle(color: Colors.white54)),
+          child: Text('稍后', style: TextStyle(color: kTextMuted)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('继续安装', style: TextStyle(color: Colors.white)),
+          child: Text('继续安装', style: TextStyle(color: kOnPrimary)),
         ),
       ],
     ),

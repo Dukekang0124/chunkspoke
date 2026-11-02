@@ -41,26 +41,26 @@ Future<void> showTtsStoreSheet(BuildContext context) async {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('安装语音引擎（二选一）',
+            Text('安装语音引擎（二选一）',
                 style: TextStyle(
-                    color: Colors.white,
+                    color: kText,
                     fontSize: 17,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
-            const Text('安装后回到 ChunkSpoke，点「重新检测」即可。',
-                style: TextStyle(color: Colors.white54, fontSize: 13)),
+            Text('安装后回到 ChunkSpoke，点「重新检测」即可。',
+                style: TextStyle(color: kTextMuted, fontSize: 13)),
             const SizedBox(height: 10),
             for (final e in kTtsEngines)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.download_rounded, color: kPrimary),
+                leading: Icon(Icons.download_rounded, color: kPrimary),
                 title: Text(e.name,
-                    style: const TextStyle(color: kText, fontSize: 15)),
+                    style: TextStyle(color: kText, fontSize: 15)),
                 subtitle: Text(e.note,
-                    style: const TextStyle(
-                        color: Colors.white54, fontSize: 12)),
-                trailing: const Icon(Icons.open_in_new,
-                    size: 16, color: Colors.white38),
+                    style: TextStyle(
+                        color: kTextMuted, fontSize: 12)),
+                trailing: Icon(Icons.open_in_new,
+                    size: 16, color: kTextFaint),
                 onTap: () async {
                   Navigator.of(sheetCtx).pop();
                   final ok = await TtsNative.openStore(e.query);
@@ -109,34 +109,34 @@ Future<void> showTtsFixDialog(BuildContext context, TtsService tts) async {
     context: context,
     builder: (dialogCtx) => AlertDialog(
       backgroundColor: kCard,
-      icon: const Icon(Icons.volume_off_rounded, color: kPrimary, size: 30),
+      icon: Icon(Icons.volume_off_rounded, color: kPrimary, size: 30),
       title: Text(title,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white, fontSize: 18)),
+          style: TextStyle(color: kText, fontSize: 18)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(reason,
-              style: const TextStyle(
-                  color: Colors.white70, fontSize: 14, height: 1.45)),
+              style: TextStyle(
+                  color: kTextSecondary, fontSize: 14, height: 1.45)),
           const SizedBox(height: 10),
           Text('诊断码：${tts.diagnostic}',
-              style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              style: TextStyle(color: kTextFaint, fontSize: 11)),
         ],
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogCtx).pop(),
-          child: const Text('取消', style: TextStyle(color: Colors.white54)),
+          child: Text('取消', style: TextStyle(color: kTextMuted)),
         ),
         TextButton(
           onPressed: () {
             Navigator.of(dialogCtx).pop();
             showTtsStoreSheet(context);
           },
-          child: const Text('去下载', style: TextStyle(color: kPrimary)),
+          child: Text('去下载', style: TextStyle(color: kPrimary)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
@@ -144,7 +144,7 @@ Future<void> showTtsFixDialog(BuildContext context, TtsService tts) async {
             Navigator.of(dialogCtx).pop();
             openTtsSettings(context);
           },
-          child: const Text('去设置', style: TextStyle(color: Colors.black87)),
+          child: Text('去设置', style: TextStyle(color: kOnPrimary)),
         ),
       ],
     ),

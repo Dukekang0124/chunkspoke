@@ -156,7 +156,7 @@ class _ListenPickStepState extends State<ListenPickStep> {
           Row(
             children: [
               Text('听辨 · 第 ${_round + 1}/$total 轮',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: kPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w600)),
@@ -170,27 +170,27 @@ class _ListenPickStepState extends State<ListenPickStep> {
                   border: Border.all(color: kPrimary.withValues(alpha: 0.4)),
                 ),
                 child: Text(_speedLabel,
-                    style: const TextStyle(color: kPrimary, fontSize: 12)),
+                    style: TextStyle(color: kPrimary, fontSize: 12)),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          const Text('听音频，选出你听到的「词块」',
-              style: TextStyle(color: Colors.white70)),
+          Text('听音频，选出你听到的「词块」',
+              style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 12),
           IconButton(
-            icon: const Icon(Icons.volume_up, color: kPrimary, size: 40),
+            icon: Icon(Icons.volume_up, color: kPrimary, size: 40),
             onPressed: _play,
           ),
-          if (_roundPassed) const _RoundBanner(
+          if (_roundPassed) _RoundBanner(
             icon: Icons.check_circle,
             color: kUnlocked,
             text: '这轮听对了！',
-          ) else if (_revealed) const _RoundBanner(
+          ) else if (_revealed) _RoundBanner(
             icon: Icons.lightbulb,
             color: kPrimary,
             text: '没听出来也没关系，答案已标出，记住它',
-          ) else if (_wrongThisRound > 0) const _RoundBanner(
+          ) else if (_wrongThisRound > 0) _RoundBanner(
             icon: Icons.hearing,
             color: kPrimary,
             text: '差一点，再听一遍试试',
@@ -218,8 +218,8 @@ class _ListenPickStepState extends State<ListenPickStep> {
                                     : (_revealed && s == widget.chunk.text
                                         ? kUnlocked
                                         : (_revealed && s == _wrongText
-                                            ? Colors.redAccent
-                                            : Colors.white24)),
+                                            ? kError
+                                            : kBorderStrong)),
                                 width: (_roundPassed || _revealed) &&
                                         s == widget.chunk.text
                                     ? 2
@@ -235,18 +235,18 @@ class _ListenPickStepState extends State<ListenPickStep> {
                               children: [
                                 if ((_roundPassed || _revealed) &&
                                     s == widget.chunk.text)
-                                  const Icon(Icons.check_circle,
+                                  Icon(Icons.check_circle,
                                       color: kUnlocked, size: 18),
                                 if (_revealed && s == _wrongText)
-                                  const Icon(Icons.close,
-                                      color: Colors.redAccent, size: 18),
+                                  Icon(Icons.close,
+                                      color: kError, size: 18),
                                 if ((_roundPassed || _revealed) &&
                                     s == widget.chunk.text)
                                   const SizedBox(width: 6),
                                 Text(s,
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 17)),
+                                    style: TextStyle(
+                                        color: kText, fontSize: 17)),
                               ],
                             ),
                           ),
@@ -256,10 +256,10 @@ class _ListenPickStepState extends State<ListenPickStep> {
             ),
           ),
           if (_roundMissed && !_roundPassed)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
               child: Text('答案已标出，记住它，点下方按钮继续',
-                  style: TextStyle(color: Colors.white54, fontSize: 13)),
+                  style: TextStyle(color: kTextMuted, fontSize: 13)),
             ),
           const Spacer(),
           if (_roundPassed || _revealed)
@@ -276,7 +276,7 @@ class _ListenPickStepState extends State<ListenPickStep> {
                     _round < total - 1
                         ? '下一轮（${_nextSpeedLabel()}）'
                         : '完成听辨 · 下一步',
-                    style: const TextStyle(color: Colors.white, fontSize: 16)),
+                    style: TextStyle(color: kOnPrimary, fontSize: 16)),
               ),
             ),
           const SizedBox(height: 8),

@@ -61,13 +61,13 @@ class _AppNavState extends State<AppNav> with WidgetsBindingObserver {
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: kCard,
-          title: Text(c.title, style: const TextStyle(color: Colors.white)),
+          title: Text(c.title, style: TextStyle(color: kText)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (final item in c.items) ...[
-                Text(item, style: const TextStyle(color: Colors.white70)),
+                Text(item, style: TextStyle(color: kTextSecondary)),
                 const SizedBox(height: 6),
               ],
             ],
@@ -75,7 +75,7 @@ class _AppNavState extends State<AppNav> with WidgetsBindingObserver {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('开始使用', style: TextStyle(color: kPrimary)),
+              child: Text('开始使用', style: TextStyle(color: kPrimary)),
             ),
           ],
         ),
@@ -113,7 +113,7 @@ class _AppNavState extends State<AppNav> with WidgetsBindingObserver {
         type: BottomNavigationBarType.fixed,
         backgroundColor: kCard,
         selectedItemColor: kPrimary,
-        unselectedItemColor: Colors.white54,
+        unselectedItemColor: kTextMuted,
         items: [
           BottomNavigationBarItem(
             icon: _tabPress(const Icon(Icons.school)),

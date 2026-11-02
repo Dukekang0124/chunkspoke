@@ -7,6 +7,7 @@ import 'package:chunkspoke_flutter/services/database.dart';
 import 'package:chunkspoke_flutter/services/hd_voice.dart';
 import 'package:chunkspoke_flutter/services/hd_voice_types.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
+import 'package:chunkspoke_flutter/services/theme_provider.dart';
 import 'package:chunkspoke_flutter/services/vosk_model.dart';
 
 class _FakeHdDownloader implements HdVoiceDownloader {
@@ -91,6 +92,13 @@ void main() {
             Provider<ProgressService>.value(value: p),
             Provider<TtsService>.value(value: tts),
             ChangeNotifierProvider<HdVoiceService>.value(value: hd),
+            ChangeNotifierProvider<ThemeProvider>.value(
+                value: ThemeProvider(
+                  initialId: p.appThemeId,
+                  initialMode: p.appThemeMode,
+                  persistId: p.setAppThemeId,
+                  persistMode: p.setAppThemeMode,
+                )),
           ],
           child: const MaterialApp(home: SettingsScreen()),
         ),
@@ -107,6 +115,16 @@ void main() {
       // TTS 修复入口常驻设置页。
       expect(find.text('语音朗读（TTS）'), findsOneWidget);
       // 录音留存开关已移入语音分组（常驻），分享入口默认不出现。
+      // 1.7.0：外观与主题卡片插在音效卡之后，7 个色板齐全。
+      expect(find.text('音效'), findsOneWidget);
+      expect(find.byKey(const ValueKey('theme-card')), findsOneWidget);
+      for (final id in ['default', 'nude_rose', 'sage', 'plum', 'ocean', 'forest', 'charcoal']) {
+        expect(find.byKey(ValueKey('theme-swatch-$id')), findsOneWidget,
+            reason: '设置页缺少色板 $id');
+      }
+      expect(tester.getTopLeft(find.text('外观与主题')).dy,
+          greaterThan(tester.getTopLeft(find.text('音效')).dy),
+          reason: '主题卡片必须在音效卡之后');
       expect(find.text('保存最近一次录音（排障）'), findsOneWidget);
       expect(find.text('分享最近一次录音'), findsNothing);
 

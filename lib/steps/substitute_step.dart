@@ -242,12 +242,12 @@ class _SubstituteStepState extends State<SubstituteStep> {
     final idx = text.toLowerCase().indexOf(phrase.toLowerCase());
     if (idx < 0) {
       return Text(text,
-          style: const TextStyle(color: Colors.white, fontSize: 19));
+          style: TextStyle(color: kText, fontSize: 19));
     }
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        style: const TextStyle(color: Colors.white, fontSize: 19),
+        style: TextStyle(color: kText, fontSize: 19),
         children: [
           TextSpan(text: text.substring(0, idx)),
           TextSpan(
@@ -291,7 +291,7 @@ class _SubstituteStepState extends State<SubstituteStep> {
             alignment: Alignment.centerLeft,
             child: Text(
                 widget.review ? '复习 · 定向替换' : '第 5/6 步 · 定向替换',
-                style: const TextStyle(
+                style: TextStyle(
                     color: kPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600)),
@@ -303,16 +303,16 @@ class _SubstituteStepState extends State<SubstituteStep> {
             decoration: BoxDecoration(
               color: kBg.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white24),
+              border: Border.all(color: kBorderStrong),
             ),
             child: Column(
               children: [
                 _highlighted(
-                    _plan.baseSentence, _plan.chunkText, Colors.white38,
+                    _plan.baseSentence, _plan.chunkText, kTextFaint,
                     strike: true),
                 if (!_plan.isFallback) ...[
                   const SizedBox(height: 8),
-                  const Icon(Icons.arrow_downward,
+                  Icon(Icons.arrow_downward,
                       color: kPrimary, size: 16),
                   const SizedBox(height: 8),
                   _highlighted(
@@ -335,7 +335,7 @@ class _SubstituteStepState extends State<SubstituteStep> {
                   selectedColor: kPrimary,
                   backgroundColor: kCard,
                   labelStyle: TextStyle(
-                      color: on ? Colors.black87 : Colors.white70,
+                      color: on ? kOnPrimary : kTextSecondary,
                       fontSize: 13),
                   onSelected: (_) => setState(() {
                     _plan = _plan.withReplacement(o);
@@ -353,8 +353,8 @@ class _SubstituteStepState extends State<SubstituteStep> {
             children: [
               TextButton.icon(
                 onPressed: _speakTarget,
-                icon: const Icon(Icons.volume_up, color: kPrimary, size: 18),
-                label: const Text('听参考',
+                icon: Icon(Icons.volume_up, color: kPrimary, size: 18),
+                label: Text('听参考',
                     style: TextStyle(color: kPrimary, fontSize: 13)),
               ),
               TextButton.icon(
@@ -375,25 +375,25 @@ class _SubstituteStepState extends State<SubstituteStep> {
                     color: kPrimary, size: 18),
                 label: Text(_playing ? '停止回放' : '回放我的',
                     style:
-                        const TextStyle(color: kPrimary, fontSize: 13)),
+                        TextStyle(color: kPrimary, fontSize: 13)),
               ),
             ],
           ),
           if (_plan.isFallback)
-            const Text('这个词块暂时没有替换搭档，直接把它说进句子',
+            Text('这个词块暂时没有替换搭档，直接把它说进句子',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
+                style: TextStyle(color: kTextFaint, fontSize: 12)),
           const SizedBox(height: 4),
           Text(widget.meaningCN,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
           const Spacer(),
           if (_passed)
             Column(
               children: [
-                const Text('替换成功，句子说完整了',
+                Text('替换成功，句子说完整了',
                     style: TextStyle(
                         color: kUnlocked,
                         fontSize: 17,
@@ -403,8 +403,8 @@ class _SubstituteStepState extends State<SubstituteStep> {
                   Text('你说：$_transcript',
                       key: const Key('substituteAsrRaw'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          color: Colors.white70, fontSize: 13)),
+                      style: TextStyle(
+                          color: kTextSecondary, fontSize: 13)),
                 ],
                 const SizedBox(height: 10),
                 SizedBox(
@@ -413,25 +413,25 @@ class _SubstituteStepState extends State<SubstituteStep> {
                     style: ElevatedButton.styleFrom(
                         backgroundColor: kPrimary),
                     onPressed: _confirmPass,
-                    child: const Text('完成替换 · 下一步',
-                        style: TextStyle(color: Colors.black87)),
+                    child: Text('完成替换 · 下一步',
+                        style: TextStyle(color: kOnPrimary)),
                   ),
                 ),
               ],
             )
           else if (_thinking)
-            const Column(
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 CircularProgressIndicator(color: kPrimary),
-                SizedBox(height: 8),
-                Text('识别中…', style: TextStyle(color: Colors.white54)),
+                const SizedBox(height: 8),
+                Text('识别中…', style: TextStyle(color: kTextMuted)),
               ],
             )
           else if (_listening)
             Column(
               children: [
-                const Text('正在录音 · 说完点停止',
+                Text('正在录音 · 说完点停止',
                     style: TextStyle(color: kPrimary)),
                 const SizedBox(height: 10),
                 GestureDetector(
@@ -444,7 +444,7 @@ class _SubstituteStepState extends State<SubstituteStep> {
                       color: kPrimary.withValues(alpha: 0.2),
                       border: Border.all(color: kPrimary, width: 2),
                     ),
-                    child: const Icon(Icons.stop, color: kPrimary, size: 36),
+                    child: Icon(Icons.stop, color: kPrimary, size: 36),
                   ),
                 ),
               ],
@@ -459,25 +459,25 @@ class _SubstituteStepState extends State<SubstituteStep> {
                 decoration: BoxDecoration(
                   color: kCard,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white24),
+                  border: Border.all(color: kBorderStrong),
                 ),
                 child: Text('你说：$_transcript',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        color: Colors.white70, fontSize: 13)),
+                    style: TextStyle(
+                        color: kTextSecondary, fontSize: 13)),
               ),
             if (hint != null)
               Text(hint,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: hintColor, fontSize: 13))
             else
-              const Text('选好替换词，开口说出新句子',
-                  style: TextStyle(color: Colors.white70)),
+              Text('选好替换词，开口说出新句子',
+                  style: TextStyle(color: kTextSecondary)),
             const SizedBox(height: 8),
             if (_permBlocked)
-              const Text('麦克风未授权，可以先跟着读一遍（自评）',
+              Text('麦克风未授权，可以先跟着读一遍（自评）',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white54, fontSize: 12))
+                  style: TextStyle(color: kTextMuted, fontSize: 12))
             else
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -486,28 +486,28 @@ class _SubstituteStepState extends State<SubstituteStep> {
                       const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
                 ),
                 onPressed: _ready ? _start : null,
-                icon: const Icon(Icons.mic, color: Colors.black87, size: 20),
-                label: const Text('开口说这句',
-                    style: TextStyle(color: Colors.black87)),
+                icon: Icon(Icons.mic, color: kOnPrimary, size: 20),
+                label: Text('开口说这句',
+                    style: TextStyle(color: kOnPrimary)),
               ),
             if (!_ready)
-              const Padding(
-                padding: EdgeInsets.only(top: 6),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
                 child: Text('识别引擎准备中…',
-                    style: TextStyle(color: Colors.white38, fontSize: 12)),
+                    style: TextStyle(color: kTextFaint, fontSize: 12)),
               ),
             if (_showSelfEval || _permBlocked || !_ready) ...[
               const SizedBox(height: 6),
               TextButton(
                 onPressed: _selfConfirm,
-                child: const Text('跟着读一遍，我说对了 →',
+                child: Text('跟着读一遍，我说对了 →',
                     style: TextStyle(color: kPrimary, fontSize: 13)),
               ),
             ],
             TextButton(
               onPressed: widget.onSkip,
               child: Text(widget.review ? '先跳过这块，明天再来' : '跳过这一步',
-                  style: const TextStyle(color: Colors.white38)),
+                  style: TextStyle(color: kTextFaint)),
             ),
           ],
           const SizedBox(height: 10),

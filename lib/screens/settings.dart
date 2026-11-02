@@ -23,6 +23,7 @@ import '../models/content_pack.dart' show ContentPack, Level;
 import '../ui/sheet.dart';
 import '../ui/permission_preprompt.dart';
 import '../ui/theme.dart';
+import '../ui/theme_card.dart';
 import '../ui/feedback.dart';
 import 'ai_coach_screen.dart';
 import 'data_backup.dart';
@@ -203,37 +204,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showGlmKeyGuide() async {
-    const style = TextStyle(color: Colors.white70, fontSize: 13, height: 1.55);
+    final style = TextStyle(color: kTextSecondary, fontSize: 13, height: 1.55);
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: kBg,
-        title: const Text('三分钟填 GLM Key', style: TextStyle(color: kText)),
-        content: const SingleChildScrollView(
+        title: Text('三分钟填 GLM Key', style: TextStyle(color: kText)),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('1. 手机或电脑浏览器打开 open.bigmodel.cn，注册并登录。', style: style),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text('2. 进入「API Keys」→「新建 API Key」，复制生成的 Key（形如 xxxx.yyyy，通常只显示一次）。',
                   style: style),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text('3. 回到本页：服务商选「智谱 GLM」，把 Key 粘进 API Key 框（地址与模型已自动填好）。',
                   style: style),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text('4. 点「测试连接」，显示「已连接：glm-4.7-flash」即成功；之后在 AI 助手里用即可。',
                   style: style),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text('说明：Key 只存本机（Android Keystore 加密），不上传、不进日志；额度与计费以智谱官方为准，本应用不代收费用。',
-                  style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.5)),
+                  style: TextStyle(color: kTextFaint, fontSize: 11, height: 1.5)),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('知道了', style: TextStyle(color: kPrimary)),
+            child: Text('知道了', style: TextStyle(color: kPrimary)),
           ),
         ],
       ),
@@ -336,7 +337,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       statusColor = kUnlocked;
     } else {
       status = '本地统计模式（未配置 AI，可在高级中填 GLM Key）';
-      statusColor = Colors.white54;
+      statusColor = kTextMuted;
     }
     return Container(
       decoration: BoxDecoration(
@@ -349,12 +350,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-          leading: const Icon(Icons.auto_awesome, color: kPrimary),
-          title: const Text('AI 助手', style: TextStyle(color: kText)),
+          leading: Icon(Icons.auto_awesome, color: kPrimary),
+          title: Text('AI 助手', style: TextStyle(color: kText)),
           subtitle:
               Text(status, style: TextStyle(color: statusColor, fontSize: 12)),
-          trailing: const Icon(Icons.arrow_forward_ios,
-              size: 16, color: Colors.white38),
+          trailing: Icon(Icons.arrow_forward_ios,
+              size: 16, color: kTextFaint),
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AiCoachScreen()),
@@ -375,12 +376,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-          leading: const Icon(Icons.save_alt, color: kPrimary),
-          title: const Text('数据备份', style: TextStyle(color: kText)),
-          subtitle: const Text('导出/导入 JSON：词块进度、学习记录、设置；只在本机',
-              style: TextStyle(color: Colors.white54, fontSize: 12)),
-          trailing: const Icon(Icons.arrow_forward_ios,
-              size: 16, color: Colors.white38),
+          leading: Icon(Icons.save_alt, color: kPrimary),
+          title: Text('数据备份', style: TextStyle(color: kText)),
+          subtitle: Text('导出/导入 JSON：词块进度、学习记录、设置；只在本机',
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
+          trailing: Icon(Icons.arrow_forward_ios,
+              size: 16, color: kTextFaint),
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const DataBackupScreen()),
@@ -437,13 +438,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListTile(
           leading: Icon(unlocked ? Icons.workspace_premium : Icons.lock_outline,
               color: unlocked ? kUnlocked : kPrimary),
-          title: Text(title, style: const TextStyle(color: kText)),
+          title: Text(title, style: TextStyle(color: kText)),
           subtitle: Text(subtitle,
-              style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
           trailing: unlocked
-              ? const Icon(Icons.arrow_forward_ios,
-                  size: 16, color: Colors.white38)
-              : const Text('输入解锁码',
+              ? Icon(Icons.arrow_forward_ios,
+                  size: 16, color: kTextFaint)
+              : Text('输入解锁码',
                   style: TextStyle(color: kPrimary, fontSize: 13)),
           onTap: lic == null
               ? null
@@ -462,10 +463,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final (text, color) = switch (_engineState) {
       EngineState.ready => ('识别引擎：离线引擎已就绪（Vosk）', kUnlocked),
       EngineState.failed => ('识别引擎初始化失败，重启应用或反馈', kError),
-      EngineState.downloading => ('识别引擎：正在下载离线模型…', Colors.white54),
-      EngineState.extracting => ('识别引擎：正在解压离线模型…', Colors.white54),
-      EngineState.loading => ('识别引擎：准备中…', Colors.white54),
-      EngineState.unknown => ('识别引擎：首次使用需下载离线模型', Colors.white54),
+      EngineState.downloading => ('识别引擎：正在下载离线模型…', kTextMuted),
+      EngineState.extracting => ('识别引擎：正在解压离线模型…', kTextMuted),
+      EngineState.loading => ('识别引擎：准备中…', kTextMuted),
+      EngineState.unknown => ('识别引擎：首次使用需下载离线模型', kTextMuted),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -504,7 +505,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final installed = svc.installed;
         final enabled = svc.enabled;
         final busy = svc.busy;
-        final color = enabled ? kUnlocked : Colors.white54;
+        final color = enabled ? kUnlocked : kTextMuted;
         String subtitle;
         if (busy &&
             svc.phase == ModelPhase.downloading &&
@@ -532,7 +533,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               ListTile(
                 leading: Icon(Icons.auto_awesome, color: color, size: 20),
-                title: const Text('增强识别（实验）',
+                title: Text('增强识别（实验）',
                     style: TextStyle(color: kText, fontSize: 14)),
                 subtitle:
                     Text(subtitle, style: TextStyle(color: color, fontSize: 12)),
@@ -562,11 +563,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 0, 12, 8),
                   child: Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           '需下载模型；默认不启用，开启后只影响开放式识别。',
                           style:
-                              TextStyle(color: Colors.white54, fontSize: 12),
+                              TextStyle(color: kTextMuted, fontSize: 12),
                         ),
                       ),
                       TextButton(
@@ -593,7 +594,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                   child: Text(svc.lastError!,
-                      style: const TextStyle(color: kError, fontSize: 12)),
+                      style: TextStyle(color: kError, fontSize: 12)),
                 ),
             ],
           ),
@@ -612,7 +613,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TtsStatus.noEngine => ('语音朗读：未检测到语音引擎，点此修复', kError),
             TtsStatus.noEnglish => ('语音朗读：缺少英文语音数据，点此修复', kError),
             TtsStatus.error => ('语音朗读：检测异常，点此重试', kError),
-            TtsStatus.unknown => ('语音朗读：检测中…', Colors.white54),
+            TtsStatus.unknown => ('语音朗读：检测中…', kTextMuted),
           };
     return Container(
       decoration: BoxDecoration(
@@ -624,13 +625,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         type: MaterialType.transparency,
         child: ListTile(
           leading: Icon(Icons.record_voice_over, color: color, size: 20),
-          title: const Text('语音朗读（TTS）',
+          title: Text('语音朗读（TTS）',
               style: TextStyle(color: kText, fontSize: 14)),
           subtitle: Text(text, style: TextStyle(color: color, fontSize: 12)),
           trailing: _ttsStatus == TtsStatus.ready || tts.hdActive
               ? null
-              : const Icon(Icons.arrow_forward_ios,
-                  size: 16, color: Colors.white38),
+              : Icon(Icons.arrow_forward_ios,
+                  size: 16, color: kTextFaint),
           onTap: () async {
             if (tts.hdActive && tts.status != TtsStatus.ready) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -713,7 +714,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: kBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: upsell ? kPrimary : Colors.white12,
+          color: upsell ? kPrimary : kBorder,
           width: upsell ? 1.2 : 1,
         ),
       ),
@@ -723,12 +724,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: const Icon(Icons.record_voice_over,
+              leading: Icon(Icons.record_voice_over,
                   color: kPrimary, size: 20),
-              title: const Text('自然人声（离线 · 美式）',
+              title: Text('自然人声（离线 · 美式）',
                   style: TextStyle(color: kText, fontSize: 14)),
               subtitle: Text(subtitle,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                  style: TextStyle(color: kTextMuted, fontSize: 12)),
               trailing: installed == 0
                   ? null
                   : Switch(
@@ -741,13 +742,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
                 child: Text(hd.engineError!,
-                    style: const TextStyle(color: kError, fontSize: 12)),
+                    style: TextStyle(color: kError, fontSize: 12)),
               ),
             // 回落=甲：高清包加载失败时仍照常发声，但必须让用户知道听到的是
             // 系统发音，而不是以为高清仍然生效（静默回落=用户放弃的旧行为）。
             if (tts.hdFellBack)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 6),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
                 child: Text(
                   '高清音色本次加载失败，已自动回落到系统发音。可删除该音色后重新下载，或先关掉开关。',
                   style: TextStyle(color: kPrimary, fontSize: 12, height: 1.4),
@@ -761,8 +762,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ? '已安装 $installed 个音色 · 共 ${_fmtHdBytes(totalBytes)}。'
                         '切换即时生效；加载失败会自动回落到其他已安装音色。'
                     : '音色包不随安装包分发，按需下载；可随时切回系统发音。',
-                style: const TextStyle(
-                    color: Colors.white38, fontSize: 11, height: 1.5),
+                style: TextStyle(
+                    color: kTextFaint, fontSize: 11, height: 1.5),
               ),
             ),
             if (upsell && target != null)
@@ -771,15 +772,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('当前选用英式系统发音；想要真人质感美音可下载高清美式包。',
-                        style: TextStyle(color: Colors.white54, fontSize: 12)),
+                    Text('当前选用英式系统发音；想要真人质感美音可下载高清美式包。',
+                        style: TextStyle(color: kTextMuted, fontSize: 12)),
                     const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: kPrimary,
-                          foregroundColor: Colors.white,
+                          foregroundColor: kOnPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
                         onPressed: busy
@@ -840,12 +841,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } else if (err != null) {
       trailing = TextButton(
         onPressed: busy ? null : () => _confirmHdDownload(hd, v, retry: true),
-        child: const Text('重试', style: TextStyle(color: kPrimary)),
+        child: Text('重试', style: TextStyle(color: kPrimary)),
       );
     } else {
       trailing = TextButton(
         onPressed: busy ? null : () => _confirmHdDownload(hd, v),
-        child: const Text('下载', style: TextStyle(color: kPrimary)),
+        child: Text('下载', style: TextStyle(color: kPrimary)),
       );
     }
 
@@ -858,7 +859,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(active ? Icons.check_circle : Icons.circle_outlined,
-                  size: 16, color: active ? kPrimary : Colors.white24),
+                  size: 16, color: active ? kPrimary : kBorderStrong),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -866,14 +867,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(v.label,
                         style: TextStyle(
-                            color: active ? kText : Colors.white70,
+                            color: active ? kText : kTextSecondary,
                             fontSize: 13)),
                     const SizedBox(height: 2),
                     Text(
                       '${v.desc.isEmpty ? "真人质感" : v.desc} · ${_fmtHdBytes(size)}'
                       '${ready ? "" : " · 未下载"}',
                       style:
-                          const TextStyle(color: Colors.white38, fontSize: 11),
+                          TextStyle(color: kTextFaint, fontSize: 11),
                     ),
                   ],
                 ),
@@ -890,7 +891,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (p?.message != null) ...[
                     Text(p!.message!,
                         style:
-                            const TextStyle(color: kPrimary, fontSize: 12)),
+                            TextStyle(color: kPrimary, fontSize: 12)),
                     const SizedBox(height: 6),
                   ],
                   ClipRRect(
@@ -902,7 +903,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ? p.received / p.total
                               : 0.0),
                       minHeight: 6,
-                      backgroundColor: Colors.white12,
+                      backgroundColor: kBorder,
                       color: kPrimary,
                     ),
                   ),
@@ -913,7 +914,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       '${_fmtHdBytes(p?.received ?? 0)} / ${_fmtHdBytes(p?.total ?? 0)}  ·  '
                       '${_fmtHdSpeed(p?.bytesPerSecond ?? 0)}  ·  剩余 ${_fmtHdEta(p?.remaining)}',
                       style:
-                          const TextStyle(color: Colors.white54, fontSize: 11),
+                          TextStyle(color: kTextMuted, fontSize: 11),
                     ),
                 ],
               ),
@@ -926,13 +927,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Expanded(
                     child: Text(err,
                         style:
-                            const TextStyle(color: kError, fontSize: 11)),
+                            TextStyle(color: kError, fontSize: 11)),
                   ),
                   if (!ready)
                     TextButton(
                       onPressed: busy ? null : () => hd.deleteVoice(v.id),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.white38,
+                        foregroundColor: kTextFaint,
                         padding: EdgeInsets.zero,
                         minimumSize: const Size(0, 30),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -969,7 +970,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 TextButton(
                   onPressed: busy ? null : () => _confirmHdDelete(hd, v),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.white38,
+                    foregroundColor: kTextFaint,
                     padding: EdgeInsets.zero,
                     minimumSize: const Size(0, 32),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1009,22 +1010,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: kCard,
         title: Text(retry ? '重新下载${v.label}' : '下载${v.label}',
-            style: const TextStyle(color: kText)),
+            style: TextStyle(color: kText)),
         content: Text(
           '$size 左右，建议在 Wi-Fi 下下载（移动网络也可）。\n'
           '下载完成后自动切到此音色并启用，可随时切回系统发音；删除后需重新下载。',
-          style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+          style: TextStyle(color: kTextSecondary, fontSize: 13, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消', style: TextStyle(color: Colors.white54)),
+            child: Text('取消', style: TextStyle(color: kTextMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('下载', style: TextStyle(color: kPrimary)),
+            child: Text('下载', style: TextStyle(color: kPrimary)),
           ),
         ],
       ),
@@ -1044,18 +1045,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: Text('删除${v.label}？', style: const TextStyle(color: kText)),
+        backgroundColor: kCard,
+        title: Text('删除${v.label}？', style: TextStyle(color: kText)),
         content: Text(note,
-            style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            style: TextStyle(color: kTextSecondary, fontSize: 13)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消', style: TextStyle(color: Colors.white54)),
+            child: Text('取消', style: TextStyle(color: kTextMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('删除', style: TextStyle(color: kError)),
+            child: Text('删除', style: TextStyle(color: kError)),
           ),
         ],
       ),
@@ -1087,19 +1088,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-          leading: const Icon(Icons.speed, color: kPrimary),
-          title: const Text('自然人声基准（测试）',
+          leading: Icon(Icons.speed, color: kPrimary),
+          title: Text('自然人声基准（测试）',
               style: TextStyle(color: kText)),
           subtitle: Text(
             ready == 0
                 ? '先下载至少一个音色'
                 : '加载 / 首音 / RTF / 内存 · RTF ≤ 0.5 保留（已装 $ready 个）',
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+            style: TextStyle(color: kTextMuted, fontSize: 12),
           ),
           trailing: _benchRunning
               ? const SizedBox(
@@ -1107,8 +1108,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.arrow_forward_ios,
-                  size: 16, color: Colors.white38),
+              : Icon(Icons.arrow_forward_ios,
+                  size: 16, color: kTextFaint),
           onTap: _benchRunning ? null : () => _runVoiceBench(hd),
         ),
       ),
@@ -1155,17 +1156,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF1A1A2E),
-          title: const Text('自然人声基准', style: TextStyle(color: kText)),
+          backgroundColor: kCard,
+          title: Text('自然人声基准', style: TextStyle(color: kText)),
           content: SingleChildScrollView(
             child: Text('$body\n\n已写入：\n$path',
-                style: const TextStyle(
-                    color: Colors.white70, fontSize: 12, height: 1.5)),
+                style: TextStyle(
+                    color: kTextSecondary, fontSize: 12, height: 1.5)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('好', style: TextStyle(color: kPrimary)),
+              child: Text('好', style: TextStyle(color: kPrimary)),
             ),
           ],
         ),
@@ -1213,20 +1214,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(children: [
+          Row(children: [
             Icon(Icons.speed, color: kPrimary, size: 20),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text('朗读语速', style: TextStyle(color: kText, fontSize: 14)),
           ]),
           const SizedBox(height: 4),
-          const Text('影响示范音、词块与讲解；磨耳朵文章按自己的倍速播放，不叠加这里',
-              style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.4)),
+          Text('影响示范音、词块与讲解；磨耳朵文章按自己的倍速播放，不叠加这里',
+              style: TextStyle(color: kTextMuted, fontSize: 12, height: 1.4)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -1235,13 +1236,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ChoiceChip(
                   label: Text(s.label,
                       style: TextStyle(
-                          color: cur == s ? Colors.white : Colors.white70,
+                          color: cur == s ? kText : kTextSecondary,
                           fontSize: 13)),
                   selected: cur == s,
                   selectedColor: kPrimary.withValues(alpha: 0.28),
-                  backgroundColor: Colors.white10,
+                  backgroundColor: kBorderSoft,
                   side: BorderSide(
-                      color: cur == s ? kPrimary : Colors.white24),
+                      color: cur == s ? kPrimary : kBorderStrong),
                   onSelected: (_) => _setSpeed(progress, s),
                 ),
             ],
@@ -1249,7 +1250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 6),
           Text(
             cur.hint,
-            style: const TextStyle(color: Colors.white38, fontSize: 11),
+            style: TextStyle(color: kTextFaint, fontSize: 11),
           ),
         ],
       ),
@@ -1277,18 +1278,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-          leading: const Icon(Icons.graphic_eq, color: kPrimary, size: 20),
+          leading: Icon(Icons.graphic_eq, color: kPrimary, size: 20),
           title:
-              const Text('发音音色', style: TextStyle(color: kText, fontSize: 14)),
+              Text('发音音色', style: TextStyle(color: kText, fontSize: 14)),
           subtitle: Text(hdNote == null ? subtitle : '$subtitle\n$hdNote',
-              style: const TextStyle(color: Colors.white54, fontSize: 12)),
-          trailing: const Icon(Icons.arrow_forward_ios,
-              size: 16, color: Colors.white38),
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
+          trailing: Icon(Icons.arrow_forward_ios,
+              size: 16, color: kTextFaint),
           onTap: _openVoicePicker,
         ),
       ),
@@ -1336,8 +1337,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text('发音音色',
@@ -1347,12 +1348,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             fontWeight: FontWeight.w600)),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text('点右侧喇叭试听并选用；默认自动优选质量最高的英文声音',
-                        style: TextStyle(color: Colors.white54, fontSize: 12)),
+                        style: TextStyle(color: kTextMuted, fontSize: 12)),
                   ),
                 ),
                 Flexible(
@@ -1361,37 +1362,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       ListTile(
                         leading:
-                            const Icon(Icons.auto_awesome, color: kPrimary),
-                        title: const Text('自动优选（推荐）',
+                            Icon(Icons.auto_awesome, color: kPrimary),
+                        title: Text('自动优选（推荐）',
                             style: TextStyle(color: kText)),
                         subtitle: Text(
                           tts.autoVoice == null
                               ? '按质量与引擎优先级自动选择'
                               : '当前：${tts.autoVoice!.label}',
-                          style: const TextStyle(
-                              color: Colors.white54, fontSize: 12),
+                          style: TextStyle(
+                              color: kTextMuted, fontSize: 12),
                         ),
                         trailing: tts.preferredVoiceKey == null
-                            ? const Icon(Icons.check, color: kPrimary)
+                            ? Icon(Icons.check, color: kPrimary)
                             : null,
                         onTap: () =>
                             Navigator.pop(sheetCtx, const _VoiceChoice(null)),
                       ),
-                      const Divider(color: Colors.white12, height: 1),
+                      Divider(color: kBorder, height: 1),
                       for (final v in voices)
                         ListTile(
                           title: Text(
                             '${v.locale} · ${v.name.split("#").last}',
-                            style: const TextStyle(color: kText, fontSize: 14),
+                            style: TextStyle(color: kText, fontSize: 14),
                           ),
                           subtitle: Text(v.label,
-                              style: const TextStyle(
-                                  color: Colors.white54, fontSize: 12)),
+                              style: TextStyle(
+                                  color: kTextMuted, fontSize: 12)),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.volume_up,
+                                icon: Icon(Icons.volume_up,
                                     color: kPrimary, size: 20),
                                 tooltip: '试听',
                                 onPressed: () async {
@@ -1414,7 +1415,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 },
                               ),
                               if (tts.preferredVoiceKey == v.key)
-                                const Icon(Icons.check, color: kPrimary)
+                                Icon(Icons.check, color: kPrimary)
                               else
                                 const SizedBox(width: 24),
                             ],
@@ -1457,11 +1458,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-          leading: const Icon(Icons.headphones, color: kPrimary),
-          title: const Text('磨耳朵（预览）', style: TextStyle(color: kText)),
-          subtitle: const Text('浸泡层播放器 · 1.5.4 预览',
-              style: TextStyle(color: Colors.white54, fontSize: 12)),
-          trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+          leading: Icon(Icons.headphones, color: kPrimary),
+          title: Text('磨耳朵（预览）', style: TextStyle(color: kText)),
+          subtitle: Text('浸泡层播放器 · 1.5.4 预览',
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
+          trailing: Icon(Icons.chevron_right, color: kTextFaint),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const ListeningDebugScreen()),
           ),
@@ -1476,38 +1477,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: Column(
           children: [
             SwitchListTile(
-              title: const Text('每日练习提醒', style: TextStyle(color: kText)),
-              subtitle: const Text('每天固定时间提醒开口练习（本地通知）',
-                  style: TextStyle(color: Colors.white54, fontSize: 12)),
+              title: Text('每日练习提醒', style: TextStyle(color: kText)),
+              subtitle: Text('每天固定时间提醒开口练习（本地通知）',
+                  style: TextStyle(color: kTextMuted, fontSize: 12)),
               value: _notifOn,
               activeThumbColor: kPrimary,
               onChanged: _toggleNotif,
             ),
             if (_notifOn)
               ListTile(
-                leading: const Icon(Icons.schedule, color: kPrimary),
-                title: const Text('提醒时间', style: TextStyle(color: kText)),
+                leading: Icon(Icons.schedule, color: kPrimary),
+                title: Text('提醒时间', style: TextStyle(color: kText)),
                 trailing: Text(
                   '${_notifHour.toString().padLeft(2, '0')}:${_notifMinute.toString().padLeft(2, '0')}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: kPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w600),
                 ),
                 onTap: _pickNotifTime,
               ),
-            const Divider(height: 1, color: Colors.white12),
+            Divider(height: 1, color: kBorder),
             SwitchListTile(
-              title: const Text('到期复习提醒', style: TextStyle(color: kText)),
-              subtitle: const Text('有词块到复习时间时提醒一次（本地通知）',
-                  style: TextStyle(color: Colors.white54, fontSize: 12)),
+              title: Text('到期复习提醒', style: TextStyle(color: kText)),
+              subtitle: Text('有词块到复习时间时提醒一次（本地通知）',
+                  style: TextStyle(color: kTextMuted, fontSize: 12)),
               value: _reviewNotifOn,
               activeThumbColor: kPrimary,
               onChanged: _toggleReviewNotif,
@@ -1530,14 +1531,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: SwitchListTile(
-          title: const Text('音效', style: TextStyle(color: kText)),
-          subtitle: const Text('答对提示音（关闭后仅保留视觉反馈）',
-              style: TextStyle(color: Colors.white54, fontSize: 12)),
+          title: Text('音效', style: TextStyle(color: kText)),
+          subtitle: Text('答对提示音（关闭后仅保留视觉反馈）',
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
           value: _soundOn,
           activeThumbColor: kPrimary,
           onChanged: _toggleSound,
@@ -1545,6 +1546,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+
+  /// 外观与主题（1.7.0）：卡片本体在 ui/theme_card.dart，可单独测试。
+  Widget _themeCard(BuildContext context) => const ThemeCard();
 
   Future<void> _toggleAiNet(bool v) async {
     final p = Provider.of<ProgressService>(context, listen: false);
@@ -1558,17 +1562,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: SwitchListTile(
-          title: const Text('AI 联网点评', style: TextStyle(color: kText)),
+          title: Text('AI 联网点评', style: TextStyle(color: kText)),
           subtitle: Text(
             _aiNetOn
                 ? '开启：自由造句会把句子文本发送到你配置的 AI 服务商生成点评（不含录音与设备信息）'
                 : '已关闭：自由造句仅用本机规则判定，不发送任何数据',
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+            style: TextStyle(color: kTextMuted, fontSize: 12),
           ),
           value: _aiNetOn,
           activeThumbColor: kPrimary,
@@ -1584,17 +1588,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-          leading: const Icon(Icons.feedback_outlined, color: kPrimary),
-          title: const Text('反馈与建议', style: TextStyle(color: kText)),
-          subtitle: const Text('发邮件或复制邮箱',
-              style: TextStyle(color: Colors.white54, fontSize: 12)),
-          trailing: const Icon(Icons.arrow_forward_ios,
-              size: 16, color: Colors.white38),
+          leading: Icon(Icons.feedback_outlined, color: kPrimary),
+          title: Text('反馈与建议', style: TextStyle(color: kText)),
+          subtitle: Text('发邮件或复制邮箱',
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
+          trailing: Icon(Icons.arrow_forward_ios,
+              size: 16, color: kTextFaint),
           onTap: () => showFeedbackSheet(context),
         ),
       ),
@@ -1607,17 +1611,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-          leading: const Icon(Icons.gavel, color: kPrimary),
-          title: const Text('开源许可与源码', style: TextStyle(color: kText)),
-          subtitle: const Text('eSpeak NG（GPLv3）全文与对应源码获取方式',
-              style: TextStyle(color: Colors.white54, fontSize: 12)),
-          trailing: const Icon(Icons.arrow_forward_ios,
-              size: 16, color: Colors.white38),
+          leading: Icon(Icons.gavel, color: kPrimary),
+          title: Text('开源许可与源码', style: TextStyle(color: kText)),
+          subtitle: Text('eSpeak NG（GPLv3）全文与对应源码获取方式',
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
+          trailing: Icon(Icons.arrow_forward_ios,
+              size: 16, color: kTextFaint),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const LegalScreen()),
           ),
@@ -1627,13 +1631,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _label(String t) =>
-      Text(t, style: const TextStyle(color: Colors.white70, fontSize: 14));
+      Text(t, style: TextStyle(color: kTextSecondary, fontSize: 14));
 
   InputDecoration _dec(String hint) => InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white38),
+        hintStyle: TextStyle(color: kTextFaint),
         filled: true,
-        fillColor: const Color(0xFF1A1A2E),
+        fillColor: kCard,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       );
 
@@ -1651,7 +1655,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextField(
               controller: _key,
               obscureText: true,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: kText),
               decoration: _dec('粘贴密钥（可选）'),
             ),
             const SizedBox(height: 12),
@@ -1659,7 +1663,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _region,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: kText),
               decoration: _dec('例如 eastasia（可选）'),
             ),
             const SizedBox(height: 16),
@@ -1684,6 +1688,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _notificationCard(context),
             const SizedBox(height: 12),
             _soundCard(context),
+            const SizedBox(height: 12),
+            _themeCard(context),
             const SizedBox(height: 12),
             _recordingCard(context),
             const SizedBox(height: 12),
@@ -1712,30 +1718,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                 onPressed: _save,
-                child: const Text('保存', style: TextStyle(color: Colors.white)),
+                child: Text('保存', style: TextStyle(color: kOnPrimary)),
               ),
             ),
             const SizedBox(height: 20),
-            const Divider(color: Colors.white12),
+            Divider(color: kBorder),
             _licenseCard(context),
             const SizedBox(height: 16),
             _label('应用更新'),
             const SizedBox(height: 6),
-            const Text('更新源已内置，无需配置。',
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            Text('更新源已内置，无需配置。',
+                style: TextStyle(color: kTextMuted, fontSize: 12)),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: _checkUpdate,
                 child:
-                    const Text('检查更新', style: TextStyle(color: Colors.white70)),
+                    Text('检查更新', style: TextStyle(color: kTextSecondary)),
               ),
             ),
             const SizedBox(height: 24),
             Center(
               child: Text('ChunkSpoke v$_ver',
-                  style: const TextStyle(color: Colors.white38)),
+                  style: TextStyle(color: kTextFaint)),
             ),
           ],
         ),
@@ -1749,7 +1755,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       // Material(transparency)：在背景 DecoratedBox 与 ExpansionTile 内部 ListTile
       // 之间提供 Material 锚点，消除「水波纹不可见」断言（对 debug/测试有效）。
@@ -1760,17 +1766,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: ExpansionTile(
             initiallyExpanded: _customOn,
             title:
-                const Text('高级', style: TextStyle(color: kText, fontSize: 15)),
-            subtitle: const Text('AI 模型（智谱 GLM / 自定义，默认关）',
-                style: TextStyle(color: Colors.white54, fontSize: 12)),
+                Text('高级', style: TextStyle(color: kText, fontSize: 15)),
+            subtitle: Text('AI 模型（智谱 GLM / 自定义，默认关）',
+                style: TextStyle(color: kTextMuted, fontSize: 12)),
             childrenPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             children: [
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('启用在线 AI 助手', style: TextStyle(color: kText)),
-                subtitle: const Text('开启后 AI 助手才会联网；关闭即只用本机规则引擎',
-                    style: TextStyle(color: Colors.white54, fontSize: 12)),
+                title: Text('启用在线 AI 助手', style: TextStyle(color: kText)),
+                subtitle: Text('开启后 AI 助手才会联网；关闭即只用本机规则引擎',
+                    style: TextStyle(color: kTextMuted, fontSize: 12)),
                 value: _customOn,
                 activeThumbColor: kPrimary,
                 onChanged: (v) => setState(() => _customOn = v),
@@ -1794,7 +1800,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 6),
                 TextField(
                   controller: _customUrl,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: kText, fontSize: 13),
                   decoration: _dec(_presetId == glmPreset.id
                       ? glmPreset.urlHint
                       : customPreset.urlHint),
@@ -1804,18 +1810,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 6),
                 TextField(
                   controller: _customModel,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: kText, fontSize: 13),
                   decoration: _dec(_presetId == glmPreset.id
                       ? glmPreset.modelHint
                       : customPreset.modelHint),
                 ),
                 if (_presetId == glmPreset.id)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
                     child: Text(
                         '默认 glm-4.7-flash 为免费档；名称含 flashX 的为付费档，请按需选择。\n'
                         '备选模型：glm-4-flash-250414（主模型不可用时手动切换）',
-                        style: TextStyle(color: Colors.white38, fontSize: 11)),
+                        style: TextStyle(color: kTextFaint, fontSize: 11)),
                   ),
                 const SizedBox(height: 10),
                 _label('API Key'),
@@ -1823,7 +1829,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 TextField(
                   controller: _customKey,
                   obscureText: true,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: kText, fontSize: 13),
                   decoration: _dec(_presetId == glmPreset.id
                       ? '粘贴智谱 API Key'
                       : '粘贴服务商的 API Key'),
@@ -1837,7 +1843,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         padding: EdgeInsets.zero,
                         minimumSize: const Size(0, 32),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                    child: const Text('三分钟填 GLM Key →',
+                    child: Text('三分钟填 GLM Key →',
                         style: TextStyle(color: kPrimary, fontSize: 12)),
                   ),
                 ),
@@ -1849,30 +1855,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ElevatedButton.styleFrom(backgroundColor: kPrimary),
                       onPressed: _testing ? null : _testConnection,
                       child: _testing
-                          ? const Row(
+                          ? Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 SizedBox(
                                   width: 14,
                                   height: 14,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.black87),
+                                      strokeWidth: 2, color: kOnPrimary),
                                 ),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                                 Text('测试中…',
-                                    style: TextStyle(color: Colors.black87)),
+                                    style: TextStyle(color: kOnPrimary)),
                               ],
                             )
                           : Text(
                               _testOk == null
                                   ? '测试连接'
                                   : (_testOk == true ? '重新测试' : '重试连接'),
-                              style: const TextStyle(color: Colors.black87)),
+                              style: TextStyle(color: kOnPrimary)),
                     ),
                     const SizedBox(width: 10),
                     OutlinedButton(
                       onPressed: _clearCustom,
-                      child: const Text('清除配置',
+                      child: Text('清除配置',
                           style: TextStyle(color: kPrimary)),
                     ),
                   ],
@@ -1886,10 +1892,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             fontSize: 13)),
                   ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   '会发送：你说的句子文本 + 学习统计摘要（不发送录音音频，不上传学习记录）。\n'
                   'Key 只存本机（Android Keystore 加密），不上传、不进日志、不进导出；失败不会自动改用别的服务商。',
-                  style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.5),
+                  style: TextStyle(color: kTextFaint, fontSize: 11, height: 1.5),
                 ),
               ],
             ],
@@ -1909,35 +1915,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: Column(
           children: [
             SwitchListTile(
-              title: const Text('保存最近一次录音（排障）',
+              title: Text('保存最近一次录音（排障）',
                   style: TextStyle(color: kText)),
-              subtitle: const Text(
+              subtitle: Text(
                   '默认关；开启后停止录音时复制到应用文档 asr_debug/last.wav',
-                  style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  style: TextStyle(color: kTextMuted, fontSize: 12)),
               value: on,
               activeThumbColor: kPrimary,
               onChanged: (v) =>
                   setState(() => RecordingService.keepLastWavForDebug = v),
             ),
             if (on) ...[
-              const Divider(color: Colors.white12, height: 1),
+              Divider(color: kBorder, height: 1),
               ListTile(
                 leading:
-                    const Icon(Icons.ios_share, color: kPrimary, size: 20),
-                title: const Text('分享最近一次录音',
+                    Icon(Icons.ios_share, color: kPrimary, size: 20),
+                title: Text('分享最近一次录音',
                     style: TextStyle(color: kText)),
-                subtitle: const Text(
+                subtitle: Text(
                     '只取最近一次录音 · 分享前请自行确认内容',
-                    style: TextStyle(color: Colors.white54, fontSize: 12)),
-                trailing: const Icon(Icons.arrow_forward_ios,
-                    size: 16, color: Colors.white38),
+                    style: TextStyle(color: kTextMuted, fontSize: 12)),
+                trailing: Icon(Icons.arrow_forward_ios,
+                    size: 16, color: kTextFaint),
                 onTap: _shareLastRecording,
               ),
             ],

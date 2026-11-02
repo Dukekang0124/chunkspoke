@@ -85,7 +85,7 @@ class MeScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SettingsScreen())),
-            child: const Text('设置', style: TextStyle(color: Colors.black87)),
+            child: Text('设置', style: TextStyle(color: kOnPrimary)),
           ),
         ),
       ],
@@ -107,16 +107,16 @@ class MeScreen extends StatelessWidget {
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: kCard,
-          title: const Text('掌握标准', style: TextStyle(color: Colors.white)),
-          content: const Text(
+          title: Text('掌握标准', style: TextStyle(color: kText)),
+          content: Text(
             '学完六步后进入巩固周期；走完 1/3/7/14 天复习且每次通过，'
             '即成为「已掌握」词块。',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: kTextSecondary),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('知道了', style: TextStyle(color: kPrimary)),
+              child: Text('知道了', style: TextStyle(color: kPrimary)),
             ),
           ],
         ),
@@ -126,13 +126,13 @@ class MeScreen extends StatelessWidget {
     final m = RegExp(r'^(\d+)(.*)$').firstMatch(value);
     if (m == null) {
       return Text(value,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold));
+          style: TextStyle(
+              color: kText, fontSize: 22, fontWeight: FontWeight.bold));
     }
     final suffix = m.group(2) ?? '';
     return CountUpText(int.parse(m.group(1)!),
-        style: const TextStyle(
-            color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+        style: TextStyle(
+            color: kText, fontSize: 22, fontWeight: FontWeight.bold),
         format: (v) => '$v$suffix');
   }
 
@@ -154,22 +154,22 @@ class MeScreen extends StatelessWidget {
                   Row(
                     children: [
                       Text(label,
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 14)),
+                          style: TextStyle(
+                              color: kTextSecondary, fontSize: 14)),
                       if (help != null) ...[
                         const SizedBox(width: 4),
                         GestureDetector(
                           onTap: help,
-                          child: const Icon(Icons.help_outline,
-                              size: 14, color: Colors.white38),
+                          child: Icon(Icons.help_outline,
+                              size: 14, color: kTextFaint),
                         ),
                       ],
                     ],
                   ),
                   if (sub.isNotEmpty)
                     Text(sub,
-                        style: const TextStyle(
-                            color: Colors.white38, fontSize: 11)),
+                        style: TextStyle(
+                            color: kTextFaint, fontSize: 11)),
                 ],
               ),
             ),
@@ -249,29 +249,29 @@ class _CalendarCardState extends State<_CalendarCard> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('学习日历',
-                  style: TextStyle(color: Colors.white70, fontSize: 14)),
+              Text('学习日历',
+                  style: TextStyle(color: kTextSecondary, fontSize: 14)),
               Row(
                 children: [
                   IconButton(
                     visualDensity: VisualDensity.compact,
                     onPressed: () => _shiftMonth(-1),
-                    icon: const Icon(Icons.chevron_left,
-                        size: 20, color: Colors.white70),
+                    icon: Icon(Icons.chevron_left,
+                        size: 20, color: kTextSecondary),
                   ),
                   Text('${_month.year} 年 ${_month.month} 月',
                       style:
-                          const TextStyle(color: Colors.white, fontSize: 14)),
+                          TextStyle(color: kText, fontSize: 14)),
                   IconButton(
                     visualDensity: VisualDensity.compact,
                     onPressed: _canGoNext ? () => _shiftMonth(1) : null,
                     icon: Icon(Icons.chevron_right,
                         size: 20,
-                        color: _canGoNext ? Colors.white70 : Colors.white24),
+                        color: _canGoNext ? kTextSecondary : kBorderStrong),
                   ),
                   const Spacer(),
                   if (_selected == today)
-                    const Text('今天',
+                    Text('今天',
                         style: TextStyle(color: kPrimary, fontSize: 11)),
                 ],
               ),
@@ -280,8 +280,8 @@ class _CalendarCardState extends State<_CalendarCard> {
                     .map((w) => Expanded(
                           child: Center(
                             child: Text(w,
-                                style: const TextStyle(
-                                    color: Colors.white38, fontSize: 11)),
+                                style: TextStyle(
+                                    color: kTextFaint, fontSize: 11)),
                           ),
                         ))
                     .toList(),
@@ -307,10 +307,10 @@ class _CalendarCardState extends State<_CalendarCard> {
                     ),
                 ],
               ),
-              const Divider(color: Colors.white12, height: 20),
+              Divider(color: kBorder, height: 20),
               Text(
                 '${_selected.month} 月 ${_selected.day} 日 · 当日三数',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: TextStyle(color: kTextMuted, fontSize: 12),
               ),
               const SizedBox(height: 8),
               Row(
@@ -349,7 +349,7 @@ class _CalendarCardState extends State<_CalendarCard> {
           children: [
             Text('$day',
                 style: TextStyle(
-                    color: selected ? kPrimary : Colors.white70,
+                    color: selected ? kPrimary : kTextSecondary,
                     fontSize: 13,
                     fontWeight:
                         selected ? FontWeight.bold : FontWeight.normal)),
@@ -372,13 +372,13 @@ class _CalendarCardState extends State<_CalendarCard> {
         child: Column(
           children: [
             Text('$value',
-                style: const TextStyle(
-                    color: Colors.white,
+                style: TextStyle(
+                    color: kText,
                     fontSize: 18,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
             Text(label,
-                style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                style: TextStyle(color: kTextFaint, fontSize: 11)),
           ],
         ),
       );
@@ -421,8 +421,8 @@ class _GoalCardState extends State<_GoalCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('每日目标',
-              style: TextStyle(color: Colors.white70, fontSize: 14)),
+          Text('每日目标',
+              style: TextStyle(color: kTextSecondary, fontSize: 14)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -432,7 +432,7 @@ class _GoalCardState extends State<_GoalCard> {
                       selected: _goal == n,
                       selectedColor: kPrimary,
                       labelStyle: TextStyle(
-                          color: _goal == n ? Colors.black87 : Colors.white70),
+                          color: _goal == n ? kOnPrimary : kTextSecondary),
                       onSelected: (_) => _select(n),
                     ))
                 .toList(),
@@ -441,10 +441,10 @@ class _GoalCardState extends State<_GoalCard> {
           Row(
             children: [
               Text('今日已开口 ${widget.progress.todaySpoken} / $_goal 句',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  style: TextStyle(color: kTextSecondary, fontSize: 13)),
               const Spacer(),
               if (widget.progress.todaySpoken >= _goal)
-                const Text('已达成 ✓',
+                Text('已达成 ✓',
                     style: TextStyle(color: kUnlocked, fontSize: 12)),
             ],
           ),
@@ -456,8 +456,8 @@ class _GoalCardState extends State<_GoalCard> {
                   ? (widget.progress.todaySpoken / _goal).clamp(0.0, 1.0)
                   : 0.0,
               minHeight: 8,
-              backgroundColor: Colors.white12,
-              valueColor: const AlwaysStoppedAnimation(kUnlocked),
+              backgroundColor: kBorder,
+              valueColor: AlwaysStoppedAnimation(kUnlocked),
             ),
           ),
         ],

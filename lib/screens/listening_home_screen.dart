@@ -131,7 +131,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
   Widget build(BuildContext context) {
     final data = _data;
     if (data == null) {
-      return const Center(child: CircularProgressIndicator(color: kPrimary));
+      return Center(child: CircularProgressIndicator(color: kPrimary));
     }
     return RefreshIndicator(
       color: kPrimary,
@@ -142,12 +142,12 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 8, 14, 28),
         children: [
-          const Text('磨耳朵',
+          Text('磨耳朵',
               style: TextStyle(
                   color: kText, fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text('听场景，让词块先混个耳熟',
-              style: TextStyle(color: Colors.white54, fontSize: 12)),
+          Text('听场景，让词块先混个耳熟',
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
           const SizedBox(height: 12),
           _immersionCard(),
           if (data.noNewContent) ...[
@@ -200,10 +200,10 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
           ],
           const SizedBox(height: 10),
           if (_visible(data.recent).isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 30),
               child: Center(
-                child: Text('暂无篇目', style: TextStyle(color: Colors.white38)),
+                child: Text('暂无篇目', style: TextStyle(color: kTextFaint)),
               ),
             )
           else if (_byLevel)
@@ -216,8 +216,8 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                     _levelBadge(g.level),
                     const SizedBox(width: 8),
                     Text('${g.articles.length} 篇 · 默认 ${g.level.baseRate}x',
-                        style: const TextStyle(
-                            color: Colors.white30, fontSize: 11)),
+                        style: TextStyle(
+                            color: kTextFaint, fontSize: 11)),
                   ],
                 ),
               ),
@@ -237,14 +237,14 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                   child: Row(
                     children: [
                       Text(g.label,
-                          style: const TextStyle(
-                              color: Colors.white70,
+                          style: TextStyle(
+                              color: kTextSecondary,
                               fontSize: 13,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(width: 6),
                       Text('${_visible(g.articles).length} 篇',
-                          style: const TextStyle(
-                              color: Colors.white30, fontSize: 11)),
+                          style: TextStyle(
+                              color: kTextFaint, fontSize: 11)),
                     ],
                   ),
                 ),
@@ -295,27 +295,27 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                   // M1（数字滚动）：数字拆成可滚段，前后文案保持静态；降级时直接显示终值。
                   child: Row(
                     children: [
-                      const Text('今日浸泡 ',
+                      Text('今日浸泡 ',
                           style: TextStyle(
                               color: kText,
                               fontSize: 14,
                               fontWeight: FontWeight.w600)),
                       CountUpText(_minutesOf(_todaySeconds),
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: kText,
                               fontSize: 14,
                               fontWeight: FontWeight.w600)),
-                      const Text(' 分钟 · 本周 ',
+                      Text(' 分钟 · 本周 ',
                           style: TextStyle(
                               color: kText,
                               fontSize: 14,
                               fontWeight: FontWeight.w600)),
                       CountUpText(_minutesOf(_weekSeconds),
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: kText,
                               fontSize: 14,
                               fontWeight: FontWeight.w600)),
-                      const Text(' 分钟',
+                      Text(' 分钟',
                           style: TextStyle(
                               color: kText,
                               fontSize: 14,
@@ -323,8 +323,8 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                     ],
                   ),
                 ),
-                const Text('看统计 ›',
-                    style: TextStyle(color: Colors.white38, fontSize: 12)),
+                Text('看统计 ›',
+                    style: TextStyle(color: kTextFaint, fontSize: 12)),
               ],
             ),
           ),
@@ -354,7 +354,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
         child: ChoiceChip(
           key: Key('listening_level_chip_${level?.key ?? 'all'}'),
           label: Text(label,
-              style: TextStyle(fontSize: 12, color: on ? Colors.black : kText)),
+              style: TextStyle(fontSize: 12, color: on ? kOnPrimary : kText)),
           selected: on,
           onSelected: (_) => setState(() => _levelFilter = level),
           backgroundColor: kCard,
@@ -362,7 +362,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
           showCheckmark: false,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: on ? kPrimary : Colors.white12),
+            side: BorderSide(color: on ? kPrimary : kBorder),
           ),
         ));
   }
@@ -405,7 +405,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(g.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: kText,
                             fontSize: 14,
                             fontWeight: FontWeight.w600)),
@@ -414,12 +414,12 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                         g.sceneLabel == null
                             ? g.hint
                             : '${g.hint} · ${g.sceneLabel}',
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 12)),
+                        style: TextStyle(
+                            color: kTextMuted, fontSize: 12)),
                   ],
                 ),
               ),
-              const Text('筛给我也行',
+              Text('筛给我也行',
                   style: TextStyle(color: kPrimary, fontSize: 12)),
             ],
           ),
@@ -445,14 +445,14 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                   child: Text(
                     '今日复习播单 · ${pl.articles.length} 篇含 '
                     '${pl.dueChunks} 个到期块',
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: kText,
                         fontSize: 14,
                         fontWeight: FontWeight.w600),
                   ),
                 ),
-                const Text('到期块会琥珀脉动',
-                    style: TextStyle(color: Colors.white38, fontSize: 11)),
+                Text('到期块会琥珀脉动',
+                    style: TextStyle(color: kTextFaint, fontSize: 11)),
               ],
             ),
             const SizedBox(height: 10),
@@ -464,14 +464,14 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                   ActionChip(
                     key: Key('listening_playlist_${a.id}'),
                     avatar:
-                        const Icon(Icons.headphones, size: 16, color: kPrimary),
+                        Icon(Icons.headphones, size: 16, color: kPrimary),
                     label: Text(a.title,
-                        style: const TextStyle(color: kText, fontSize: 12)),
+                        style: TextStyle(color: kText, fontSize: 12)),
                     onPressed: () => _open(a, reviewRun: true),
                     backgroundColor: kLocked,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
-                      side: const BorderSide(color: Colors.white12),
+                      side: BorderSide(color: kBorder),
                     ),
                   ),
               ],
@@ -484,7 +484,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
 
   Widget _sectionTitle(String text) => Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
             color: kText, fontSize: 15, fontWeight: FontWeight.w600),
       );
 
@@ -506,7 +506,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
   Widget _pickCard(ListeningPick pick) {
     final accent = switch (pick.kind) {
       ListeningPickKind.today => kPrimary,
-      ListeningPickKind.yesterday => Colors.white70,
+      ListeningPickKind.yesterday => kTextSecondary,
       ListeningPickKind.reunion => kUnlocked,
     };
     return PressableScale(
@@ -547,15 +547,15 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                     _levelBadge(pick.article.level),
                     const Spacer(),
                     Text('${_minutes(pick.article)} 分钟',
-                        style: const TextStyle(
-                            color: Colors.white30, fontSize: 10)),
+                        style: TextStyle(
+                            color: kTextFaint, fontSize: 10)),
                   ],
                 ),
                 const SizedBox(height: 6),
                 Text(pick.article.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: kText,
                         fontSize: 15,
                         height: 1.25,
@@ -564,8 +564,8 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                 Text(pick.article.summaryCN,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: Colors.white38, fontSize: 11, height: 1.35)),
+                    style: TextStyle(
+                        color: kTextFaint, fontSize: 11, height: 1.35)),
                 const Spacer(),
                 Row(
                   children: [
@@ -574,8 +574,8 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                         '${pick.article.sceneLabel} · ${_minutes(pick.article)} 分钟',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 11),
+                        style: TextStyle(
+                            color: kTextMuted, fontSize: 11),
                       ),
                     ),
                     Icon(Icons.play_circle_outline, color: accent, size: 20),
@@ -622,7 +622,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                   color: kPrimary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.play_arrow_rounded,
+                child: Icon(Icons.play_arrow_rounded,
                     color: kPrimary, size: 28),
               ),
               const SizedBox(width: 12),
@@ -630,7 +630,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('继续听',
+                    Text('继续听',
                         style: TextStyle(
                             color: kPrimary,
                             fontSize: 11,
@@ -639,18 +639,18 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                     Text(resume.article.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: kText,
                             fontSize: 15,
                             fontWeight: FontWeight.w600)),
                     const SizedBox(height: 3),
                     Text(where,
-                        style: const TextStyle(
-                            color: Colors.white38, fontSize: 11)),
+                        style: TextStyle(
+                            color: kTextFaint, fontSize: 11)),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.white24),
+              Icon(Icons.chevron_right, color: kBorderStrong),
             ],
           ),
         ),
@@ -686,7 +686,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                               child: Text(a.title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       color: kText,
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600)),
@@ -695,12 +695,12 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                             _levelBadge(a.level),
                             if (done) ...[
                               const SizedBox(width: 6),
-                              const Icon(Icons.check_circle,
+                              Icon(Icons.check_circle,
                                   size: 14, color: kUnlocked),
                             ] else if (heard) ...[
                               const SizedBox(width: 6),
-                              const Icon(Icons.headphones,
-                                  size: 13, color: Colors.white30),
+                              Icon(Icons.headphones,
+                                  size: 13, color: kTextFaint),
                             ],
                           ],
                         ),
@@ -708,13 +708,13 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                         Text(
                           '${a.sceneLabel} · ${_minutes(a)} 分钟'
                           '${_updated(a).isEmpty ? '' : ' · ${_updated(a)}'}',
-                          style: const TextStyle(
-                              color: Colors.white38, fontSize: 11),
+                          style: TextStyle(
+                              color: kTextFaint, fontSize: 11),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.play_circle_outline,
+                  Icon(Icons.play_circle_outline,
                       color: kPrimary, size: 24),
                 ],
               ),
@@ -735,13 +735,13 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.replay_circle_filled, color: kUnlocked, size: 26),
+          Icon(Icons.replay_circle_filled, color: kUnlocked, size: 26),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('词块库待复习',
+                Text('词块库待复习',
                     style: TextStyle(
                         color: kText,
                         fontSize: 14,
@@ -751,8 +751,8 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                   data.dueReviews > 0
                       ? '${data.dueReviews} 个词块到期了。先把它们过一遍，再回来听会更顺。'
                       : '篇目都听过了。去词块库回看已学词块，再回来听会更顺。',
-                  style: const TextStyle(
-                      color: Colors.white54, fontSize: 11, height: 1.45),
+                  style: TextStyle(
+                      color: kTextMuted, fontSize: 11, height: 1.45),
                 ),
                 if (widget.onGoLibrary != null)
                   Align(
@@ -760,7 +760,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                     child: TextButton(
                       key: const Key('listening_go_library'),
                       onPressed: widget.onGoLibrary,
-                      child: const Text('去词块库',
+                      child: Text('去词块库',
                           style: TextStyle(color: kUnlocked, fontSize: 12)),
                     ),
                   ),
@@ -783,13 +783,13 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
           color: active ? kPrimary.withValues(alpha: 0.14) : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: active ? kPrimary.withValues(alpha: 0.4) : Colors.white12,
+            color: active ? kPrimary.withValues(alpha: 0.4) : kBorder,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: active ? kPrimary : Colors.white38,
+            color: active ? kPrimary : kTextFaint,
             fontSize: 11,
             fontWeight: active ? FontWeight.w600 : FontWeight.normal,
           ),

@@ -53,7 +53,7 @@ class _AnchorStepState extends State<AnchorStep> {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Text('第 1/6 步 · 锚定',
+              Text('第 1/6 步 · 锚定',
                   style: TextStyle(
                       color: kPrimary,
                       fontSize: 14,
@@ -61,12 +61,12 @@ class _AnchorStepState extends State<AnchorStep> {
               const Spacer(),
               Text('第 ${widget.chunkIndex + 1}/${widget.chunkTotal} 块',
                   style:
-                      const TextStyle(color: Colors.white54, fontSize: 12)),
+                      TextStyle(color: kTextMuted, fontSize: 12)),
             ],
           ),
           const Spacer(),
-          const Text('先认识这一块',
-              style: TextStyle(color: Colors.white70, fontSize: 15)),
+          Text('先认识这一块',
+              style: TextStyle(color: kTextSecondary, fontSize: 15)),
           const SizedBox(height: 14),
           Container(
             width: double.infinity,
@@ -80,25 +80,25 @@ class _AnchorStepState extends State<AnchorStep> {
               children: [
                 Text(widget.chunk.text,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: kText,
                         fontSize: 30,
                         fontWeight: FontWeight.w700)),
                 const SizedBox(height: 8),
                 Text(widget.chunk.meaningCN,
                     textAlign: TextAlign.center,
                     style:
-                        const TextStyle(color: kPrimary, fontSize: 16)),
+                        TextStyle(color: kPrimary, fontSize: 16)),
               ],
             ),
           ),
           const SizedBox(height: 14),
           IconButton(
-            icon: const Icon(Icons.volume_up, color: kPrimary, size: 34),
+            icon: Icon(Icons.volume_up, color: kPrimary, size: 34),
             onPressed: _play,
           ),
-          const Text('听一遍，记住它在这个场景里的意思',
-              style: TextStyle(color: Colors.white54, fontSize: 13)),
+          Text('听一遍，记住它在这个场景里的意思',
+              style: TextStyle(color: kTextMuted, fontSize: 13)),
           const Spacer(),
           SizedBox(
             width: double.infinity,
@@ -110,9 +110,9 @@ class _AnchorStepState extends State<AnchorStep> {
                     borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: widget.onDone,
-              child: const Text('开始拆解',
+              child: Text('开始拆解',
                   style: TextStyle(
-                      color: Colors.black87,
+                      color: kOnPrimary,
                       fontSize: 17,
                       fontWeight: FontWeight.w700)),
             ),

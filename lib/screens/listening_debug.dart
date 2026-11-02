@@ -32,10 +32,10 @@ class ListeningDebugScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: kPrimary.withValues(alpha: 0.3)),
             ),
-            child: const Text(
+            child: Text(
               '浸泡层预览：被动收听不产出学习资产，只记录浸泡时长与完听。'
               '首次播放会逐句合成离线音频，之后走本地缓存；断网可用。',
-              style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.5),
+              style: TextStyle(color: kTextMuted, fontSize: 12, height: 1.5),
             ),
           ),
           const SizedBox(height: 12),
@@ -80,14 +80,14 @@ class ListeningDebugScreen extends StatelessWidget {
                           child: Text(a.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: kText,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600)),
                         ),
                         if (completed) ...[
                           const SizedBox(width: 6),
-                          const Icon(Icons.check_circle,
+                          Icon(Icons.check_circle,
                               size: 14, color: kUnlocked),
                         ],
                       ],
@@ -97,13 +97,13 @@ class ListeningDebugScreen extends StatelessWidget {
                       '${a.sceneLabel} · ${a.sentences.length} 句 · '
                       '约 ${_estimateMinutes(a)} 分钟'
                       '${pos != null ? ' · 上次听到 ${((pos.positionMs / 1000) / 60).floor()} 分' : ''}',
-                      style: const TextStyle(
-                          color: Colors.white38, fontSize: 11),
+                      style: TextStyle(
+                          color: kTextFaint, fontSize: 11),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.play_circle_outline,
+              Icon(Icons.play_circle_outline,
                   color: kPrimary, size: 26),
             ],
           ),

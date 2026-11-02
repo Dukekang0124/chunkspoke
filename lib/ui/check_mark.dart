@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 import 'motion.dart';
+import 'theme.dart';
+
 
 /// M1（#40 复制变勾 / #21 实时打勾）：对勾沿笔画一笔画出来。
 ///
 /// 参数：描边 300ms（规范 300–350ms）ease-out；降级时直接显示完整对勾。
 class CheckDraw extends StatefulWidget {
   final double size;
-  final Color color;
+
+  /// 1.7.0：颜色可空，缺省用主题令牌的成功色（主题切换后自动跟着变）。
+  final Color? color;
   final double stroke;
   final int durationMs;
 
@@ -15,7 +19,7 @@ class CheckDraw extends StatefulWidget {
   final bool animate;
   const CheckDraw({
     this.size = 18,
-    this.color = const Color(0xFF34D399),
+    this.color,
     this.stroke = 2.2,
     this.durationMs = 300,
     this.animate = true,
@@ -52,7 +56,7 @@ class _CheckDrawState extends State<CheckDraw>
       size: Size(widget.size, widget.size),
       painter: _CheckPainter(
         progress: full ? 1.0 : _c.value,
-        color: widget.color,
+        color: widget.color ?? kSuccess,
         stroke: widget.stroke,
       ),
     );

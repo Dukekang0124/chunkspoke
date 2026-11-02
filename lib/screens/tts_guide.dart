@@ -145,26 +145,26 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                 child: Container(
                   width: 64,
                   height: 64,
-                  decoration: const BoxDecoration(
-                    color: Color(0x1AFFB84D),
+                  decoration: BoxDecoration(
+                    color: kPrimaryTint,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.record_voice_over_rounded,
+                  child: Icon(Icons.record_voice_over_rounded,
                       color: kPrimary, size: 32),
                 ),
               ),
               const SizedBox(height: 12),
               Text(_title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: kText,
                       fontSize: 20,
                       fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               Text(_subtitle,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: Colors.white60, fontSize: 13, height: 1.45)),
+                  style: TextStyle(
+                      color: kTextMuted, fontSize: 13, height: 1.45)),
               const SizedBox(height: 14),
 
               // 检测结果卡：让用户知道「app 检查到了什么」。
@@ -173,7 +173,7 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                 decoration: BoxDecoration(
                   color: kCard,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: kBorder),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +194,7 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                         children: [
                           Text(
                             _cardTitle,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: kText,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600),
@@ -202,14 +202,14 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _cardSub,
-                            style: const TextStyle(
-                                color: Colors.white54, fontSize: 12),
+                            style: TextStyle(
+                                color: kTextMuted, fontSize: 12),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             '诊断码：${widget.diagnostic}',
-                            style: const TextStyle(
-                                color: Colors.white30, fontSize: 10),
+                            style: TextStyle(
+                                color: kTextFaint, fontSize: 10),
                           ),
                         ],
                       ),
@@ -218,9 +218,9 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('按下面步骤修复',
+              Text('按下面步骤修复',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: kText,
                       fontSize: 15,
                       fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
@@ -253,13 +253,13 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                         _noEngine
                             ? Icons.download_rounded
                             : Icons.settings_outlined,
-                        color: Colors.black87,
+                        color: kOnPrimary,
                         size: 20,
                       ),
                       label: Text(
                         _noEngine ? '去下载语音引擎' : '打开系统语音设置',
-                        style: const TextStyle(
-                            color: Colors.black87,
+                        style: TextStyle(
+                            color: kOnPrimary,
                             fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -273,7 +273,7 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: const BorderSide(color: Colors.white24),
+                        side: BorderSide(color: kBorderStrong),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
@@ -289,7 +289,7 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                       ),
                       label: Text(
                         _noEngine ? '打开系统语音设置' : '安装其他语音引擎',
-                        style: const TextStyle(color: kPrimary),
+                        style: TextStyle(color: kPrimary),
                       ),
                     ),
                   ),
@@ -298,28 +298,28 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: const BorderSide(color: Colors.white24),
+                        side: BorderSide(color: kBorderStrong),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: _checking ? null : _recheck,
                       child: _checking
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: kPrimary))
-                          : const Text('重新检测',
-                              style: TextStyle(color: Colors.white70)),
+                          : Text('重新检测',
+                              style: TextStyle(color: kTextSecondary)),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 '语音问题不影响听辨、跟读和录音判定，修复后自动恢复。',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white38, fontSize: 11.5),
+                style: TextStyle(color: kTextFaint, fontSize: 11.5),
               ),
               TextButton(
                 style: TextButton.styleFrom(
@@ -329,8 +329,8 @@ class _TtsGuideScreenState extends State<TtsGuideScreen> {
                 onPressed: () async {
                   await widget.onContinue();
                 },
-                child: const Text('先继续使用',
-                    style: TextStyle(color: Colors.white54, fontSize: 13)),
+                child: Text('先继续使用',
+                    style: TextStyle(color: kTextMuted, fontSize: 13)),
               ),
             ],
           ),
@@ -354,7 +354,7 @@ class _StepRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: kBorderSoft),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,10 +363,10 @@ class _StepRow extends StatelessWidget {
             width: 22,
             height: 22,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
-                color: Color(0x1AFFB84D), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+                color: kPrimaryTint, shape: BoxShape.circle),
             child: Text('$index',
-                style: const TextStyle(
+                style: TextStyle(
                     color: kPrimary,
                     fontSize: 12,
                     fontWeight: FontWeight.w700)),
@@ -377,14 +377,14 @@ class _StepRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: kText,
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 3),
                 Text(body,
-                    style: const TextStyle(
-                        color: Colors.white54,
+                    style: TextStyle(
+                        color: kTextMuted,
                         fontSize: 12,
                         height: 1.45)),
               ],

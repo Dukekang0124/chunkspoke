@@ -102,16 +102,16 @@ class _ModelGateState extends State<ModelGate> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.graphic_eq, color: kPrimary, size: 48),
+                Icon(Icons.graphic_eq, color: kPrimary, size: 48),
                 const SizedBox(height: 16),
-                const Text('正在准备离线语音引擎',
+                Text('正在准备离线语音引擎',
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white)),
+                        color: kText)),
                 const SizedBox(height: 8),
-                const Text('首次使用需下载约 39MB 离线模型（仅此一次）',
-                    style: TextStyle(fontSize: 13, color: Colors.white54)),
+                Text('首次使用需下载约 39MB 离线模型（仅此一次）',
+                    style: TextStyle(fontSize: 13, color: kTextMuted)),
                 const SizedBox(height: 28),
                 _buildBody(),
               ],
@@ -128,22 +128,22 @@ class _ModelGateState extends State<ModelGate> {
         children: [
           Text(_error ?? '模型下载失败',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: kError, fontSize: 13)),
+              style: TextStyle(color: kError, fontSize: 13)),
           const SizedBox(height: 14),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: _retry,
-            child: const Text('重试', style: TextStyle(color: Colors.white)),
+            child: Text('重试', style: TextStyle(color: kOnPrimary)),
           ),
           const SizedBox(height: 6),
           TextButton.icon(
             onPressed: _copyDiag,
-            icon: const Icon(Icons.copy, size: 15, color: Colors.white54),
-            label: const Text('复制诊断信息',
-                style: TextStyle(color: Colors.white54, fontSize: 12)),
+            icon: Icon(Icons.copy, size: 15, color: kTextMuted),
+            label: Text('复制诊断信息',
+                style: TextStyle(color: kTextMuted, fontSize: 12)),
           ),
-          const Text('反馈时贴给开发者，能直接看出是哪一步失败',
-              style: TextStyle(color: Colors.white30, fontSize: 11)),
+          Text('反馈时贴给开发者，能直接看出是哪一步失败',
+              style: TextStyle(color: kTextFaint, fontSize: 11)),
         ],
       );
     }
@@ -152,14 +152,14 @@ class _ModelGateState extends State<ModelGate> {
     final extracting = _state == EngineState.extracting ||
         (p != null && p.phase == ModelPhase.extracting);
     if (extracting) {
-      return const Column(
+      return Column(
         children: [
-          SizedBox(
+          const SizedBox(
               width: 24,
               height: 24,
               child: CircularProgressIndicator(strokeWidth: 2)),
-          SizedBox(height: 12),
-          Text('正在解压模型…', style: TextStyle(color: Colors.white70)),
+          const SizedBox(height: 12),
+          Text('正在解压模型…', style: TextStyle(color: kTextSecondary)),
         ],
       );
     }
@@ -172,7 +172,7 @@ class _ModelGateState extends State<ModelGate> {
         if (p?.message != null) ...[
           Text(p!.message!,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: kPrimary, fontSize: 13)),
+              style: TextStyle(color: kPrimary, fontSize: 13)),
           const SizedBox(height: 12),
         ],
         ClipRRect(
@@ -180,16 +180,16 @@ class _ModelGateState extends State<ModelGate> {
           child: LinearProgressIndicator(
             value: total > 0 ? received / total : null,
             minHeight: 8,
-            backgroundColor: Colors.white12,
+            backgroundColor: kBorder,
             color: kPrimary,
           ),
         ),
         const SizedBox(height: 12),
         Text('${percent.toStringAsFixed(1)}%  ·  ${_fmtBytes(received)} / ${_fmtBytes(total)}',
-            style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            style: TextStyle(color: kTextSecondary, fontSize: 13)),
         const SizedBox(height: 4),
         Text('${_fmtSpeed(p?.bytesPerSecond ?? 0)}  ·  剩余 ${_fmtEta(p?.remaining)}',
-            style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            style: TextStyle(color: kTextMuted, fontSize: 12)),
       ],
     );
   }

@@ -72,9 +72,9 @@ void showFeedbackSheet(BuildContext context) {
                       Navigator.of(ctx).pop();
                       openFeedbackEmail();
                     },
-                    icon: const Icon(Icons.mail_outline, color: Colors.black87),
-                    label: const Text('发邮件',
-                        style: TextStyle(color: Colors.black87)),
+                    icon: Icon(Icons.mail_outline, color: kOnPrimary),
+                    label: Text('发邮件',
+                        style: TextStyle(color: kOnPrimary)),
                   ),
                 ),
                 const SizedBox(width: 12),

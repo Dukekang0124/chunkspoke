@@ -62,7 +62,7 @@ class _CopyMorphButtonState extends State<CopyMorphButton> {
     final policy = Motion.of(context);
     final dur = policy.dur(250);
     final accent = widget.variant == CopyMorphVariant.filled
-        ? Colors.black87
+        ? kOnPrimary
         : kPrimary;
     final icon = AnimatedSwitcher(
       duration: dur,
@@ -89,7 +89,7 @@ class _CopyMorphButtonState extends State<CopyMorphButton> {
           key: ValueKey(_copied),
           style: TextStyle(
               fontSize: widget.fontSize,
-              color: _copied ? const Color(0xFF34D399) : accent)),
+              color: _copied ? kSuccess : accent)),
     );
 
     final row = Row(

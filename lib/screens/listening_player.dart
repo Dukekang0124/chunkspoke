@@ -226,14 +226,14 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                 Text(
                   '${widget.article.sceneLabel} · '
                   '${widget.article.sentences.length} 句',
-                  style: const TextStyle(fontSize: 11, color: Colors.white38),
+                  style: TextStyle(fontSize: 11, color: kTextFaint),
                 ),
                 const SizedBox(width: 6),
                 _levelBadge(widget.article.level),
                 const SizedBox(width: 6),
                 Text('默认 ${_c.baseRate}x',
                     style:
-                        const TextStyle(fontSize: 11, color: Colors.white38)),
+                        TextStyle(fontSize: 11, color: kTextFaint)),
               ],
             ),
           ],
@@ -271,14 +271,14 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: kPrimary),
+            CircularProgressIndicator(color: kPrimary),
             const SizedBox(height: 20),
-            const Text('正在准备离线音频…',
+            Text('正在准备离线音频…',
                 style: TextStyle(color: kText, fontSize: 16)),
             const SizedBox(height: 8),
             if (total > 0) ...[
               Text('已合成 ${_c.prepDone} / $total 段',
-                  style: const TextStyle(color: Colors.white54)),
+                  style: TextStyle(color: kTextMuted)),
               const SizedBox(height: 12),
               LinearProgressIndicator(
                 value: total == 0 ? null : _c.prepDone / total,
@@ -287,10 +287,10 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
               ),
             ],
             const SizedBox(height: 16),
-            const Text(
+            Text(
               '首次播放需逐句合成，之后走本地缓存；全程离线，断网可用。',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+              style: TextStyle(color: kTextFaint, fontSize: 12),
             ),
           ],
         ),
@@ -305,16 +305,16 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: kError, size: 40),
+            Icon(Icons.error_outline, color: kError, size: 40),
             const SizedBox(height: 12),
             Text(_c.error ?? '音频准备失败',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: kText)),
+                style: TextStyle(color: kText)),
             const SizedBox(height: 20),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: kPrimary),
               onPressed: _retry,
-              child: const Text('重试', style: TextStyle(color: Colors.black)),
+              child: Text('重试', style: TextStyle(color: kOnPrimary)),
             ),
           ],
         ),
@@ -390,7 +390,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
           const Spacer(),
           Text(
             enabled ? hint : '实时朗读不支持讲解版',
-            style: const TextStyle(color: Colors.white38, fontSize: 11),
+            style: TextStyle(color: kTextFaint, fontSize: 11),
           ),
           if (_c.inExplanation) ...[
             const SizedBox(width: 8),
@@ -437,8 +437,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
           label,
           style: TextStyle(
             color: !enabled
-                ? Colors.white24
-                : (selected ? kPrimary : Colors.white54),
+                ? kBorderStrong
+                : (selected ? kPrimary : kTextMuted),
             fontSize: 12,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
           ),
@@ -455,7 +455,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: available ? const Color(0x22FFB84D) : const Color(0x22FF6B6B),
+          color: available ? kPrimaryTint : kErrorTint,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
               color: (available ? kPrimary : kError).withValues(alpha: 0.35)),
@@ -500,12 +500,12 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
       ),
       child: Row(
         children: [
-          const Icon(Icons.offline_pin_outlined, size: 16, color: kUnlocked),
+          Icon(Icons.offline_pin_outlined, size: 16, color: kUnlocked),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               '句级离线音频已就绪（$detail）$expl',
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
+              style: TextStyle(color: kTextSecondary, fontSize: 12),
             ),
           ),
         ],
@@ -524,8 +524,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
           const SizedBox(width: 12),
           _legendDot(kListeningCandidateText.withValues(alpha: 0.35), '新块候选'),
           const Spacer(),
-          const Text('轻点词块看释义',
-              style: TextStyle(color: Colors.white38, fontSize: 11)),
+          Text('轻点词块看释义',
+              style: TextStyle(color: kTextFaint, fontSize: 11)),
         ],
       ),
     );
@@ -545,7 +545,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         ),
         const SizedBox(width: 5),
         Text(label,
-            style: const TextStyle(color: Colors.white54, fontSize: 11)),
+            style: TextStyle(color: kTextMuted, fontSize: 11)),
       ],
     );
   }
@@ -626,7 +626,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
               Text(
                 '${i + 1}'.padLeft(2, '0'),
                 style: TextStyle(
-                  color: active ? kPrimary : Colors.white24,
+                  color: active ? kPrimary : kBorderStrong,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -634,7 +634,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
               const SizedBox(height: 4),
               Text(
                 '${plan.precise ? '' : '≈'}${(s.durationMs / 1000).toStringAsFixed(1)}s',
-                style: const TextStyle(color: Colors.white24, fontSize: 9),
+                style: TextStyle(color: kBorderStrong, fontSize: 9),
               ),
             ],
           ),
@@ -669,11 +669,11 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                           border: Border.all(
                               color: kPrimary.withValues(alpha: 0.55)),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.graphic_eq, size: 12, color: kPrimary),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text('讲解中',
                                 style:
                                     TextStyle(color: kPrimary, fontSize: 11)),
@@ -688,13 +688,13 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                               .join(' · '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              color: Colors.white54, fontSize: 11),
+                          style: TextStyle(
+                              color: kTextMuted, fontSize: 11),
                         ),
                       ),
-                      const Text('轻点跳过',
+                      Text('轻点跳过',
                           style:
-                              TextStyle(color: Colors.white24, fontSize: 10)),
+                              TextStyle(color: kBorderStrong, fontSize: 10)),
                     ],
                   ),
                 ),
@@ -704,7 +704,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                 Text(
                   src.meaningCN,
                   style: TextStyle(
-                    color: active ? Colors.white54 : Colors.white24,
+                    color: active ? kTextMuted : kBorderStrong,
                     fontSize: 12,
                   ),
                 ),
@@ -717,7 +717,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
           iconSize: 18,
           tooltip: '跟读这一句',
           key: Key('listening_shadow_$i'),
-          color: active ? kPrimary : Colors.white24,
+          color: active ? kPrimary : kBorderStrong,
           icon: const Icon(Icons.mic_none),
           onPressed: () => _openShadowRead(i),
         ),
@@ -725,7 +725,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
           visualDensity: VisualDensity.compact,
           iconSize: 18,
           tooltip: '重播本句',
-          color: active ? kPrimary : Colors.white24,
+          color: active ? kPrimary : kBorderStrong,
           icon: const Icon(Icons.replay),
           onPressed: () => _c.replaySentence(i),
         ),
@@ -746,7 +746,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
       ),
       child: Row(
         children: [
-          const Icon(Icons.repeat, size: 16, color: kPrimary),
+          Icon(Icons.repeat, size: 16, color: kPrimary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -754,12 +754,12 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                   ? 'A-B 循环'
                   : 'A ${_fmtMs(a)} · B ${b == null ? '未设' : _fmtMs(b)}'
                       '${_c.abActive ? ' · 循环中' : ' · 播放到点后设 B'}',
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
+              style: TextStyle(color: kTextSecondary, fontSize: 12),
             ),
           ),
           TextButton(
             onPressed: _c.clearLoop,
-            child: const Text('清除', style: TextStyle(color: Colors.white54)),
+            child: Text('清除', style: TextStyle(color: kTextMuted)),
           ),
         ],
       ),
@@ -785,9 +785,9 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
               children: [
                 Text('第 ${_c.currentIndex + 1} / ${plan.sentences.length} 句',
                     style:
-                        const TextStyle(color: Colors.white38, fontSize: 11)),
-                const Text('进度为估算',
-                    style: TextStyle(color: Colors.white24, fontSize: 11)),
+                        TextStyle(color: kTextFaint, fontSize: 11)),
+                Text('进度为估算',
+                    style: TextStyle(color: kBorderStrong, fontSize: 11)),
               ],
             ),
           ],
@@ -829,11 +829,11 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(_fmtMs(g.round()),
-                        style: const TextStyle(
-                            color: Colors.white38, fontSize: 11)),
+                        style: TextStyle(
+                            color: kTextFaint, fontSize: 11)),
                     Text(_fmtMs(plan.totalMs),
-                        style: const TextStyle(
-                            color: Colors.white38, fontSize: 11)),
+                        style: TextStyle(
+                            color: kTextFaint, fontSize: 11)),
                   ],
                 ),
               ),
@@ -858,7 +858,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
             child: IconButton(
               iconSize: 28,
               tooltip: '上一句',
-              color: atStart ? Colors.white24 : Colors.white70,
+              color: atStart ? kBorderStrong : kTextSecondary,
               onPressed: atStart ? null : _c.previous,
               icon: const Icon(Icons.skip_previous),
             ),
@@ -878,7 +878,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                 child: PlayPauseMorph(
                   playing: _c.playing,
                   size: 34,
-                  color: _c.canPlay ? Colors.black : Colors.white38,
+                  color: _c.canPlay ? kOnPrimary : kTextFaint,
                 ),
               ),
             ),
@@ -888,7 +888,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
             child: IconButton(
               iconSize: 28,
               tooltip: '下一句',
-              color: atEnd ? Colors.white24 : Colors.white70,
+              color: atEnd ? kBorderStrong : kTextSecondary,
               onPressed: atEnd ? null : _c.next,
               icon: const Icon(Icons.skip_next),
             ),
@@ -897,9 +897,9 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('第 ${_c.currentIndex + 1} / ${plan.sentences.length} 句',
-                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                  style: TextStyle(color: kTextMuted, fontSize: 11)),
               if (_c.completed)
-                const Text('已完听',
+                Text('已完听',
                     style: TextStyle(color: kUnlocked, fontSize: 10)),
             ],
           ),
@@ -958,12 +958,12 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
       icon: Icon(icon,
           size: 16,
           color:
-              enabled ? (active ? kPrimary : Colors.white54) : Colors.white24),
+              enabled ? (active ? kPrimary : kTextMuted) : kBorderStrong),
       label: Text(
         label,
         style: TextStyle(
           color:
-              enabled ? (active ? kPrimary : Colors.white70) : Colors.white24,
+              enabled ? (active ? kPrimary : kTextSecondary) : kBorderStrong,
           fontSize: 12,
         ),
       ),
@@ -993,8 +993,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
+            Padding(
+              padding: const EdgeInsets.all(16),
               child: Text('播放速度', style: TextStyle(color: kText, fontSize: 16)),
             ),
             for (var i = 0; i < ListeningPlayerController.kSpeeds.length; i++)
@@ -1003,7 +1003,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                     style: TextStyle(
                         color: i == _c.speedIndex ? kPrimary : kText)),
                 trailing: i == _c.speedIndex
-                    ? const Icon(Icons.check, color: kPrimary, size: 18)
+                    ? Icon(Icons.check, color: kPrimary, size: 18)
                     : null,
                 onTap: () => Navigator.pop(ctx, i),
               ),
@@ -1027,12 +1027,12 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('A-B 循环',
+              Text('A-B 循环',
                   style: TextStyle(color: kText, fontSize: 16)),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 '播放到起点按「设 A」，到终点按「设 B」；跨句边界同样生效。',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+                style: TextStyle(color: kTextMuted, fontSize: 12),
               ),
               const SizedBox(height: 16),
               Row(
@@ -1066,7 +1066,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                       '${_c.loopA == null ? 'A 未设' : 'A ${_fmtMs(_c.loopA!)}'}'
                       ' · ${_c.loopB == null ? 'B 未设' : 'B ${_fmtMs(_c.loopB!)}'}',
                       style:
-                          const TextStyle(color: Colors.white54, fontSize: 12),
+                          TextStyle(color: kTextMuted, fontSize: 12),
                     ),
                   ),
                   TextButton(
@@ -1074,7 +1074,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                       _c.clearLoop();
                       Navigator.pop(ctx);
                     },
-                    child: const Text('清除', style: TextStyle(color: kError)),
+                    child: Text('清除', style: TextStyle(color: kError)),
                   ),
                 ],
               ),
@@ -1093,8 +1093,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
+            Padding(
+              padding: const EdgeInsets.all(16),
               child: Text('定时关闭', style: TextStyle(color: kText, fontSize: 16)),
             ),
             for (final option in SleepTimerOption.values)
@@ -1103,7 +1103,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                     style: TextStyle(
                         color: option == _c.sleepOption ? kPrimary : kText)),
                 trailing: option == _c.sleepOption
-                    ? const Icon(Icons.check, color: kPrimary, size: 18)
+                    ? Icon(Icons.check, color: kPrimary, size: 18)
                     : null,
                 onTap: () => Navigator.pop(ctx, option),
               ),
@@ -1183,17 +1183,17 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.category_outlined,
+                  Icon(Icons.category_outlined,
                       size: 16, color: kPrimary),
                   const SizedBox(width: 8),
                   Text('本文 ${chunks.length} 块',
-                      style: const TextStyle(color: kText, fontSize: 13)),
+                      style: TextStyle(color: kText, fontSize: 13)),
                   const Spacer(),
                   Text(_chunksOpen ? '收起' : '展开',
                       style:
-                          const TextStyle(color: Colors.white38, fontSize: 12)),
+                          TextStyle(color: kTextFaint, fontSize: 12)),
                   Icon(_chunksOpen ? Icons.expand_less : Icons.expand_more,
-                      size: 18, color: Colors.white38),
+                      size: 18, color: kTextFaint),
                 ],
               ),
             ),
@@ -1214,7 +1214,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                   ListeningChunkTone.candidate => kListeningCandidateText,
                   ListeningChunkTone.learning => kListeningLearningText,
                   ListeningChunkTone.mastered => kListeningMasteredText,
-                  ListeningChunkTone.none => Colors.white38,
+                  ListeningChunkTone.none => kTextFaint,
                 };
                 return ActionChip(
                   key: Key('listening_strip_${c.id}'),
@@ -1378,29 +1378,29 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('音频信息（离线合成）',
+              Text('音频信息（离线合成）',
                   style: TextStyle(color: kText, fontSize: 16)),
               const SizedBox(height: 8),
               Text('音源：${_sourceLabel(plan)}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  style: TextStyle(color: kTextSecondary, fontSize: 12)),
               const SizedBox(height: 4),
               Text(
                 '播放模式：${_c.explainedActive ? '讲解版' : '原版'}'
                 '${plan.hasExplanations ? ' · 讲解 ${plan.items.where((e) => e.isExplanation).length} 段'
                     '（新合成 ${plan.explanationSynthesized} / 缓存 ${plan.explanationReused}）' : ''}',
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                style: TextStyle(color: kTextSecondary, fontSize: 12),
               ),
               const SizedBox(height: 4),
               Text('缓存键音色：${plan.voiceKey}',
-                  style: const TextStyle(
-                      color: Colors.white38,
+                  style: TextStyle(
+                      color: kTextFaint,
                       fontSize: 11,
                       fontFamily: 'monospace')),
               const SizedBox(height: 4),
               Text(
                 '总时长：${_fmtMs(plan.totalMs)} · '
                 '${plan.precise ? '实测时长回填时间轴' : '估算时间轴（精确定位不可用）'}',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: TextStyle(color: kTextMuted, fontSize: 12),
               ),
               const SizedBox(height: 12),
               ConstrainedBox(
@@ -1433,7 +1433,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                                     ? '讲'
                                     : '${(item?.sentenceIndex ?? i) + 1}',
                                 style: TextStyle(
-                                    color: expl ? kPrimary : Colors.white38,
+                                    color: expl ? kPrimary : kTextFaint,
                                     fontSize: 11)),
                           ),
                           Expanded(
@@ -1441,15 +1441,15 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                    color: expl ? kPrimary : Colors.white54,
+                                    color: expl ? kPrimary : kTextMuted,
                                     fontSize: 11)),
                           ),
                           const SizedBox(width: 8),
                           Text(
                             '${_fmtMs(s.startMs)}–${_fmtMs(s.endMs)}'
                             '（${(s.durationMs / 1000).toStringAsFixed(2)}s）',
-                            style: const TextStyle(
-                                color: Colors.white38, fontSize: 11),
+                            style: TextStyle(
+                                color: kTextFaint, fontSize: 11),
                           ),
                         ],
                       ),
@@ -1587,7 +1587,7 @@ class _SentenceRichTextState extends State<_SentenceRichText> {
         text: text.substring(m.start, m.end),
         recognizer: recognizer,
         style: TextStyle(
-          color: emphasized ? Colors.white : color,
+          color: emphasized ? kText : color,
           backgroundColor: background,
           fontWeight: emphasized
               ? FontWeight.w700
@@ -1622,7 +1622,7 @@ class _SentenceRichTextState extends State<_SentenceRichText> {
     return Text.rich(
       TextSpan(children: _spans),
       style: TextStyle(
-        color: widget.active ? kText : Colors.white70,
+        color: widget.active ? kText : kTextSecondary,
         fontSize: 18,
         height: 1.55,
       ),
@@ -1731,7 +1731,7 @@ class _ChunkSheetState extends State<_ChunkSheet> {
   Color get _statusColor {
     switch (_r.action) {
       case ListeningChunkAction.candidate:
-        return const Color(0xFF90CAF9);
+        return kInfo;
       case ListeningChunkAction.mastered:
         return kPrimary;
       case ListeningChunkAction.reviewNow:
@@ -1739,7 +1739,7 @@ class _ChunkSheetState extends State<_ChunkSheet> {
       case ListeningChunkAction.join:
       case ListeningChunkAction.continueLearning:
       case ListeningChunkAction.unavailable:
-        return Colors.white54;
+        return kTextMuted;
     }
   }
 
@@ -1789,7 +1789,7 @@ class _ChunkSheetState extends State<_ChunkSheet> {
               children: [
                 Expanded(
                   child: Text(_r.chunk.text,
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: kText,
                           fontSize: 22,
                           fontWeight: FontWeight.w600)),
@@ -1797,20 +1797,20 @@ class _ChunkSheetState extends State<_ChunkSheet> {
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   tooltip: '试听',
-                  icon: const Icon(Icons.volume_up, color: kPrimary, size: 22),
+                  icon: Icon(Icons.volume_up, color: kPrimary, size: 22),
                   onPressed: () => speakOrHint(context, tts, _r.chunk.text),
                 ),
               ],
             ),
             const SizedBox(height: 4),
             Text(_r.chunk.meaningCN,
-                style: const TextStyle(color: Colors.white70, fontSize: 15)),
+                style: TextStyle(color: kTextSecondary, fontSize: 15)),
             if (widget.example.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
                 '文中原句：${widget.example}',
                 key: const Key('chunkSheetExample'),
-                style: const TextStyle(color: Colors.white54, fontSize: 13),
+                style: TextStyle(color: kTextMuted, fontSize: 13),
               ),
             ],
             const SizedBox(height: 12),
@@ -1826,13 +1826,13 @@ class _ChunkSheetState extends State<_ChunkSheet> {
             if (_note != null) ...[
               const SizedBox(height: 12),
               Text(_note!,
-                  style: const TextStyle(
-                      color: Colors.white54, fontSize: 12, height: 1.4)),
+                  style: TextStyle(
+                      color: kTextMuted, fontSize: 12, height: 1.4)),
             ],
             if (showCap) ...[
               const SizedBox(height: 6),
               Text('本篇已收 ${_r.collectedCount}/${_r.collectCap} 块',
-                  style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                  style: TextStyle(color: kTextFaint, fontSize: 11)),
             ],
             if (primary != null) ...[
               const SizedBox(height: 16),
@@ -1841,22 +1841,22 @@ class _ChunkSheetState extends State<_ChunkSheet> {
                 child: FilledButton(
                   style: FilledButton.styleFrom(
                     backgroundColor: kPrimary,
-                    disabledBackgroundColor: Colors.white12,
+                    disabledBackgroundColor: kBorder,
                   ),
                   onPressed: (_busy || _justJoined || !_r.primaryEnabled)
                       ? null
                       : _primary,
                   child: _busy
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white70))
+                              strokeWidth: 2, color: kOnPrimary))
                       : Text(primary,
                           style: TextStyle(
                               color: _r.primaryEnabled && !_justJoined
-                                  ? Colors.black87
-                                  : Colors.white54)),
+                                  ? kOnPrimary
+                                  : kTextMuted)),
                 ),
               ),
             ],
@@ -1871,7 +1871,7 @@ class _ChunkSheetState extends State<_ChunkSheet> {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: kPrimary.withValues(alpha: 0.35)),
                 ),
-                child: const Text('已掌握 · 完成全部复习间隔',
+                child: Text('已掌握 · 完成全部复习间隔',
                     style: TextStyle(color: kPrimary, fontSize: 13)),
               ),
             ],
@@ -2009,22 +2009,22 @@ class _ShadowReadSheetState extends State<_ShadowReadSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('跟读这一句',
+            Text('跟读这一句',
                 style: TextStyle(
                     color: kText, fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 10),
             Text(widget.sentence,
                 key: const Key('shadowTarget'),
                 style:
-                    const TextStyle(color: kText, fontSize: 18, height: 1.35)),
+                    TextStyle(color: kText, fontSize: 18, height: 1.35)),
             const SizedBox(height: 12),
             if (v != null) ...[
               Text('你说：${v.recognized}',
                   key: const Key('shadowTranscript'),
-                  style: const TextStyle(color: Colors.white70, fontSize: 15)),
+                  style: TextStyle(color: kTextSecondary, fontSize: 15)),
               const SizedBox(height: 6),
               Text('相似度 ${(v.similarity * 100).round()}%',
-                  style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                  style: TextStyle(color: kTextMuted, fontSize: 13)),
             ],
             if (verdict != null) ...[
               const SizedBox(height: 8),
@@ -2034,8 +2034,8 @@ class _ShadowReadSheetState extends State<_ShadowReadSheet> {
                       color: color, fontSize: 15, fontWeight: FontWeight.w600)),
             ],
             const SizedBox(height: 6),
-            const Text('只跟读，不计进度：这块的状态仍由六步和复习决定',
-                style: TextStyle(color: Colors.white30, fontSize: 12)),
+            Text('只跟读，不计进度：这块的状态仍由六步和复习决定',
+                style: TextStyle(color: kTextFaint, fontSize: 12)),
             const SizedBox(height: 14),
             Row(
               children: [
@@ -2055,7 +2055,7 @@ class _ShadowReadSheetState extends State<_ShadowReadSheet> {
                   key: const Key('shadowReplay'),
                   tooltip: '回放刚才那次',
                   onPressed: _path == null ? null : _replay,
-                  icon: const Icon(Icons.play_circle_outline,
+                  icon: Icon(Icons.play_circle_outline,
                       color: kPrimary, size: 28),
                 ),
               ],

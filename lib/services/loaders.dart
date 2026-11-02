@@ -184,6 +184,15 @@ class ProgressService {
 
   Future<void> setHdVoiceId(String? id) => _put('hdVoiceId', id ?? '');
 
+  /// 主题 id（default/nude_rose/sage/plum/ocean/forest/charcoal）。
+  /// key 名与任务书一致；存储介质用现有 SQLite kv，避免新增原生依赖。
+  String? get appThemeId => _blank(_kv('app_theme_id'));
+  Future<void> setAppThemeId(String id) => _put('app_theme_id', id);
+
+  /// 主题明暗：dark / light；默认深色。
+  String? get appThemeMode => _blank(_kv('app_theme_mode'));
+  Future<void> setAppThemeMode(String mode) => _put('app_theme_mode', mode);
+
   // Empty/unset key reads back as null to keep "无 Key 回显" behavior identical.
   String? get azureKey {
     final v = _kv('azureKey');

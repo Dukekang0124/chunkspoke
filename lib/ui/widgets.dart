@@ -90,12 +90,12 @@ void showCnCard(BuildContext context, String cn) {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E),
+            color: kCard,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white24),
+            border: Border.all(color: kBorderStrong),
           ),
           child: Text(cn,
-              style: const TextStyle(color: Colors.white, fontSize: 16)),
+              style: TextStyle(color: kText, fontSize: 16)),
         ),
       ),
     ),
@@ -118,8 +118,8 @@ class SceneCard extends StatelessWidget {
         height: 130,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          gradient: const LinearGradient(
-            colors: [kPrimary, Color(0xFF8B5CF6)],
+          gradient: LinearGradient(
+            colors: [kPrimary, kAccentViolet],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -132,14 +132,16 @@ class SceneCard extends StatelessWidget {
             children: [
               Text(sceneCn(theme),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: kOnPrimary,
                       fontSize: 22,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               Text(theme,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  style: TextStyle(
+                      color: kOnPrimary.withValues(alpha: 0.75),
+                      fontSize: 12)),
             ],
           ),
         ),
@@ -198,7 +200,7 @@ class MasteryRing extends StatelessWidget {
               backgroundColor: kLocked,
             ),
             Text('${(fraction * 100).toInt()}',
-                style: const TextStyle(fontSize: 10, color: Colors.white)),
+                style: TextStyle(fontSize: 10, color: kText)),
           ],
         ),
       );
