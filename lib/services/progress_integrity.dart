@@ -54,11 +54,14 @@ class ModuleAudit {
 
   bool get complete => total > 0 && ledgerMastered >= total;
 
-  /// 快照块号与台账不一致 = 需要自愈的陈旧断点。
-  /// 整模块已掌握时，任何残留快照都算陈旧（台账已是终点），一律清掉，
-  /// 这样「已完成 25/25」不会再被陈旧的「接着上次练 第 21 块」盖过去。
+  /// 陈旧断点：**未完成的模块**里，快照与台账不同位（落后=双源分歧，超前/串块=脏数据）。
+  ///
+  /// 整模块已掌握时不看快照：那时快照只是「从头开始」重练留下的书签，
+  /// 页面一律走完成态门（已完成 N/N + 环 100%），它既不会指错路，也不该把设备判红。
+  /// 真机回执里「台账 12/12 · 断点第 1 块」被算进红名单，就是旧口径把书签当分歧了。
   bool get staleSnapshot =>
       snapshotIndex >= 0 &&
+      !complete &&
       !(snapshotValid && snapshotIndex == ledgerNextIndex);
 
   bool get consistent => !staleSnapshot;
