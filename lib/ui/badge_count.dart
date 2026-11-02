@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'motion.dart';
+import 'theme.dart';
+
 
 /// M1（#58 红点数字角标）：数字翻牌 + 角标轻弹 + 宽度平滑 + 清零缩小淡出。
 ///
@@ -10,16 +12,18 @@ import 'motion.dart';
 class BadgeCount extends StatefulWidget {
   final int count;
   final Widget child;
-  final Color color;
-  final Color textColor;
+
+  /// 1.7.0：颜色改为可空 + 令牌兜底（主题切换要重算，不能当编译期常量）。
+  final Color? color;
+  final Color? textColor;
 
   /// 超过该值显示「cap+」（默认 99+，与规范一致）。
   final int cap;
   const BadgeCount({
     required this.count,
     required this.child,
-    this.color = const Color(0xFFFF6B6B),
-    this.textColor = Colors.white,
+    this.color,
+    this.textColor,
     this.cap = 99,
     super.key,
   });
@@ -95,7 +99,7 @@ class _BadgeCountState extends State<BadgeCount>
                         horizontal: 5, vertical: 1),
                     constraints: const BoxConstraints(minWidth: 18),
                     decoration: BoxDecoration(
-                      color: widget.color,
+                      color: widget.color ?? kError,
                       borderRadius: BorderRadius.circular(9),
                       border: Border.all(color: kBgBadgeRing, width: 1.5),
                     ),
@@ -138,4 +142,4 @@ class _BadgeCountState extends State<BadgeCount>
       t <= 0 || t >= 1 ? 0 : (t < .6 ? t / .6 : (1 - t) / .4);
 }
 
-const Color kBgBadgeRing = Color(0xFF1A1B2E);
+Color get kBgBadgeRing => kCard;

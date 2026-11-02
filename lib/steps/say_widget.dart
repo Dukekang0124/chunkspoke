@@ -305,9 +305,9 @@ class _SayWidgetState extends State<SayWidget> {
     final text = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text('改转写 / 打字作答',
-            style: TextStyle(color: Colors.white, fontSize: 17)),
+        backgroundColor: kCard,
+        title: Text('改转写 / 打字作答',
+            style: TextStyle(color: kText, fontSize: 17)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,26 +317,26 @@ class _SayWidgetState extends State<SayWidget> {
               autofocus: true,
               minLines: 1,
               maxLines: 3,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              decoration: const InputDecoration(
+              style: TextStyle(color: kText, fontSize: 16),
+              decoration: InputDecoration(
                 hintText: '把你要说的句子写出来',
-                hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
-                border: OutlineInputBorder(),
+                hintStyle: TextStyle(color: kTextFaint, fontSize: 13),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 8),
-            const Text('按文本判定：不验证发音，也不计发音分',
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            Text('按文本判定：不验证发音，也不计发音分',
+                style: TextStyle(color: kTextFaint, fontSize: 12)),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消', style: TextStyle(color: Colors.white54)),
+            child: Text('取消', style: TextStyle(color: kTextMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text),
-            child: const Text('按文本判定', style: TextStyle(color: kPrimary)),
+            child: Text('按文本判定', style: TextStyle(color: kPrimary)),
           ),
         ],
       ),
@@ -363,18 +363,18 @@ class _SayWidgetState extends State<SayWidget> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text('跳过本题？', style: TextStyle(color: Colors.white)),
-        content: const Text('跳过照读，直接进入开口（本题不计入掌握度）。',
-            style: TextStyle(color: Colors.white70)),
+        backgroundColor: kCard,
+        title: Text('跳过本题？', style: TextStyle(color: kText)),
+        content: Text('跳过照读，直接进入开口（本题不计入掌握度）。',
+            style: TextStyle(color: kTextSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消', style: TextStyle(color: Colors.white54)),
+            child: Text('取消', style: TextStyle(color: kTextMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('确定跳过', style: TextStyle(color: kPrimary)),
+            child: Text('确定跳过', style: TextStyle(color: kPrimary)),
           ),
         ],
       ),
@@ -399,9 +399,9 @@ class _SayWidgetState extends State<SayWidget> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 15)),
+            Text(label, style: TextStyle(color: kTextSecondary, fontSize: 15)),
             Text(v.toStringAsFixed(1),
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                style: TextStyle(color: kText, fontSize: 16, fontWeight: FontWeight.w600)),
           ],
         ),
       );
@@ -410,7 +410,7 @@ class _SayWidgetState extends State<SayWidget> {
       Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
+          color: kCard,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: border),
         ),
@@ -432,7 +432,7 @@ class _SayWidgetState extends State<SayWidget> {
         final ok = m == null || i >= m.length || m[i];
         return Text(words[i],
             style: TextStyle(
-              color: ok ? Colors.white : Colors.redAccent,
+              color: ok ? kText : kError,
               fontSize: 18,
               fontWeight: ok ? FontWeight.normal : FontWeight.bold,
             ));
@@ -443,12 +443,12 @@ class _SayWidgetState extends State<SayWidget> {
   Widget _resultCard(SayOutcome o) {
     if (o.level == 'L1' && o.azure != null) {
       final az = o.azure!;
-      return _card(border: o.passed ? kUnlocked : Colors.white24, children: [
+      return _card(border: o.passed ? kUnlocked : kBorderStrong, children: [
         Icon(o.passed ? Icons.check_circle : Icons.refresh,
             color: o.passed ? kUnlocked : kPrimary, size: 36),
         const SizedBox(height: 8),
-        const Text('发音测评',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+        Text('发音测评',
+            style: TextStyle(color: kText, fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 12),
         _scoreRow('准确度', az.accuracy),
         _scoreRow('流利度', az.fluency),
@@ -457,7 +457,7 @@ class _SayWidgetState extends State<SayWidget> {
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text('${az.error}',
-                style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                style: TextStyle(color: kTextFaint, fontSize: 12)),
           ),
         const SizedBox(height: 14),
         SizedBox(
@@ -466,98 +466,98 @@ class _SayWidgetState extends State<SayWidget> {
             style: ElevatedButton.styleFrom(backgroundColor: o.passed ? kUnlocked : kPrimary),
             onPressed: o.passed ? () => widget.onDone(_scoreOf(o)) : _retry,
             child: Text(o.passed ? '下一句' : '再试一次',
-                style: const TextStyle(color: Colors.white)),
+                style: TextStyle(color: kText)),
           ),
         ),
         if (!o.passed)
           TextButton(
             onPressed: _appeal,
-            child: const Text('我说的对（申诉）', style: TextStyle(color: Colors.white38)),
+            child: Text('我说的对（申诉）', style: TextStyle(color: kTextFaint)),
           ),
       ]);
     }
     if (o.passed) {
       return _card(border: kUnlocked, children: [
-        const Icon(Icons.check_circle, color: kUnlocked, size: 36),
+        Icon(Icons.check_circle, color: kUnlocked, size: 36),
         const SizedBox(height: 8),
         Text(o.edited ? '你写的：' : '你说：',
-            style: const TextStyle(color: Colors.white, fontSize: 16)),
+            style: TextStyle(color: kText, fontSize: 16)),
         const SizedBox(height: 6),
         Text("'${o.recognized}'",
-            style: const TextStyle(color: kUnlocked, fontSize: 16, fontWeight: FontWeight.w600)),
+            style: TextStyle(color: kUnlocked, fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         Text(
             o.edited
                 ? '按文本通过 · 未验证发音（不计分）'
                 : '得分：${o.textMatchScore}（文本匹配）',
-            style: const TextStyle(color: Colors.white70, fontSize: 14)),
+            style: TextStyle(color: kTextSecondary, fontSize: 14)),
         const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
             onPressed: () => widget.onDone(_scoreOf(o)),
-            child: const Text('下一句', style: TextStyle(color: Colors.white)),
+            child: Text('下一句', style: TextStyle(color: kText)),
           ),
         ),
       ]);
     }
     if (o.noSpeech) {
-      return _card(border: Colors.white24, children: [
-        const Icon(Icons.mic_off, color: kPrimary, size: 36),
+      return _card(border: kBorderStrong, children: [
+        Icon(Icons.mic_off, color: kPrimary, size: 36),
         const SizedBox(height: 8),
-        const Text('没听到，再试一次',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        Text('没听到，再试一次',
+            style: TextStyle(color: kText, fontSize: 18)),
         const SizedBox(height: 6),
         Text(_diagText,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: kPrimary, fontSize: 14)),
+            style: TextStyle(color: kPrimary, fontSize: 14)),
         const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: _retry,
-            child: const Text('再试一次', style: TextStyle(color: Colors.white)),
+            child: Text('再试一次', style: TextStyle(color: kOnPrimary)),
           ),
         ),
         if (_diagIsPerm)
           TextButton(
             onPressed: () => _rec.openSettings(),
-            child: const Text('去设置检查麦克风权限', style: TextStyle(color: Colors.white54)),
+            child: Text('去设置检查麦克风权限', style: TextStyle(color: kText)),
           ),
         TextButton(
           onPressed: _editTranscript,
-          child: const Text('说不了？打字作答',
-              style: TextStyle(color: Colors.white54)),
+          child: Text('说不了？打字作答',
+              style: TextStyle(color: kTextFaint)),
         ),
       ]);
     }
     if (o.level == 'L2') {
       final failed = !o.passed;
-      return _card(border: Colors.white24, children: [
+      return _card(border: kBorderStrong, children: [
         Text(o.asrUnclear ? '⚠ 没听清，再说一遍' : '你说：',
             style: TextStyle(
-                color: o.asrUnclear ? kPrimary : Colors.white70,
+                color: o.asrUnclear ? kPrimary : kTextSecondary,
                 fontSize: 14,
                 fontWeight:
                     o.asrUnclear ? FontWeight.w700 : FontWeight.normal)),
         const SizedBox(height: 4),
         Text("'${o.recognized}'",
             key: const Key('sayAsrRaw'),
-            style: const TextStyle(color: Colors.white, fontSize: 16)),
+            style: TextStyle(color: kText, fontSize: 16)),
         const SizedBox(height: 6),
         if (failed) _targetDiff(o),
         const SizedBox(height: 6),
         Text('相似度：${o.textMatchScore}（词级匹配）',
-            style: const TextStyle(color: Colors.white70, fontSize: 14)),
+            style: TextStyle(color: kTextSecondary, fontSize: 14)),
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: _retry,
-            child: const Text('再试一次', style: TextStyle(color: Colors.white)),
+            child: Text('再试一次', style: TextStyle(color: kOnPrimary)),
           ),
         ),
         const SizedBox(height: 10),
@@ -565,8 +565,8 @@ class _SayWidgetState extends State<SayWidget> {
           width: double.infinity,
           child: OutlinedButton(
             onPressed: _editTranscript,
-            child: const Text('改转写再判（不计发音分）',
-                style: TextStyle(color: Colors.white70)),
+            child: Text('改转写再判（不计发音分）',
+                style: TextStyle(color: kTextSecondary)),
           ),
         ),
         const SizedBox(height: 6),
@@ -574,39 +574,39 @@ class _SayWidgetState extends State<SayWidget> {
           width: double.infinity,
           child: OutlinedButton(
             onPressed: _appeal,
-            child: const Text('我说的对（申诉）', style: TextStyle(color: Colors.white70)),
+            child: Text('我说的对（申诉）', style: TextStyle(color: kTextSecondary)),
           ),
         ),
       ]);
     }
     // L3 自确认（仅原生录音不可用时兜底）
-    return _card(border: Colors.white24, children: [
-      const Text('录音暂不可用', style: TextStyle(color: Colors.white, fontSize: 18)),
+    return _card(border: kBorderStrong, children: [
+      Text('录音暂不可用', style: TextStyle(color: kText, fontSize: 18)),
       const SizedBox(height: 6),
-      const Text('说出来了就点这里', style: TextStyle(color: Colors.white70, fontSize: 15)),
+      Text('说出来了就点这里', style: TextStyle(color: kTextSecondary, fontSize: 15)),
       const SizedBox(height: 16),
       SizedBox(
         width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: kUnlocked),
           onPressed: () => widget.onDone(0.0),
-          child: const Text('我说了', style: TextStyle(color: Colors.white)),
+          child: Text('我说了', style: TextStyle(color: kText)),
         ),
       ),
     ]);
   }
 
   Widget _permCard() => _card(border: kPrimary, children: [
-        const Icon(Icons.mic_off, color: kPrimary, size: 36),
+        Icon(Icons.mic_off, color: kPrimary, size: 36),
         const SizedBox(height: 8),
-        const Text('需要麦克风权限', style: TextStyle(color: Colors.white, fontSize: 18)),
+        Text('需要麦克风权限', style: TextStyle(color: kText, fontSize: 18)),
         const SizedBox(height: 6),
         Text(
           _perm == MicPerm.permanentlyDenied
               ? '麦克风权限已被关闭，请到系统设置里打开后返回'
               : '未获得麦克风权限，无法进行朗读评分',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          style: TextStyle(color: kTextSecondary, fontSize: 14),
         ),
         const SizedBox(height: 14),
         SizedBox(
@@ -617,28 +617,28 @@ class _SayWidgetState extends State<SayWidget> {
                 ? () => _rec.openSettings()
                 : _initMic,
             child: Text(_perm == MicPerm.permanentlyDenied ? '去设置' : '允许麦克风',
-                style: const TextStyle(color: Colors.white)),
+                style: TextStyle(color: kOnPrimary)),
           ),
         ),
       ]);
 
   /// 引擎初始化失败：明确报错，禁止静默落空壳。
   Widget _engineFailedCard() => _card(border: kPrimary, children: [
-        const Icon(Icons.error_outline, color: kPrimary, size: 36),
+        Icon(Icons.error_outline, color: kPrimary, size: 36),
         const SizedBox(height: 8),
-        const Text('识别引擎初始化失败',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        Text('识别引擎初始化失败',
+            style: TextStyle(color: kText, fontSize: 18)),
         const SizedBox(height: 6),
-        const Text('重启应用或反馈给我们',
+        Text('重启应用或反馈给我们',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white70, fontSize: 14)),
+            style: TextStyle(color: kTextSecondary, fontSize: 14)),
         const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: _initMic,
-            child: const Text('重试加载引擎', style: TextStyle(color: Colors.white)),
+            child: Text('重试加载引擎', style: TextStyle(color: kOnPrimary)),
           ),
         ),
       ]);
@@ -654,14 +654,14 @@ class _SayWidgetState extends State<SayWidget> {
             style: TextStyle(
                 color: _tooQuiet
                     ? kPrimary
-                    : (_levelActive ? kUnlocked : Colors.white54),
+                    : (_levelActive ? kUnlocked : kTextMuted),
                 fontSize: 13),
           ),
           const SizedBox(height: 18),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: _stop,
-            child: const Text('停止', style: TextStyle(color: Colors.white)),
+            child: Text('停止', style: TextStyle(color: kOnPrimary)),
           ),
         ],
       );
@@ -675,7 +675,7 @@ class _SayWidgetState extends State<SayWidget> {
         children: [
           const SizedBox(height: 10),
           Text(widget.sentence,
-              style: const TextStyle(color: Colors.white, fontSize: 20)),
+              style: TextStyle(color: kText, fontSize: 20)),
           const SizedBox(height: 8),
           TextButton(
             onPressed: _active || _thinking
@@ -684,7 +684,7 @@ class _SayWidgetState extends State<SayWidget> {
                     context,
                     Provider.of<TtsService>(context, listen: false),
                     widget.sentence),
-            child: const Text('重听', style: TextStyle(color: Colors.white70)),
+            child: Text('重听', style: TextStyle(color: kTextSecondary)),
           ),
           const Spacer(),
           if (_permBlocked)
@@ -692,17 +692,17 @@ class _SayWidgetState extends State<SayWidget> {
           else if (_engineFailed)
             _engineFailedCard()
           else if (_thinking)
-            const CircularProgressIndicator(color: kPrimary)
+            CircularProgressIndicator(color: kPrimary)
           else if (_outcome != null)
             _resultCard(_outcome!)
           else if (_active)
             _activeView()
           else if (waiting)
-            const Column(
+            Column(
               children: [
                 CircularProgressIndicator(color: kPrimary),
-                SizedBox(height: 10),
-                Text('引擎准备中…', style: TextStyle(color: Colors.white54)),
+                const SizedBox(height: 10),
+                Text('引擎准备中…', style: TextStyle(color: kTextMuted)),
               ],
             )
           else
@@ -722,18 +722,18 @@ class _SayWidgetState extends State<SayWidget> {
                       color: kPrimary.withValues(alpha: 0.2),
                       border: Border.all(color: kPrimary, width: 2),
                     ),
-                    child: const Icon(Icons.mic, color: kPrimary, size: 44),
+                    child: Icon(Icons.mic, color: kPrimary, size: 44),
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('点按，然后说出来',
-                    style: TextStyle(color: Colors.white70)),
+                Text('点按，然后说出来',
+                    style: TextStyle(color: kTextSecondary)),
                 const SizedBox(height: 4),
-                const Text('语速适中、吐字清晰识别更准',
-                    style: TextStyle(color: Colors.white38, fontSize: 12)),
+                Text('语速适中、吐字清晰识别更准',
+                    style: TextStyle(color: kTextFaint, fontSize: 12)),
                 TextButton(
                   onPressed: _editTranscript,
-                  child: const Text('说不了？打字作答',
+                  child: Text('说不了？打字作答',
                       style: TextStyle(color: kPrimary, fontSize: 13)),
                 ),
               ],
@@ -742,7 +742,7 @@ class _SayWidgetState extends State<SayWidget> {
           if (_outcome == null && !waiting && !_permBlocked && !_engineFailed)
             TextButton(
               onPressed: () => _confirmSkip(context),
-              child: const Text('跳过', style: TextStyle(color: Colors.white38)),
+              child: Text('跳过', style: TextStyle(color: kTextFaint)),
             ),
         ],
       ),

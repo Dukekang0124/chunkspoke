@@ -20,11 +20,11 @@ class LegalScreen extends StatelessWidget {
         backgroundColor: kBg,
         appBar: AppBar(
           title: const Text('开源许可与源码'),
-          bottom: const TabBar(
+          bottom: TabBar(
             indicatorColor: kPrimary,
             labelColor: kText,
-            unselectedLabelColor: Colors.white54,
-            tabs: [
+            unselectedLabelColor: kTextMuted,
+            tabs: const [
               Tab(text: 'GPLv3 全文'),
               Tab(text: '源码要约'),
               Tab(text: '组件声明'),
@@ -35,9 +35,9 @@ class LegalScreen extends StatelessWidget {
           future: _load(),
           builder: (context, snap) {
             if (snap.hasError) {
-              return const Center(
+              return Center(
                 child: Text('许可文本读取失败，请重新打开',
-                    style: TextStyle(color: Colors.white54)),
+                    style: TextStyle(color: kTextMuted)),
               );
             }
             final data = snap.data;
@@ -61,8 +61,8 @@ class LegalScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: SelectableText(
           text,
-          style: const TextStyle(
-              color: Colors.white70, fontSize: 12, height: 1.5),
+          style: TextStyle(
+              color: kTextSecondary, fontSize: 12, height: 1.5),
         ),
       );
 }

@@ -38,7 +38,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
       color = kUnlocked;
     } else {
       text = '本地统计模式（未配置 AI，可在设置高级中填 GLM Key）';
-      color = Colors.white54;
+      color = kTextMuted;
     }
     return Container(
       padding: const EdgeInsets.all(12),
@@ -72,35 +72,35 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
           const SizedBox(height: 14),
           _card('智能周报', '汇总开口句数 / 平均分 / 卡壳词块 / 薄弱场景，生成诊断与建议',
               _weekly == null
-                  ? const Text('尚未生成', style: TextStyle(color: Colors.white54))
-                  : Text(_weekly!, style: const TextStyle(color: kText)),
+                  ? Text('尚未生成', style: TextStyle(color: kTextMuted))
+                  : Text(_weekly!, style: TextStyle(color: kText)),
               _busy
-                  ? const CircularProgressIndicator(color: kPrimary)
+                  ? CircularProgressIndicator(color: kPrimary)
                   : ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                       onPressed: () => _genWeekly(p, content),
-                      child: const Text('生成周报',
-                          style: TextStyle(color: Colors.black87)),
+                      child: Text('生成周报',
+                          style: TextStyle(color: kOnPrimary)),
                     )),
           const SizedBox(height: 14),
           _card('7 天学习计划', '依据到期复习与新学词块，生成本周每日安排（新学每日 ≤5）',
               _plan == null
-                  ? const Text('尚未生成', style: TextStyle(color: Colors.white54))
+                  ? Text('尚未生成', style: TextStyle(color: kTextMuted))
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         for (final d in _plan!)
                           Text(
                             '${_wd(d.day.weekday)} ${d.day.month}/${d.day.day}：复习 ${d.reviewCount} · 新学 ${d.newCount}',
-                            style: const TextStyle(color: kText),
+                            style: TextStyle(color: kText),
                           ),
                       ],
                     ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                 onPressed: () => _genPlan(p, content),
-                child: const Text('查看计划',
-                    style: TextStyle(color: Colors.black87)),
+                child: Text('查看计划',
+                    style: TextStyle(color: kOnPrimary)),
               )),
           const SizedBox(height: 14),
           _variantCard(p, content),
@@ -114,14 +114,14 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
         decoration: BoxDecoration(
           color: kBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: kBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(color: kPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
+            Text(title, style: TextStyle(color: kPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            Text(sub, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            Text(sub, style: TextStyle(color: kTextMuted, fontSize: 12)),
             const SizedBox(height: 10),
             body,
             const SizedBox(height: 10),
@@ -135,33 +135,33 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
         decoration: BoxDecoration(
           color: kBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: kBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('变式造句', style: TextStyle(color: kPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
+            Text('变式造句', style: TextStyle(color: kPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            const Text('从已掌握词块取 2 个，AI 给新场景提示，拖词块重组作答（判定复用 L2 逻辑）',
-                style: TextStyle(color: Colors.white54, fontSize: 12)),
+            Text('从已掌握词块取 2 个，AI 给新场景提示，拖词块重组作答（判定复用 L2 逻辑）',
+                style: TextStyle(color: kTextMuted, fontSize: 12)),
             const SizedBox(height: 10),
             if (_variant == null)
               _variantMsg != null
-                  ? Text(_variantMsg!, style: const TextStyle(color: kError))
+                  ? Text(_variantMsg!, style: TextStyle(color: kError))
                   : _busy
-                      ? const CircularProgressIndicator(color: kPrimary)
+                      ? CircularProgressIndicator(color: kPrimary)
                       : ElevatedButton(
                           style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                           onPressed: () => _genVariant(p, c),
-                          child: const Text('来一道',
-                              style: TextStyle(color: Colors.black87)),
+                          child: Text('来一道',
+                              style: TextStyle(color: kOnPrimary)),
                         )
             else ...[
               Text(_variant!['cn_prompt'] ?? '',
-                  style: const TextStyle(color: kText, fontSize: 15)),
+                  style: TextStyle(color: kText, fontSize: 15)),
               const SizedBox(height: 10),
-              const Text('点击下方词块，按顺序组成句子：',
-                  style: TextStyle(color: Colors.white70, fontSize: 12)),
+              Text('点击下方词块，按顺序组成句子：',
+                  style: TextStyle(color: kTextSecondary, fontSize: 12)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -186,8 +186,8 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                     onPressed: _vOrder.length == 2 ? _checkVariant : null,
-                    child: const Text('提交',
-                        style: TextStyle(color: Colors.black87)),
+                    child: Text('提交',
+                        style: TextStyle(color: kOnPrimary)),
                   ),
                   const SizedBox(width: 10),
                   TextButton(
@@ -196,7 +196,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                       _vOrder = [];
                       _vOk = null;
                     }),
-                    child: const Text('换一题', style: TextStyle(color: kPrimary)),
+                    child: Text('换一题', style: TextStyle(color: kPrimary)),
                   ),
                   if (_vOk != null) ...[
                     const SizedBox(width: 10),
@@ -221,7 +221,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
             border: Border.all(color: kPrimary.withValues(alpha: 0.5)),
           ),
           child: Text(label,
-              style: TextStyle(color: on ? Colors.black87 : kText)),
+              style: TextStyle(color: on ? kOnPrimary : kText)),
         ),
       );
 

@@ -20,28 +20,28 @@ Future<UpdateDialogAction> showUpdateDialog(
     context: context,
     barrierDismissible: false,
     builder: (_) => AlertDialog(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: kCard,
       title: Text('发现新版本 v${info.versionName}',
-          style: const TextStyle(color: Colors.white)),
+          style: TextStyle(color: kText)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('版本号：v${info.versionName}（versionCode ${info.versionCode}）',
-              style: const TextStyle(color: Colors.white70)),
+              style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 8),
           Text('包大小：$sizeMb MB',
-              style: const TextStyle(color: Colors.white70)),
+              style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 10),
-          const Text('更新内容：', style: TextStyle(color: Colors.white)),
+          Text('更新内容：', style: TextStyle(color: kText)),
           const SizedBox(height: 4),
           Text(info.notes.isNotEmpty ? info.notes : '（无说明）',
-              style: const TextStyle(color: Colors.white70)),
+              style: TextStyle(color: kTextSecondary)),
           if (hasBrowserFallback) ...[
             const SizedBox(height: 12),
-            const Text(
+            Text(
               '下载很慢或中途失败？选「浏览器下载」，交给浏览器/下载工具续传，完成后点通知即可安装。',
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+              style: TextStyle(color: kTextFaint, fontSize: 12),
             ),
           ],
         ],
@@ -49,18 +49,18 @@ Future<UpdateDialogAction> showUpdateDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, UpdateDialogAction.later),
-          child: const Text('暂不', style: TextStyle(color: Colors.white54)),
+          child: Text('暂不', style: TextStyle(color: kTextMuted)),
         ),
         if (hasBrowserFallback)
           TextButton(
             onPressed: () => Navigator.pop(context, UpdateDialogAction.browser),
-            child: const Text('浏览器下载',
-                style: TextStyle(color: Colors.white70)),
+            child: Text('浏览器下载',
+                style: TextStyle(color: kTextSecondary)),
           ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
           onPressed: () => Navigator.pop(context, UpdateDialogAction.install),
-          child: const Text('立即更新', style: TextStyle(color: Colors.white)),
+          child: Text('立即更新', style: TextStyle(color: kOnPrimary)),
         ),
       ],
     ),
@@ -75,21 +75,21 @@ Future<bool> showBrowserFallbackDialog(
   final go = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
-      backgroundColor: const Color(0xFF1A1A2E),
-      title: const Text('应用内更新没成功', style: TextStyle(color: Colors.white)),
+      backgroundColor: kCard,
+      title: Text('应用内更新没成功', style: TextStyle(color: kText)),
       content: Text(
         '$reason\n\n可以改用浏览器下载安装包（支持断点续传，也能转给下载工具）。',
-        style: const TextStyle(color: Colors.white70),
+        style: TextStyle(color: kTextSecondary),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('取消', style: TextStyle(color: Colors.white54)),
+          child: Text('取消', style: TextStyle(color: kTextMuted)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('浏览器下载', style: TextStyle(color: Colors.white)),
+          child: Text('浏览器下载', style: TextStyle(color: kOnPrimary)),
         ),
       ],
     ),
@@ -109,19 +109,19 @@ Future<bool> showDownloadFailureDialog(
     context: context,
     barrierDismissible: false,
     builder: (ctx) => AlertDialog(
-      backgroundColor: const Color(0xFF1A1A2E),
-      title: const Text('下载没成功', style: TextStyle(color: Colors.white)),
+      backgroundColor: kCard,
+      title: Text('下载没成功', style: TextStyle(color: kText)),
       content: SizedBox(
         width: 360,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(reason, style: const TextStyle(color: Colors.white70)),
+            Text(reason, style: TextStyle(color: kTextSecondary)),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               '点「复制诊断信息」发给开发者，能直接看出卡在哪一步（只含下载失败的技术记录：源地址、HTTP 码、字节数，不含学习内容）：',
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+              style: TextStyle(color: kTextFaint, fontSize: 12),
             ),
             const SizedBox(height: 8),
             Container(
@@ -129,15 +129,15 @@ Future<bool> showDownloadFailureDialog(
               constraints: const BoxConstraints(maxHeight: 160),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D0D17),
+                color: kBg,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: kBorder),
               ),
               child: SingleChildScrollView(
                 child: SelectableText(
                   diag,
-                  style: const TextStyle(
-                      color: Colors.white54, fontSize: 11, height: 1.45),
+                  style: TextStyle(
+                      color: kTextMuted, fontSize: 11, height: 1.45),
                 ),
               ),
             ),
@@ -147,7 +147,7 @@ Future<bool> showDownloadFailureDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('关闭', style: TextStyle(color: Colors.white54)),
+          child: Text('关闭', style: TextStyle(color: kTextMuted)),
         ),
         TextButton(
           onPressed: () {
@@ -158,15 +158,15 @@ Future<bool> showDownloadFailureDialog(
                   duration: Duration(seconds: 2)));
             });
           },
-          child: const Text('复制诊断信息',
-              style: TextStyle(color: Colors.white70)),
+          child: Text('复制诊断信息',
+              style: TextStyle(color: kTextSecondary)),
         ),
         if (allowBrowser)
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: () => Navigator.pop(ctx, true),
             child:
-                const Text('浏览器下载', style: TextStyle(color: Colors.white)),
+                Text('浏览器下载', style: TextStyle(color: kOnPrimary)),
           ),
       ],
     ),
@@ -198,9 +198,9 @@ class DownloadProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF1A1A2E),
-      title: const Text('正在下载更新',
-          style: TextStyle(color: Colors.white)),
+      backgroundColor: kCard,
+      title: Text('正在下载更新',
+          style: TextStyle(color: kText)),
       content: ValueListenableBuilder<double>(
         valueListenable: progress,
         builder: (_, v, __) => ValueListenableBuilder<int>(
@@ -212,7 +212,7 @@ class DownloadProgressCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 '${(v * 100).round()}%  ${_mb(r)}MB / ${total > 0 ? _mb(total) : "?"}MB',
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: kTextSecondary),
               ),
               if (status != null)
                 Padding(
@@ -221,8 +221,8 @@ class DownloadProgressCard extends StatelessWidget {
                     valueListenable: status!,
                     builder: (_, s, __) => Text(
                       s,
-                      style: const TextStyle(
-                          color: Colors.white38, fontSize: 12),
+                      style: TextStyle(
+                          color: kTextFaint, fontSize: 12),
                     ),
                   ),
                 ),
@@ -233,7 +233,7 @@ class DownloadProgressCard extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: onCancel,
-          child: const Text('取消', style: TextStyle(color: Colors.white54)),
+          child: Text('取消', style: TextStyle(color: kTextMuted)),
         ),
       ],
     );

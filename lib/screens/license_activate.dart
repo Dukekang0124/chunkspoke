@@ -81,20 +81,20 @@ class _LicenseActivateScreenState extends State<LicenseActivateScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               '解锁码是 20 个字符，以 CS 开头。空格和横线可以直接粘，不用自己删。',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
+              style: TextStyle(color: kTextSecondary, fontSize: 13),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _controller,
               maxLines: 3,
               minLines: 2,
-              style: const TextStyle(
+              style: TextStyle(
                   color: kText, fontSize: 16, letterSpacing: 1.2),
               decoration: InputDecoration(
                 hintText: 'CSXXX-XXXXX-XXXXXXXXXX',
-                hintStyle: const TextStyle(color: Colors.white24),
+                hintStyle: TextStyle(color: kBorderStrong),
                 filled: true,
                 fillColor: kCard,
                 border:
@@ -118,8 +118,8 @@ class _LicenseActivateScreenState extends State<LicenseActivateScreen> {
                 ),
                 const Spacer(),
                 Text('${cleanLicenseCode(_controller.text).length}/20',
-                    style: const TextStyle(
-                        color: Colors.white38, fontSize: 12)),
+                    style: TextStyle(
+                        color: kTextFaint, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 16),
@@ -134,7 +134,7 @@ class _LicenseActivateScreenState extends State<LicenseActivateScreen> {
                     ? null
                     : () => _submit(lic),
                 child: Text(_busy ? '校验中…' : '激活',
-                    style: const TextStyle(color: Colors.white)),
+                    style: TextStyle(color: kOnPrimary)),
               ),
             ),
             if (_message != null) ...[
@@ -158,22 +158,22 @@ class _LicenseActivateScreenState extends State<LicenseActivateScreen> {
               ),
             ],
             const SizedBox(height: 24),
-            const Text(
+            Text(
               '这台设备用于换绑的编号',
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              style: TextStyle(color: kTextMuted, fontSize: 12),
             ),
             const SizedBox(height: 4),
             SelectableText(
               lic?.deviceId ?? '—',
-              style: const TextStyle(
-                  color: Colors.white70,
+              style: TextStyle(
+                  color: kTextSecondary,
                   fontSize: 12,
                   fontFamily: 'monospace'),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               '换手机或重装时，把这个编号发给发码人，可以把码迁到新设备。',
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+              style: TextStyle(color: kTextFaint, fontSize: 12),
             ),
           ],
         ),
@@ -203,10 +203,10 @@ Future<void> showLicenseWallSheet(
           children: [
             Row(
               children: [
-                const Icon(Icons.lock_outline, color: kPrimary, size: 18),
+                Icon(Icons.lock_outline, color: kPrimary, size: 18),
                 const SizedBox(width: 8),
                 Text(title,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: kText,
                         fontSize: 16,
                         fontWeight: FontWeight.w600)),
@@ -214,7 +214,7 @@ Future<void> showLicenseWallSheet(
             ),
             const SizedBox(height: 10),
             Text(detail,
-                style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                style: TextStyle(color: kTextSecondary, fontSize: 13)),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -228,16 +228,16 @@ Future<void> showLicenseWallSheet(
                         builder: (_) => const LicenseActivateScreen()),
                   );
                 },
-                child: const Text('输入解锁码',
-                    style: TextStyle(color: Colors.white)),
+                child: Text('输入解锁码',
+                    style: TextStyle(color: kOnPrimary)),
               ),
             ),
             const SizedBox(height: 8),
             Center(
               child: TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('先继续学 A–F',
-                    style: TextStyle(color: Colors.white54)),
+                child: Text('先继续学 A–F',
+                    style: TextStyle(color: kTextMuted)),
               ),
             ),
           ],

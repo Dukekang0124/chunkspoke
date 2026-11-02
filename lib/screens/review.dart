@@ -115,7 +115,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ? '今日复习已达上限 ${q.cap} 块\n剩余 ${q.dueTotal} 块明天继续'
                       : '今天没有待复习词块',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  style: TextStyle(color: kTextSecondary, fontSize: 16),
                 ),
               ),
             );
@@ -135,10 +135,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () => _startReview(items),
-                    icon: const Icon(Icons.play_arrow, color: Colors.white),
+                    icon: Icon(Icons.play_arrow, color: kText),
                     label: Text('开始复习（${items.length} 个 · 听辨→跟读→替换→开口）',
                         style:
-                            const TextStyle(color: Colors.white, fontSize: 15)),
+                            TextStyle(color: kText, fontSize: 15)),
                   ),
                 ),
               ),
@@ -147,7 +147,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 '今日已复习 ${q.reviewedToday}/${q.cap} 块 · 今日到期 ${q.dueTotal} 块'
                 '${q.deferred > 0 ? ' · 超出上限 ${q.deferred} 块顺延到明天' : ''}'
                 '${dropped > 0 ? ' · 另有 $dropped 块属于未解锁场景，暂不排入复习' : ''}',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: TextStyle(color: kTextMuted, fontSize: 12),
               ),
               const SizedBox(height: 16),
               for (final (i, c) in items.indexed)
@@ -167,7 +167,7 @@ class _ReviewItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: const Color(0xFF1A1A2E),
+      color: kCard,
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -177,10 +177,10 @@ class _ReviewItem extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(chunk.meaningCN,
-                  style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                  style: TextStyle(color: kTextSecondary, fontSize: 14)),
             ),
             IconButton(
-              icon: const Icon(Icons.volume_up, color: kPrimary),
+              icon: Icon(Icons.volume_up, color: kPrimary),
               onPressed: () => speakOrHint(context,
                   Provider.of<TtsService>(context, listen: false), chunk.text),
             ),

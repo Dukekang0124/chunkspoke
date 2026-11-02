@@ -13,6 +13,7 @@ import 'services/license_state.dart';
 import 'services/loaders.dart';
 import 'services/notification_service.dart';
 import 'services/review_notify.dart';
+import 'services/theme_provider.dart';
 import 'services/zipformer_asr.dart';
 import 'ui/theme.dart';
 import 'ui/error_page.dart';
@@ -58,6 +59,13 @@ Future<void> bootstrap() async {
     }
     final progress = ProgressService();
     await progress.init();
+    // 外观主题：初始值在首帧前同步生效，避免启动闪一下默认深色。
+    final themeProvider = ThemeProvider(
+      initialId: progress.appThemeId,
+      initialMode: progress.appThemeMode,
+      persistId: progress.setAppThemeId,
+      persistMode: progress.setAppThemeMode,
+    );
     final content = await loadContentPack();
     progress.setChunkTiers(content);
     final listening = await loadListeningPack();
@@ -159,6 +167,7 @@ Future<void> bootstrap() async {
           ChangeNotifierProvider<MotionService>(
               create: (_) => MotionService()),
           ChangeNotifierProvider<LicenseState>.value(value: license),
+          ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
         ],
         child: const ChunkSpokeApp(),
       ),
@@ -180,10 +189,13 @@ class ChunkSpokeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = Provider.of<ProgressService>(context, listen: false);
+    final theme = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       title: 'ChunkSpoke',
       debugShowCheckedModeBanner: false,
-      theme: darkTheme,
+      theme: theme.lightThemeData,
+      darkTheme: theme.darkThemeData,
+      themeMode: theme.themeMode,
       // 防御：根节点铺满应用底色，任何时刻（含栈空/过渡）都不会露系统黑底。
       builder: (context, child) =>
           ColoredBox(color: kBg, child: child ?? const SizedBox.shrink()),

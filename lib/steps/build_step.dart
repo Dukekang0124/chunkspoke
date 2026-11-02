@@ -125,7 +125,7 @@ class _BuildStepState extends State<BuildStep>
         children: [
           SceneCard(widget.level.theme),
           const SizedBox(height: 16),
-          const Text('用中文意思，把「词块」拖进槽位拼出句子',
+          Text('用中文意思，把「词块」拖进槽位拼出句子',
               style: TextStyle(
                   color: kPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
@@ -135,14 +135,14 @@ class _BuildStepState extends State<BuildStep>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color: kBg.withValues(alpha: 0.5),
-              border: Border.all(color: Colors.white24),
+              border: Border.all(color: kBorderStrong),
             ),
             child: Text(
               _revealEn || _built
                   ? widget.sentence.text
                   : widget.sentence.meaningCN,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: kText,
                   fontSize: 18,
                   fontWeight: FontWeight.w600),
             ),
@@ -153,14 +153,14 @@ class _BuildStepState extends State<BuildStep>
               TextButton(
                 onPressed: () => setState(() => _revealEn = !_revealEn),
                 child: Text(_revealEn || _built ? '隐藏英文' : '看英文',
-                    style: const TextStyle(color: kPrimary)),
+                    style: TextStyle(color: kPrimary)),
               ),
               TextButton(
                 onPressed: () => speakOrHint(
                     context,
                     Provider.of<TtsService>(context, listen: false),
                     widget.sentence.text),
-                child: const Text('🔊 听句子', style: TextStyle(color: kPrimary)),
+                child: Text('🔊 听句子', style: TextStyle(color: kPrimary)),
               ),
             ],
           ),
@@ -180,12 +180,12 @@ class _BuildStepState extends State<BuildStep>
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: shaking
-                          ? Colors.redAccent
-                          : (_built ? kUnlocked : Colors.white24),
+                          ? kError
+                          : (_built ? kUnlocked : kBorderStrong),
                       width: 2,
                     ),
                     color: shaking
-                        ? Colors.redAccent.withValues(alpha: 0.12)
+                        ? kError.withValues(alpha: 0.12)
                         : (_built
                             ? kUnlocked.withValues(alpha: 0.08)
                             : Colors.transparent),
@@ -219,7 +219,7 @@ class _BuildStepState extends State<BuildStep>
                                       border: Border.all(
                                         color: _selected == i
                                             ? kPrimary
-                                            : Colors.white24,
+                                            : kBorderStrong,
                                         width: _selected == i ? 2 : 1,
                                       ),
                                     ),
@@ -234,13 +234,13 @@ class _BuildStepState extends State<BuildStep>
                                       border: Border.all(
                                         color: _selected == i
                                             ? kPrimary
-                                            : Colors.white24,
+                                            : kBorderStrong,
                                         width: _selected == i ? 2 : 1,
                                       ),
                                     ),
-                                    child: const Text('—',
+                                    child: Text('—',
                                         style: TextStyle(
-                                            color: Colors.white24,
+                                            color: kBorderStrong,
                                             fontSize: 16)),
                                   ),
                           ),
@@ -257,8 +257,8 @@ class _BuildStepState extends State<BuildStep>
             },
           ),
           if (_built)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
               child: Text('句子拼好了！现在说出来',
                   style: TextStyle(
                       color: kUnlocked,

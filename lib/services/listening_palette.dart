@@ -1,6 +1,7 @@
 import 'dart:ui' show Color;
 
 import '../models/listening_article.dart';
+import '../ui/theme.dart';
 import 'chunk_asset.dart';
 
 /// 文章内词块的三色阶梯（Q-4 裁定）：
@@ -11,12 +12,14 @@ import 'chunk_asset.dart';
 enum ListeningChunkTone { none, candidate, learning, mastered }
 
 /// 三色取值集中在此，页面与 E2E 探针共用，避免改色时断言各说各话。
-const Color kListeningCandidateText = Color(0xFF90CAF9);
-const Color kListeningCandidateBg = Color(0x3364B5F6);
-const Color kListeningLearningText = Color(0xFFFFB84D);
-const Color kListeningLearningBg = Color(0x1FFFB84D);
-const Color kListeningMasteredText = Color(0xFFFFD54F);
-const Color kListeningMasteredBg = Color(0x40FFD54F);
+/// 1.7.0 起改为令牌 getter：色相语义不变（蓝/琥珀/金），明暗随主题走，
+/// 浅色下不会出现白字白底。
+Color get kListeningCandidateText => kInfo;
+Color get kListeningCandidateBg => kInfoTint;
+Color get kListeningLearningText => kPrimary;
+Color get kListeningLearningBg => kPrimaryTint;
+Color get kListeningMasteredText => kWarning;
+Color get kListeningMasteredBg => kWarningTint;
 
 ListeningChunkTone listeningChunkTone(
   ListeningChunk chunk,
@@ -32,11 +35,13 @@ ListeningChunkTone listeningChunkTone(
 
 /// CEFR 级别徽标色（指令 S §一.4）。与三色阶梯刻意分开：
 /// 级别是「篇目属性」，三色是「块状态」，两套语义不得混用同一颜色含义。
-const Color kListeningLevelA1 = Color(0xFF8BC34A);
-const Color kListeningLevelA2 = Color(0xFF4DD0E1);
-const Color kListeningLevelB1 = Color(0xFF90CAF9);
-const Color kListeningLevelB2 = Color(0xFFB39DDB);
-const Color kListeningLevelC1 = Color(0xFFFF8A65);
+/// 级别色相是固定语义（绿→青→蓝→紫→橙），不随主题换色相；
+/// 只在浅色主题下统一压暗，保证白底可读。用 getter：切主题后立刻重新取值。
+Color get kListeningLevelA1 => adaptiveAccent(const Color(0xFF8BC34A));
+Color get kListeningLevelA2 => adaptiveAccent(const Color(0xFF4DD0E1));
+Color get kListeningLevelB1 => adaptiveAccent(const Color(0xFF90CAF9));
+Color get kListeningLevelB2 => adaptiveAccent(const Color(0xFFB39DDB));
+Color get kListeningLevelC1 => adaptiveAccent(const Color(0xFFFF8A65));
 
 Color listeningLevelColor(ListeningLevel level) {
   switch (level) {

@@ -687,11 +687,11 @@ class _PracticeLoopState extends State<PracticeLoop>
                     ? '复习 $_reviewed/$_total'
                     : '本次完成 $_completed/$_total',
                 style:
-                    const TextStyle(color: Colors.white70, fontSize: 13)),
+                    TextStyle(color: kTextSecondary, fontSize: 13)),
             const Spacer(),
             Text('${phaseLabel(_phase, reviewMode: widget.reviewMode)} · '
                 '⭐${_stars.count}/4',
-                style: const TextStyle(
+                style: TextStyle(
                     color: kPrimary, fontWeight: FontWeight.w600)),
             const SizedBox(width: 10),
             if (_challenge)
@@ -699,10 +699,10 @@ class _PracticeLoopState extends State<PracticeLoop>
                   _challengeDone
                       ? '$_challengeTotal/$_challengeTotal 句'
                       : '第 ${_si + 1}/$_challengeTotal 句',
-                  style: const TextStyle(color: Colors.white54, fontSize: 13))
+                  style: TextStyle(color: kTextMuted, fontSize: 13))
             else
               Text('第 ${_ci + 1}/$_total 块',
-                  style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                  style: TextStyle(color: kTextMuted, fontSize: 13)),
           ],
         ),
       );
@@ -720,15 +720,15 @@ class _PracticeLoopState extends State<PracticeLoop>
           children: [
             MasteryRing(_total > 0 ? _resumeIndex / _total : 0, size: 84),
             const SizedBox(height: 16),
-            const Text('接着上次练',
+            Text('接着上次练',
                 style: TextStyle(
-                    color: Colors.white,
+                    color: kText,
                     fontSize: 22,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             Text('上次学到 $from',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 15)),
+                style: TextStyle(color: kTextSecondary, fontSize: 15)),
             const SizedBox(height: 26),
             SizedBox(
               width: double.infinity,
@@ -744,8 +744,8 @@ class _PracticeLoopState extends State<PracticeLoop>
                     r == null
                         ? '继续 · 第 ${_resumeIndex + 1} 块'
                         : '继续 · ${phaseLabel(r.phase, reviewMode: false)}',
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: kOnPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w700)),
               ),
@@ -760,8 +760,8 @@ class _PracticeLoopState extends State<PracticeLoop>
                 });
                 _beginChunk(0);
               },
-              child: const Text('从头开始',
-                  style: TextStyle(color: Colors.white54)),
+              child: Text('从头开始',
+                  style: TextStyle(color: kTextMuted)),
             ),
           ],
         ),
@@ -793,11 +793,11 @@ class _PracticeLoopState extends State<PracticeLoop>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.timer_outlined, color: kPrimary, size: 56),
+              Icon(Icons.timer_outlined, color: kPrimary, size: 56),
               const SizedBox(height: 14),
-              const Text('这一块练了 8 分钟',
+              Text('这一块练了 8 分钟',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: kText,
                       fontSize: 22,
                       fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
@@ -805,10 +805,10 @@ class _PracticeLoopState extends State<PracticeLoop>
                   '进度已保存：第 ${_ci + 1}/$_total 块 · '
                   '${phaseLabel(_phase, reviewMode: false)}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, fontSize: 15)),
+                  style: TextStyle(color: kTextSecondary, fontSize: 15)),
               const SizedBox(height: 6),
-              const Text('短时高频比一口气硬撑更记得住',
-                  style: TextStyle(color: Colors.white38, fontSize: 13)),
+              Text('短时高频比一口气硬撑更记得住',
+                  style: TextStyle(color: kTextFaint, fontSize: 13)),
               const SizedBox(height: 26),
               SizedBox(
                 width: double.infinity,
@@ -821,9 +821,9 @@ class _PracticeLoopState extends State<PracticeLoop>
                     setState(() => _paused = false);
                     _startTimeout();
                   },
-                  child: const Text('继续这一块',
+                  child: Text('继续这一块',
                       style: TextStyle(
-                          color: Colors.black87,
+                          color: kOnPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w700)),
                 ),
@@ -834,8 +834,8 @@ class _PracticeLoopState extends State<PracticeLoop>
                   await _writeResume();
                   if (mounted) Navigator.of(context).maybePop();
                 },
-                child: const Text('先到这里',
-                    style: TextStyle(color: Colors.white54)),
+                child: Text('先到这里',
+                    style: TextStyle(color: kTextMuted)),
               ),
             ],
           ),
@@ -860,7 +860,7 @@ class _PracticeLoopState extends State<PracticeLoop>
                 begin: kPrimary,
                 end: _justMastered
                     ? kListeningMasteredText
-                    : Colors.white38,
+                    : kTextFaint,
               ),
               duration: policy.dur(360),
               curve: Curves.easeOut,
@@ -877,7 +877,7 @@ class _PracticeLoopState extends State<PracticeLoop>
                       style: TextStyle(
                           color: _justMastered
                               ? (accent ?? kListeningMasteredText)
-                              : Colors.white70,
+                              : kTextSecondary,
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 2)),
@@ -888,14 +888,14 @@ class _PracticeLoopState extends State<PracticeLoop>
           const SizedBox(height: 12),
           Text(_encourage,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                   color: kUnlocked,
                   fontSize: 18,
                   fontWeight: FontWeight.w600)),
           if (!widget.reviewMode && _combo >= 3) ...[
             const SizedBox(height: 8),
             Text('Combo x$_combo',
-                style: const TextStyle(
+                style: TextStyle(
                     color: kPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700)),
@@ -907,7 +907,7 @@ class _PracticeLoopState extends State<PracticeLoop>
               widget.reviewMode
                   ? '复习 $_reviewed/$_total'
                   : '本次完成 $_completed/$_total',
-              style: const TextStyle(color: Colors.white70)),
+              style: TextStyle(color: kTextSecondary)),
         ],
       ),
     );
@@ -918,16 +918,16 @@ class _PracticeLoopState extends State<PracticeLoop>
         decoration: BoxDecoration(
           color: kCard,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: kBorder),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(label,
-                style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                style: TextStyle(color: kTextMuted, fontSize: 13)),
             const SizedBox(width: 6),
             Text(value,
-                style: const TextStyle(
+                style: TextStyle(
                     color: kPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700)),
@@ -948,17 +948,17 @@ class _PracticeLoopState extends State<PracticeLoop>
                 builder: (_, v, child) =>
                     Transform.scale(scale: v, child: child),
                 child:
-                    const Icon(Icons.emoji_events, color: kPrimary, size: 84),
+                    Icon(Icons.emoji_events, color: kPrimary, size: 84),
               ),
               const SizedBox(height: 10),
-              const Text('闯关完成！',
+              Text('闯关完成！',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: kText,
                       fontSize: 26,
                       fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               Text('第 ${widget.level.id} 关 · $_challengeTotal/$_challengeTotal 句',
-                  style: const TextStyle(color: Colors.white70, fontSize: 15)),
+                  style: TextStyle(color: kTextSecondary, fontSize: 15)),
               const SizedBox(height: 18),
               Transform.rotate(
                 angle: -0.12,
@@ -969,7 +969,7 @@ class _PracticeLoopState extends State<PracticeLoop>
                     border: Border.all(color: kPrimary, width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('已通关',
+                  child: Text('已通关',
                       style: TextStyle(
                           color: kPrimary,
                           fontSize: 24,
@@ -995,9 +995,9 @@ class _PracticeLoopState extends State<PracticeLoop>
                     padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
                   onPressed: () => widget.onDone(_report()),
-                  child: const Text('收下盖章 · 完成',
+                  child: Text('收下盖章 · 完成',
                       style: TextStyle(
-                          color: Colors.black87,
+                          color: kOnPrimary,
                           fontSize: 17,
                           fontWeight: FontWeight.w700)),
                 ),
@@ -1122,7 +1122,7 @@ class _PracticeLoopState extends State<PracticeLoop>
   @override
   Widget build(BuildContext context) {
     if (!_ready) {
-      return const Center(child: CircularProgressIndicator(color: kPrimary));
+      return Center(child: CircularProgressIndicator(color: kPrimary));
     }
     if (_showResume) return _resumeGate();
     if (_paused) return _pauseView();
@@ -1163,16 +1163,16 @@ class _MilestoneDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.emoji_events, color: kPrimary, size: 64),
+            Icon(Icons.emoji_events, color: kPrimary, size: 64),
             const SizedBox(height: 12),
-            const Text('里程碑达成 🎉',
+            Text('里程碑达成 🎉',
                 style: TextStyle(
-                    color: Colors.white,
+                    color: kText,
                     fontSize: 24,
                     fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
             Text('已掌握 $milestone 块',
-                style: const TextStyle(
+                style: TextStyle(
                     color: kPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w700)),
@@ -1182,18 +1182,18 @@ class _MilestoneDialog extends StatelessWidget {
               decoration: BoxDecoration(
                 color: kBg,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: kBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('连续打卡 ${p.streak} 天',
-                      style: const TextStyle(
-                          color: Colors.white70, fontSize: 14)),
+                      style: TextStyle(
+                          color: kTextSecondary, fontSize: 14)),
                   const SizedBox(height: 6),
                   Text('今日开口 ${p.todaySpoken} 句',
-                      style: const TextStyle(
-                          color: Colors.white70, fontSize: 14)),
+                      style: TextStyle(
+                          color: kTextSecondary, fontSize: 14)),
                 ],
               ),
             ),
@@ -1203,9 +1203,9 @@ class _MilestoneDialog extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                 onPressed: onSave,
-                child: const Text('保存战报卡',
+                child: Text('保存战报卡',
                     style: TextStyle(
-                        color: Colors.black87,
+                        color: kOnPrimary,
                         fontWeight: FontWeight.w700)),
               ),
             ),
@@ -1214,7 +1214,7 @@ class _MilestoneDialog extends StatelessWidget {
               width: double.infinity,
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('继续', style: TextStyle(color: kPrimary)),
+                child: Text('继续', style: TextStyle(color: kPrimary)),
               ),
             ),
           ],

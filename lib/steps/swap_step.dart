@@ -42,18 +42,18 @@ class _SwapStepState extends State<SwapStep> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text('跳过本题？', style: TextStyle(color: Colors.white)),
-        content: const Text('跳过替换练习，本题不计入掌握度。',
-            style: TextStyle(color: Colors.white70)),
+        backgroundColor: kCard,
+        title: Text('跳过本题？', style: TextStyle(color: kText)),
+        content: Text('跳过替换练习，本题不计入掌握度。',
+            style: TextStyle(color: kTextSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消', style: TextStyle(color: Colors.white54)),
+            child: Text('取消', style: TextStyle(color: kTextMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('确定跳过', style: TextStyle(color: kPrimary)),
+            child: Text('确定跳过', style: TextStyle(color: kPrimary)),
           ),
         ],
       ),
@@ -74,7 +74,7 @@ class _SwapStepState extends State<SwapStep> {
       child: Column(
         children: [
           const SizedBox(height: 8),
-          const Text('替换其中一部分', style: TextStyle(color: Colors.white70)),
+          Text('替换其中一部分', style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,
@@ -89,7 +89,7 @@ class _SwapStepState extends State<SwapStep> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: highlight ? kPrimary : Colors.white24,
+                    color: highlight ? kPrimary : kBorderStrong,
                     width: highlight ? 2 : 1,
                   ),
                   color: highlight
@@ -98,7 +98,7 @@ class _SwapStepState extends State<SwapStep> {
                 ),
                 child: Text(s.text,
                     style: TextStyle(
-                        color: highlight ? kPrimary : Colors.white,
+                        color: highlight ? kPrimary : kText,
                         fontSize: 16,
                         fontWeight:
                             highlight ? FontWeight.bold : FontWeight.normal)),
@@ -106,7 +106,7 @@ class _SwapStepState extends State<SwapStep> {
             }),
           ),
           const SizedBox(height: 24),
-          const Text('选择一个替换词', style: TextStyle(color: Colors.white70)),
+          Text('选择一个替换词', style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
@@ -125,7 +125,7 @@ class _SwapStepState extends State<SwapStep> {
           const Spacer(),
           TextButton(
             onPressed: () => _confirmSkip(context),
-            child: const Text('跳过', style: TextStyle(color: Colors.white38)),
+            child: Text('跳过', style: TextStyle(color: kTextFaint)),
           ),
           const SizedBox(height: 12),
         ],

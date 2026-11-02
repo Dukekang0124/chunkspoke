@@ -76,10 +76,10 @@ class _RecognizeStepState extends State<RecognizeStep> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          const Text('点你听到的词块', style: TextStyle(color: Colors.white70)),
+          Text('点你听到的词块', style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 14),
           IconButton(
-            icon: const Icon(Icons.volume_up, color: kPrimary, size: 40),
+            icon: Icon(Icons.volume_up, color: kPrimary, size: 40),
             onPressed: () => speakOrHint(context, _tts, _current.text),
           ),
           const SizedBox(height: 20),
@@ -101,8 +101,8 @@ class _RecognizeStepState extends State<RecognizeStep> {
             ),
           ),
           const Spacer(),
-          const Text('需要提示？稍后长按词块',
-              style: TextStyle(color: Colors.white38, fontSize: 12)),
+          Text('需要提示？稍后长按词块',
+              style: TextStyle(color: kTextFaint, fontSize: 12)),
         ],
       ),
     );

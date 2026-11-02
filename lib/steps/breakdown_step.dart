@@ -58,7 +58,7 @@ class _BreakdownStepState extends State<BreakdownStep> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text('第 2/6 步 · 拆解',
                 style: TextStyle(
@@ -67,8 +67,8 @@ class _BreakdownStepState extends State<BreakdownStep> {
                     fontWeight: FontWeight.w600)),
           ),
           const SizedBox(height: 10),
-          const Text('把词块拆开看：点每张卡片听发音',
-              style: TextStyle(color: Colors.white70)),
+          Text('把词块拆开看：点每张卡片听发音',
+              style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
@@ -76,7 +76,7 @@ class _BreakdownStepState extends State<BreakdownStep> {
             decoration: BoxDecoration(
               color: kBg.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white24),
+              border: Border.all(color: kBorderStrong),
             ),
             child: Column(
               children: [
@@ -106,7 +106,7 @@ class _BreakdownStepState extends State<BreakdownStep> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (heard) ...[
-                              const Icon(Icons.check,
+                              Icon(Icons.check,
                                   color: kUnlocked, size: 16),
                               const SizedBox(width: 4),
                             ],
@@ -124,8 +124,8 @@ class _BreakdownStepState extends State<BreakdownStep> {
                 const SizedBox(height: 14),
                 TextButton.icon(
                   onPressed: _hearAll,
-                  icon: const Icon(Icons.volume_up, color: kPrimary, size: 18),
-                  label: const Text('整块再听一遍',
+                  icon: Icon(Icons.volume_up, color: kPrimary, size: 18),
+                  label: Text('整块再听一遍',
                       style: TextStyle(color: kPrimary)),
                 ),
               ],
@@ -134,11 +134,11 @@ class _BreakdownStepState extends State<BreakdownStep> {
           const SizedBox(height: 10),
           Text(widget.chunk.meaningCN,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white54, fontSize: 14)),
+              style: TextStyle(color: kTextMuted, fontSize: 14)),
           const Spacer(),
           Text(
             _allHeard ? '拆完了，拼回去它就长在你嘴里' : '还剩 ${_words.length - _heard.length} 张卡片没听',
-            style: const TextStyle(color: Colors.white38, fontSize: 12),
+            style: TextStyle(color: kTextFaint, fontSize: 12),
           ),
           const SizedBox(height: 8),
           SizedBox(
@@ -146,7 +146,7 @@ class _BreakdownStepState extends State<BreakdownStep> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                disabledBackgroundColor: Colors.white12,
+                disabledBackgroundColor: kBorder,
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
@@ -154,7 +154,7 @@ class _BreakdownStepState extends State<BreakdownStep> {
               onPressed: _allHeard ? widget.onDone : null,
               child: Text('拼回去 · 去听辨',
                   style: TextStyle(
-                      color: _allHeard ? Colors.black87 : Colors.white38,
+                      color: _allHeard ? kOnPrimary : kTextFaint,
                       fontSize: 17,
                       fontWeight: FontWeight.w700)),
             ),

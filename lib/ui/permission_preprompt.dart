@@ -153,8 +153,8 @@ class _PrepromptSheetState extends State<_PrepromptSheet>
                 Expanded(
                   child: Text(
                     mic ? '开口练习要用麦克风' : '复习到期时提醒你',
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: kText,
                         fontSize: 17,
                         fontWeight: FontWeight.w700),
                   ),
@@ -168,8 +168,8 @@ class _PrepromptSheetState extends State<_PrepromptSheet>
                       '录音不上传、不保存到服务器，学习进度只存本机。'
                   : '只在有词块到期那天发一条提醒，点它会回到待复习的词块。'
                       '不开也不影响任何练习，随时可在设置里关。',
-              style: const TextStyle(
-                  color: Colors.white70, fontSize: 13, height: 1.5),
+              style: TextStyle(
+                  color: kTextSecondary, fontSize: 13, height: 1.5),
             ),
             const SizedBox(height: 14),
             // 权限用途的小预览（通知：一条通知滑进来；麦克风：一条电平）。
@@ -187,18 +187,18 @@ class _PrepromptSheetState extends State<_PrepromptSheet>
                   decoration: BoxDecoration(
                     color: kBg,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white12),
+                    border: Border.all(color: kBorder),
                   ),
                   child: Row(
                     children: [
                       Icon(mic ? Icons.graphic_eq : Icons.schedule,
-                          size: 16, color: Colors.white38),
+                          size: 16, color: kTextFaint),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           mic ? '「我说的是…」→ 本机识别打分' : '今天有 3 个词块到期 · 点我去复习',
-                          style: const TextStyle(
-                              color: Colors.white54, fontSize: 12),
+                          style: TextStyle(
+                              color: kTextMuted, fontSize: 12),
                         ),
                       ),
                     ],
@@ -212,8 +212,8 @@ class _PrepromptSheetState extends State<_PrepromptSheet>
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('以后再说',
-                        style: TextStyle(color: Colors.white54)),
+                    child: Text('以后再说',
+                        style: TextStyle(color: kTextMuted)),
                   ),
                 ),
                 Expanded(
@@ -222,9 +222,9 @@ class _PrepromptSheetState extends State<_PrepromptSheet>
                         backgroundColor: kPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 12)),
                     onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('好的',
+                    child: Text('好的',
                         style: TextStyle(
-                            color: Colors.black87,
+                            color: kOnPrimary,
                             fontWeight: FontWeight.w700)),
                   ),
                 ),

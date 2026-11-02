@@ -224,7 +224,7 @@ void main() {
 
   group('按下态覆盖面（M-2 高频面，展示态不骗人）', () {
     testWidgets('词块 chip：展示态按下无反馈，可交互态缩到 0.96', (tester) async {
-      await tester.pumpWidget(_host(Column(children: const [
+      await tester.pumpWidget(_host(const Column(children: [
         ChunkTile('看一眼', 'content'),
         ChunkTile('点一下', 'content', interactive: true),
       ])));
@@ -249,7 +249,7 @@ void main() {
   });
 
   group('列表入场 stagger（M-2 三处：首页播单 / 词块库分组 / 复习列表）', () {
-    double _opacity(WidgetTester tester, Key key) => tester
+    double opacity0(WidgetTester tester, Key key) => tester
         .widget<FadeTransition>(find
             .descendant(of: find.byKey(key), matching: find.byType(FadeTransition)))
         .opacity
@@ -257,10 +257,10 @@ void main() {
 
     testWidgets('降级时零 stagger：不挂淡入，子项直接显示', (tester) async {
       await tester.pumpWidget(_host(
-        StaggerIn(
-            key: const Key('s'),
+        const StaggerIn(
+            key: Key('s'),
             index: 3,
-            child: const SizedBox(width: 40, height: 40)),
+            child: SizedBox(width: 40, height: 40)),
         reduce: true,
       ));
       expect(find.descendant(
@@ -270,55 +270,55 @@ void main() {
     });
 
     testWidgets('按序号递进：前项先亮、后项仍全透明，收尾都到 1', (tester) async {
-      await tester.pumpWidget(_host(Column(children: [
+      await tester.pumpWidget(_host(const Column(children: [
         StaggerIn(
-            key: const Key('s0'),
+            key: Key('s0'),
             index: 0,
-            child: const SizedBox(width: 40, height: 40)),
+            child: SizedBox(width: 40, height: 40)),
         StaggerIn(
-            key: const Key('s3'),
+            key: Key('s3'),
             index: 3,
-            child: const SizedBox(width: 40, height: 40)),
+            child: SizedBox(width: 40, height: 40)),
       ])));
       await tester.pump(const Duration(milliseconds: 100));
-      expect(_opacity(tester, const Key('s0')), greaterThan(0.0));
-      expect(_opacity(tester, const Key('s3')), 0.0, reason: '第 4 项 120ms 后才起步');
+      expect(opacity0(tester, const Key('s0')), greaterThan(0.0));
+      expect(opacity0(tester, const Key('s3')), 0.0, reason: '第 4 项 120ms 后才起步');
       await tester.pump(const Duration(milliseconds: 600));
-      expect(_opacity(tester, const Key('s0')), 1.0);
-      expect(_opacity(tester, const Key('s3')), 1.0);
+      expect(opacity0(tester, const Key('s0')), 1.0);
+      expect(opacity0(tester, const Key('s3')), 1.0);
     });
 
     testWidgets('步长夹在 30–60ms（总时长仍 ≤700ms）', (tester) async {
-      await tester.pumpWidget(_host(Row(children: [
+      await tester.pumpWidget(_host(const Row(children: [
         StaggerIn(
-            key: const Key('low'),
+            key: Key('low'),
             index: 1,
             stepMs: 10,
-            child: const SizedBox(width: 40, height: 40)),
+            child: SizedBox(width: 40, height: 40)),
         StaggerIn(
-            key: const Key('high'),
+            key: Key('high'),
             index: 1,
             stepMs: 200,
-            child: const SizedBox(width: 40, height: 40)),
+            child: SizedBox(width: 40, height: 40)),
       ])));
       // stepMs=10 → 夹到 30：20ms 时仍在延迟段内。
       await tester.pump(const Duration(milliseconds: 20));
-      expect(_opacity(tester, const Key('low')), 0.0);
+      expect(opacity0(tester, const Key('low')), 0.0);
       // stepMs=200 → 夹到 60：100ms 时已起步（未夹会等到 200ms）。
       await tester.pump(const Duration(milliseconds: 80));
-      expect(_opacity(tester, const Key('high')), greaterThan(0.0));
+      expect(opacity0(tester, const Key('high')), greaterThan(0.0));
       await tester.pump(const Duration(milliseconds: 400));
     });
 
     testWidgets('长列表尾部不排队过久：超出 maxSteps 后不再累加', (tester) async {
-      await tester.pumpWidget(_host(StaggerIn(
-          key: const Key('tail'),
+      await tester.pumpWidget(_host(const StaggerIn(
+          key: Key('tail'),
           index: 99,
-          child: const SizedBox(width: 40, height: 40))));
+          child: SizedBox(width: 40, height: 40))));
       await tester.pump(const Duration(milliseconds: 380));
-      expect(_opacity(tester, const Key('tail')), 0.0, reason: '400ms 起步（10 步封顶）');
+      expect(opacity0(tester, const Key('tail')), 0.0, reason: '400ms 起步（10 步封顶）');
       await tester.pump(const Duration(milliseconds: 320));
-      expect(_opacity(tester, const Key('tail')), 1.0);
+      expect(opacity0(tester, const Key('tail')), 1.0);
     });
   });
 

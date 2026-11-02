@@ -84,20 +84,20 @@ class _TtsGateState extends State<TtsGate> with WidgetsBindingObserver {
     final progress = Provider.of<ProgressService>(context, listen: false);
 
     if (tts.status == TtsStatus.unknown || _checking) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: kBg,
         body: SafeArea(
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
+                const SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(strokeWidth: 2)),
-                SizedBox(height: 14),
+                const SizedBox(height: 14),
                 Text('正在检测语音朗读…',
-                    style: TextStyle(color: Colors.white54, fontSize: 13)),
+                    style: TextStyle(color: kTextMuted, fontSize: 13)),
               ],
             ),
           ),

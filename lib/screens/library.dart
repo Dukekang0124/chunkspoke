@@ -143,14 +143,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
       future: _future,
       builder: (ctx, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(
+          return Center(
               child: CircularProgressIndicator(color: kPrimary));
         }
         final data = snap.data;
         if (data == null) {
-          return const Center(
+          return Center(
               child:
-                  Text('词块库加载失败，请重试', style: TextStyle(color: Colors.white54)));
+                  Text('词块库加载失败，请重试', style: TextStyle(color: kTextMuted)));
         }
         final shown = _LibraryData(
           chunks: data.chunks.where((c) {
@@ -206,7 +206,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     selected: _fromListeningOnly,
                     onSelected: (v) => setState(() => _fromListeningOnly = v),
                     avatar:
-                        const Icon(Icons.headphones, size: 16, color: kPrimary),
+                        Icon(Icons.headphones, size: 16, color: kPrimary),
                     showCheckmark: false,
                   ),
                 ),
@@ -296,8 +296,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   static Color _tierColor(String tier) => switch (tier) {
         'T0' => kPrimary,
-        'T1' => const Color(0xFF7FB4FF),
-        _ => Colors.white54,
+        'T1' => kInfo,
+        _ => kTextMuted,
       };
 
   Widget _tierBadge(Chunk c) {
@@ -321,8 +321,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A1B2E), Color(0xFF241A06)],
+        gradient: LinearGradient(
+          colors: [kCard, kPrimaryDeep],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -332,19 +332,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('词块资产库',
+          Text('词块资产库',
               style: TextStyle(
                   color: kPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
           CountUpText(mastered,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: kText,
                   fontSize: 23,
                   fontWeight: FontWeight.w700),
               format: (v) => '已掌握 $v 个词块'),
           const SizedBox(height: 4),
           Text('已学完 $learned / $total 块 · 已掌握 = 走完 1/3/7/14 天复习',
-              style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
         ],
       ),
     );
@@ -356,24 +356,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: kBorder),
       ),
       child: Row(
         children: [
-          const Icon(Icons.ios_share, color: kPrimary, size: 22),
+          Icon(Icons.ios_share, color: kPrimary, size: 22),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('导出学习数据',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: kText,
                         fontSize: 15,
                         fontWeight: FontWeight.w600)),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text('复习保持率 + 六步漏斗汇总，纯本地生成，不会自动上传',
-                    style: TextStyle(color: Colors.white54, fontSize: 11)),
+                    style: TextStyle(color: kTextMuted, fontSize: 11)),
               ],
             ),
           ),
@@ -381,7 +381,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           OutlinedButton(
             onPressed: _exporting ? null : _export,
             child: Text(_exporting ? '生成中…' : '导出',
-                style: const TextStyle(color: kPrimary, fontSize: 13)),
+                style: TextStyle(color: kPrimary, fontSize: 13)),
           ),
         ],
       ),
@@ -400,20 +400,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: kCard,
-          title: const Text('学习数据已生成',
-              style: TextStyle(color: Colors.white, fontSize: 17)),
+          title: Text('学习数据已生成',
+              style: TextStyle(color: kText, fontSize: 17)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('文件已保存到：',
-                  style: TextStyle(color: Colors.white54, fontSize: 12)),
+              Text('文件已保存到：',
+                  style: TextStyle(color: kTextMuted, fontSize: 12)),
               const SizedBox(height: 4),
               SelectableText(file.path,
-                  style: const TextStyle(color: kPrimary, fontSize: 12)),
+                  style: TextStyle(color: kPrimary, fontSize: 12)),
               const SizedBox(height: 10),
-              const Text('不含录音和账号信息，是否分享由你决定。',
-                  style: TextStyle(color: Colors.white38, fontSize: 12)),
+              Text('不含录音和账号信息，是否分享由你决定。',
+                  style: TextStyle(color: kTextFaint, fontSize: 12)),
             ],
           ),
           actions: [
@@ -425,7 +425,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('完成', style: TextStyle(color: Colors.white54)),
+              child: Text('完成', style: TextStyle(color: kTextMuted)),
             ),
           ],
         ),
@@ -489,29 +489,29 @@ class _LibraryScreenState extends State<LibraryScreen> {
         decoration: BoxDecoration(
           color: kCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: kBorder),
         ),
         child: Column(
           children: [
-            const Icon(Icons.inventory_2_outlined,
-                color: Colors.white38, size: 46),
+            Icon(Icons.inventory_2_outlined,
+                color: kTextFaint, size: 46),
             const SizedBox(height: 10),
-            const Text('词块库还空着',
+            Text('词块库还空着',
                 style: TextStyle(
-                    color: Colors.white,
+                    color: kText,
                     fontSize: 18,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
-            const Text('完成一块的六步学习后，它会进入 1/3/7/14 天的巩固周期，并出现在这里。',
+            Text('完成一块的六步学习后，它会进入 1/3/7/14 天的巩固周期，并出现在这里。',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54, fontSize: 13)),
+                style: TextStyle(color: kTextMuted, fontSize: 13)),
             const SizedBox(height: 14),
             if (widget.onGoPractice != null)
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
                 onPressed: widget.onGoPractice,
-                child: const Text('去练习第一块',
-                    style: TextStyle(color: Colors.black87)),
+                child: Text('去练习第一块',
+                    style: TextStyle(color: kOnPrimary)),
               ),
           ],
         ),
@@ -532,8 +532,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: state == ChunkAssetState.relearning
-                ? Colors.redAccent.withValues(alpha: 0.5)
-                : Colors.white12),
+                ? kError.withValues(alpha: 0.5)
+                : kBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,11 +546,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
               Expanded(
                 child: Text(c.meaningCN,
                     style:
-                        const TextStyle(color: Colors.white70, fontSize: 13)),
+                        TextStyle(color: kTextSecondary, fontSize: 13)),
               ),
               IconButton(
                 visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.volume_up, color: kPrimary, size: 20),
+                icon: Icon(Icons.volume_up, color: kPrimary, size: 20),
                 onPressed: () => speakOrHint(context,
                     Provider.of<TtsService>(context, listen: false), c.text),
               ),
@@ -563,7 +563,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   ? '来自《${from.first.sceneLabel} · ${from.first.title}》'
                   : '来自《${from.first.title}》等 ${from.length} 篇',
               key: Key('library_source_${c.id}'),
-              style: const TextStyle(color: kPrimary, fontSize: 11),
+              style: TextStyle(color: kPrimary, fontSize: 11),
             ),
           ],
           const SizedBox(height: 6),
@@ -571,7 +571,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             '首学 $first · 复习 ${row?.reviewCount ?? 0} 次 · '
             '连对 ${row?.correctStreak ?? 0} · 可组合 $combos 块 · '
             '频表 ${c.freqRank > 0 ? '#${c.freqRank}' : '未收录'} · $due',
-            style: const TextStyle(color: Colors.white38, fontSize: 11),
+            style: TextStyle(color: kTextFaint, fontSize: 11),
           ),
           if (state == ChunkAssetState.relearning) ...[
             const SizedBox(height: 8),
@@ -579,8 +579,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
               alignment: Alignment.centerRight,
               child: OutlinedButton.icon(
                 onPressed: () => _reviewOne(c),
-                icon: const Icon(Icons.replay, color: kPrimary, size: 16),
-                label: const Text('立即复习',
+                icon: Icon(Icons.replay, color: kPrimary, size: 16),
+                label: Text('立即复习',
                     style: TextStyle(color: kPrimary, fontSize: 12)),
               ),
             ),
@@ -646,7 +646,7 @@ class _GroupHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color =
-        group.state == ChunkAssetState.relearning ? Colors.redAccent : kPrimary;
+        group.state == ChunkAssetState.relearning ? kError : kPrimary;
     return Row(
       children: [
         Container(
@@ -660,14 +660,14 @@ class _GroupHeader extends StatelessWidget {
                 color: color, fontSize: 16, fontWeight: FontWeight.w700)),
         const SizedBox(width: 6),
         Text('${group.chunks.length} 块',
-            style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            style: TextStyle(color: kTextMuted, fontSize: 12)),
         const Spacer(),
         Flexible(
           child: Text(group.subtitle,
               textAlign: TextAlign.right,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              style: TextStyle(color: kTextFaint, fontSize: 11)),
         ),
       ],
     );

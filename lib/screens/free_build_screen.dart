@@ -273,8 +273,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                 children: [
                   Expanded(
                     child: Text(m.text,
-                        style: const TextStyle(
-                            color: Colors.white,
+                        style: TextStyle(
+                            color: kText,
                             fontSize: 20,
                             fontWeight: FontWeight.w700)),
                   ),
@@ -283,29 +283,29 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
               ),
               const SizedBox(height: 10),
               if (m.meanings.isEmpty)
-                const Text('这份内容没写中文释义',
-                    style: TextStyle(color: Colors.white54))
+                Text('这份内容没写中文释义',
+                    style: TextStyle(color: kTextMuted))
               else
                 for (final meaning in m.meanings)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text('· $meaning',
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 15)),
+                        style: TextStyle(
+                            color: kTextSecondary, fontSize: 15)),
                   ),
               if (m.mergedCount > 1)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text('同名 ${m.mergedCount} 块已合并显示',
-                      style: const TextStyle(color: kPrimary, fontSize: 13)),
+                      style: TextStyle(color: kPrimary, fontSize: 13)),
                 ),
               const SizedBox(height: 14),
               Row(
                 children: [
                   TextButton.icon(
                     onPressed: () => _speak(m.text),
-                    icon: const Icon(Icons.volume_up, color: kPrimary),
-                    label: const Text('试听', style: TextStyle(color: kPrimary)),
+                    icon: Icon(Icons.volume_up, color: kPrimary),
+                    label: Text('试听', style: TextStyle(color: kPrimary)),
                   ),
                   const Spacer(),
                   TextButton(
@@ -314,7 +314,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                       _toggle(m);
                     },
                     child:
-                        const Text('加入句子', style: TextStyle(color: kUnlocked)),
+                        Text('加入句子', style: TextStyle(color: kUnlocked)),
                   ),
                 ],
               ),
@@ -333,7 +333,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
           border: Border.all(color: kPrimary.withValues(alpha: 0.6)),
         ),
         child:
-            const Text('需重修', style: TextStyle(color: kPrimary, fontSize: 11)),
+            Text('需重修', style: TextStyle(color: kPrimary, fontSize: 11)),
       );
 
   // —— 开口与判定 ——
@@ -515,23 +515,23 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                     padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
                     child: Row(
                       children: [
-                        const Text('我的句子',
+                        Text('我的句子',
                             style: TextStyle(
-                                color: Colors.white,
+                                color: kText,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700)),
                         const Spacer(),
                         Text('${list.length} 句',
-                            style: const TextStyle(color: kPrimary)),
+                            style: TextStyle(color: kPrimary)),
                       ],
                     ),
                   ),
                   Expanded(
                     child: list.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Text('还没有通过的句子。\n拼一句、点下面的麦克风说出来即可。',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white54)))
+                                style: TextStyle(color: kTextMuted)))
                         : ListView.builder(
                             itemCount: list.length,
                             itemBuilder: (_, i) {
@@ -539,22 +539,22 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                               return ListTile(
                                 title: Text(s.text,
                                     style:
-                                        const TextStyle(color: Colors.white)),
+                                        TextStyle(color: kText)),
                                 subtitle: Text(
                                     '${s.chunkIds.length} 块'
                                     '${s.chain ? ' · 串联（≥2 个已掌握块）' : ''}',
-                                    style: const TextStyle(
-                                        color: Colors.white54, fontSize: 12)),
+                                    style: TextStyle(
+                                        color: kTextMuted, fontSize: 12)),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: const Icon(Icons.volume_up,
+                                      icon: Icon(Icons.volume_up,
                                           color: kPrimary),
                                       onPressed: () => _speak(s.text),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.mic,
+                                      icon: Icon(Icons.mic,
                                           color: kUnlocked),
                                       onPressed: () {
                                         Navigator.of(sheetContext).pop();
@@ -571,8 +571,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                                       },
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline,
-                                          color: Colors.white38),
+                                      icon: Icon(Icons.delete_outline,
+                                          color: kTextFaint),
                                       onPressed: () async {
                                         await _p.sandbox
                                             .deleteSentence(s.createdAt);
@@ -604,22 +604,22 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white70),
+          icon: Icon(Icons.close, color: kTextSecondary),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text('自由造句沙盒 · $_sentenceCount 句',
-            style: const TextStyle(color: Colors.white, fontSize: 18)),
+            style: TextStyle(color: kText, fontSize: 18)),
         actions: [
           IconButton(
             key: const Key('sandboxMySentences'),
-            icon: const Icon(Icons.auto_stories, color: kPrimary),
+            icon: Icon(Icons.auto_stories, color: kPrimary),
             tooltip: '我的句子',
             onPressed: _showSentences,
           ),
         ],
       ),
       body: !_engineReady && !_engineFailed
-          ? const Center(child: CircularProgressIndicator(color: kPrimary))
+          ? Center(child: CircularProgressIndicator(color: kPrimary))
           : Column(
               children: [
                 _sentenceCard(),
@@ -647,7 +647,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('你的句子',
+          Text('你的句子',
               style: TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
           Expanded(
@@ -656,7 +656,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: empty ? Colors.white54 : Colors.white,
+                color: empty ? kTextMuted : kText,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -667,16 +667,16 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
               TextButton.icon(
                 key: const Key('sandboxListenDemo'),
                 onPressed: empty ? null : () => _speak(_targetText),
-                icon: const Icon(Icons.volume_up, color: kPrimary),
-                label: const Text('听示范', style: TextStyle(color: kPrimary)),
+                icon: Icon(Icons.volume_up, color: kPrimary),
+                label: Text('听示范', style: TextStyle(color: kPrimary)),
               ),
               const Spacer(),
               TextButton.icon(
                 key: const Key('sandboxRepick'),
                 onPressed: (empty || _selected.isEmpty) ? _repick : _repick,
-                icon: const Icon(Icons.refresh, color: Colors.white70),
+                icon: Icon(Icons.refresh, color: kTextSecondary),
                 label:
-                    const Text('重拼', style: TextStyle(color: Colors.white70)),
+                    Text('重拼', style: TextStyle(color: kTextSecondary)),
               ),
             ],
           ),
@@ -701,14 +701,14 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
           color: kCard.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Text('拼好句子，点下面的麦克风开口说',
-            style: TextStyle(color: Colors.white38, fontSize: 13)),
+        child: Text('拼好句子，点下面的麦克风开口说',
+            style: TextStyle(color: kTextFaint, fontSize: 13)),
       );
     }
     final perfect = t == 'perfect';
     final improve = t == 'improve';
     final guardFailed = _guard != null && !_guard!.ok;
-    final color = perfect ? kUnlocked : (improve ? kPrimary : Colors.white70);
+    final color = perfect ? kUnlocked : (improve ? kPrimary : kTextSecondary);
     final title = perfect
         ? (_storedChain ? '已存入我的句子 · 串联 +1' : '通过！已存入我的句子')
         : (improve
@@ -751,14 +751,14 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style:
-                          const TextStyle(color: Colors.white, fontSize: 13)),
+                          TextStyle(color: kText, fontSize: 13)),
                 if (refLine != null)
                   Text(refLine,
                       key: const Key('sandboxReference'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style:
-                          const TextStyle(color: Colors.white54, fontSize: 12)),
+                          TextStyle(color: kTextMuted, fontSize: 12)),
               ],
             ),
           ),
@@ -766,7 +766,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
             TextButton(
               key: const Key('sandboxRetry'),
               onPressed: () => setState(_clearFeedback),
-              child: const Text('再说一次', style: TextStyle(color: kPrimary)),
+              child: Text('再说一次', style: TextStyle(color: kPrimary)),
             ),
         ],
       ),
@@ -783,8 +783,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
       transitionBuilder: (child, a) => ScaleTransition(
           scale: a, child: FadeTransition(opacity: a, child: child)),
       child: tier == 'perfect'
-          ? const CheckDraw(
-              key: ValueKey('ok'), size: 22, stroke: 2.6, color: kUnlocked)
+          ? CheckDraw(
+              key: const ValueKey('ok'), size: 22, stroke: 2.6, color: kUnlocked)
           : Icon(
               tier == 'improve' ? Icons.tips_and_updates_outlined : Icons.close,
               key: ValueKey(tier),
@@ -817,12 +817,12 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
               key: const Key('sandboxSearch'),
               controller: _searchCtl,
               onChanged: _onQuery,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: TextStyle(color: kText, fontSize: 15),
               decoration: InputDecoration(
                 hintText: '搜词块（英文或中文释义）',
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
+                hintStyle: TextStyle(color: kTextFaint, fontSize: 14),
                 prefixIcon:
-                    const Icon(Icons.search, color: Colors.white38, size: 20),
+                    Icon(Icons.search, color: kTextFaint, size: 20),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 filled: true,
@@ -871,7 +871,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
           ),
           child: Text('$label · $count',
               style: TextStyle(
-                  color: on ? kPrimary : Colors.white54, fontSize: 13)),
+                  color: on ? kPrimary : kTextMuted, fontSize: 13)),
         ),
       ),
     );
@@ -889,10 +889,10 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
   Widget _poolView() {
     final visible = _visible;
     if (visible.isEmpty) {
-      return const Center(
+      return Center(
         child: Text('这个筛选下没有词块\n换个关键词或点「全部」',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white38)),
+            style: TextStyle(color: kTextFaint)),
       );
     }
     final groups = <String, List<MergedChunk>>{};
@@ -927,8 +927,8 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
               child: Text(_sceneLabel(g.key),
-                  style: const TextStyle(
-                      color: Colors.white54,
+                  style: TextStyle(
+                      color: kTextMuted,
                       fontSize: 13,
                       fontWeight: FontWeight.w600)),
             ),
@@ -986,12 +986,12 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                   child: Text(m.text,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: kPrimary, fontWeight: FontWeight.w600)),
                 ),
                 if (relearn) ...[
                   const SizedBox(width: 4),
-                  const Icon(Icons.autorenew, color: kPrimary, size: 14),
+                  Icon(Icons.autorenew, color: kPrimary, size: 14),
                 ],
               ],
             ),
@@ -999,7 +999,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
               Text(m.meanings.first,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                  style: TextStyle(color: kTextMuted, fontSize: 11)),
           ],
         ),
       ),
@@ -1044,7 +1044,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style:
-                                const TextStyle(color: kPrimary, fontSize: 13)),
+                                TextStyle(color: kPrimary, fontSize: 13)),
                       ),
                     ),
                   ),
@@ -1068,19 +1068,19 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                         ? kLocked
                         : (_recording ? kPrimary : kCard),
                     border: Border.all(
-                        color: _hasSentence ? kPrimary : Colors.white24,
+                        color: _hasSentence ? kPrimary : kBorderStrong,
                         width: 2),
                   ),
                   child: Center(
                     child: _judging
-                        ? const CircularProgressIndicator(
+                        ? CircularProgressIndicator(
                             color: kPrimary, strokeWidth: 2)
                         : Icon(
                             _recording ? Icons.stop : Icons.mic,
                             size: 30,
                             color: !_hasSentence
-                                ? Colors.white38
-                                : (_recording ? Colors.black87 : kPrimary),
+                                ? kTextFaint
+                                : (_recording ? kOnPrimary : kPrimary),
                           ),
                   ),
                 ),
@@ -1096,7 +1096,7 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
                     : (_judging
                         ? '识别 / 评句中…'
                         : (_hasSentence ? '点一下开口说这句' : '先挑块拼一句')),
-            style: const TextStyle(color: Colors.white38, fontSize: 12),
+            style: TextStyle(color: kTextFaint, fontSize: 12),
           ),
         ],
       ),

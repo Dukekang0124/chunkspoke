@@ -1,35 +1,35 @@
 {
-  "versionName": "1.6.2",
-  "versionCode": 4066,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.2/chunkspoke-latest.apk",
+  "versionName": "1.7.0",
+  "versionCode": 4070,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.0/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.6.2/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.6.2/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.0/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.7.0/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "dbac73e81268e3ff18ff0129905318de0d875af4b9aa9aaa9b6bb019efbd935a",
-  "size": 60004507,
-  "notes": "v1.6.2：① 慢速朗读改为合成时原生放慢，不再「标准速再拉伸」——金属回声与电流感消失，音高不变；② 装了高清音色包时慢速也用高清音色；③ 慢/标准/快三档各自缓存，切档立刻生效；④ 系统发音慢档只做一层放慢（不再是 0.56x 复合减速）；⑤ 不改学习内容与六步流程。",
+  "sha256": "2df4b5082d929a66b9829c7ff73a287225bd482786bae1e92f89b39c2fcf5797",
+  "size": 60070075,
+  "notes": "v1.7.0£º¢Ù ÉèÖÃҳÐÂÔö¡¸Íâ¹ÛÓëÖ÷Ì⡹¡ª¡ª7 Ì×Ö÷Ìâ ¡Á Éî/ǳ˫ģʽ£¬µãѡ¼´ʱÉúЧ¡¢ÖØÆô±£Áô£»¢Ú ÐÂÔöǳɫģʽ£»¢Û ´ʿéËÄɫËæÖ÷ÌâÖØÅäɫ£¬Բ½ÇÓë×ֺţ¨ÐÎ״±àÂ룩²»±䣻¢Ü Ð޵ô 24 ´¦Ö÷ɫµװ××ֶԱȶȲ»×㣻¢Ý ȫ App ÑÕɫÊտڵ½Ö÷ÌâÁîÅƣ»¢Þ ²»¸ÄѧϰÄÚÈݡ¢Áù²½Á÷³ÌÓëʶ±ðÅж¨¡£",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.2/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.0/parts/apk.part0",
       "size": 15728640,
-      "sha256": "a575602f2ced8eb938ee39ab61582653b8c9c91b8488e344d1461a2a52ec07ad"
+      "sha256": "a8d9f37a7d8b25583ce4c5821055c940df1d230bcedd2db3e950e35617510042"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.2/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.0/parts/apk.part1",
       "size": 15728640,
-      "sha256": "696e9fa6e6ca3f313d055ac8ed8571f537885098a93676de1e6942c9ca9a62ed"
+      "sha256": "452d7840b73bd23053c0260f787984659ed0ff9e284f6965f8ce79232e3af05d"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.2/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.0/parts/apk.part2",
       "size": 15728640,
-      "sha256": "3e1df094d8b6d75bd42894fc4b0d7cc856afa461bead0b36768edbbfd3c6d1c0"
+      "sha256": "a469d254a22e8028a4dcf0816780d07a7a121b586ce59a48c427d17c2a05e332"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.6.2/parts/apk.part3",
-      "size": 12818627,
-      "sha256": "b43d9b8e7d6adcac1ac06dfed84df3c97b37535c5c38d67e39cc6a1a35e630be"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.0/parts/apk.part3",
+      "size": 12884155,
+      "sha256": "394325aedd89543f07126d3ac974a4ecd43b8b159666996ee7373d5204b4dc75"
     }
   ],
   "model": {

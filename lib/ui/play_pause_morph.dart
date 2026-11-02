@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'motion.dart';
+import 'theme.dart';
+
 
 /// M1（#38 播放暂停变形）：三角形与两竖条**顶点一一对应**插值，
 /// 中间帧能看到三角形被「掰开」，而不是两个图标硬切。
@@ -13,14 +15,15 @@ import 'motion.dart';
 class PlayPauseMorph extends StatelessWidget {
   final bool playing;
   final double size;
-  final Color color;
+  /// 1.7.0：可空，缺省用主色上的前景（主题切换后自动跟着变）。
+  final Color? color;
 
   /// 主传输键 200ms；列表内小图标不接本组件（库内禁用场景）。
   final int durationMs;
   const PlayPauseMorph({
     required this.playing,
     this.size = 34,
-    this.color = Colors.black,
+    this.color,
     this.durationMs = 200,
     super.key,
   });
@@ -28,9 +31,10 @@ class PlayPauseMorph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final policy = Motion.of(context);
+    final c = color ?? kOnPrimary;
     if (!policy.animates) {
       return Icon(playing ? Icons.pause : Icons.play_arrow,
-          size: size, color: color);
+          size: size, color: c);
     }
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: playing ? 1 : 0),
@@ -39,7 +43,7 @@ class PlayPauseMorph extends StatelessWidget {
       builder: (_, t, __) => CustomPaint(
         key: const ValueKey('play-pause-morph'),
         size: Size.square(size),
-        painter: _PlayPausePainter(t, color),
+        painter: _PlayPausePainter(t, c),
       ),
     );
   }

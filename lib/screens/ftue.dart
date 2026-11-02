@@ -90,11 +90,11 @@ class _FtueScreenState extends State<FtueScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('ChunkSpoke',
-                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('ChunkSpoke',
+                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: kText)),
               const SizedBox(height: 8),
-              const Text('用词块思考，用英语开口。',
-                  style: TextStyle(fontSize: 16, color: Colors.white70)),
+              Text('用词块思考，用英语开口。',
+                  style: TextStyle(fontSize: 16, color: kTextSecondary)),
               const SizedBox(height: 48),
               Wrap(
                 spacing: 10,
@@ -111,8 +111,8 @@ class _FtueScreenState extends State<FtueScreen> {
                 opacity: s3 ? 1 : 0,
                 duration: Motion.of(context).dur(300),
                 curve: Curves.easeOut,
-                child: const Text("I'd like a cup of coffee.",
-                    style: TextStyle(fontSize: 18, color: Colors.white)),
+                child: Text("I'd like a cup of coffee.",
+                    style: TextStyle(fontSize: 18, color: kText)),
               ),
               const Spacer(),
               if (showStart) ...[
@@ -121,10 +121,10 @@ class _FtueScreenState extends State<FtueScreen> {
                   children: [
                     Icon(_micOk ? Icons.check_circle : Icons.mic,
                         size: 15,
-                        color: _micOk ? kUnlocked : Colors.white54),
+                        color: _micOk ? kUnlocked : kTextMuted),
                     const SizedBox(width: 4),
                     Text(_micOk ? '麦克风已授权' : '麦克风待授权',
-                        style: const TextStyle(fontSize: 12, color: Colors.white54)),
+                        style: TextStyle(fontSize: 12, color: kTextMuted)),
                     const SizedBox(width: 16),
                     Icon(
                         _engine == EngineState.ready
@@ -136,15 +136,15 @@ class _FtueScreenState extends State<FtueScreen> {
                         color: _engine == EngineState.ready
                             ? kUnlocked
                             : _engine == EngineState.failed
-                                ? Colors.orange
-                                : Colors.white54),
+                                ? kWarning
+                                : kTextMuted),
                     const SizedBox(width: 4),
                     Text(_engine == EngineState.ready
                         ? '语音引擎就绪'
                         : _engine == EngineState.failed
                             ? '引擎不可用(可降级)'
                             : '引擎准备中…',
-                        style: const TextStyle(fontSize: 12, color: Colors.white54)),
+                        style: TextStyle(fontSize: 12, color: kTextMuted)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -157,8 +157,8 @@ class _FtueScreenState extends State<FtueScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: _start,
-                    child: const Text('开始学习',
-                        style: TextStyle(fontSize: 18, color: Colors.white)),
+                    child: Text('开始学习',
+                        style: TextStyle(fontSize: 18, color: kOnPrimary)),
                   ),
                 ),
               ],

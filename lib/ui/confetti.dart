@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'motion.dart';
+import 'theme.dart';
+
 
 /// M1：撒花共享组件（统一过闸）。
 ///
@@ -80,21 +82,17 @@ class _ConfettiPainter extends CustomPainter {
   final int count;
   _ConfettiPainter(this.t, this.count);
   final math.Random _rng = math.Random(7);
-  static const _colors = [
-    Color(0xFFFFB84D),
-    Color(0xFF34D399),
-    Colors.white,
-    Color(0xFFF59E0B),
-    Color(0xFF60A5FA),
-  ];
+  /// 撒花取主题色（琥珀/成功/主文字/警告/信息），保证浅色主题下不落白底。
+  static List<Color> _palette() => [kPrimary, kSuccess, kText, kWarning, kInfo];
 
   @override
   void paint(Canvas canvas, Size size) {
+    final colors = _palette();
     for (var i = 0; i < count; i++) {
       final x = _rng.nextDouble() * size.width;
       final y =
           (_rng.nextDouble() * size.height + t * size.height) % size.height;
-      final c = _colors[i % _colors.length];
+      final c = colors[i % colors.length];
       final w = 6.0 + _rng.nextDouble() * 5;
       final h = 10.0 + _rng.nextDouble() * 6;
       canvas.save();

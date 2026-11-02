@@ -48,8 +48,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               alignment: Alignment.topRight,
               child: TextButton(
                 onPressed: () => _goNext(false),
-                child: const Text('跳过',
-                    style: TextStyle(color: Colors.white54, fontSize: 15)),
+                child: Text('跳过',
+                    style: TextStyle(color: kTextMuted, fontSize: 15)),
               ),
             ),
             Expanded(
@@ -87,7 +87,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         width: _page == i ? 22 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: _page == i ? kPrimary : Colors.white24,
+                          color: _page == i ? kPrimary : kBorderStrong,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       )),
@@ -101,7 +101,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kPrimary,
-                      foregroundColor: Colors.black87,
+                      foregroundColor: kOnPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
@@ -124,7 +124,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: kPrimary,
-                          foregroundColor: Colors.black87,
+                          foregroundColor: kOnPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
@@ -135,8 +135,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text('已为 30+ 学习者提供服务',
-                        style: TextStyle(color: Colors.white38, fontSize: 12)),
+                    Text('已为 30+ 学习者提供服务',
+                        style: TextStyle(color: kTextFaint, fontSize: 12)),
                   ],
                 ),
               ),
@@ -171,12 +171,12 @@ class _Page extends StatelessWidget {
             const SizedBox(height: 12),
             Text(title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
+                style: TextStyle(
+                    color: kText, fontSize: 24, fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
             Text(subtitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 15)),
+                style: TextStyle(color: kTextSecondary, fontSize: 15)),
           ],
         ),
       );
@@ -199,12 +199,12 @@ class _ScatterVisual extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white10,
+                  color: kBorderSoft,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white24),
+                  border: Border.all(color: kBorderStrong),
                 ),
                 child: Text(chips[i],
-                    style: const TextStyle(color: Colors.white54, fontSize: 14)),
+                    style: TextStyle(color: kTextMuted, fontSize: 14)),
               ),
             ),
         ],
@@ -237,7 +237,7 @@ class _SentenceVisual extends StatelessWidget {
                   border: Border.all(color: kPrimary.withValues(alpha: 0.6)),
                 ),
                 child: Text(w,
-                    style: const TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
               ),
           ],
         ),
@@ -251,7 +251,7 @@ class _RocketVisual extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: 96,
         height: 96,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
               colors: [kPrimary, kUnlocked],

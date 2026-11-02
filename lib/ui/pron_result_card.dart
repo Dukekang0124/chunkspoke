@@ -32,16 +32,16 @@ class PronResultCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('没听到声音',
-                style: TextStyle(color: Colors.white, fontSize: 15)),
+            Text('没听到声音',
+                style: TextStyle(color: kText, fontSize: 15)),
             const SizedBox(height: 6),
-            const Text('靠近一点、正常语速再读一遍；也可以先点「听示范」。',
+            Text('靠近一点、正常语速再读一遍；也可以先点「听示范」。',
                 style: TextStyle(
-                    color: Colors.white54, fontSize: 12, height: 1.5)),
+                    color: kTextMuted, fontSize: 12, height: 1.5)),
             if (r.recognized.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text('识别到：${r.recognized}',
-                  style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                  style: TextStyle(color: kTextFaint, fontSize: 11)),
             ],
           ],
         ),
@@ -58,14 +58,14 @@ class PronResultCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text('${r.overall}',
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: kText,
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
                       height: 1)),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 4, left: 4),
-                child: Text('分', style: TextStyle(color: Colors.white54)),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4, left: 4),
+                child: Text('分', style: TextStyle(color: kTextMuted)),
               ),
               const Spacer(),
               Container(
@@ -109,16 +109,16 @@ class PronResultCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text('绿 ${r.goodCount} · 黄 ${r.nearCount} · 红 ${r.missCount}',
-              style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              style: TextStyle(color: kTextFaint, fontSize: 11)),
           if (r.recognized.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text('听到：${r.recognized}',
-                style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                style: TextStyle(color: kTextFaint, fontSize: 11)),
           ],
           const SizedBox(height: 10),
-          const Text('黄档是缩读、连读或虚词——能听懂就不算错；红了才需要再说一遍。',
+          Text('黄档是缩读、连读或虚词——能听懂就不算错；红了才需要再说一遍。',
               style:
-                  TextStyle(color: Colors.white24, fontSize: 11, height: 1.4)),
+                  TextStyle(color: kBorderStrong, fontSize: 11, height: 1.4)),
         ],
       ),
     );

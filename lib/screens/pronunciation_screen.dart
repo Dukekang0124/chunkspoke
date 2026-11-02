@@ -151,7 +151,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
       appBar: AppBar(
         title: Text(_selected == null ? '发音评测' : '跟读这一句'),
         backgroundColor: kBg,
-        foregroundColor: Colors.white,
+        foregroundColor: kOnPrimary,
       ),
       body: _selected == null ? _buildPicker() : _buildPractice(),
     );
@@ -165,18 +165,18 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
+        Text(
           '选一句话，正常拿着手机读一遍。\n打分全在本机完成，不联网、不上传，也不影响你的学习进度。',
-          style: TextStyle(color: Colors.white54, fontSize: 13, height: 1.5),
+          style: TextStyle(color: kTextMuted, fontSize: 13, height: 1.5),
         ),
         const SizedBox(height: 12),
         if (levels.isEmpty)
-          const Text('内容包里还没有可评测的句子', style: TextStyle(color: Colors.white38)),
+          Text('内容包里还没有可评测的句子', style: TextStyle(color: kTextFaint)),
         for (final lv in levels) ...[
           Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 4),
             child: Text(lv.theme,
-                style: const TextStyle(
+                style: TextStyle(
                     color: kPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.bold)),
@@ -192,14 +192,14 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                 child: ListTile(
                   title: Text(s.text,
                       style:
-                          const TextStyle(color: Colors.white, fontSize: 15)),
+                          TextStyle(color: kText, fontSize: 15)),
                   subtitle: s.meaningCN.isEmpty
                       ? null
                       : Text(s.meaningCN,
-                          style: const TextStyle(
-                              color: Colors.white38, fontSize: 12)),
-                  trailing: const Icon(Icons.chevron_right,
-                      color: Colors.white38, size: 20),
+                          style: TextStyle(
+                              color: kTextFaint, fontSize: 12)),
+                  trailing: Icon(Icons.chevron_right,
+                      color: kTextFaint, size: 20),
                   onTap: () => setState(() {
                     _selected = s;
                     _result = null;
@@ -209,8 +209,8 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
             ),
         ],
         const SizedBox(height: 8),
-        const Text('绿=说对了　黄=能听出（缩读/连读/虚词）　红=再试试',
-            style: TextStyle(color: Colors.white24, fontSize: 11)),
+        Text('绿=说对了　黄=能听出（缩读/连读/虚词）　红=再试试',
+            style: TextStyle(color: kBorderStrong, fontSize: 11)),
       ],
     );
   }
@@ -229,15 +229,15 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(s.text,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: kText,
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               if (s.meaningCN.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Text(s.meaningCN,
                     style:
-                        const TextStyle(color: Colors.white54, fontSize: 13)),
+                        TextStyle(color: kTextMuted, fontSize: 13)),
               ],
               const SizedBox(height: 12),
               Row(
@@ -259,8 +259,8 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                               _selected = null;
                               _result = null;
                             }),
-                    child: const Text('换一句',
-                        style: TextStyle(color: Colors.white54)),
+                    child: Text('换一句',
+                        style: TextStyle(color: kTextMuted)),
                   ),
                 ],
               ),
@@ -298,7 +298,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                 : _recording
                     ? '正在录音，点一下结束'
                     : '点一下开始跟读',
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
+            style: TextStyle(color: kTextMuted, fontSize: 13),
           ),
         ),
         if (_recording) ...[
@@ -308,8 +308,8 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
             child: LinearProgressIndicator(
               value: _level,
               minHeight: 4,
-              backgroundColor: Colors.white12,
-              valueColor: const AlwaysStoppedAnimation(kPrimary),
+              backgroundColor: kBorder,
+              valueColor: AlwaysStoppedAnimation(kPrimary),
             ),
           ),
         ],
@@ -347,11 +347,11 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
                 children: [
                   Text(title,
                       style:
-                          const TextStyle(color: Colors.white, fontSize: 14)),
+                          TextStyle(color: kText, fontSize: 14)),
                   const SizedBox(height: 4),
                   Text(sub,
-                      style: const TextStyle(
-                          color: Colors.white54, fontSize: 12, height: 1.4)),
+                      style: TextStyle(
+                          color: kTextMuted, fontSize: 12, height: 1.4)),
                 ],
               ),
             ),
@@ -359,7 +359,7 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
               TextButton(
                 onPressed: () => onAction(),
                 child: Text(action,
-                    style: const TextStyle(color: kPrimary, fontSize: 13)),
+                    style: TextStyle(color: kPrimary, fontSize: 13)),
               ),
           ],
         ),

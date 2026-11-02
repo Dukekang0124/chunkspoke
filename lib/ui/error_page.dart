@@ -20,24 +20,24 @@ class ErrorBody extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, color: kPrimary, size: 44),
+              Icon(Icons.error_outline, color: kPrimary, size: 44),
               const SizedBox(height: 12),
-              const Text('出了点问题',
+              Text('出了点问题',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: kText,
                       fontSize: 18,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              const Text('已记录错误信息，点击重试或反馈给我们',
+              Text('已记录错误信息，点击重试或反馈给我们',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white54, fontSize: 13)),
+                  style: TextStyle(color: kTextMuted, fontSize: 13)),
               if (detail != null) ...[
                 const SizedBox(height: 12),
                 Text('$detail',
                     maxLines: 6,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white24, fontSize: 11)),
+                    style: TextStyle(color: kBorderStrong, fontSize: 11)),
               ],
               if (onRetry != null) ...[
                 const SizedBox(height: 18),
@@ -46,7 +46,7 @@ class ErrorBody extends StatelessWidget {
                       ElevatedButton.styleFrom(backgroundColor: kPrimary),
                   onPressed: onRetry,
                   child:
-                      const Text('重试', style: TextStyle(color: Colors.white)),
+                      Text('重试', style: TextStyle(color: kOnPrimary)),
                 ),
               ],
             ],
