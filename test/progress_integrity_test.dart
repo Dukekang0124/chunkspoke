@@ -439,8 +439,54 @@ void main() {
       expect(crossSlot[1].state, CheckState.pass);
     });
 
-    test('归档：JSON 三段结构 + 文件名 + 落盘', () async {
-      final f = await _fx('archive');
+    test('零红 + 提示项 ≠ 需要处理（真机回执里 allGreen=false 的两种来源要分开）', () {
+      const withWrong = ModuleAudit(
+          levelId: 'w',
+          theme: '留痕待补',
+          total: 3,
+          ledgerMastered: 3,
+          ledgerNextIndex: 3,
+          snapshotIndex: -1,
+          snapshotChunkId: null,
+          snapshotValid: false,
+          wrongChunkIds: ['w1'],
+          pendingChunkIds: [],
+          masteredScores: [90, 92, 95]);
+      SelfCheckReport build({List<ModuleAudit> audits = const [], CheckRow? extra}) {
+        final sections = <CheckSection>[
+          SelfCheck.progressSection(audits),
+          CheckSection('资源完整性', [
+            const CheckRow('高清发音包', '未下载（可选包）', CheckState.warn),
+            if (extra != null) extra,
+          ]),
+        ];
+        return SelfCheckReport(
+            at: DateTime.parse('2026-11-02T15:51:21.000'),
+            audits: audits,
+            sections: sections,
+            localVersion: '1.7.1',
+            localVersionCode: 4071);
+      }
+
+      final hints = build(audits: [withWrong]);
+      expect(hints.reds, isEmpty);
+      expect(hints.allGreen, isFalse, reason: '有留痕待补 → 不算全绿');
+      expect(hints.needsAction, isFalse, reason: '但零红零失败 → 不该判「需要处理」');
+      expect(hints.hintCount, 2, reason: '黄牌条目：留痕待补的模块 1 条 + 可选包未下载 1 条');
+      expect(hints.toJson()['needsAction'], isFalse);
+      expect(hints.toJson()['hints'], 2);
+
+      final failing = build(
+          audits: [withWrong],
+          extra: const CheckRow('引擎状态', '加载失败', CheckState.fail));
+      expect(failing.needsAction, isTrue, reason: '硬失败必须升到「需要处理」');
+
+      final withRed = build(audits: [red]);
+      expect(withRed.needsAction, isTrue);
+      expect(withRed.hintCount, 1);
+    });
+
+    test('归档：JSON 三段结构 + 文件名 + 落盘', () async {      final f = await _fx('archive');
       final report = SelfCheck.assemble(
         at: DateTime.parse('2026-11-02T10:20:30.000'),
         audits: [await ProgressIntegrity.audit(f.p, _level('AR', 2))],

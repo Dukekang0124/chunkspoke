@@ -59,14 +59,24 @@ class SelfCheckReport {
 
   List<ModuleAudit> get reds => ProgressIntegrity.reds(audits);
   int get weakTraceCount => audits.where((a) => a.wrongChunkIds.isNotEmpty).length;
+
+  /// 提示项 = 全页黄牌条目数（可选包未下载、无音频缓存、某模块留痕待补…）。
+  int get hintCount => sections.fold(
+      0, (n, s) => n + s.rows.where((r) => r.state == CheckState.warn).length);
   bool get allGreen => reds.isEmpty && weakTraceCount == 0 && !anyFail;
   bool get anyFail => sections.any((s) => s.hasFail);
+
+  /// 「需要处理」的门槛：只有断点红名单或硬失败才算异常。
+  /// 留痕待补（错块）与可选包未下载都是提示项，不该把整页判红。
+  bool get needsAction => reds.isNotEmpty || anyFail;
 
   Map<String, Object?> toJson() => {
         'at': at.toIso8601String(),
         'localVersion': localVersion,
         'localVersionCode': localVersionCode,
         'allGreen': allGreen,
+        'needsAction': needsAction,
+        'hints': hintCount,
         'reds': [for (final a in reds) a.toJson()],
         'audits': [for (final a in audits) a.toJson()],
         'sections': [for (final s in sections) s.toJson()],
