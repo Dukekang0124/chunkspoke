@@ -131,6 +131,12 @@ class ListeningArticle {
 
   /// 内容文件里 `baseRate` 的原始值；null 表示未声明。
   final double? baseRate;
+
+  /// ASR-204 映射字段（均可选）：
+  /// `moduleIds` = 本篇服务的主线模块 id（用于「每模块 ≥3 篇」与 80% 出自本模块的判定）；
+  /// `kind` = 篇目体裁（慢速对话 / 常速对话 / 独白）。
+  final List<String> moduleIds;
+  final String kind;
   final List<ListeningSentence> sentences;
 
   ListeningArticle({
@@ -145,6 +151,8 @@ class ListeningArticle {
     this.levelRaw = '',
     this.level = ListeningLevel.b1,
     this.baseRate,
+    this.moduleIds = const [],
+    this.kind = '',
     required this.sentences,
   });
 
@@ -162,6 +170,11 @@ class ListeningArticle {
       levelRaw: raw,
       level: ListeningLevel.parse(raw) ?? ListeningLevel.b1,
       baseRate: (json['baseRate'] as num?)?.toDouble(),
+      moduleIds: ((json['moduleIds'] as List? ?? [])
+          .map((e) => (e as String?)?.trim() ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList()),
+      kind: (json['kind'] as String?)?.trim() ?? '',
       sentences: (json['sentences'] as List? ?? [])
           .map((e) => ListeningSentence.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -305,6 +318,11 @@ List<String> validateListeningPack(ListeningPack pack, ContentPack content) {
     for (final lv in content.levels)
       for (final c in lv.chunks) c.id,
   };
+  // ASR-204：模块 → 该模块的词块集合，用于校验「篇目词块 ≥80% 出自本模块」。
+  final moduleChunks = <String, Set<String>>{
+    for (final lv in content.levels)
+      lv.id: {for (final c in lv.chunks) c.id},
+  };
   final articleIds = <String>{};
   final sentenceIds = <String>{};
 
@@ -352,6 +370,32 @@ List<String> validateListeningPack(ListeningPack pack, ContentPack content) {
     if (rubric == ListeningLevel.a1 && a.knownChunkRatio < 0.70) {
       errors.add('${a.id} A1 档要求复用既有词块 ≥70%，实测 '
           '${(a.knownChunkRatio * 100).round()}%');
+    }
+
+    // —— ASR-204 映射字段（可选）：一旦声明就必须成立。——
+    if (a.kind.isNotEmpty && !kArticleKinds.contains(a.kind)) {
+      errors.add('${a.id} kind 非法：${a.kind}'
+          '（须为 ${kArticleKinds.join('/')}）');
+    }
+    for (final mid in a.moduleIds) {
+      if (!moduleChunks.containsKey(mid)) {
+        errors.add('${a.id} moduleIds 指向不存在的模块：$mid');
+      }
+    }
+    if (a.moduleIds.isNotEmpty) {
+      final pool = <String>{
+        for (final mid in a.moduleIds)
+          if (moduleChunks[mid] != null) ...moduleChunks[mid]!,
+      };
+      final known = a.chunks.where((c) => !c.candidate).toList();
+      if (known.isNotEmpty) {
+        final inside = known.where((c) => pool.contains(c.id)).length;
+        final ratio = inside / known.length;
+        if (ratio < 0.80) {
+          errors.add('${a.id} 声明服务模块 ${a.moduleIds.join('/')}，'
+              '但只有 ${(ratio * 100).round()}% 的标注块出自这些模块（要求 ≥80%）');
+        }
+      }
     }
 
     final seen = <String>{};

@@ -95,7 +95,8 @@ class ChunkProgressStore {
       bool selfEval = false,
       bool review = false,
       bool fourStarsGreen = false,
-      bool enforceFourStars = false}) async {
+      bool enforceFourStars = false,
+      Map<String, String>? alsoKv}) async {
     final p = await get(key);
     final at = _clock();
     final atMs = at.millisecondsSinceEpoch;
@@ -234,6 +235,8 @@ class ChunkProgressStore {
       final newlyMastered = willMaster && p.level != ChunkLevel.mastered;
       await _write(
         p,
+        // ASR-203 修复 2：只有「本块完成」这条分支需要与断点快照同事务落盘。
+        alsoKv: alsoKv,
         asset: snap,
         level: next,
         dueDate: dueDate,
@@ -266,6 +269,7 @@ class ChunkProgressStore {
   /// 单点落库：资产快照与旧关卡轴字段一起写，避免两套状态分叉。
   Future<void> _write(
     ChunkRow p, {
+    Map<String, String>? alsoKv,
     required ChunkAssetSnapshot asset,
     ChunkLevel? level,
     int? dueDate,
@@ -278,7 +282,7 @@ class ChunkProgressStore {
     int? correctStreak,
     int? lastReviewAt,
   }) async {
-    await db.upsertChunk(ChunkRow(
+    final row = ChunkRow(
       chunkKey: p.chunkKey,
       level: level ?? p.level,
       dueDate: dueDate ?? p.dueDate,
@@ -294,7 +298,12 @@ class ChunkProgressStore {
       reviewCount: reviewCount ?? p.reviewCount,
       correctStreak: correctStreak ?? p.correctStreak,
       lastReviewAt: lastReviewAt ?? p.lastReviewAt,
-    ));
+    );
+    if (alsoKv == null || alsoKv.isEmpty) {
+      await db.upsertChunk(row);
+    } else {
+      await db.upsertChunkAndKv(row, alsoKv);
+    }
   }
 
   Future<List<String>> dueChunkKeys(int now, {int? limit}) async {

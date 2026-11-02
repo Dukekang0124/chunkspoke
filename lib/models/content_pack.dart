@@ -31,6 +31,11 @@ class Level {
   final List<Chunk> chunks;
   /// 本场景目标句清单（句句标注由哪些词块拼成），供「块拼句 / 句子闯关」使用。
   final List<TargetSentence> sentences;
+
+  /// ASR-204 阶梯锚点（可选，未声明为空串）：
+  /// `stage` = L0 生存 / L1 入门 / L2 基础 / L3 进阶；`cefr` = 目标档（A1..C1）。
+  final String stage;
+  final String cefr;
   Level({
     required this.id,
     required this.theme,
@@ -39,6 +44,8 @@ class Level {
     this.requiresChunks = const [],
     this.combos = const [],
     this.sentences = const [],
+    this.stage = '',
+    this.cefr = '',
   });
 
   factory Level.fromJson(Map<String, dynamic> json) {
@@ -56,6 +63,8 @@ class Level {
       sentences: (json['sentences'] as List? ?? [])
           .map((e) => TargetSentence.fromJson(e as Map<String, dynamic>))
           .toList(),
+      stage: (json['stage'] as String?)?.trim() ?? '',
+      cefr: (json['cefr'] as String?)?.trim() ?? '',
     );
   }
 }
@@ -73,6 +82,10 @@ class Chunk {
   final List<String> sources; // 证据来源（包内篇目 / 文章 / 频表）
   final String meaningCN;
   final ChunkSentence sentence; // 旧场景单句训练用；新场景解析时回退为词块文本本身
+
+  /// ASR-204：词块级 CEFR 档（A1/A2/B1/B2/C1）。可选，未标注为空串。
+  /// 注意：`tier`（T0/T1/T2）是核心度，与 CEFR 难度是两个正交轴，不可互相替代。
+  final String cefr;
   Chunk({
     required this.id,
     required this.text,
@@ -84,6 +97,7 @@ class Chunk {
     this.funcCat = '',
     this.freqRank = 0,
     this.sources = const [],
+    this.cefr = '',
   });
 
   /// 是否为 T0 核心库成员（复习播单优先与覆盖统计共用）。
@@ -121,9 +135,19 @@ class Chunk {
           (json['sources'] as List? ?? []).map((e) => e as String).toList(),
       meaningCN: meaningCN,
       sentence: sentence,
+      cefr: (json['cefr'] as String?)?.trim() ?? '',
     );
   }
 }
+
+/// ASR-204 允许的档位字面量（单一真源，校验器与内容生成共用）。
+const List<String> kCefrKeys = ['A1', 'A2', 'B1', 'B2', 'C1'];
+const List<String> kStageKeys = ['L0', 'L1', 'L2', 'L3'];
+const List<String> kArticleKinds = [
+  'slow_dialog',
+  'normal_dialog',
+  'monologue',
+];
 
 /// 内容包引用完整性校验（DDS §19.2 入口守门）：
 /// requires_chunks 必须指向前序级别，combos / 句子 chunkIds 必须在本篇内。
@@ -133,6 +157,18 @@ List<String> validateContentPackReferences(ContentPack pack) {
   for (var i = 0; i < pack.levels.length; i++) {
     final lv = pack.levels[i];
     final own = {for (final c in lv.chunks) c.id};
+    // ASR-204：阶梯与档位字段可选，但一旦声明就必须合法（宁可不写，不许写错）。
+    if (lv.stage.isNotEmpty && !kStageKeys.contains(lv.stage)) {
+      errors.add('${lv.id}: stage 非法 ${lv.stage}（须为 ${kStageKeys.join('/')}）');
+    }
+    if (lv.cefr.isNotEmpty && !kCefrKeys.contains(lv.cefr)) {
+      errors.add('${lv.id}: cefr 非法 ${lv.cefr}（须为 ${kCefrKeys.join('/')}）');
+    }
+    for (final c in lv.chunks) {
+      if (c.cefr.isNotEmpty && !kCefrKeys.contains(c.cefr)) {
+        errors.add('${lv.id}/${c.id}: cefr 非法 ${c.cefr}');
+      }
+    }
     for (final id in lv.requiresChunks) {
       if (!earlier.contains(id)) {
         errors.add('${lv.id}: requires_chunks 指向非前序块 $id');

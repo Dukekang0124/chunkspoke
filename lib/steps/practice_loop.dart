@@ -10,6 +10,7 @@ import '../services/chunk_progress.dart';
 import '../services/database.dart';
 import '../services/crash_log.dart';
 import '../services/learning_flow.dart';
+import '../services/progress_integrity.dart';
 import '../services/state_machine.dart';
 import '../services/session_report.dart';
 import '../ui/theme.dart';
@@ -86,6 +87,11 @@ class _PracticeLoopState extends State<PracticeLoop>
   bool _finished = false;
   LearnResume? _resume;
   int _resumeIndex = 0;
+
+  /// ASR-203 修复 1/3/4：完整关卡会话的对账结果（台账派生的块号、环、完成态）。
+  ModuleAudit? _audit;
+  bool _showDone = false;
+
   bool _challenge = false;
   bool _challengeDone = false;
   int _si = 0;
@@ -179,20 +185,49 @@ class _PracticeLoopState extends State<PracticeLoop>
     int start = 0;
     int mastered = 0;
     LearnResume? resume;
+    final full = _isFullLevel;
     try {
       if (!widget.reviewMode) {
-        start = await _p.chunkStore.nextUnmasteredIndex(_keys);
-        final raw = _p.learnResume(widget.level.id);
-        final decoded = LearnResume.tryDecode(raw);
+        if (full) {
+          // ASR-203 修复 1/4：完整关卡以台账（chunks 表）为唯一事实源。
+          // 断点快照只在「与台账一致」时保留块内相位；不一致或整模块已掌握时当场自愈。
+          var a = await ProgressIntegrity.audit(_p, widget.level,
+              chunks: _chunks);
+          if (a.staleSnapshot) {
+            try {
+              await _p.logEvent('resume_selfheal', {
+                'level': a.levelId,
+                'snapIndex': a.snapshotIndex,
+                'ledgerIndex': a.ledgerNextIndex,
+                'mastered': a.ledgerMastered,
+                'total': a.total,
+                'complete': a.complete,
+              });
+            } catch (e, st) {
+              CrashLog.write('resume_selfheal log: $e', st);
+            }
+            a = await ProgressIntegrity.heal(_p, widget.level, a);
+          }
+          _audit = a;
+          start = a.ledgerNextIndex;
+          mastered = a.ledgerMastered;
+        } else {
+          start = await _p.chunkStore.nextUnmasteredIndex(_keys);
+        }
+        // 自愈后重新取快照：只有仍与台账同位的那份才是可信的块内断点。
+        final decoded =
+            LearnResume.tryDecode(await _p.learnResumeFromDb(widget.level.id));
         if (decoded != null &&
             decoded.chunkIndex < _total &&
             _keys[decoded.chunkIndex] == decoded.chunkId) {
           resume = decoded;
         }
       }
-      for (final c in _chunks) {
-        final row = await _p.chunkStore.get(c.id);
-        if (row.level == ChunkLevel.mastered) mastered++;
+      if (!full) {
+        for (final c in _chunks) {
+          final row = await _p.chunkStore.get(c.id);
+          if (row.level == ChunkLevel.mastered) mastered++;
+        }
       }
     } catch (e, st) {
       CrashLog.write('PracticeLoop._init: $e', st);
@@ -206,19 +241,34 @@ class _PracticeLoopState extends State<PracticeLoop>
     } catch (e, st) {
       CrashLog.write('firstPracticeStart log: $e', st);
     }
-    final resumeIndex = resume?.chunkIndex ?? (start >= _total ? 0 : start);
+    final a = _audit;
+    final bool done = full && (a?.complete ?? false);
+    final int index;
+    final bool showDone;
+    final bool showResume;
+    if (full && a != null) {
+      index = a.startIndex;
+      showDone = done;
+      // 陈旧「接着上次练」一律废除：只有台账确实停在模块中间某块才弹。
+      showResume = !done && a.shouldOfferResume;
+    } else {
+      index = resume?.chunkIndex ?? (start >= _total ? 0 : start);
+      showDone = false;
+      showResume = !widget.reviewMode &&
+          (resume != null || (mastered > 0 && mastered < _total));
+    }
     setState(() {
-      _resume = resume;
-      _resumeIndex = resumeIndex;
-      _ci = resumeIndex;
+      _resume = showResume ? resume : null;
+      _resumeIndex = index;
+      _ci = index;
       _phase = _order.first;
       _stars = StarBoard.empty;
-      _showResume = !widget.reviewMode &&
-          (resume != null || (mastered > 0 && mastered < _total));
+      _showDone = showDone;
+      _showResume = showResume;
       _ready = true;
     });
-    if (!_showResume) {
-      _beginChunk(_ci, saveResume: resume == null);
+    if (!_showResume && !_showDone) {
+      _beginChunk(_ci, saveResume: _resume == null);
     }
   }
 
@@ -322,14 +372,16 @@ class _PracticeLoopState extends State<PracticeLoop>
       {int accuracy = 0,
       bool selfEval = false,
       bool fourStarsGreen = false,
-      bool enforceFourStars = false}) async {
+      bool enforceFourStars = false,
+      Map<String, String>? alsoKv}) async {
     try {
       await _p.chunkStore.applyEvent(_chunk.id, event,
           accuracy: accuracy,
           selfEval: selfEval,
           review: widget.reviewMode,
           fourStarsGreen: fourStarsGreen,
-          enforceFourStars: enforceFourStars);
+          enforceFourStars: enforceFourStars,
+          alsoKv: alsoKv);
     } catch (e, st) {
       CrashLog.write('applyEvent($event) 失败（已乐观推进，不阻塞）: $e', st);
     }
@@ -424,11 +476,22 @@ class _PracticeLoopState extends State<PracticeLoop>
   Future<void> _finishLearningChunk() async {
     final allGreen = _stars.allGreen;
     final before = await _safeGet(_chunk.id);
+    // ASR-203 修复 2：本块完成与断点快照同事务落盘。
+    // 台账推进到哪一块，快照就同步到哪一块（最后一块完成则清空），
+    // 进程即便在中间被杀，也不会留下「台账已推进、断点停在旧块」的双源分歧。
+    final alsoKv = _isFullLevel
+        ? ProgressIntegrity.resumeKvAfterChunkDone(
+            levelId: widget.level.id,
+            keys: _keys,
+            doneIndex: _ci,
+            nowMs: _p.now.millisecondsSinceEpoch)
+        : null;
     await _persist(
       ChunkEvent.speakSuccess,
       accuracy: 100,
       fourStarsGreen: allGreen,
       enforceFourStars: true,
+      alsoKv: alsoKv,
     );
     final row = await _safeGet(_chunk.id);
     if (!mounted) return;
@@ -708,17 +771,21 @@ class _PracticeLoopState extends State<PracticeLoop>
       );
 
   Widget _resumeGate() {
+    final a = _audit;
     final r = _resume;
     final from = r == null
         ? '第 ${_resumeIndex + 1} 块'
         : '第 ${r.chunkIndex + 1} 块 · ${phaseLabel(r.phase, reviewMode: false)}';
+    final double ring = a != null
+        ? a.ringRatio
+        : (_total > 0 ? _resumeIndex / _total : 0.0);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            MasteryRing(_total > 0 ? _resumeIndex / _total : 0, size: 84),
+            MasteryRing(ring, size: 84),
             const SizedBox(height: 16),
             Text('接着上次练',
                 style: TextStyle(
@@ -785,6 +852,115 @@ class _PracticeLoopState extends State<PracticeLoop>
     _startTimeout();
     _writeResume();
     _logPhase();
+  }
+
+  /// ASR-203 修复 3：整模块掌握后的完成态门。
+  ///
+  /// 台账 25/25 时不再弹陈旧的「接着上次练 · 第 21 块」，而是如实显示
+  /// 「已完成 25/25」+ 环 100%，并给两条真实出路：错块复习 / 从头开始。
+  Widget _doneGate() {
+    final a = _audit!;
+    final wrong = a.wrongChunkIds.length;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            MasteryRing(a.ringRatio, size: 84),
+            const SizedBox(height: 16),
+            Text('已完成 ${a.ledgerMastered}/${a.total}',
+                key: const Key('done-gate-title'),
+                style: TextStyle(
+                    color: kText,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Text(
+                wrong == 0
+                    ? '本模块每一块都已掌握，可以再过一遍巩固。'
+                    : '其中 $wrong 块留痕偏弱（一次没过或开口分低于 80），建议先错块复习。',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: kTextSecondary, fontSize: 15)),
+            const SizedBox(height: 26),
+            if (wrong > 0) ...[
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  key: const Key('done-gate-review-wrong'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: _startWrongChunkReview,
+                  child: Text('错块复习（$wrong 块）',
+                      style: TextStyle(
+                          color: kOnPrimary,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700)),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                key: const Key('done-gate-restart'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: kTextSecondary,
+                  side: BorderSide(color: kBorderStrong),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: _restartFromTop,
+                child: const Text('从头开始',
+                    style:
+                        TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              ),
+            ),
+            const SizedBox(height: 6),
+            TextButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: Text('返回地图', style: TextStyle(color: kTextMuted)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 完成态 → 错块复习：只把「已掌握但留痕不合格」的块排进复习会话。
+  void _startWrongChunkReview() {
+    final wrong = (_audit?.wrongChunkIds ?? const <String>[]).toSet();
+    final list =
+        widget.level.chunks.where((c) => wrong.contains(c.id)).toList();
+    if (list.isEmpty) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: const Text('错块复习')),
+        body: PracticeLoop(
+          level: widget.level,
+          chunks: list,
+          reviewMode: true,
+          onDone: (_) => Navigator.of(context).maybePop(),
+        ),
+      ),
+    ));
+  }
+
+  /// 完成态 → 从头开始：清空快照，从第 1 块重走六步。
+  void _restartFromTop() {
+    _clearResume();
+    setState(() {
+      _showDone = false;
+      _showResume = false;
+      _resume = null;
+      _completed = 0;
+    });
+    _beginChunk(0);
   }
 
   Widget _pauseView() => Center(
@@ -1124,6 +1300,7 @@ class _PracticeLoopState extends State<PracticeLoop>
     if (!_ready) {
       return Center(child: CircularProgressIndicator(color: kPrimary));
     }
+    if (_showDone) return _doneGate();
     if (_showResume) return _resumeGate();
     if (_paused) return _pauseView();
     return Column(

@@ -469,6 +469,14 @@ class ProgressService {
     return (v == null || v.isEmpty) ? null : v;
   }
 
+  /// 从落库状态读断点（对账/自检用）。
+  /// 块完成时快照是与台账同事务写进去的，绕过了内存缓存，
+  /// 因此判据一律读磁盘，别拿可能滞后一步的缓存当事实。
+  Future<String?> learnResumeFromDb(String levelId) async {
+    final v = await _db.getKv('learnResume_$levelId');
+    return (v == null || v.isEmpty) ? null : v;
+  }
+
   Future<void> setLearnResume(String levelId, String? encoded) =>
       _put('learnResume_$levelId', encoded ?? '');
 

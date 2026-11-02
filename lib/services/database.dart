@@ -261,6 +261,22 @@ class AppDatabase {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// ASR-203 修复 2：块完成写库与断点快照**同一事务**落盘。
+  ///
+  /// 之前两条写分开执行，进程在中间被杀就会留下「台账已推进、断点还停在旧块」
+  /// 的双源分歧（本次线上现象的根因之一）。合并成事务后两者要么都在、要么都不在。
+  Future<void> upsertChunkAndKv(ChunkRow row, Map<String, String> kv) async {
+    final d = await db;
+    await d.transaction((txn) async {
+      await txn.insert('chunks', row.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+      for (final e in kv.entries) {
+        await txn.insert('kv', {'key': e.key, 'value': e.value},
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
   /// 到期复习队列（资产轴）：巩固中/已巩固/长期/需重修且到期。
   /// [limit] 用于每日上限截断；超出部分保持到期，次日自然顺延。
   Future<List<ChunkRow>> dueChunks(int now, {int? limit}) async {
