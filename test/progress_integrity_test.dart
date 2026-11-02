@@ -159,7 +159,8 @@ void main() {
       expect(a.ringRatio, closeTo(0.4, 0.001));
     });
 
-    test('复现案例：台账 25/25 而断点停在第 21 块 → 判红、环=100%、自愈', () async {
+    test('复现案例：台账 25/25 而快照停在第 21 块 → 环=100%、走完成态门、不判红',
+        () async {
       final f = await _fx('repro');
       final level = _level('R', 25);
       for (final c in level.chunks) {
@@ -168,17 +169,29 @@ void main() {
       // 单块/锚定路径只写伪 level 的断点，真实 level 的快照停在旧块。
       await f.p.setLearnResume(level.id, _snap(20, level.chunks[20].id));
 
-      var a = await ProgressIntegrity.audit(f.p, level);
+      final a = await ProgressIntegrity.audit(f.p, level);
       expect(a.ledgerMastered, 25);
       expect(a.complete, isTrue);
       expect(a.ringRatio, 1.0, reason: '完成态环必须 100%，不再被陈旧快照拖成 80%');
       expect(a.shouldOfferResume, isFalse, reason: '废除陈旧「接着上次练」');
-      expect(a.staleSnapshot, isTrue);
-
-      a = await ProgressIntegrity.heal(f.p, level, a);
+      // 完成模块的快照只是「从头开始」重练留下的书签：不指错路，也不该判红。
+      expect(a.staleSnapshot, isFalse);
       expect(a.consistent, isTrue);
-      expect(a.snapshotIndex, -1);
-      expect(await f.p.learnResumeFromDb(level.id), isNull);
+      expect(ProgressIntegrity.reds([a]), isEmpty);
+    });
+
+    test('重练书签：整模块完成后从头练到第 1 块，退出重进仍零红、仍走完成态',
+        () async {
+      final f = await _fx('replay');
+      final level = _level('P', 12);
+      for (final c in level.chunks) {
+        await _mastered(f.db, c.id);
+      }
+      await f.p.setLearnResume(level.id, _snap(0, level.chunks[0].id, phase: 3));
+      final a = await ProgressIntegrity.audit(f.p, level);
+      expect(a.staleSnapshot, isFalse, reason: '真机回执里 A/B 被误判红的就是这一种');
+      expect(ProgressIntegrity.reds([a]), isEmpty);
+      expect(a.startIndex, 0, reason: '完成态门上的「从头开始」从第 1 块起');
     });
 
     test('断点超前台账（乱课练）→ 同样以台账为准', () async {
@@ -299,14 +312,14 @@ void main() {
         levelId: 'x',
         theme: 'Red',
         total: 5,
-        ledgerMastered: 5,
-        ledgerNextIndex: 5,
-        snapshotIndex: 2,
-        snapshotChunkId: 'x2',
+        ledgerMastered: 2,
+        ledgerNextIndex: 2,
+        snapshotIndex: 4,
+        snapshotChunkId: 'x4',
         snapshotValid: true,
         wrongChunkIds: [],
-        pendingChunkIds: [],
-        masteredScores: [90]);
+        pendingChunkIds: ['x2', 'x3', 'x4'],
+        masteredScores: [90, 88]);
     const clean = ModuleAudit(
         levelId: 'y',
         theme: 'Clean',
@@ -326,7 +339,7 @@ void main() {
       expect(s.hasFail, isTrue);
       expect(s.rows[0].state, CheckState.fail);
       expect(s.rows[0].value,
-          '台账 5/5 · 断点第 3 块 · 环 100% · 最低 90 / 均值 90.0');
+          '台账 2/5 · 断点第 5 块 · 环 40% · 最低 88 / 均值 89.0');
       expect(s.rows[1].state, CheckState.pass);
       expect(s.rows[1].value, contains('无断点'));
       expect(s.rows.last.value, '2 个模块 · 红名单 1');
@@ -358,7 +371,7 @@ void main() {
       expect(packs.last.state, CheckState.warn);
     });
 
-    test('音频抽检：0 字节 / 坏头 / 过短都算损坏', () async {
+    test('音频抽检：0 字节与坏头算硬故障，时长偏短只算提示并留细节', () async {
       final dir = await Directory.systemTemp.createTemp('selfcheck_audio');
       File('${dir.path}/good.wav').writeAsBytesSync(_wav(32000));
       File('${dir.path}/empty.wav').writeAsBytesSync(Uint8List(0));
@@ -373,9 +386,15 @@ void main() {
       expect(scan.zeroBytes, 1);
       expect(scan.badHeaders, 1);
       expect(scan.tooShort, 1);
-      expect(scan.broken, 3);
+      expect(scan.broken, 2, reason: '硬故障只数 0 字节与坏头，短文件不算');
       expect(scan.shortestSec, closeTo(0.01, 0.001));
-      expect(SelfCheck.audioRows(scan).first.state, CheckState.fail);
+      expect(scan.shortestDetail, contains('tiny.wav'));
+      expect(scan.shortestDetail, contains('16000Hz/1ch/16bit'));
+
+      final rows = SelfCheck.audioRows(scan);
+      expect(rows.first.state, CheckState.fail);
+      expect(rows.any((r) => r.label == '时长偏短' && r.state == CheckState.warn),
+          isTrue);
 
       final missing = await SelfCheck.scanAudioCache(['${dir.path}/none']);
       expect(missing.total, 0);

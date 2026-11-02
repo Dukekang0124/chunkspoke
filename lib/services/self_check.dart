@@ -199,7 +199,7 @@ class SelfCheck {
     }
 
     var zero = 0, badHeader = 0, tooShort = 0;
-    var shortest = double.infinity;
+    final measured = <_WavSample>[];
     for (final f in sampled) {
       final len = await f.length();
       if (len <= 0) {
@@ -213,17 +213,20 @@ class SelfCheck {
         badHeader++;
         continue;
       }
-      if (info.durationSec < shortest) shortest = info.durationSec;
+      measured.add(_WavSample(f.uri.pathSegments.last, len, info));
       if (info.durationSec < minDurationSec) tooShort++;
     }
+    measured.sort((a, b) => a.seconds.compareTo(b.seconds));
     return AudioScan(
       total: files.length,
       checked: sampled.length,
       zeroBytes: zero,
       badHeaders: badHeader,
       tooShort: tooShort,
-      shortestSec: shortest.isFinite ? shortest : 0,
-      broken: zero + badHeader + tooShort,
+      shortestSec: measured.isEmpty ? 0 : measured.first.seconds,
+      broken: zero + badHeader,
+      shortestDetail:
+          [for (final s in measured.take(3)) s.describe()].join(' ; '),
     );
   }
 
@@ -235,17 +238,21 @@ class SelfCheck {
       CheckRow(
           '音频抽检',
           '共 ${s.total} 个 · 抽检 ${s.checked} 个 · '
-          '最短 ${s.shortestSec.toStringAsFixed(2)}s',
+          '空文件 ${s.zeroBytes} · 坏头 ${s.badHeaders}',
           s.broken == 0 ? CheckState.pass : CheckState.fail),
     ];
     if (s.zeroBytes > 0) {
-      out.add(CheckRow('空文件', '${s.zeroBytes} 个 0 字节', CheckState.fail));
+      out.add(CheckRow('空文件', '${s.zeroBytes} 个 0 字节（需重听一遍重新生成）', CheckState.fail));
     }
     if (s.badHeaders > 0) {
       out.add(CheckRow('损坏音频', '${s.badHeaders} 个 WAV 头无法解析', CheckState.fail));
     }
     if (s.tooShort > 0) {
-      out.add(CheckRow('时长异常', '${s.tooShort} 个不足 0.1s', CheckState.fail));
+      // 只算提示不算故障：不同发音引擎/采样率下「短」的判据并不唯一，
+      // 真机回执里 22/22 抽检都短但用户没反馈听感异常，先把细节留进归档再定标。
+      out.add(CheckRow('时长偏短',
+          '${s.tooShort} 个不足 0.1s（最短 ${s.shortestSec.toStringAsFixed(2)}s）· ${s.shortestDetail}',
+          CheckState.warn));
     }
     return out;
   }
@@ -357,6 +364,7 @@ class AudioScan {
     required this.tooShort,
     required this.shortestSec,
     required this.broken,
+    this.shortestDetail = '',
   });
 
   final int total;
@@ -365,7 +373,12 @@ class AudioScan {
   final int badHeaders;
   final int tooShort;
   final double shortestSec;
+
+  /// 硬故障数（0 字节 + 坏头）；时长偏短只算提示，不计入。
   final int broken;
+
+  /// 最短几个文件的实测细节（名字/字节/采样参数/时长），随归档一起回传。
+  final String shortestDetail;
 
   factory AudioScan.empty() => const AudioScan(
         total: 0,
@@ -376,4 +389,17 @@ class AudioScan {
         shortestSec: 0,
         broken: 0,
       );
+}
+
+class _WavSample {
+  const _WavSample(this.name, this.bytes, this.info);
+  final String name;
+  final int bytes;
+  final WavInfo info;
+  double get seconds => info.durationSec;
+
+  String describe() =>
+      '$name ${(bytes / 1024).toStringAsFixed(1)}KB ${info.sampleRate}Hz'
+      '/${info.channels}ch/${info.bitsPerSample}bit '
+      '${info.durationSec.toStringAsFixed(2)}s';
 }
