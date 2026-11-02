@@ -22,6 +22,14 @@ String changelogTitle(String versionName) =>
 /// 规矩：**发版前必须为本版新增一条**，内容只写本版真实交付项，
 /// 不得沿用上一版；单测会核对当前 versionName 是否有条目。
 const Map<String, List<String>> changelogByVersion = {
+  '1.6.2': [
+    '· 慢速朗读改为合成时原生放慢：不再「标准速再拉伸」，金属回声与电流感消失，音高不变',
+    '· 装了高清音色包时，慢速也用高清音色（以前慢档会退回系统发音）',
+    '· 慢 / 标准 / 快三档各自缓存，切档立刻生效，不会再听到上一档的语速',
+    '· 浸泡层（磨耳朵）同规则：慢速直接合成，不再在播放端拉长',
+    '· 未装高清包时系统发音只做一层放慢，慢档不再是 0.56x 的复合减速',
+    '· 本版不改学习内容与六步流程；某篇文章首次听慢速版会在本机合成一次，之后走缓存',
+  ],
   '1.6.1': [
     '· 跟读判不过时，自动锁定这句的词表再听一遍，减少「明明念对了却显示没听到」',
     '· 设置页新增「增强识别（实验）」开关：可自愿下载约 38MB 离线增强模型，不下载不占空间',
@@ -59,7 +67,7 @@ const Map<String, List<String>> changelogByVersion = {
 };
 
 /// 兜底版本（当前发布版）；表里查不到时用它，避免空弹窗。
-const String changelogFallbackVersion = '1.6.1';
+const String changelogFallbackVersion = '1.6.2';
 
 /// 一条可展示的更新清单。
 class Changelog {

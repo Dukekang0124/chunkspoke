@@ -16,6 +16,7 @@ import 'sandbox_store.dart';
 import 'secure_store.dart';
 import 'session.dart';
 import 'tts_voice.dart';
+import 'voice_speed.dart';
 
 Future<ContentPack> loadContentPack() async {
   final str = await rootBundle.loadString('assets/content_pack.json');
@@ -643,9 +644,9 @@ enum TtsSpeed {
 /// （speak / speakAtRate / speakAndWait / auditionVoice / synthesizeToFile）
 /// 都必须从这里取参数；新增入口绕开它，等于又造了一个硬编码。
 ///
-/// 边界（裁定）：浸泡层文章播放的 `baseRate` 属**内容轴**（每级由内容声明并由
-/// 校验器断言），不叠加用户档位；高清包是固定语速（`HdVoiceService.kSpeed`
-/// 对齐标准档），用户改了档位就只走系统引擎，避免「选了慢却听到原速」。
+/// 边界（ASR-200 修订）：高清包已全档接管，慢/快档用 [VoiceSpeed] 的
+/// VITS 原生 speed 合成；浸泡层的档位属**内容轴**（每级由内容声明并由
+/// 校验器断言），由播放器显式把档位传进合成管线，不叠加用户朗读档位。
 class VoiceProfile {
   const VoiceProfile({this.speed = TtsSpeed.normal});
 
@@ -1201,10 +1202,12 @@ class TtsService implements ListeningVoice {
   Future<bool> speak(String text) async {
     final hd = _hdVoice;
     final p = profile;
-    // 高清包是固定语速（kSpeed 对齐标准档）。用户调过档位就只走系统引擎，
-    // 否则「设置里选了慢、听出来还是原速」就是不诚实（§30.5 S-4）。
-    if (hd != null && hd.active && p.isStandard) {
-      if (await hd.speak(text)) {
+    // ASR-200：高清包全档接管，慢/快档用 VITS 原生 speed 合成。
+    // 只有高清包不可用或合成失败才回落系统引擎（回落=甲）。
+    if (hd != null && hd.active) {
+      final ok = await hd.speak(text,
+          speed: VoiceSpeed.hdForRate(p.speed.factor));
+      if (ok) {
         _lastError = null;
         return true;
       }
@@ -1252,16 +1255,20 @@ class TtsService implements ListeningVoice {
   }
 
   /// 浸泡层：按指定音源把一句合成到 WAV（失败返回 false，由管线回退）。
+  ///
+  /// [rate] 是浸泡层的**内容轴**档位（0.75/1.0/1.25），由播放器显式传入；
+  /// 不再叠加用户朗读档位，也不再靠播放端变速。
   @override
   Future<bool> synthesizeToFile(String text, String fullPath,
-      {required bool hd}) async {
+      {required bool hd, required double rate}) async {
     final t = text.trim();
     if (t.isEmpty) return false;
     if (hd) {
       final s = _hdSynth;
       if (s == null || !(_hdVoice?.active ?? false)) return false;
       try {
-        return await s.synthesizeToFile(t, fullPath);
+        return await s.synthesizeToFile(t, fullPath,
+            speed: VoiceSpeed.hdForRate(rate));
       } catch (e, st) {
         _lastError = 'hd-synth: $e';
         CrashLog.write('TtsService.synthesizeToFile(hd): $e', st);
@@ -1282,7 +1289,8 @@ class TtsService implements ListeningVoice {
       return false;
     }
     try {
-      await _applyProfile();
+      // 单层控速：档位只喂给合成引擎，WAV 播放时不再乘倍率。
+      await _applyProfile(VoiceSpeed.systemForRate(rate));
       final ok = await a.synthesizeToFile(t, fullPath);
       _lastError = ok ? null : 'tts-synth-failed';
       return ok;

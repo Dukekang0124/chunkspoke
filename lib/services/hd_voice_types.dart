@@ -15,7 +15,9 @@ class HdAudio {
 /// TtsService 只依赖这一层：判定是否接管发音、发声、停止。
 abstract class HdVoiceSpeaker {
   bool get active;
-  Future<bool> speak(String text);
+
+  /// [speed] 为 VITS 合成 speed（见 VoiceSpeed）；null = 标准档。
+  Future<bool> speak(String text, {double? speed});
   Future<void> stop();
 }
 
@@ -24,7 +26,10 @@ abstract class HdVoiceSpeaker {
 abstract class HdVoiceSynthesizer {
   /// 模型版本标签：音色/模型升级后音频缓存须失效重合成。
   String get modelTag;
-  Future<bool> synthesizeToFile(String text, String fullPath);
+
+  /// [speed] 为 VITS 合成 speed（见 VoiceSpeed）；null = 标准档。
+  Future<bool> synthesizeToFile(String text, String fullPath,
+      {double? speed});
 }
 
 abstract class HdVoiceSynth {
