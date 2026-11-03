@@ -1,0 +1,17 @@
+# ASR-206 §三 · 第四闸基线：上一线上版本的签名证书指纹
+#
+# 规矩：待发布 APK 的签名证书 SHA-256 必须等于这里的 certSha256，不一致 → 退出码 1，
+# 禁止 bump 清单。换签的后果不是「装不上新版本」这么简单——Android 按签名判定同一应用，
+# 换证书后全量老用户无法覆盖安装，只能卸载重装，而学习进度只存本机 = 直接丢进度。
+# 所以：现行 debug 证书保持不动；未来若必须换签，先出迁移方案单（见 LAST-185）并另行拍板。
+#
+# 取数方式（可复核）：本地 releases 仓副本 apk/1.7.2/chunkspoke-latest.apk
+# 的 sha256 与线上 1.7.2 清单逐字节一致（e9a7ac41…），再用 apksigner --print-certs 实测。
+versionName=1.7.2
+versionCode=4072
+apkSha256=e9a7ac410e80a60332e949be82f6be775afe758ba3e173bcaf2b966fd38e6a1d
+certSha256=3244b4f8af39a4fca1b6dbef5fdac8bacf7e0b8cf88cae33094b2428ece77465
+certSubject=CN=Android Debug
+source=https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.7.2/chunkspoke-latest.apk
+fetchedAt=2026-11-03
+verifiedBy=tools/release_gate.py 闸 3/3（apksigner verify --print-certs）

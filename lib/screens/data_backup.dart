@@ -138,7 +138,7 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
       );
       if (ok != true) return;
       final applied = await applyChannelImport(
-          db: p.database, gate: gate, text: text);
+          db: p.database, gate: gate, text: text, store: p.chunkStore);
       // 设置可能被补进 kv 缓存，重载一次让页面立刻看到新值。
       await p.init();
       if (!mounted) return;

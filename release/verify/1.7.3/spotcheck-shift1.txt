@@ -1,0 +1,13 @@
+# 班次 1 · 2026-11-03T20:05:23+08:00 · bash tools/spotcheck.sh 1.7.3 4073
+# 说明：上一轮 19:52 的 Pages ✗ 是本脚本把站点路径拼成 /Dukekang0124/xxx 造成的（已修），非线上缺件；修后结果如下
+== 1/3 三源清单（1.7.3）
+  raw.githubusercontent.com    http=200 sha=8a6d4eac39489c07 1.7.3 4073
+  dukekang0124.github.io       http=200 sha=8a6d4eac39489c07 1.7.3 4073
+  cdn.jsdelivr.net             http=200 sha=8a6d4eac39489c07 1.7.3 4073
+== 2/3 官网首页
+  ✓ 下载链已指 apk/1.7.3/
+  ✓ 版本徽标 v1.7.3
+== 3/3 分片全文 sha（part0）
+  ✓ part0 sha256 = 8d2da10d9db95f3be89d58756eab31ab015c9a194cd69e125843516f6b35739c（15728640 B）
+[抽验通过] 1.7.3 链路完好
+exit=0

@@ -137,6 +137,50 @@ class ChunkProgressStore {
     return {learnResumeKey(levelId): encoded};
   }
 
+  /// ASR-206 §二：导入合并专用写入点——一次改多条台账时，锚点按**写后**的台账
+  /// 重新派生，并与块行落在同一事务里（保证「写台账必同事务同步锚点」）。
+  ///
+  /// 无关卡索引（旧调用/单测）时退回逐条 upsert，行为与改动前一致。
+  Future<void> applyImportedRows(List<ChunkRow> rows) async {
+    if (rows.isEmpty) return;
+    final keysOf = chunkKeysOfLevel;
+    final levelOf = levelOfChunk;
+    if (keysOf == null || levelOf == null) {
+      for (final r in rows) {
+        await db.upsertChunk(r);
+      }
+      return;
+    }
+    final incoming = {for (final r in rows) r.chunkKey: r};
+    final touched = {
+      for (final r in rows)
+        if ((levelOf(r.chunkKey) ?? '').isNotEmpty) levelOf(r.chunkKey)!
+    };
+    final kv = <String, String>{};
+    for (final levelId in touched) {
+      final keys = keysOf(levelId) ?? const <String>[];
+      if (keys.isEmpty) continue;
+      var anchor = keys.length;
+      for (var i = 0; i < keys.length; i++) {
+        final row = incoming[keys[i]] ?? await db.getChunk(keys[i]);
+        if (row == null || row.level != ChunkLevel.mastered) {
+          anchor = i;
+          break;
+        }
+      }
+      kv[learnResumeKey(levelId)] = anchor >= keys.length
+          ? ''
+          : LearnResume(
+              chunkIndex: anchor,
+              chunkId: keys[anchor],
+              phase: 0,
+              stars: StarBoard.empty,
+              savedAt: _clock().millisecondsSinceEpoch,
+            ).encode();
+    }
+    await db.upsertChunksAndKv(rows, kv);
+  }
+
   Future<void> applyEvent(String key, ChunkEvent event,
       {int accuracy = 0,
       bool selfEval = false,

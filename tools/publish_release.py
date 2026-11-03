@@ -374,7 +374,8 @@ def main():
     # ASR-205 发版门禁：不变量测试全过 + 自检归档零红，缺一不发（含 --manifest-only）。
     subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'release_gate.py'),
                     '--version-name', str(manifest.get('versionName')),
-                    '--version-code', str(manifest.get('versionCode'))], check=True)
+                    '--version-code', str(manifest.get('versionCode')),
+                    '--apk', args.apk], check=True)
 
     if args.dry_run:
         log('\n[dry-run] 校验通过，未做任何线上改动。去掉 --dry-run 即真正发布。')

@@ -1,0 +1,15 @@
+# 三源逐字节复核 2026-11-03T19:29:31+08:00
+round1 cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main                http=200 sha256=8a6d4eac39489c07 bytes=16945
+round1 raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main          http=200 sha256=8a6d4eac39489c07 bytes=16945
+round1 dukekang0124.github.io/chunkspoke-releases                               http=200 sha256=8a6d4eac39489c07 bytes=16945
+round2 cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main                http=200 sha256=8a6d4eac39489c07 bytes=16945
+round2 raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main          http=200 sha256=8a6d4eac39489c07 bytes=16945
+round2 dukekang0124.github.io/chunkspoke-releases                               http=200 sha256=8a6d4eac39489c07 bytes=16945
+round3 cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main                http=200 sha256=8a6d4eac39489c07 bytes=16945
+round3 raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main          http=200 sha256=8a6d4eac39489c07 bytes=16945
+round3 dukekang0124.github.io/chunkspoke-releases                               http=200 sha256=8a6d4eac39489c07 bytes=16945
+
+# 包体长度（Range 探测）
+dukekang0124.github.io                                                                 Content-Range: bytes 0-0/60201731
+raw.githubusercontent.com                                                              Content-Range: bytes 0-0/60201731
+cdn.jsdelivr.net                                                                       content-range: bytes 0-0/6429799

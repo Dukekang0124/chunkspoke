@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 import 'database.dart';
+import 'chunk_progress.dart';
 import 'legacy_gate.dart';
 
 /// 1.5.10（#209 通道版）· 整机数据 JSON 导出 / 导入。
@@ -285,6 +286,7 @@ Future<ChannelImportPlan> applyChannelImport({
   required AppDatabase db,
   required LegacyGate gate,
   required String text,
+  ChunkProgressStore? store,
 }) async {
   final plan = await previewChannelImport(db: db, text: text);
   // D1：这一行必须在任何 DB 写入之前。
@@ -298,13 +300,23 @@ Future<ChannelImportPlan> applyChannelImport({
   }
 
   final current = {for (final r in await db.allChunks()) r.chunkKey: r};
+  final writes = <ChunkRow>[];
   for (final raw in (plan.payload['chunks'] as List)) {
     final m = Map<String, Object?>.from(raw as Map);
     final key = (m['chunk_key'] ?? '').toString();
     if (key.isEmpty) continue;
     final local = current[key];
     if (local != null && !_incomingWins(m, local)) continue;
-    await db.upsertChunk(_rowFrom(m));
+    writes.add(_rowFrom(m));
+  }
+  // ASR-206 §二：导入也是台账写入点——块行与受影响关卡的锚点必须同事务落盘，
+  // 否则「导入后台账前进、锚点停在旧块」就是第三案。无关卡索引时退回逐条写。
+  if (store != null) {
+    await store.applyImportedRows(writes);
+  } else {
+    for (final r in writes) {
+      await db.upsertChunk(r);
+    }
   }
 
   for (final raw in (plan.payload['sessions'] as List)) {

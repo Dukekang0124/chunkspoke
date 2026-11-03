@@ -144,7 +144,11 @@ class ProgressService {
     await _db.setKv('review', jsonEncode({}));
     await _db.resetChunks();
     await _db.setKv('dataVersion', Migration.currentDataVersion);
-    _cache.addAll(await _db.getAllKv());
+    // 重置后一律以磁盘为准重建缓存：清台账已同事务把断点快照置空，
+    // 但内存里若还留着旧锚点，同一会话就会读到「台账归零、断点还在」的假分歧。
+    _cache
+      ..clear()
+      ..addAll(await _db.getAllKv());
     return true;
   }
 

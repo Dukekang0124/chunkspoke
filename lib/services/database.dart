@@ -277,6 +277,25 @@ class AppDatabase {
     });
   }
 
+  /// ASR-206 §二：批量写台账（导入合并）与受影响关卡的锚点派生**同一事务**。
+  ///
+  /// 导入是「一次改多条台账」的写入点：若只写块行，锚点会停在旧块，
+  /// 正好复现 ASR-205 修掉的双源分歧（第三案）。空值 = 该关已整关掌握 → 清锚点。
+  Future<void> upsertChunksAndKv(
+      List<ChunkRow> rows, Map<String, String> kv) async {
+    final d = await db;
+    await d.transaction((txn) async {
+      for (final row in rows) {
+        await txn.insert('chunks', row.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      for (final e in kv.entries) {
+        await txn.insert('kv', {'key': e.key, 'value': e.value},
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
   /// 到期复习队列（资产轴）：巩固中/已巩固/长期/需重修且到期。
   /// [limit] 用于每日上限截断；超出部分保持到期，次日自然顺延。
   Future<List<ChunkRow>> dueChunks(int now, {int? limit}) async {
@@ -346,8 +365,20 @@ class AppDatabase {
   }
 
   // 旧数据重置（M4）：清空进度表，保留 kv 设置。
+  //
+  // ASR-206 §二：清台账必须同事务清断点快照，否则「锚点还在第 N 块、台账已归零」
+  // 会变成反向脏数据（锚点>台账），一键修复也只会把它再派生回去。
   Future<void> resetChunks() async {
-    await (await db).delete('chunks');
+    final d = await db;
+    await d.transaction((txn) async {
+      await txn.delete('chunks');
+      final stale = await txn.query('kv',
+          columns: ['key'], where: "key LIKE 'learnResume_%'");
+      for (final r in stale) {
+        await txn.insert('kv', {'key': r['key'], 'value': ''},
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
   }
 
   // 全部已掌握词块 key（用于场景解锁 ≥80% 与首页统计）。

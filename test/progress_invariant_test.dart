@@ -146,4 +146,115 @@ void main() {
       }
     }
   }, timeout: const Timeout(Duration(minutes: 10)));
+
+  // ── ASR-206 §二：写入点矩阵（六步之外的台账写入点各造一条）──────────────
+  //
+  // 规矩：**任何写台账的地方，必须在同一事务里把锚点同步到「首个未完成块」**。
+  // 上面 1000 组只覆盖 applyEvent 家族；导入 / 迁移重置 / 失败回退 / 一键修复
+  // 走的是别的调用点，第三案只会从这些没被断言的口子长出来。
+
+  Future<void> freshLevel(ProgressService p, Level level) async {
+    await _reset(p);
+    p.setChunkTiers(ContentPack(version: 'test', levels: [level]));
+  }
+
+  Future<String?> anchorRaw(ProgressService p, String levelId) =>
+      p.learnResumeFromDb(levelId);
+
+  test('写入点·导入合并：块行与锚点同事务，锚点=首个未完成块', () async {
+    final p = ProgressService(db: AppDatabase(path: ':memory:'));
+    await p.init();
+    final level = _level('I', 4);
+    await freshLevel(p, level);
+
+    ChunkRow masteredRow(int i) => ChunkRow(
+          chunkKey: 'ic$i',
+          level: ChunkLevel.mastered,
+          dueDate: 0,
+          failCount: 0,
+          lastScore: 90,
+          l2OneTry: 1,
+        );
+
+    // 备份带来前 3 块已掌握：锚点必须立刻落到第 4 块（ic3），不等 heal。
+    await p.chunkStore.applyImportedRows(
+        List.generate(3, (i) => masteredRow(i)));
+    final snap = LearnResume.tryDecode(await anchorRaw(p, 'I'));
+    expect(snap, isNotNull, reason: '导入后台账前进，锚点必须同事务写出');
+    expect(snap!.chunkIndex, 3, reason: '锚点应=首个未完成块（第 4 块）');
+    expect(snap.chunkId, 'ic3');
+    final a1 = await ProgressIntegrity.audit(p, level);
+    expect(a1.consistent, isTrue, reason: '导入不应留下台账/锚点分歧');
+
+    // 整关补齐：锚点应清空（末块+1 口径）。
+    await p.chunkStore.applyImportedRows([masteredRow(3)]);
+    final raw = await anchorRaw(p, 'I');
+    expect(raw == null || raw.trim().isEmpty, isTrue,
+        reason: '整关掌握应清空锚点，实际=$raw');
+    final a2 = await ProgressIntegrity.audit(p, level);
+    expect(a2.complete, isTrue);
+    expect(a2.consistent, isTrue);
+  });
+
+  test('写入点·迁移重置：清台账同事务清锚点，不留反向脏快照', () async {
+    final p = ProgressService(db: AppDatabase(path: ':memory:'));
+    await p.init();
+    final level = _level('R', 4);
+    await freshLevel(p, level);
+    await _learn(p, 'rc0');
+    await _learn(p, 'rc1');
+    expect(LearnResume.tryDecode(await anchorRaw(p, 'R'))!.chunkIndex, 2,
+        reason: '前置：两块完成后锚点应在第 3 块');
+
+    await p.database.resetChunks();
+    final d = await p.database.db;
+    final left = await d.query('kv', where: "key LIKE 'learnResume_%'");
+    expect(left, isNotEmpty, reason: '重置应留下已清空的锚点行');
+    for (final r in left) {
+      expect((r['value'] as String?)?.trim().isNotEmpty, isFalse,
+          reason: '清台账必须同事务清断点，实际=${r['key']}=${r['value']}');
+    }
+    final audit = await ProgressIntegrity.audit(p, level);
+    expect(audit.ledgerMastered, 0);
+    expect(audit.consistent, isTrue, reason: '重置后不得判红（锚点>台账=脏数据）');
+  });
+
+  test('写入点·开口失败：非完成路径不得推动锚点', () async {
+    final p = ProgressService(db: AppDatabase(path: ':memory:'));
+    await p.init();
+    final level = _level('F', 4);
+    await freshLevel(p, level);
+    await _learn(p, 'fc0');
+    final before = LearnResume.tryDecode(await anchorRaw(p, 'F'))!.chunkIndex;
+    expect(before, 1);
+
+    await p.chunkStore.applyEvent('fc1', ChunkEvent.assembleCorrect);
+    await p.chunkStore.applyEvent('fc1', ChunkEvent.dragCorrect);
+    await p.chunkStore.applyEvent('fc1', ChunkEvent.accuracyPass, accuracy: 90);
+    await p.chunkStore.applyEvent('fc1', ChunkEvent.speakFail);
+    final after = LearnResume.tryDecode(await anchorRaw(p, 'F'))!.chunkIndex;
+    expect(after, 1, reason: '未掌握的块不能把锚点推前');
+    final a = await ProgressIntegrity.audit(p, level);
+    expect(a.consistent, isTrue);
+  });
+
+  test('写入点·诊断一键修复：脏锚点按台账归位', () async {
+    final p = ProgressService(db: AppDatabase(path: ':memory:'));
+    await p.init();
+    final level = _level('H', 4);
+    await freshLevel(p, level);
+    await _learn(p, 'hc0');
+    await _learn(p, 'hc1');
+    // 人为造旧锚点（模拟升级前留下的分歧数据）。
+    await p.setLearnResume('H',
+        const LearnResume(chunkIndex: 0, chunkId: 'hc0', phase: 0, stars: StarBoard.empty, savedAt: 1)
+            .encode());
+    final dirty = await ProgressIntegrity.audit(p, level);
+    expect(dirty.staleSnapshot, isTrue, reason: '前置：应造出陈旧锚点');
+
+    final healed = await ProgressIntegrity.heal(p, level, dirty);
+    expect(healed.snapshotIndex, 2, reason: '一键修复=推进到首个未完成块');
+    expect(healed.consistent, isTrue);
+    expect(healed.staleSnapshot, isFalse, reason: '修复后不得再被判陈旧锚点');
+  });
 }
