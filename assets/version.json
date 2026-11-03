@@ -1,15 +1,15 @@
 {
-  "versionName": "1.7.1",
-  "versionCode": 4071,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.1/chunkspoke-latest.apk",
+  "versionName": "1.7.2",
+  "versionCode": 4072,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.2/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.1/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.7.1/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.2/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.7.2/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "7f0023766cd1192d3f5ae5fe9d299c25540d53d3f74cfef4b72eeafff26f3b1c",
-  "size": 60201907,
-  "notes": "v1.7.1：修「练完了还提示接着上次练」——进度以台账为唯一事实源，整模块掌握时如实显示已完成 N/N + 环 100%，并给错块复习/从头开始；每完成一块，断点与台账同一事务落盘，杀进程也不再两边不同步；打开模块自动对账自愈（断点落后即推进到首个未完成块，学习数据本身不受影响）。设置新增「诊断与自检」：逐模块比对台账/断点/环/分数 + 红名单一键修复，并自检语音引擎、可选包、音频缓存与更新链路，每次结果自动留档。",
+  "sha256": "b1d63f20f7aeff98c4c21f4874c8f7fe50f71cd8fb8e87b14aef1cdd6da52046",
+  "size": 60201727,
+  "notes": "v1.7.2：自由造句第 6/6 步识别不确定时不再直接判错——多条候选自动挑回、弹确认卡「就是这句」、跳过入口后置；沙盒近音写法改为词级模糊匹配（阈值不变）；识别失败自动改用增强/云端再听并如实标注来源。本版不改学习内容与六步流程。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.1/parts/apk.part0",

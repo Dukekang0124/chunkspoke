@@ -217,6 +217,76 @@ void main() {
     test('空输入 → empty', () {
       expect(judgeFreeUse(input: '  ', chunkText: 'good morning').reason, 'empty');
     });
+
+    // S0 ASR 容错（2026-11-03 真机误判：What size → UD A SIZE）
+    test('实词全中、仅缺 1 个虚词 → uncertain（不静默判过）', () {
+      final v = judgeFreeUse(
+          input: 'UD A SIZE DO YOU WANT', chunkText: 'what size');
+      expect(v.pass, isFalse);
+      expect(v.chunkUsed, isFalse);
+      expect(v.reason, 'uncertain');
+    });
+
+    test('识别正确 → ok（对照上一条，证明误判只来自 what 的转写）', () {
+      final v = judgeFreeUse(
+          input: 'What size do you want?', chunkText: 'what size');
+      expect(v.pass, isTrue);
+      expect(v.reason, 'ok');
+    });
+
+    test('复述词块但无新增内容 → tooShort（不因容错放过）', () {
+      expect(
+          judgeFreeUse(input: 'what size', chunkText: 'what size').reason,
+          'tooShort');
+    });
+
+    test('实词命中但确实换了句式 → 仍只给 uncertain，须用户确认', () {
+      final v = judgeFreeUse(
+          input: 'I want a large size please', chunkText: 'what size');
+      expect(v.pass, isFalse);
+      expect(v.reason, 'uncertain');
+    });
+
+    test('实词没中 → 仍是 noChunk（容错只补虚词）', () {
+      final v =
+          judgeFreeUse(input: 'hello there friend', chunkText: 'what size');
+      expect(v.reason, 'noChunk');
+    });
+
+    test('词块全是虚词时不做容错（避免随便一句就弹确认）', () {
+      final v = judgeFreeUse(input: 'I want coffee now', chunkText: 'to the');
+      expect(v.reason, 'noChunk');
+    });
+  });
+
+  group('S1 多候选挑词块（pickChunkCandidate）', () {
+    test('主候选缺词块、候选 2 有 → 采用候选 2', () {
+      expect(
+        pickChunkCandidate(
+            ['UD A SIZE DO YOU WANT', 'what size do you want', 'what sides'],
+            'what size'),
+        'what size do you want',
+      );
+    });
+
+    test('主候选已覆盖 → 保持主候选（展示口径不漂移）', () {
+      expect(
+        pickChunkCandidate(
+            ['what size do you want', 'which size do you need'], 'what size'),
+        'what size do you want',
+      );
+    });
+
+    test('都不覆盖 → 退回主候选', () {
+      expect(pickChunkCandidate(['UD A SIZE', 'which sides'], 'what size'),
+          'UD A SIZE');
+    });
+
+    test('空候选列表 → 空串；主候选为空但候选非空 → 用候选', () {
+      expect(pickChunkCandidate(const [], 'what size'), '');
+      expect(pickChunkCandidate(['', 'what size now'], 'what size'),
+          'what size now');
+    });
   });
 
   test('单块超时预算为 8 分钟', () {

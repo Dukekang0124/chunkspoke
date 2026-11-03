@@ -29,6 +29,8 @@ import 'services/loaders.dart';
 import 'services/speech.dart';
 import 'services/state_machine.dart';
 import 'services/vosk_engine.dart';
+import 'steps/free_use_step.dart';
+import 'steps/l4_step.dart';
 import 'steps/practice_loop.dart';
 import 'ui/theme.dart';
 
@@ -37,6 +39,13 @@ import 'ui/theme.dart';
 /// 生产入口 main.dart 不设置注入，判定仍由真实 Vosk + judgeSpeech 完成。
 class _ScriptedTranscriber implements Transcriber {
   final bool alwaysHit;
+
+  /// ASR 误判修复（S1/S2）取证模式：
+  /// - ''          旧行为
+  /// - 'alt-good'  主候选误识、第 2 条候选含词块 → 应被挑回并通过
+  /// - 'alt-bad'   多候选都不含词块 → 应给「就是这句」确认入口
+  String freeUseMode = '';
+
   _ScriptedTranscriber({this.alwaysHit = false});
   final Map<String, int> _calls = {};
 
@@ -51,6 +60,19 @@ class _ScriptedTranscriber implements Transcriber {
 
   @override
   Future<VoskResult> transcribe(String wavPath, List<String> phrases) async {
+    const heard = 'UD A SIZE DO YOU WANT';
+    if (freeUseMode == 'alt-good') {
+      return const VoskResult(heard, null, alternatives: [
+        heard,
+        'what size do you want',
+      ]);
+    }
+    if (freeUseMode == 'alt-bad') {
+      return const VoskResult(heard, null, alternatives: [
+        heard,
+        'which side do you want',
+      ]);
+    }
     final target = phrases.isEmpty ? '' : phrases.first;
     final n = (_calls[target] ?? 0) + 1;
     _calls[target] = n;
@@ -85,8 +107,8 @@ final GlobalKey e2eRootKey = GlobalKey();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   const alwaysHit = bool.fromEnvironment('E2E_ALWAYS_HIT');
-  SpeechService.debugTranscriberOverride =
-      _ScriptedTranscriber(alwaysHit: alwaysHit);
+  final scripted = _ScriptedTranscriber(alwaysHit: alwaysHit);
+  SpeechService.debugTranscriberOverride = scripted;
   const startChallenge =
       bool.fromEnvironment('E2E_START_CHALLENGE', defaultValue: true);
   const seedCount = int.fromEnvironment('E2E_SEED_COUNT', defaultValue: 0);
@@ -212,6 +234,8 @@ Future<void> main() async {
                                 : screen == 'sandbox'
                                     ? _SandboxStress(
                                         progress: progress, tts: tts)
+                                    : screen == 'freefix'
+                                        ? _FixScreen(scripted: scripted)
                                     : LevelScreen(level: level);
     runZonedGuarded(() {
       runApp(
@@ -2337,5 +2361,208 @@ class _Q3Auto with _AutoUi {
     }
     await Future.delayed(const Duration(milliseconds: 250));
     return true;
+  }
+}
+
+// ——————————————————————————————————————————————
+// ASR 误判修复（S0/S1/S2 + D1）E2E 取证台
+// 三幕连续跑：① L4 首屏无跳过 → ② 多候选救回 → ③ 不确定时确认入口
+// 识别文本由 _ScriptedTranscriber 注入，其余（录音/守门/判定/UI）全走真实路径。
+// ——————————————————————————————————————————————
+
+class _FixScreen extends StatefulWidget {
+  final _ScriptedTranscriber scripted;
+  const _FixScreen({required this.scripted});
+
+  @override
+  State<_FixScreen> createState() => _FixScreenState();
+}
+
+class _FixScreenState extends State<_FixScreen> {
+  static final Chunk _chunk = Chunk.fromJson({
+    'id': 'e2e_what_size',
+    'text': 'what size',
+    'type': 'content',
+    'meaningCN': '什么尺码',
+  });
+  static final Level _level = Level(
+    id: 'A',
+    theme: '点单',
+    sceneImage: '',
+    chunks: [_chunk],
+    sentences: const [],
+  );
+
+  int _stage = 0;
+  bool _done = false;
+  bool _ok = false;
+  String _status = '准备中…';
+  final List<String> _rows = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _run());
+  }
+
+  Future<void> _run() async {
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    final auto = _FixAuto(
+      onRow: (name, ok, detail) => setState(
+          () => _rows.add('${ok ? 'PASS' : 'FAIL'} · $name · $detail')),
+      setMode: (m) => widget.scripted.freeUseMode = m,
+      setStage: (s) => setState(() => _stage = s),
+    );
+    var ok = false;
+    try {
+      ok = await auto.run();
+    } catch (e, st) {
+      CrashLog.write('E2E fix: $e', st);
+      auto.failure = '异常：$e';
+    }
+    if (!mounted) return;
+    setState(() {
+      _done = true;
+      _ok = ok;
+      _status = ok ? 'S1/S2/D1 全过' : '中断：${auto.failure}';
+    });
+  }
+
+  Widget _body() {
+    if (_done) {
+      return ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(_status,
+              style: TextStyle(
+                  color: _ok ? kUnlocked : kError,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          for (final r in _rows)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Text(r,
+                  style: TextStyle(
+                      color: r.startsWith('PASS') ? kUnlocked : kError,
+                      fontSize: 12)),
+            ),
+        ],
+      );
+    }
+    if (_stage == 0) {
+      return L4Step(
+          chunk: _chunk,
+          levelId: 'A',
+          theme: '点单',
+          targetText: 'What size do you want?',
+          onPass: () {},
+          onSkip: () {});
+    }
+    return FreeUseStep(
+      key: ValueKey('freeuse-$_stage'),
+      chunk: _chunk,
+      level: _level,
+      referenceText: 'What size do you want?',
+      meaningCN: '什么尺码',
+      onPass: (_) {},
+      onSkip: () {},
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kBg,
+      appBar: AppBar(title: Text('E2E · ASR 误判修复（${_stage + 1}/3）')),
+      body: _body(),
+    );
+  }
+}
+
+class _FixAuto with _AutoUi {
+  _FixAuto({
+    required this.onRow,
+    required this.setMode,
+    required this.setStage,
+  });
+
+  @override
+  String get logTag => 'E2E_FIX';
+
+  final void Function(String name, bool ok, String detail) onRow;
+  final void Function(String mode) setMode;
+  final void Function(int stage) setStage;
+
+  @override
+  void _check(String name, bool ok, String detail) {
+    super._check(name, ok, detail);
+    onRow(name, ok, detail);
+  }
+
+  Future<bool> run() async {
+    // ① D1：L4 首屏（未录音）不得出现跳过入口。
+    if (!await _waitText('开口说出来', timeout: const Duration(seconds: 25))) {
+      return false;
+    }
+    await Future.delayed(const Duration(milliseconds: 600));
+    final skipVisible = _hasText('先跳过，明天复习见');
+    _check('D1 首屏未录音无跳过按钮', !skipVisible, 'visible=$skipVisible');
+    _log('SHOT|l4_first_screen');
+    // 留出取证窗口：外部按 2fps 截屏，2.5s 足够抓到该状态。
+    await Future.delayed(const Duration(milliseconds: 2500));
+
+    // ② S1：主候选误识、第 2 条候选含词块 → 挑回并直接通过。
+    setMode('alt-good');
+    setStage(1);
+    if (!await _waitText('第 6/6 步 · 自由造句')) return false;
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!await _tapText('说出来')) return false;
+    if (!await _waitText('说完点这里')) return false;
+    await Future.delayed(const Duration(milliseconds: 2500));
+    if (!await _tapText('说完点这里')) return false;
+    if (!await _waitText('完成这一块', timeout: const Duration(seconds: 30))) {
+      _log('SHOT|s1_fail');
+      return false;
+    }
+    final adopted = _hasText('你说：what size do you want');
+    _check('S1 采用含词块的候选', adopted,
+        _firstWithPrefix('你说：'));
+    final passed = _hasText('✓ 目标块用上了');
+    _check('S1 判定通过', passed, passed ? '✓ 目标块用上了' : '未见通过文案');
+    _log('SHOT|s1_adopted');
+    await Future.delayed(const Duration(milliseconds: 2500));
+
+    // ③ S2：多候选都救不回 → 弹确认卡 →「就是这句」按确认通过。
+    setMode('alt-bad');
+    setStage(2);
+    if (!await _waitText('第 6/6 步 · 自由造句')) return false;
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!await _tapText('说出来')) return false;
+    if (!await _waitText('说完点这里')) return false;
+    await Future.delayed(const Duration(milliseconds: 2500));
+    if (!await _tapText('说完点这里')) return false;
+    if (!await _waitText('你是不是想说「what size」？',
+        timeout: const Duration(seconds: 30))) {
+      _log('SHOT|s2_no_confirm');
+      return false;
+    }
+    _check('S2 识别不确定时给确认入口',
+        _hasText('我听到的是「UD A SIZE DO YOU WANT」'),
+        _firstWithPrefix('我听到的是'));
+    _log('SHOT|s2_confirm_card');
+    await Future.delayed(const Duration(milliseconds: 2500));
+    if (!await _tapText('就是这句')) return false;
+    if (!await _waitText('完成这一块', timeout: const Duration(seconds: 10))) {
+      return false;
+    }
+    final confirmed = _hasText('✓ 目标块用上了（按你的确认）');
+    _check('S2 确认后通过且如实标注', confirmed,
+        confirmed ? '按你的确认' : '未见确认标注');
+    _log('SHOT|s2_confirmed');
+    await Future.delayed(const Duration(milliseconds: 2500));
+    _log('DONE|${allPassed ? 'PASS' : 'FAIL'}|checks=${_checks.length}');
+    return allPassed;
   }
 }
