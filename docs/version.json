@@ -1,35 +1,35 @@
 {
-  "versionName": "1.7.1",
-  "versionCode": 4071,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.1/chunkspoke-latest.apk",
+  "versionName": "1.7.2",
+  "versionCode": 4072,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.2/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.1/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.7.1/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.2/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.7.2/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "50242a4707ff0a68f26327e9fcd708a033be42762e10fe9e361ff7cc21da7164",
-  "size": 60201903,
-  "notes": "v1.7.1：修「练完了还提示接着上次练」——进度以台账为唯一事实源，整模块掌握时如实显示已完成 N/N + 环 100%，并给错块复习/从头开始；每完成一块，断点与台账同一事务落盘，杀进程也不再两边不同步；打开模块自动对账自愈（断点落后即推进到首个未完成块，学习数据本身不受影响）。设置新增「诊断与自检」：逐模块比对台账/断点/环/分数 + 红名单一键修复，并自检语音引擎、可选包、音频缓存与更新链路，每次结果自动留档。",
+  "sha256": "e9a7ac410e80a60332e949be82f6be775afe758ba3e173bcaf2b966fd38e6a1d",
+  "size": 60201727,
+  "notes": "v1.7.2：自由造句第 6/6 步识别不确定时不再直接判错——多条候选自动挑回、弹确认卡「就是这句」、跳过入口后置；沙盒近音写法改为词级模糊匹配（阈值不变）；识别失败自动改用增强/云端再听并如实标注来源。本版不改学习内容与六步流程。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.1/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.2/parts/apk.part0",
       "size": 15728640,
-      "sha256": "ebd922e0385feb8c3f38161d1c14b1f54100e9c82f39fdd11bbf1d6e40b14e22"
+      "sha256": "371cd8120c8fa25de86b9bbc8d56da63559f0bca54d7876fb4be89be08bf6e24"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.1/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.2/parts/apk.part1",
       "size": 15728640,
       "sha256": "a4294a1f0b86b3fd6db26b2a54e188d7c702a71920b7333656c33ce1516a9ccf"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.1/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.2/parts/apk.part2",
       "size": 15728640,
       "sha256": "5f08acad401b1dfe0d8253a0c8fb5763c18d41c49f669937cc5a7820efcb5cf4"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.1/parts/apk.part3",
-      "size": 13015983,
-      "sha256": "505a0d68b1d70409962df9182a5e465656ecc21afc5b2d0aaae8da132b9c9b83"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.2/parts/apk.part3",
+      "size": 13015807,
+      "sha256": "2e26f45c186fa0b79ec64705f1f4e45f5c893b8e5f8a87ffe9477c47ad764e73"
     }
   ],
   "model": {
