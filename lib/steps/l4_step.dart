@@ -82,6 +82,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   bool _playing = false;
   String? _recPath;
   String _transcript = '';
+  // M1：本条结果实际来自哪个后端；降级重识时如实标注，不静默换引擎。
+  AsrSource? _asrSrc;
+  String _thinkingText = '识别中…';
   JudgeOutcome? _judge;
   AsrGuardResult? _guard;
   bool _passed = false;
@@ -127,6 +130,13 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
         widget.targetText,
         ...?widget.recognitionPhrases,
       }.toList(growable: false);
+
+  /// M1：来源标注——Vosk 默认路径不加噪音，只在降级重识时如实标注。
+  String _srcLabel(AsrSource? s) {
+    if (s == AsrSource.enhanced) return '（增强识别）';
+    if (s == AsrSource.azure) return '（云端识别）';
+    return '';
+  }
 
   @override
   void initState() {
@@ -186,6 +196,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     _playing = false;
     _recPath = null;
     _transcript = '';
+    _asrSrc = null;
+    _thinkingText = '识别中…';
     _judge = null;
     _guard = null;
     _passed = false;
@@ -373,7 +385,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       _recPath = path;
       _listening = true;
       _thinking = false;
+      _thinkingText = '识别中…';
       _transcript = '';
+      _asrSrc = null;
       _judge = null;
       _guard = null;
       _passed = false;
@@ -430,7 +444,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       final dur = await _speech.durationSec(usePath);
       if (!mounted) return;
       // Azure 无 Vosk 置信度 → confidence=null，判定走文本相似度（不当作 0 拒判）。
-      await _finishWith(text, null, dur);
+      await _finishWith(text, null, dur, fromCloud: true);
       return;
     }
     _enterSelfAssess();
@@ -440,7 +454,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   /// 并叠加 B5 守门：只有「文本命中 + 置信度达标 + 非垃圾」才允许绿灯。
   Future<void> _finishWith(
       String text, double? confidence, double durationSec,
-      {List<double>? wordConfs}) async {
+      {List<double>? wordConfs, bool fromCloud = false}) async {
+    var source = fromCloud ? AsrSource.azure : _speech.lastOpenSource;
     final targetTokens = tokenizeSpeech(widget.targetText);
     var g = guardAsr(
       raw: text,
@@ -486,7 +501,45 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
         }
       }
     }
-    if (!mounted) return; // 二过是异步的，回到 UI 前重新确认挂载
+    // —— M1（2026-11-03）：本地增强优先、云端兜底的降级重识。
+    // 只在仍未通过时执行；两条路都不可用会立刻返回 null，不等待、不改原结果。
+    if (!passed && _recPath != null) {
+      if (mounted) {
+        setState(() => _thinkingText = '正在用更精准的方式再听一遍…');
+      }
+      final fb = await _speech.retryOpenWithFallback(
+        wavPath: _recPath!,
+        target: widget.targetText,
+        keywords: asrKeywords(widget.targetText),
+        skipEnhanced: source == AsrSource.enhanced,
+        azureKey: _p.azureKey,
+        azureRegion: _p.azureRegion,
+      );
+      if (mounted) setState(() => _thinkingText = '识别中…');
+      if (fb != null) {
+        final g3 = guardAsr(
+          raw: fb.text,
+          wordConfidences: fb.wordConfidences,
+          targetBlock: widget.targetText,
+          minWords: targetTokens.length <= 1 ? 1 : 2,
+        );
+        final o3 = judgeSpeech(
+            target: widget.targetText,
+            recognized: fb.text,
+            confidence: fb.confidence,
+            durationSec: durationSec);
+        if (g3.ok && o3.pass) {
+          debugPrint(
+              'M1|fallback-rescued|src=${fb.source.name}|one=$text|retry=${fb.text}');
+          g = g3;
+          outcome = o3;
+          passed = true;
+          finalText = fb.text;
+          source = fb.source;
+        }
+      }
+    }
+    if (!mounted) return; // 二过/降级重识是异步的，回到 UI 前重新确认挂载
     if (passed) Motion.of(context).success();
     final accuracy = (outcome.similarity * 100).round();
     // A2① 平均准确度=文本匹配相似度：每次开口判定（通过与否）都记相似度，
@@ -499,6 +552,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     setState(() {
       _thinking = false;
       _transcript = finalText;
+      _asrSrc = source;
       _judge = outcome;
       _guard = g;
       _passed = passed;
@@ -644,6 +698,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     if (passed) Motion.of(context).success();
     setState(() {
       _transcript = t;
+      _asrSrc = null; // 手改/打字的文本不是任何识别后端的产物
       _judge = outcome;
       _guard = null;
       _passed = passed;
@@ -973,7 +1028,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               children: [
                 CircularProgressIndicator(color: kPrimary),
                 const SizedBox(height: 10),
-                Text('识别中…', style: TextStyle(color: kTextMuted)),
+                Text(_thinkingText, style: TextStyle(color: kTextMuted)),
               ],
             )
           else if (_listening)
@@ -1013,7 +1068,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 if (_transcript.trim().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
-                    child: Text("${_edited ? '你写' : '你说'}：'$_transcript'",
+                    child: Text(
+                        "${_edited ? '你写' : '你说'}：'$_transcript'${_srcLabel(_asrSrc)}",
                         key: const Key('l4AsrRaw'),
                         style: TextStyle(
                             color: kTextSecondary, fontSize: 13)),
@@ -1094,7 +1150,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 if (_transcript.trim().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text("${_edited ? '你写' : '你说'}：'$_transcript'",
+                    child: Text(
+                        "${_edited ? '你写' : '你说'}：'$_transcript'${_srcLabel(_asrSrc)}",
                         key: const Key('l4AsrRaw'),
                         style: TextStyle(
                             color: kTextSecondary, fontSize: 13)),
@@ -1151,7 +1208,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               !_passPending &&
               !_passed &&
               !_listening &&
-              !_thinking)
+              !_thinking &&
+              // D1：录过音才给「跳过」——首屏常驻跳过按钮等于教用户不开口。
+              _recPath != null)
             TextButton(
               onPressed: _emitSkip,
               child: Text(widget.skipHint,

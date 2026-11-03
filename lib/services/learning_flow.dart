@@ -385,7 +385,13 @@ class FreeUseVerdict {
   final bool pass;
   final bool chunkUsed;
   final int wordCount;
-  final String reason; // ok | empty | noChunk | tooShort
+
+  /// ok | empty | noChunk | tooShort | uncertain
+  ///
+  /// [uncertain]（ASR 容错）：词块里的实词都听到了，只差 ≤1 个虚词
+  /// （如 "what size" 被小模型转成 "UD A SIZE"）。**不直接判过**——
+  /// 由界面弹一次确认，用户点头才算「用上了」，避免把误识强行洗成通过。
+  final String reason;
   const FreeUseVerdict({
     required this.pass,
     required this.chunkUsed,
@@ -396,6 +402,10 @@ class FreeUseVerdict {
 
 /// 自由造句宽松校验：必须用上目标词块，且至少 3 个词、比词块本身多出内容。
 /// 宁松勿错杀——这里只验证「用上了」，不评判语法优劣；参考句随后给出。
+///
+/// ASR 容错（S0）：小模型对 what/that/the 这类短虚词系统性误识，
+/// 用户一字不差地说对也会被判「没用上」。当「词块实词全中、只缺 ≤1 个虚词」时
+/// 返回 [uncertain] 而不是 [noChunk]，交给界面一次性确认，不静默放过。
 FreeUseVerdict judgeFreeUse({
   required String input,
   required String chunkText,
@@ -409,6 +419,13 @@ FreeUseVerdict judgeFreeUse({
   final used = _orderedCoverage(tokens, chunkWords) >= 1.0;
   final extra = tokens.length - chunkWords.length;
   if (!used) {
+    if (_onlyFunctionWordMissing(tokens, chunkWords)) {
+      return FreeUseVerdict(
+          pass: false,
+          chunkUsed: false,
+          wordCount: tokens.length,
+          reason: 'uncertain');
+    }
     return FreeUseVerdict(
         pass: false, chunkUsed: false, wordCount: tokens.length, reason: 'noChunk');
   }
@@ -420,6 +437,37 @@ FreeUseVerdict judgeFreeUse({
       pass: true, chunkUsed: true, wordCount: tokens.length, reason: 'ok');
 }
 
+/// 词块的**实词全中**、只缺不超过 1 个**虚词** → 视为 ASR 可能误识。
+/// 词块里没有实词（全是虚词）时不做此容错，避免"随便说句英文"就弹确认。
+bool _onlyFunctionWordMissing(List<String> tokens, List<String> chunkWords) {
+  final contentWords = chunkWords.where((w) => !isFunctionWord(w)).toList();
+  if (contentWords.isEmpty) return false;
+  final contentHit =
+      contentWords.every((cw) => tokens.any((t) => wordClose(t, cw)));
+  if (!contentHit) return false;
+  final missingFn = chunkWords
+      .where((w) => isFunctionWord(w) && !tokens.any((t) => wordClose(t, w)))
+      .length;
+  return missingFn <= 1;
+}
+
+/// 从多条 ASR 候选里挑最可能「真用上词块」的一条（S1）。
+/// 主候选完整覆盖 → 用主候选（保持原展示口径）；否则取第一条完整覆盖的候选。
+/// 都不覆盖 → 返回主候选，后续交由 [judgeFreeUse] 判 uncertain/noChunk。
+String pickChunkCandidate(List<String> candidates, String chunkText) {
+  final list = candidates
+      .map((c) => c.trim())
+      .where((c) => c.isNotEmpty)
+      .toList(growable: false);
+  if (list.isEmpty) return '';
+  final chunkWords = tokenizeSpeech(chunkText);
+  if (chunkWords.isEmpty) return list.first;
+  for (final c in list) {
+    if (_orderedCoverage(tokenizeSpeech(c), chunkWords) >= 1.0) return c;
+  }
+  return list.first;
+}
+
 String freeUseHint(FreeUseVerdict v, String chunkText) {
   switch (v.reason) {
     case 'empty':
@@ -428,6 +476,8 @@ String freeUseHint(FreeUseVerdict v, String chunkText) {
       return '句子里用上今天的词块「$chunkText」';
     case 'tooShort':
       return '再补一点内容，让它成为完整的一句话';
+    case 'uncertain':
+      return '听起来像「$chunkText」，确认一下是不是这句';
     default:
       return '用上了！对照参考句听听地道说法';
   }

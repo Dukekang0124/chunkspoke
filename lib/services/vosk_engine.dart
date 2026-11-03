@@ -22,7 +22,13 @@ class VoskResult {
   /// 词级置信度（Vosk `result[].conf`，需 setWords(true)）。空 = 字段缺失。
   final List<double> wordConfidences;
 
-  const VoskResult(this.text, this.confidence, {this.wordConfidences = const []});
+  /// 多候选文本（S1：setMaxAlternatives(3) 产出，含主候选）。
+  /// 小模型会把 what 听成 ud，多候选里常有一条是对的——判定层可据此救回。
+  /// 空 = 引擎未开启候选或宿主桩实现未提供。
+  final List<String> alternatives;
+
+  const VoskResult(this.text, this.confidence,
+      {this.wordConfidences = const [], this.alternatives = const []});
 }
 
 /// 语音转写抽象：wav 音频 + 短语表 → 识别文本 + 置信度。
@@ -191,6 +197,12 @@ class VoskTranscriber implements Transcriber {
     // 词级时间/置信度：顶层 confidence 默认不产出，开启后 final JSON 的
     // result[].conf 才可用（B5 置信度门槛的事实源）。
     await rec.setWords(words: true);
+    // 多候选（S1）：小模型对 what/the 等短虚词系统性误识，单候选会把
+    // "What size…" 拼成 "UD A SIZE…"。开 3 条候选供判定层挑回。
+    // 失败不致命（宿主桩/旧原生库）——保持单候选路径即可。
+    try {
+      await rec.setMaxAlternatives(3);
+    } catch (_) {}
     const chunk = 4000; // ~0.125s @16kHz×2B
     for (var i = 0; i < pcm.length; i += chunk) {
       final end = (i + chunk) < pcm.length ? i + chunk : pcm.length;
@@ -204,7 +216,8 @@ class VoskTranscriber implements Transcriber {
     }
     final parsed = parseVoskFinalJson(rawJson);
     return VoskResult(parsed.text, parsed.confidence,
-        wordConfidences: parsed.wordConfidences);
+        wordConfidences: parsed.wordConfidences,
+        alternatives: parsed.alternatives);
   }
 }
 
@@ -213,26 +226,53 @@ class VoskParsedJson {
   final String text;
   final double? confidence;
   final List<double> wordConfidences;
-  const VoskParsedJson(this.text, this.confidence, this.wordConfidences);
+  final List<String> alternatives;
+  const VoskParsedJson(this.text, this.confidence, this.wordConfidences,
+      {this.alternatives = const []});
 }
 
 /// 解析 final JSON：文本原样取出（B5：一字不改）；词级 `result[].conf` 全量保留。
 /// 顶层 `confidence` 缺失时用词级均值；两者都缺失 → null（不当作 0 拒判）。
+///
+/// 多候选形态（setMaxAlternatives>1）下 Vosk 只给
+/// `{"alternatives":[{"text":…,"confidence":…,"result":[…]}, …]}`，
+/// **没有顶层 text**——此时主文本取第一条候选，词级置信度/置信度也回落候选内字段。
 VoskParsedJson parseVoskFinalJson(String rawJson) {
   final res = jsonDecode(rawJson) as Map<String, dynamic>;
-  final text = (res['text'] as String?) ?? '';
-  final confs = <double>[];
-  final arr = res['result'];
-  if (arr is List) {
-    for (final e in arr) {
-      if (e is Map && e['conf'] is num) confs.add((e['conf'] as num).toDouble());
+  final alts = <String>[];
+  Map<String, dynamic>? firstAlt;
+  final altArr = res['alternatives'];
+  if (altArr is List) {
+    for (final e in altArr) {
+      if (e is! Map) continue;
+      final m = e.cast<String, dynamic>();
+      firstAlt ??= m;
+      final t = (m['text'] as String?) ?? '';
+      if (t.trim().isNotEmpty) alts.add(t.trim());
     }
   }
-  final top = res['confidence'];
+  var text = (res['text'] as String?) ?? '';
+  if (text.trim().isEmpty && alts.isNotEmpty) text = alts.first;
+
+  List<double> confsOf(Object? arr) {
+    final out = <double>[];
+    if (arr is List) {
+      for (final e in arr) {
+        if (e is Map && e['conf'] is num) out.add((e['conf'] as num).toDouble());
+      }
+    }
+    return out;
+  }
+
+  var confs = confsOf(res['result']);
+  if (confs.isEmpty) confs = confsOf(firstAlt?['result']);
+
+  final top = res['confidence'] ?? firstAlt?['confidence'];
   final double? mean = confs.isEmpty
       ? null
       : confs.reduce((a, b) => a + b) / confs.length;
-  return VoskParsedJson(text, top is num ? top.toDouble() : mean, confs);
+  return VoskParsedJson(text, top is num ? top.toDouble() : mean, confs,
+      alternatives: alts);
 }
 
 /// 从 wav 文件估算录音时长（秒）：PCM 字节数 / 2 / [kCaptureSampleRate]。

@@ -197,5 +197,40 @@ void main() {
       final p = parseVoskFinalJson(jsonEncode({'text': 'Hello, World!'}));
       expect(p.text, 'Hello, World!');
     });
+
+    // S1 多候选（setMaxAlternatives(3)）：Vosk 此时不给顶层 text。
+    test('只有 alternatives → 主文本取第一条，置信度/词级回落候选内字段', () {
+      final p = parseVoskFinalJson(jsonEncode({
+        'alternatives': [
+          {
+            'confidence': 0.81,
+            'text': 'ud a size do you want',
+            'result': [
+              {'word': 'ud', 'conf': 0.5},
+              {'word': 'a', 'conf': 0.9},
+            ],
+          },
+          {'confidence': 0.62, 'text': 'what size do you want'},
+        ],
+      }));
+      expect(p.text, 'ud a size do you want');
+      expect(p.alternatives,
+          ['ud a size do you want', 'what size do you want']);
+      expect(p.confidence, 0.81);
+      expect(p.wordConfidences, [0.5, 0.9]);
+    });
+
+    test('顶层 text 与 alternatives 并存 → 顶层优先，候选照常保留', () {
+      final p = parseVoskFinalJson(jsonEncode({
+        'text': 'what size do you want',
+        'alternatives': [
+          {'text': 'what size do you want'},
+          {'text': 'what sides do you want'},
+        ],
+      }));
+      expect(p.text, 'what size do you want');
+      expect(p.alternatives.length, 2);
+      expect(p.confidence, isNull); // 仍是 null，不当 0
+    });
   });
 }

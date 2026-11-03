@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'audio_format.dart';
+import 'speech_judge.dart'
+    show wordClose, tokenizeSpeech, isFunctionWord;
 import 'vosk_engine.dart';
 import 'zipformer_asr.dart';
 
@@ -63,6 +66,51 @@ class TextMatchResult {
   });
 }
 
+/// M1（2026-11-03）：一次识别的来源。UI 必须如实标注，禁止静默换引擎。
+enum AsrSource { vosk, enhanced, azure }
+
+/// M1：降级重识结果（增强 zipformer / 云端 Azure）。[wordConfidences] 仅 Vosk 有，
+/// 增强与云端都为 null（判定层按文本相似度走，见 speech_judge 既有口径）。
+class AsrRetryResult {
+  final String text;
+  final List<String> alternatives;
+  final List<double>? wordConfidences;
+  final double? confidence;
+  final AsrSource source;
+  AsrRetryResult({
+    required this.text,
+    required this.source,
+    this.alternatives = const [],
+    this.wordConfidences,
+    this.confidence,
+  });
+}
+
+/// M1：识别文本是否「明显不对」——空 / 词数不足目标 60% / 关键词全缺。
+/// 纯逻辑，供降级链路与单测共用；[keywords] 为空时自动取目标句内容词。
+bool openTranscriptPoor({
+  required String text,
+  required String target,
+  List<String> keywords = const [],
+}) {
+  final words = _normalize(text).split(' ').where((w) => w.isNotEmpty).toList();
+  if (words.isEmpty) return true;
+  final targetWords =
+      _normalize(target).split(' ').where((w) => w.isNotEmpty).toList();
+  if (targetWords.isNotEmpty && words.length < targetWords.length * 0.6) {
+    return true;
+  }
+  final kws = keywords.isNotEmpty
+      ? keywords
+      : targetWords.where((w) => !_stopwords.contains(w)).toList();
+  if (kws.isEmpty) return false;
+  return !kws.any((k) => words.any((w) => wordClose(w, k)));
+}
+
+/// 目标文本的内容词（去掉虚词），作为降级重识的「关键词」。
+List<String> asrKeywords(String text) =>
+    tokenizeSpeech(text).where((w) => !isFunctionWord(w)).toList(growable: false);
+
 const Set<String> _stopwords = {
   'a', 'an', 'the', 'is', 'am', 'are', 'was', 'were', 'be', 'been',
   'being', 'to', 'of', 'in', 'on', 'at', 'for', 'and', 'or', 'but',
@@ -97,6 +145,10 @@ class SpeechService {
 
   final Transcriber _transcriber;
 
+  /// M1：最近一次 [recognizeOpen] 实际用的后端（给降级链路判重，避免同一后端跑两遍）。
+  AsrSource _lastOpenSource = AsrSource.vosk;
+  AsrSource get lastOpenSource => _lastOpenSource;
+
   SpeechService({Transcriber? transcriber})
       : _transcriber =
             transcriber ?? debugTranscriberOverride ?? SpeechEngine.instance;
@@ -118,13 +170,72 @@ class SpeechService {
       {List<String>? e2ePhrases}) async {
     final override = debugTranscriberOverride;
     if (override != null && identical(_transcriber, override)) {
+      _lastOpenSource = AsrSource.vosk;
       return override.transcribe(wavPath, e2ePhrases ?? const []);
     }
     // ASR-191 模式 B：用户显式开启增强引擎后，开放式识别优先用它；
     // 未开启/未就绪/任何异常返回 null → 立刻继续用默认 Vosk（不改变默认路径）。
     final enhanced = await EnhancedAsrService.instance.transcribeOpen(wavPath);
-    if (enhanced != null) return enhanced;
+    if (enhanced != null) {
+      _lastOpenSource = AsrSource.enhanced;
+      return enhanced;
+    }
+    _lastOpenSource = AsrSource.vosk;
     return _transcriber.transcribeOpen(wavPath);
+  }
+
+  /// M1（2026-11-03）：识别明显不对时的**本地优先降级重识**。
+  ///
+  /// 顺序固定：增强 zipformer（需用户已下载并开启）→ 云端 Azure（用户自备 Key）。
+  /// 哪一步的结果不再「明显不对」就立刻返回；都不可用/都为空返回 null，
+  /// 调用方保留原结果（绝不静默换引擎，来源由 [AsrRetryResult.source] 交给 UI 标注）。
+  ///
+  /// [skipEnhanced]：一过已经是增强识别时置 true，避免同一后端白跑一遍。
+  Future<AsrRetryResult?> retryOpenWithFallback({
+    required String wavPath,
+    required String target,
+    List<String> keywords = const [],
+    bool skipEnhanced = false,
+    String? azureKey,
+    String? azureRegion,
+  }) async {
+    AsrRetryResult? best;
+    if (!skipEnhanced) {
+      try {
+        final e = await EnhancedAsrService.instance.transcribeOpen(wavPath);
+        if (e != null && e.text.trim().isNotEmpty) {
+          final cand = AsrRetryResult(
+            text: e.text.trim(),
+            source: AsrSource.enhanced,
+            alternatives: e.alternatives,
+            wordConfidences: e.wordConfidences,
+            confidence: e.confidence,
+          );
+          if (!openTranscriptPoor(
+              text: cand.text, target: target, keywords: keywords)) {
+            return cand;
+          }
+          best = cand;
+        }
+      } catch (e) {
+        debugPrint('[M1] 增强重识失败，继续尝试云端：$e');
+      }
+    }
+    final key = azureKey?.trim() ?? '';
+    final region = azureRegion?.trim() ?? '';
+    if (key.isNotEmpty && region.isNotEmpty) {
+      final t = await transcribeAzure(wavPath, key, region);
+      if (t.trim().isNotEmpty) {
+        final cand =
+            AsrRetryResult(text: t.trim(), source: AsrSource.azure);
+        if (best == null ||
+            !openTranscriptPoor(
+                text: cand.text, target: target, keywords: keywords)) {
+          return cand;
+        }
+      }
+    }
+    return best;
   }
 
   /// ASR-188 缓解版：**二过受限解码救回**（只在自由解码判不过之后追加一次）。
@@ -163,13 +274,38 @@ class SpeechService {
 
   /// L2：本地识别结果计分（Text Match）。
   /// 核心词命中率 ≥60% 判通过；分数 = 60 + 40×命中率。
+  ///
+  /// M2（2026-11-03）：命中从「纯字符串包含」升级为**词级近似**——
+  /// 精确未中时用 [wordClose]（编辑距离 ≤1 / 短虚词放宽 / 词干 / 混淆对），
+  /// 与 L4 开口同一套容错。沙盒不再因 `size↔sides`、`large↔lunch` 这类
+  /// Vosk 同音近形误识直接判死；命中率口径与阈值不变，评分不注水。
   TextMatchResult textMatch(String expected, String recognized) {
     final core = _coreWords(expected);
     if (core.isEmpty) {
       return TextMatchResult(recognized: recognized, score: 100, hitRate: 1.0, passed: true);
     }
-    final rec = _normalize(recognized).split(' ').where((w) => w.isNotEmpty).toSet();
-    final hit = core.where((w) => rec.contains(w)).length;
+    final recTokens = _normalize(recognized)
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .toList(growable: false);
+    final recSet = recTokens.toSet();
+    final used = <int>{};
+    var hit = 0;
+    for (final w in core) {
+      if (recSet.contains(w)) {
+        hit++;
+        continue;
+      }
+      // 一个识别词只抵一个目标词，防止同一 token 反复近配抬高命中率。
+      for (var i = 0; i < recTokens.length; i++) {
+        if (used.contains(i)) continue;
+        if (wordClose(w, recTokens[i])) {
+          used.add(i);
+          hit++;
+          break;
+        }
+      }
+    }
     final hitRate = hit / core.length;
     final score = (60 + 40 * hitRate).round();
     return TextMatchResult(recognized: recognized, score: score, hitRate: hitRate, passed: hitRate >= 0.6);

@@ -66,9 +66,26 @@ const Set<Set<String>> kConfusionPairs = {
   {'the', 'this'},
   {'to', 'too'},
   {'on', 'in'},
+  // S3（2026-11-03 ASR-203）：Vosk small-0.15 短虚词系统性误识兜底。
+  // 真机样本：what→ud（主候选）、what/that/with 短时混淆、was/well、to/do、of/off。
+  {'what', 'that'},
+  {'what', 'with'},
+  {'was', 'well'},
+  {'to', 'do'},
+  {'of', 'off'},
 };
 
-/// 单字/词发音容错：完全相等 / 编辑距离≤1 / 词干近似（短词为长词前缀且长度差≤1）/ 混淆词表。
+/// 短虚词（长度 2–4）放宽编辑距离至 ≤2。长度 1 仍严格（防 x↔e 误配）。
+/// 仅当 a/b 都在虚词表里才放宽，避免把实词 "cat"↔"cut"（ED=1 已通过）之外的
+/// 实词错误放行（如 "what"↔ "chat" 虽 ED=2，但 chat 是实词，不在此列）。
+bool _relaxedShortFunction(String a, String b) {
+  if (a.length <= 1 || b.length <= 1) return false;
+  if (a.length > 4 || b.length > 4) return false;
+  if (!_functionWords.contains(a) || !_functionWords.contains(b)) return false;
+  return _levenshtein(a, b) <= 2;
+}
+
+/// 单字/词发音容错：完全相等 / 编辑距离≤1 / 短虚词放宽≤2 / 词干近似 / 混淆词表。
 bool wordClose(String a, String b) {
   a = normalizeSpeech(a);
   b = normalizeSpeech(b);
@@ -79,6 +96,8 @@ bool wordClose(String a, String b) {
   // 会把 "x" 当成 "e"，让骨架/槽位校验虚高。
   if (a.length == 1 || b.length == 1) return false;
   if (_levenshtein(a, b) <= 1) return true;
+  // S3：短虚词（≤4 字母、双方都在虚词表）放宽到 ED≤2，兜 what/that/with 这类误识。
+  if (_relaxedShortFunction(a, b)) return true;
   final shorter = a.length <= b.length ? a : b;
   final longer = a.length <= b.length ? b : a;
   return longer.startsWith(shorter) && (longer.length - shorter.length) <= 1;

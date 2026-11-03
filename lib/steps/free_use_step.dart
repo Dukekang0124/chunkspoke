@@ -53,6 +53,10 @@ class _FreeUseStepState extends State<FreeUseStep> {
   String _asrRaw = '';
   AsrGuardResult? _guard;
   bool _fromVoice = false;
+  bool _confirmedByUser = false; // S2：ASR 不确定时由用户点「就是这句」确认
+  // M1：本条结果实际来自哪个后端（增强/云端降级时如实标注，不静默换引擎）。
+  AsrSource? _asrSrc;
+  String _thinkingText = '识别中…';
   SilenceAutoStop? _silence;
 
   TtsService get _tts => Provider.of<TtsService>(context, listen: false);
@@ -102,6 +106,85 @@ class _FreeUseStepState extends State<FreeUseStep> {
     }
   }
 
+  /// S2：用户确认「我听到的就是这句」→ 按用上词块通过（明确标注按确认，不伪装成识别命中）。
+  void _confirmHeard() {
+    final v = _verdict;
+    if (v == null || _passed) return;
+    setState(() {
+      _verdict = FreeUseVerdict(
+          pass: true, chunkUsed: true, wordCount: v.wordCount, reason: 'ok');
+      _confirmedByUser = true;
+      _showReference = true;
+    });
+    Motion.of(context).success();
+    setState(() => _passed = true);
+  }
+
+  /// S2：不认可这次识别 → 清掉本次结果并立刻重录。
+  void _retryHeard() {
+    setState(() {
+      _verdict = null;
+      _guard = null;
+      _asrRaw = '';
+      _fromVoice = false;
+      _confirmedByUser = false;
+      _asrSrc = null;
+      _showReference = false;
+    });
+    _toggleMic();
+  }
+
+  /// M1：本地增强（zipformer）优先、云端 Azure 兜底的第二次识别。
+  /// 只有拿到非空结果才覆盖展示；来源写进 [_asrSrc]，UI 如实标注。
+  Future<void> _retryWithFallback(String path,
+      {required bool skipEnhanced}) async {
+    if (!mounted) return;
+    setState(() {
+      _thinking = true;
+      _thinkingText = '正在用更精准的方式再听一遍…';
+    });
+    final retry = await _speech.retryOpenWithFallback(
+      wavPath: path,
+      target: widget.chunk.text,
+      keywords: asrKeywords(widget.chunk.text),
+      skipEnhanced: skipEnhanced,
+      azureKey: _p.azureKey,
+      azureRegion: _p.azureRegion,
+    );
+    if (!mounted) return;
+    if (retry == null) {
+      setState(() {
+        _thinking = false;
+        _thinkingText = '识别中…';
+      });
+      return;
+    }
+    final g = guardAsr(
+      raw: retry.text,
+      wordConfidences: retry.wordConfidences,
+      targetBlock: widget.chunk.text,
+      checkChunkStack: true,
+    );
+    setState(() {
+      _thinking = false;
+      _thinkingText = '识别中…';
+      _asrSrc = retry.source;
+      _asrRaw = retry.text;
+      _guard = g;
+      _fromVoice = true;
+      _confirmedByUser = false;
+      if (g.ok) _controller.text = retry.text;
+    });
+    _check();
+  }
+
+  /// M1：来源标注——只有降级重识才加后缀，Vosk 默认路径不加噪音。
+  String _srcLabel(AsrSource? s) {
+    if (s == AsrSource.enhanced) return '（增强识别）';
+    if (s == AsrSource.azure) return '（云端识别）';
+    return '';
+  }
+
   Future<void> _toggleMic() async {
     if (_listening) {
       _silence?.detach();
@@ -116,14 +199,20 @@ class _FreeUseStepState extends State<FreeUseStep> {
       }
       String text = '';
       List<double>? confs;
+      AsrSource? src;
       if (await _speech.initVosk()) {
         final r = await _speech.recognizeOpen(path,
             e2ePhrases: [widget.referenceText, widget.chunk.text]);
-        text = r.text;
+        // S1：多候选里挑一条真用上词块的（小模型常把 what 听成 ud，
+        // 但第 2/3 条候选往往是对的）。挑不回来则退回主候选，交给 S0/S2。
+        text = pickChunkCandidate(
+            [r.text, ...r.alternatives], widget.chunk.text);
         confs = r.wordConfidences;
+        src = _speech.lastOpenSource;
       } else if (_p.azureKey != null && _p.azureRegion != null) {
         text = await _speech.transcribeAzure(
             path, _p.azureKey!, _p.azureRegion!);
+        src = AsrSource.azure;
       }
       if (!mounted) return;
       final g = guardAsr(
@@ -134,12 +223,20 @@ class _FreeUseStepState extends State<FreeUseStep> {
       );
       setState(() {
         _thinking = false;
+        _thinkingText = '识别中…';
+        _asrSrc = src;
         _asrRaw = text;
         _guard = g;
         _fromVoice = true;
         if (g.ok) _controller.text = text;
       });
       _check();
+      // M1：判定没过且不是「说得太短」→ 本地增强优先、云端兜底再听一遍。
+      // 两条路都不可用时立即返回 null，不额外等待，也不改动原结果。
+      final reason = _verdict?.reason;
+      if (!_passed && reason != 'tooShort' && reason != 'empty') {
+        await _retryWithFallback(path, skipEnhanced: src == AsrSource.enhanced);
+      }
       return;
     }
     if (_micBlocked || !_micReady) return;
@@ -161,6 +258,9 @@ class _FreeUseStepState extends State<FreeUseStep> {
       _asrRaw = '';
       _guard = null;
       _fromVoice = false;
+      _confirmedByUser = false;
+      _asrSrc = null;
+      _thinkingText = '识别中…';
     });
   }
 
@@ -176,13 +276,23 @@ class _FreeUseStepState extends State<FreeUseStep> {
   @override
   Widget build(BuildContext context) {
     final v = _verdict;
-    final av = (_fromVoice && _guard != null && v != null)
+    // uncertain 不套 asrVerdictFor 的「✗ 没用上」——那会与下方确认卡自相矛盾。
+    final av = (_fromVoice &&
+            _guard != null &&
+            v != null &&
+            v.reason != 'uncertain')
         ? asrVerdictFor(
             guard: _guard!,
             targetHit: v.pass,
             targetLabel: widget.chunk.text,
+            passText: _confirmedByUser ? '✓ 目标块用上了（按你的确认）' : '✓ 目标块用上了',
           )
         : null;
+    final needConfirm = v != null &&
+        v.reason == 'uncertain' &&
+        _fromVoice &&
+        !_passed &&
+        (_guard?.ok ?? false);
     final ok = av != null ? av.kind == AsrVerdictKind.pass : (v?.pass ?? false);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
@@ -267,7 +377,8 @@ class _FreeUseStepState extends State<FreeUseStep> {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: kBorderStrong),
                       ),
-                      child: Text('你说：$_asrRaw',
+                      child: Text(
+                          '你说：$_asrRaw${_srcLabel(_asrSrc)}',
                           style: TextStyle(
                               color: kTextSecondary, fontSize: 13)),
                     ),
@@ -295,6 +406,10 @@ class _FreeUseStepState extends State<FreeUseStep> {
                         ),
                       ],
                     ),
+                  if (needConfirm) ...[
+                    const SizedBox(height: 10),
+                    _confirmHeardCard(),
+                  ],
                   if (_showReference && !_passed) ...[
                     const SizedBox(height: 10),
                     _referenceCard(),
@@ -334,7 +449,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
                           color: _listening ? kPrimary : kTextSecondary, size: 18),
                       label: Text(
                           _thinking
-                              ? '识别中…'
+                              ? _thinkingText
                               : (_listening ? '说完点这里' : '说出来'),
                           style: const TextStyle(fontSize: 13)),
                     ),
@@ -384,6 +499,49 @@ class _FreeUseStepState extends State<FreeUseStep> {
       ),
     );
   }
+
+  Widget _confirmHeardCard() => Container(
+        key: const Key('freeUseConfirmCard'),
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: kCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: kPrimary.withValues(alpha: 0.45)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('我听到的是「$_asrRaw」',
+                style: TextStyle(color: kTextSecondary, fontSize: 13)),
+            const SizedBox(height: 4),
+            Text('你是不是想说「${widget.chunk.text}」？',
+                style: TextStyle(
+                    color: kText, fontSize: 15, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _retryHeard,
+                    child: const Text('再说一遍',
+                        style: TextStyle(fontSize: 13)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+                    onPressed: _confirmHeard,
+                    child: Text('就是这句',
+                        style: TextStyle(color: kOnPrimary, fontSize: 13)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
 
   Widget _referenceCard() => Container(
         width: double.infinity,
