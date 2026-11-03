@@ -107,8 +107,8 @@ class ModuleAudit {
 }
 
 class ProgressIntegrity {
-  /// 断点快照的 kv key（与 PracticeLoop 保持同一把 key）。
-  static String resumeKey(String levelId) => 'learnResume_$levelId';
+  /// 断点快照的 kv key（ASR-205：与 PracticeLoop / 自检页同一把 key）。
+  static String resumeKey(String levelId) => learnResumeKey(levelId);
 
   static Future<ModuleAudit> audit(ProgressService p, Level level,
       {List<Chunk>? chunks}) async {
@@ -169,12 +169,12 @@ class ProgressIntegrity {
     ];
   }
 
-  /// 自愈：陈旧快照一律清除（块号本来就由台账派生，留着只会指错）。
-  /// 下一次进入模块时，PracticeLoop 会从台账位置重新落一份快照。
+  /// 自愈：陈旧快照按台账重新派生（推进到首个未完成块；整关完成则清空）。
+  /// 与「只清空」相比，存量用户打开即修，不会丢掉块内相位的落点语义。
   static Future<ModuleAudit> heal(
       ProgressService p, Level level, ModuleAudit a) async {
     if (a.consistent) return a;
-    await p.clearLearnResume(a.levelId);
+    await p.reconcileResume(a.levelId);
     return audit(p, level);
   }
 

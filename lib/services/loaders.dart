@@ -66,6 +66,9 @@ class ProgressService {
   String? _llmKeyPlain;
   /// 词块层级表（id → T0/T1/T2），启动时由内容包灌入；复习播单据此 T0 优先。
   Map<String, String> _chunkTiers = const {};
+  /// ASR-205：块 → 所属关卡；关卡 → 块序列。断点快照由该关台账派生。
+  Map<String, String> _levelOfChunk = const {};
+  Map<String, List<String>> _chunkKeysOfLevel = const {};
   ProgressService({AppDatabase? db, DateTime Function()? clock, KeyCipher? cipher})
       : _clock = clock ?? DateTime.now,
         _cipher = cipher ?? const KeystoreCipher(),
@@ -76,6 +79,15 @@ class ProgressService {
     _chunkTiers = {
       for (final lv in content.levels)
         for (final c in lv.chunks) c.id: c.tier,
+    };
+    _levelOfChunk = {
+      for (final lv in content.levels)
+        for (final c in lv.chunks) c.id: lv.id,
+    };
+    _chunkKeysOfLevel = {
+      for (final lv in content.levels)
+        if (lv.chunks.isNotEmpty)
+          lv.id: [for (final c in lv.chunks) c.id],
     };
   }
 
@@ -569,9 +581,18 @@ class ProgressService {
   ChunkProgressStore get chunkStore => ChunkProgressStore(_db,
       clock: _clock,
       tierOf: (key) => _chunkTiers[key] ?? '',
+      levelOfChunk: (key) => _levelOfChunk[key],
+      chunkKeysOfLevel: (id) => _chunkKeysOfLevel[id],
       onNewMastery: () {
         bumpDailyNew();
       });
+
+  /// ASR-205：按台账把某关断点推进到首个未完成块（整关完成则清空）。
+  /// 无关卡索引（单测/旧调用）时回退为清空，保持既有自愈语义。
+  Future<void> reconcileResume(String levelId) async {
+    final derived = await chunkStore.deriveResume(levelId);
+    await setLearnResume(levelId, (derived == null || derived.isEmpty) ? null : derived);
+  }
 
   /// 1.5.10 通道版：JSON 导出/导入需要整表直读直写（只读 + 去重追加，不绕过状态机）。
   AppDatabase get database => _db;

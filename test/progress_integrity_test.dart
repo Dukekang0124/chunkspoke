@@ -260,11 +260,66 @@ void main() {
       expect(a.staleSnapshot, isFalse, reason: '同事务落盘后不该再出现分歧');
     });
 
-    test('不传 alsoKv 时不碰真实 level 的断点（单块/复习会话）', () async {
-      final f = await _fx('nokv');
-      final level = _level('N', 2);
-      await _learnChunk(f.p, level.chunks[0].id);
-      expect(await f.p.learnResumeFromDb(level.id), isNull);
+    test('复习完成不传 alsoKv 也按台账派生断点（ASR-205）', () async {
+      final f = await _fx('review_derive');
+      final level = _level('N', 4);
+      final content = ContentPack(version: 'test', levels: [level]);
+      f.p.setChunkTiers(content);
+      final keys = [for (final c in level.chunks) c.id];
+      await _mastered(f.db, keys[0]);
+      await _mastered(f.db, keys[1]);
+      await _mastered(f.db, keys[2]);
+      final p = await _reopen(f.path);
+      p.setChunkTiers(content);
+      // l4_step 复习通过的真实写法：review: true，不传 alsoKv。
+      await p.chunkStore.applyEvent(keys[2], ChunkEvent.speakSuccess,
+          accuracy: 95, review: true);
+
+      final snap = LearnResume.tryDecode(await p.learnResumeFromDb(level.id));
+      expect(snap, isNotNull, reason: '复习完成也必须留下与台账同位的断点');
+      expect(snap!.chunkIndex, 3);
+      expect(snap.chunkId, keys[3]);
+      final a = await ProgressIntegrity.audit(p, level);
+      expect(a.staleSnapshot, isFalse);
+    });
+
+    test('跳过完成路径同样把断点事务化推进（ASR-205）', () async {
+      final f = await _fx('skip_derive');
+      final level = _level('S', 3);
+      final content = ContentPack(version: 'test', levels: [level]);
+      f.p.setChunkTiers(content);
+      final keys = [for (final c in level.chunks) c.id];
+      await _mastered(f.db, keys[0]);
+
+      await f.p.chunkStore.applyEvent(keys[1], ChunkEvent.scheduleReview);
+      final snap = LearnResume.tryDecode(await f.p.learnResumeFromDb(level.id));
+      expect(snap, isNotNull);
+      expect(snap!.chunkIndex, 1);
+      expect(snap.chunkId, keys[1]);
+      expect((await ProgressIntegrity.audit(f.p, level)).consistent, isTrue);
+    });
+
+    test('heal：陈旧锚点推进到首个未完成块，而不是清空（ASR-205）', () async {
+      final f = await _fx('heal_advance');
+      final level = _level('HA', 5);
+      final content = ContentPack(version: 'test', levels: [level]);
+      f.p.setChunkTiers(content);
+      final keys = [for (final c in level.chunks) c.id];
+      for (var i = 0; i < 3; i++) {
+        await _mastered(f.db, keys[i]);
+      }
+      await f.p.setLearnResume(level.id, _snap(0, keys[0], phase: 2));
+
+      final before = [await ProgressIntegrity.audit(f.p, level)];
+      expect(before.first.staleSnapshot, isTrue);
+      final healed = await ProgressIntegrity.healAll(f.p, content, before);
+      expect(ProgressIntegrity.reds(healed), isEmpty);
+      expect(healed.first.snapshotIndex, 3);
+
+      final snap = LearnResume.tryDecode(await f.p.learnResumeFromDb(level.id));
+      expect(snap, isNotNull);
+      expect(snap!.chunkIndex, 3);
+      expect(snap.phase, 0);
     });
   });
 

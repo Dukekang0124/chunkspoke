@@ -1,5 +1,6 @@
 import 'chunk_asset.dart';
 import 'database.dart';
+import 'learning_flow.dart';
 import 'state_machine.dart';
 
 /// 每日复习上限：防到期堆积（超出部分保持到期，次日自然顺延）。
@@ -41,10 +42,18 @@ class ChunkProgressStore {
   final void Function()? onNewMastery;
   /// 层级查表钩子（指令 N §四.1）：T0 核心块在复习播单中优先。
   final String Function(String key)? tierOf;
+  /// ASR-205：块 → 所属关卡 id（用于把断点派生自该关台账）。
+  final String? Function(String key)? levelOfChunk;
+  /// ASR-205：关卡 id → 关卡块序列（内容包原序）。
+  final List<String>? Function(String levelId)? chunkKeysOfLevel;
   final DateTime Function() _clock;
 
   ChunkProgressStore(this.db,
-      {this.onNewMastery, DateTime Function()? clock, this.tierOf})
+      {this.onNewMastery,
+      DateTime Function()? clock,
+      this.tierOf,
+      this.levelOfChunk,
+      this.chunkKeysOfLevel})
       : _clock = clock ?? DateTime.now;
 
   DateTime get now => _clock();
@@ -90,6 +99,44 @@ class ChunkProgressStore {
   }) =>
       isMasteredWith(l2OneTry, lastScore, selfEval) && fourStarsGreen;
 
+  /// ASR-205：断点快照的**唯一派生式**。
+  ///
+  /// 锚点 = 台账里首个未掌握块；整关已掌握 = 空串（清空）。
+  /// 返回 null 表示当前 store 没有关卡索引（单测/旧调用），调用方回退旧行为。
+  /// [overrideRow] 用于「本块刚算出新状态、尚未落库」时参与判定，避免读到旧行。
+  Future<String?> deriveResume(String levelId, {ChunkRow? overrideRow}) async {
+    final keys = chunkKeysOfLevel?.call(levelId);
+    if (keys == null || keys.isEmpty) return null;
+    var anchor = keys.length;
+    for (var i = 0; i < keys.length; i++) {
+      final key = keys[i];
+      final row = (overrideRow != null && overrideRow.chunkKey == key)
+          ? overrideRow
+          : await db.getChunk(key);
+      if (row == null || row.level != ChunkLevel.mastered) {
+        anchor = i;
+        break;
+      }
+    }
+    if (anchor >= keys.length) return '';
+    return LearnResume(
+      chunkIndex: anchor,
+      chunkId: keys[anchor],
+      phase: 0,
+      stars: StarBoard.empty,
+      savedAt: _clock().millisecondsSinceEpoch,
+    ).encode();
+  }
+
+  /// 把派生结果包成 kv 对；无关卡索引时返回 null（不写）。
+  Future<Map<String, String>?> _derivedResumeKv(ChunkRow newRow) async {
+    final levelId = levelOfChunk?.call(newRow.chunkKey);
+    if (levelId == null || levelId.isEmpty) return null;
+    final encoded = await deriveResume(levelId, overrideRow: newRow);
+    if (encoded == null) return null;
+    return {learnResumeKey(levelId): encoded};
+  }
+
   Future<void> applyEvent(String key, ChunkEvent event,
       {int accuracy = 0,
       bool selfEval = false,
@@ -118,6 +165,8 @@ class ChunkProgressStore {
         level: entering ? ChunkLevel.review : p.level,
         dueDate: due,
         firstLearnedAt: p.firstLearnedAt == 0 ? atMs : p.firstLearnedAt,
+        // ASR-205：跳过/延期也是一条「本块完成」路径，断点同事务跟随台账。
+        deriveResume: true,
       );
       await db.insertSession(key, event.name, 0, ts: atMs);
       return;
@@ -236,7 +285,9 @@ class ChunkProgressStore {
       await _write(
         p,
         // ASR-203 修复 2：只有「本块完成」这条分支需要与断点快照同事务落盘。
+        // ASR-205：快照不再信任调用方算的「下一块」，而是由台账派生（单源）。
         alsoKv: alsoKv,
+        deriveResume: true,
         asset: snap,
         level: next,
         dueDate: dueDate,
@@ -270,6 +321,7 @@ class ChunkProgressStore {
   Future<void> _write(
     ChunkRow p, {
     Map<String, String>? alsoKv,
+    bool deriveResume = false,
     required ChunkAssetSnapshot asset,
     ChunkLevel? level,
     int? dueDate,
@@ -299,10 +351,14 @@ class ChunkProgressStore {
       correctStreak: correctStreak ?? p.correctStreak,
       lastReviewAt: lastReviewAt ?? p.lastReviewAt,
     );
-    if (alsoKv == null || alsoKv.isEmpty) {
+    // ASR-205：完成路径的断点由台账派生，并与块行写入同一事务。
+    // 派生值优先于调用方传的 alsoKv（后者仅作为无关卡索引时的兼容回退）。
+    final derived = deriveResume ? await _derivedResumeKv(row) : null;
+    final kv = <String, String>{...?alsoKv, ...?derived};
+    if (kv.isEmpty) {
       await db.upsertChunk(row);
     } else {
-      await db.upsertChunkAndKv(row, alsoKv);
+      await db.upsertChunkAndKv(row, kv);
     }
   }
 

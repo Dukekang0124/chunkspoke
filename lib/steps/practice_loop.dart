@@ -214,11 +214,14 @@ class _PracticeLoopState extends State<PracticeLoop>
         } else {
           start = await _p.chunkStore.nextUnmasteredIndex(_keys);
         }
-        // 自愈后重新取快照：只有仍与台账同位的那份才是可信的块内断点。
+        // ASR-205：自愈后重新取快照，且只认「与台账锚点同位」的那份。
+        // 台账是唯一事实源；快照只提供块内相位。非同位的旧书签一律不采信，
+        // 避免单块/复习等非锚定会话把陈旧块号带回来。
         final decoded =
             LearnResume.tryDecode(await _p.learnResumeFromDb(widget.level.id));
         if (decoded != null &&
-            decoded.chunkIndex < _total &&
+            start < _total &&
+            decoded.chunkIndex == start &&
             _keys[decoded.chunkIndex] == decoded.chunkId) {
           resume = decoded;
         }

@@ -28,6 +28,14 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
+      # ASR-205 闸①：断点不变量（1000 组随机序列），独立一步便于失败定位。
+      - name: Invariant gate (ASR-205)
+        run: flutter test test/progress_invariant_test.dart
+
+      # ASR-205 闸②：发版自检归档必须零红（needsAction=false、reds=[]）。
+      - name: Selfcheck archive gate (ASR-205)
+        run: python3 tools/release_gate.py --skip-tests
+
       # 全量测试：不绿即失败（不会进入发布）。
       - name: Full test (must be green)
         run: flutter test

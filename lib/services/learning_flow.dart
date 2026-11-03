@@ -162,6 +162,12 @@ int listenStar(int hits, int rounds) {
   return hits >= (rounds >= 3 ? 2 : 1) ? 1 : 0;
 }
 
+/// 断点快照的 kv key（ASR-205：全仓单一来源）。
+///
+/// 台账是唯一事实源，快照只保存「块内相位」；key 本身不再各写各的，
+/// 避免 PracticeLoop / 对账层 / 自检页读到不同的槽位。
+String learnResumeKey(String levelId) => 'learnResume_$levelId';
+
 /// 断点续学快照：按场景存 kv；完成后清除。
 class LearnResume {
   final int chunkIndex;
