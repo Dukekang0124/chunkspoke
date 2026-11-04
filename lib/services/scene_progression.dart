@@ -15,8 +15,18 @@ bool isSceneUnlocked(List<Level> levels, int index, Set<String> masteredKeys,
   if (index < 0 || index >= levels.length) return false;
   // 1.6.0（LIC-1）：license 只做 AND 收窄；传 null 时行为与 1.5.x 完全一致。
   if (allowed != null && !allowed(index)) return false;
+  // ASR-208 §一.4：可选模块（L0 生存）恒解锁，且不进解锁链——
+  // 它不是任何后续场景的前置，老用户不学它也照样能进 A。
+  if (levels[index].optional) return true;
   if (index == 0) return true;
-  final prev = levels[index - 1];
+  Level? prev;
+  for (var i = index - 1; i >= 0; i--) {
+    if (!levels[i].optional) {
+      prev = levels[i];
+      break;
+    }
+  }
+  if (prev == null) return true; // 链首（A）：没有非可选前置 → 直接可进
   if (prev.chunks.isEmpty) return true;
   return masteredInLevel(prev, masteredKeys) >=
       prev.chunks.length * kSceneUnlockRatio;
@@ -41,13 +51,24 @@ Level? enterableScene(
 /// 全部通关（最后一关也 100% 掌握）时返回 null。
 Level? progressionTarget(List<Level> levels, Set<String> masteredKeys,
     {bool Function(int index)? allowed}) {
+  // ASR-208 §一.4：零基础（本机还没有任何掌握块）时，第一站 = 可选生存模块；
+  // 只要有过进度，就完全跳过它，不催老用户去学 L0。
+  final hasAnyProgress =
+      levels.any((l) => masteredInLevel(l, masteredKeys) > 0);
+  if (!hasAnyProgress) {
+    for (final l in levels) {
+      if (l.optional) return l;
+    }
+  }
   Level? last;
   for (var i = 0; i < levels.length; i++) {
+    if (levels[i].optional) continue;
     if (!isSceneUnlocked(levels, i, masteredKeys, allowed: allowed)) break;
     last = levels[i];
   }
   if (last == null) return null;
-  if (identical(last, levels.last) &&
+  final rest = levels.where((l) => !l.optional).toList();
+  if (identical(last, rest.last) &&
       masteredInLevel(last, masteredKeys) >= last.chunks.length) {
     return null;
   }

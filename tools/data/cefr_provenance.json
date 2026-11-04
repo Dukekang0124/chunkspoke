@@ -10,6 +10,280 @@
     "B2": 2433
   },
   "chunks": {
+    "sv01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "hello there",
+      "freqRank": 0
+    },
+    "sv02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "pardon me",
+      "freqRank": 0
+    },
+    "sv03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I need help",
+      "freqRank": 0
+    },
+    "sv04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "please help me",
+      "freqRank": 0
+    },
+    "sv05": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "call the police",
+      "freqRank": 0
+    },
+    "sv06": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "call an ambulance",
+      "freqRank": 0
+    },
+    "sv07": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "I'm lost",
+      "freqRank": 0
+    },
+    "sv08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "something is wrong",
+      "freqRank": 0
+    },
+    "sv09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "sorry, one more time",
+      "freqRank": 0
+    },
+    "sv10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "please say that again",
+      "freqRank": 0
+    },
+    "sv11": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "speak slowly please",
+      "freqRank": 0
+    },
+    "sv12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "can you write it down",
+      "freqRank": 0
+    },
+    "sv13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "what does this mean",
+      "freqRank": 0
+    },
+    "sv14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "how do I get there",
+      "freqRank": 0
+    },
+    "sv15": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "where is the exit",
+      "freqRank": 0
+    },
+    "sv16": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "where is the hospital",
+      "freqRank": 0
+    },
+    "sv17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "where is the toilet",
+      "freqRank": 0
+    },
+    "sv18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I'm not feeling well",
+      "freqRank": 0
+    },
+    "sv19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it hurts here",
+      "freqRank": 0
+    },
+    "sv20": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I need a doctor",
+      "freqRank": 0
+    },
+    "sv21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "do you speak English",
+      "freqRank": 0
+    },
+    "sv22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "my English is poor",
+      "freqRank": 0
+    },
+    "sv23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I am new here",
+      "freqRank": 0
+    },
+    "sv24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "how do I pay",
+      "freqRank": 0
+    },
+    "sv25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "where do I sign",
+      "freqRank": 0
+    },
+    "sv26": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "what time do you open",
+      "freqRank": 0
+    },
+    "sv27": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "how long does it take",
+      "freqRank": 0
+    },
+    "sv28": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "is this the right way",
+      "freqRank": 0
+    },
+    "sv29": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "thank you for your help",
+      "freqRank": 0
+    },
+    "sv30": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "see you later",
+      "freqRank": 0
+    },
     "a01": {
       "cefr": "A1",
       "source": "cefrj",
@@ -4449,9 +4723,9 @@
     }
   },
   "chunkDist": {
-    "A1": 309,
-    "A2": 115,
-    "B1": 56,
+    "A1": 334,
+    "A2": 118,
+    "B1": 58,
     "B2": 7
   },
   "license": "CEFR-J / Tono Laboratory, TUFS（研究商用均可，须署名）"

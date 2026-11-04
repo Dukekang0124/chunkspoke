@@ -36,6 +36,10 @@ class Level {
   /// `stage` = L0 生存 / L1 入门 / L2 基础 / L3 进阶；`cefr` = 目标档（A1..C1）。
   final String stage;
   final String cefr;
+
+  /// ASR-208 §一.4：可选模块（L0 生存）。可选模块恒解锁、不进解锁链、
+  /// 不做任何后续场景的前置 —— 老用户不被它挡住，新用户拿它当第一站。
+  final bool optional;
   Level({
     required this.id,
     required this.theme,
@@ -46,6 +50,7 @@ class Level {
     this.sentences = const [],
     this.stage = '',
     this.cefr = '',
+    this.optional = false,
   });
 
   factory Level.fromJson(Map<String, dynamic> json) {
@@ -65,6 +70,7 @@ class Level {
           .toList(),
       stage: (json['stage'] as String?)?.trim() ?? '',
       cefr: (json['cefr'] as String?)?.trim() ?? '',
+      optional: json['optional'] == true,
     );
   }
 }

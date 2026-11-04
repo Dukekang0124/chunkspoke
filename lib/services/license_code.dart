@@ -29,8 +29,10 @@ const String kEditionTrial = 'TRIAL';
 const String kEditionBeta = 'BETA';
 const List<String> kEditions = [kEditionPro, kEditionTrial, kEditionBeta];
 
-/// A–F 共 6 关免费；G 起（index ≥ 6）需 PRO 或老用户身份。
-const int kFreeLevelCount = 6;
+/// 免费区 = 生存 S0 + A–F 共 7 关（index < 7，167 块）；G 起需 PRO 或老用户身份。
+///
+/// ASR-208 §一.4：L0 生存模块全免，免费口径 137 → 167。
+const int kFreeLevelCount = 7;
 
 enum LicenseError { length, charSet, prefix, edition, tag }
 

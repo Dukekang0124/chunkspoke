@@ -707,6 +707,9 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                         const SizedBox(height: 4),
                         Text(
                           '${a.sceneLabel} · ${_minutes(a)} 分钟'
+                          // ASR-208 §一.1：泛听分组是纯 UI 归类——没声明 moduleIds 的
+                          // 旧篇目统一标「综合泛听」，声明过的标「专篇」，不动内容。
+                          ' · ${a.moduleIds.isEmpty ? "综合泛听" : "专篇"}'
                           '${_updated(a).isEmpty ? '' : ' · ${_updated(a)}'}',
                           style: TextStyle(
                               color: kTextFaint, fontSize: 11),

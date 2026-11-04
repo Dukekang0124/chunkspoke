@@ -1,6 +1,716 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "levels": [
+    {
+      "id": "S0",
+      "theme": "Survival First",
+      "sceneImage": "scene_s0.png",
+      "stage": "L0",
+      "cefr": "A1",
+      "optional": true,
+      "requires_chunks": [],
+      "combos": [],
+      "sentences": [
+        {
+          "id": "sv_s01",
+          "text": "Hello there, my friend.",
+          "meaningCN": "你好啊，朋友。",
+          "chunkIds": [
+            "sv01"
+          ]
+        },
+        {
+          "id": "sv_s02",
+          "text": "Pardon me, do you speak English?",
+          "meaningCN": "劳驾，你会说英语吗？",
+          "chunkIds": [
+            "sv02",
+            "sv21"
+          ]
+        },
+        {
+          "id": "sv_s03",
+          "text": "I need help with my bag.",
+          "meaningCN": "我需要人手帮我看看包。",
+          "chunkIds": [
+            "sv03"
+          ]
+        },
+        {
+          "id": "sv_s04",
+          "text": "Please help me, I'm lost.",
+          "meaningCN": "请帮帮我，我迷路了。",
+          "chunkIds": [
+            "sv04",
+            "sv07"
+          ]
+        },
+        {
+          "id": "sv_s05",
+          "text": "Call the police, please.",
+          "meaningCN": "请报警。",
+          "chunkIds": [
+            "sv05"
+          ]
+        },
+        {
+          "id": "sv_s06",
+          "text": "Call an ambulance, he is sick.",
+          "meaningCN": "叫救护车，他不舒服。",
+          "chunkIds": [
+            "sv06"
+          ]
+        },
+        {
+          "id": "sv_s07",
+          "text": "I'm lost. Where is the exit?",
+          "meaningCN": "我迷路了，出口在哪儿？",
+          "chunkIds": [
+            "sv07",
+            "sv15"
+          ]
+        },
+        {
+          "id": "sv_s08",
+          "text": "Something is wrong with this form.",
+          "meaningCN": "这张表出问题了。",
+          "chunkIds": [
+            "sv08"
+          ]
+        },
+        {
+          "id": "sv_s09",
+          "text": "Sorry, one more time, please.",
+          "meaningCN": "抱歉，请再说一次。",
+          "chunkIds": [
+            "sv09"
+          ]
+        },
+        {
+          "id": "sv_s10",
+          "text": "Please say that again, slowly.",
+          "meaningCN": "请再说一遍，慢一点。",
+          "chunkIds": [
+            "sv10"
+          ]
+        },
+        {
+          "id": "sv_s11",
+          "text": "Speak slowly please, my English is poor.",
+          "meaningCN": "请说慢一点，我英语不好。",
+          "chunkIds": [
+            "sv11",
+            "sv22"
+          ]
+        },
+        {
+          "id": "sv_s12",
+          "text": "Can you write it down for me?",
+          "meaningCN": "你能帮我写下来吗？",
+          "chunkIds": [
+            "sv12"
+          ]
+        },
+        {
+          "id": "sv_s13",
+          "text": "What does this mean on the form?",
+          "meaningCN": "表上这一项是什么意思？",
+          "chunkIds": [
+            "sv13"
+          ]
+        },
+        {
+          "id": "sv_s14",
+          "text": "How do I get there from here?",
+          "meaningCN": "我从这儿怎么到那儿？",
+          "chunkIds": [
+            "sv14"
+          ]
+        },
+        {
+          "id": "sv_s15",
+          "text": "Where is the exit, please?",
+          "meaningCN": "请问出口在哪儿？",
+          "chunkIds": [
+            "sv15"
+          ]
+        },
+        {
+          "id": "sv_s16",
+          "text": "Where is the hospital? I need a doctor.",
+          "meaningCN": "医院在哪儿？我需要医生。",
+          "chunkIds": [
+            "sv16",
+            "sv20"
+          ]
+        },
+        {
+          "id": "sv_s17",
+          "text": "Where is the toilet?",
+          "meaningCN": "厕所在哪儿？",
+          "chunkIds": [
+            "sv17"
+          ]
+        },
+        {
+          "id": "sv_s18",
+          "text": "I'm not feeling well today.",
+          "meaningCN": "我今天不太舒服。",
+          "chunkIds": [
+            "sv18"
+          ]
+        },
+        {
+          "id": "sv_s19",
+          "text": "It hurts here, since noon.",
+          "meaningCN": "这儿疼，从中午开始。",
+          "chunkIds": [
+            "sv19"
+          ]
+        },
+        {
+          "id": "sv_s20",
+          "text": "I need a doctor now.",
+          "meaningCN": "我现在需要医生。",
+          "chunkIds": [
+            "sv20"
+          ]
+        },
+        {
+          "id": "sv_s21",
+          "text": "Do you speak English?",
+          "meaningCN": "你会说英语吗？",
+          "chunkIds": [
+            "sv21"
+          ]
+        },
+        {
+          "id": "sv_s22",
+          "text": "My English is poor, pardon me.",
+          "meaningCN": "我英语不好，劳驾见谅。",
+          "chunkIds": [
+            "sv22",
+            "sv02"
+          ]
+        },
+        {
+          "id": "sv_s23",
+          "text": "I am new here.",
+          "meaningCN": "我是新来的。",
+          "chunkIds": [
+            "sv23"
+          ]
+        },
+        {
+          "id": "sv_s24",
+          "text": "How do I pay by card?",
+          "meaningCN": "我怎么刷卡付款？",
+          "chunkIds": [
+            "sv24"
+          ]
+        },
+        {
+          "id": "sv_s25",
+          "text": "Where do I sign my name?",
+          "meaningCN": "我在哪儿签名？",
+          "chunkIds": [
+            "sv25"
+          ]
+        },
+        {
+          "id": "sv_s26",
+          "text": "What time do you open tomorrow?",
+          "meaningCN": "你们明天几点开门？",
+          "chunkIds": [
+            "sv26"
+          ]
+        },
+        {
+          "id": "sv_s27",
+          "text": "How long does it take by bus?",
+          "meaningCN": "坐公交要多久？",
+          "chunkIds": [
+            "sv27"
+          ]
+        },
+        {
+          "id": "sv_s28",
+          "text": "Is this the right way?",
+          "meaningCN": "这条路对吗？",
+          "chunkIds": [
+            "sv28"
+          ]
+        },
+        {
+          "id": "sv_s29",
+          "text": "Thank you for your help today.",
+          "meaningCN": "谢谢你今天的帮助。",
+          "chunkIds": [
+            "sv29"
+          ]
+        },
+        {
+          "id": "sv_s30",
+          "text": "See you later, my friend.",
+          "meaningCN": "回头见，朋友。",
+          "chunkIds": [
+            "sv30"
+          ]
+        }
+      ],
+      "chunks": [
+        {
+          "id": "sv01",
+          "text": "hello there",
+          "meaningCN": "你好啊",
+          "semantic": "greeting",
+          "funcCat": "寒暄开场",
+          "type": "固定搭配",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv02",
+          "text": "pardon me",
+          "meaningCN": "劳驾；请原谅",
+          "semantic": "function",
+          "funcCat": "委婉缓冲",
+          "type": "惯用表达",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv03",
+          "text": "I need help",
+          "meaningCN": "我需要帮助",
+          "semantic": "content",
+          "funcCat": "请求协助",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv04",
+          "text": "please help me",
+          "meaningCN": "请帮帮我",
+          "semantic": "content",
+          "funcCat": "请求协助",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv05",
+          "text": "call the police",
+          "meaningCN": "报警",
+          "semantic": "content",
+          "funcCat": "请求协助",
+          "type": "固定搭配",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A2"
+        },
+        {
+          "id": "sv06",
+          "text": "call an ambulance",
+          "meaningCN": "叫救护车",
+          "semantic": "content",
+          "funcCat": "请求协助",
+          "type": "固定搭配",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "B1"
+        },
+        {
+          "id": "sv07",
+          "text": "I'm lost",
+          "meaningCN": "我迷路了",
+          "semantic": "content",
+          "funcCat": "请求协助",
+          "type": "惯用表达",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A2"
+        },
+        {
+          "id": "sv08",
+          "text": "something is wrong",
+          "meaningCN": "出问题了",
+          "semantic": "content",
+          "funcCat": "情绪评价",
+          "type": "固定搭配",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv09",
+          "text": "sorry, one more time",
+          "meaningCN": "抱歉，再说一次",
+          "semantic": "function",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv10",
+          "text": "please say that again",
+          "meaningCN": "请再说一遍",
+          "semantic": "function",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv11",
+          "text": "speak slowly please",
+          "meaningCN": "请说慢一点",
+          "semantic": "function",
+          "funcCat": "请求协助",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A2"
+        },
+        {
+          "id": "sv12",
+          "text": "can you write it down",
+          "meaningCN": "你能写下来吗",
+          "semantic": "content",
+          "funcCat": "请求协助",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv13",
+          "text": "what does this mean",
+          "meaningCN": "这是什么意思",
+          "semantic": "content",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv14",
+          "text": "how do I get there",
+          "meaningCN": "我怎么到那儿",
+          "semantic": "timeplace",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv15",
+          "text": "where is the exit",
+          "meaningCN": "出口在哪儿",
+          "semantic": "timeplace",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "B1"
+        },
+        {
+          "id": "sv16",
+          "text": "where is the hospital",
+          "meaningCN": "医院在哪儿",
+          "semantic": "timeplace",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv17",
+          "text": "where is the toilet",
+          "meaningCN": "厕所在哪儿",
+          "semantic": "timeplace",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv18",
+          "text": "I'm not feeling well",
+          "meaningCN": "我不太舒服",
+          "semantic": "content",
+          "funcCat": "情绪评价",
+          "type": "惯用表达",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv19",
+          "text": "it hurts here",
+          "meaningCN": "这儿疼",
+          "semantic": "content",
+          "funcCat": "情绪评价",
+          "type": "固定搭配",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv20",
+          "text": "I need a doctor",
+          "meaningCN": "我需要医生",
+          "semantic": "content",
+          "funcCat": "请求协助",
+          "type": "固定搭配",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv21",
+          "text": "do you speak English",
+          "meaningCN": "你会说英语吗",
+          "semantic": "function",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv22",
+          "text": "my English is poor",
+          "meaningCN": "我英语不好",
+          "semantic": "content",
+          "funcCat": "情绪评价",
+          "type": "固定搭配",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv23",
+          "text": "I am new here",
+          "meaningCN": "我是新来的",
+          "semantic": "content",
+          "funcCat": "寒暄开场",
+          "type": "固定搭配",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv24",
+          "text": "how do I pay",
+          "meaningCN": "我怎么付款",
+          "semantic": "content",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv25",
+          "text": "where do I sign",
+          "meaningCN": "我在哪儿签字",
+          "semantic": "timeplace",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T2",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv26",
+          "text": "what time do you open",
+          "meaningCN": "你们几点开门",
+          "semantic": "timeplace",
+          "funcCat": "时间计划",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T2",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv27",
+          "text": "how long does it take",
+          "meaningCN": "要多久",
+          "semantic": "timeplace",
+          "funcCat": "时间计划",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv28",
+          "text": "is this the right way",
+          "meaningCN": "这条路对吗",
+          "semantic": "timeplace",
+          "funcCat": "确认澄清",
+          "type": "句型框架",
+          "freqRank": 0,
+          "tier": "T2",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv29",
+          "text": "thank you for your help",
+          "meaningCN": "谢谢你的帮助",
+          "semantic": "function",
+          "funcCat": "应答回应",
+          "type": "惯用表达",
+          "freqRank": 0,
+          "tier": "T1",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        },
+        {
+          "id": "sv30",
+          "text": "see you later",
+          "meaningCN": "回头见",
+          "semantic": "greeting",
+          "funcCat": "时间计划",
+          "type": "固定搭配",
+          "freqRank": 0,
+          "tier": "T0",
+          "sources": [
+            "survival/S0",
+            "manual:ASR-208"
+          ],
+          "cefr": "A1"
+        }
+      ]
+    },
     {
       "id": "A",
       "theme": "Greetings",

@@ -1,15 +1,15 @@
 {
-  "versionName": "1.7.3",
-  "versionCode": 4073,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.3/chunkspoke-latest.apk",
+  "versionName": "1.8.0",
+  "versionCode": 4080,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.0/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.7.3/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.7.3/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.0/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.8.0/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
   "sha256": "b1d63f20f7aeff98c4c21f4874c8f7fe50f71cd8fb8e87b14aef1cdd6da52046",
   "size": 60201727,
-  "notes": "v1.7.3：断点不再只靠某一种入口回写——复习、错块复习、听学、场景对话里的每次块完成，断点与学习记录都同一事务同步推进；打开模块时按「首个未完成块」自动归位，存量不一致打开即修；设置→诊断的一键修复改为按学习记录归位。本版不改学习内容、六步流程与识别判定口径。",
+  "notes": "v1.8.0：新增「生存 S0」30 句零基础准入 + 9 篇慢速磨耳朵；免费口径 137→167 块（生存 S0 + A–F 全免）；词块与模块补 CEFR 难度轴；导入/重置也同事务同步学习断点。本版不改六步流程与识别判定口径。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.7.1/parts/apk.part0",

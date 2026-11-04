@@ -77,12 +77,12 @@ void main() {
     expect(rows['a2'], isNull);
   });
 
-  test('N-4 核心库覆盖：分母按块面去重为 100，导出同口径', () async {
+  test('N-4 核心库覆盖：分母按块面去重为 112，导出同口径', () async {
     final raw = jsonDecode(await File('assets/content_pack.json').readAsString())
         as Map<String, dynamic>;
     final pack = ContentPack.fromJson(raw);
 
-    // 分母看块面：T0 有 106 条 id，但只有 100 个不同块面。
+    // 分母看块面：ASR-208 后 T0 有 118 条 id（L0 生存 +12），去重为 112 个块面。
     final byText = <String, List<String>>{};
     for (final lv in pack.levels) {
       for (final c in lv.chunks) {
@@ -91,8 +91,8 @@ void main() {
         }
       }
     }
-    expect(ProgressService.coreTotal(pack), 100);
-    expect(byText.length, 100);
+    expect(ProgressService.coreTotal(pack), 112);
+    expect(byText.length, 112);
     final dup = byText.values.firstWhere((ids) => ids.length > 1);
     final otherFace = byText.values
         .firstWhere((ids) => ids.length == 1 && ids.first != dup.first)
@@ -118,7 +118,7 @@ void main() {
       content: pack,
       now: DateTime(2026, 10, 25, 9, 5),
     );
-    expect(export.text, contains('核心库覆盖：T0 2/100'));
+    expect(export.text, contains('核心库覆盖：T0 2/112'));
   });
 
   test('导出：资产分组、六步漏斗与复习保持率数值正确，且不含原文', () async {

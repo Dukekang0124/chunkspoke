@@ -308,7 +308,7 @@ class _SceneRow extends StatelessWidget {
         await showLicenseWallSheet(
           context,
           title: 'G 关起需要解锁码',
-          detail: 'A–F 共 6 个场景（137 块）随便学，永久免费；'
+          detail: '生存 S0 + A–F 共 7 个场景（167 块）随便学，永久免费；'
               'G 关起的场景需要一枚解锁码。'
               '你已经学过的内容、复习和评测都不受影响。',
         );

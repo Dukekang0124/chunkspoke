@@ -221,7 +221,9 @@ def main():
         cs.sort()
         top = RANK_ORDER[cs[min(len(cs) - 1, int(len(cs) * 0.75))]]
         lv['cefr'] = top
-        lv['stage'] = {'A1': 'L1', 'A2': 'L1', 'B1': 'L2', 'B2': 'L3', 'C1': 'L3'}[top]
+        # 人工已声明的 stage 优先（ASR-208 §一.4：L0 生存模块由内容侧钉死，不被算法改回 L1）
+        if lv.get('stage') not in ('L0', 'L1', 'L2', 'L3'):
+            lv['stage'] = {'A1': 'L1', 'A2': 'L1', 'B1': 'L2', 'B2': 'L3', 'C1': 'L3'}[top]
         print(f"  {lv['id']:>2} {lv['theme'][:20]:<22} cefr={top} stage={lv['stage']} "
               f"构成={dict(sorted(collections.Counter(RANK_ORDER[i] for i in cs).items(), key=lambda x: POS[x[0]]))}")
 

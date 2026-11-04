@@ -422,7 +422,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } else {
       title = '专业版';
       subtitle =
-          '已解锁 A–F（$freeChunks/$totalChunks 块）· G 关起需要解锁码';
+          '已解锁 生存 S0 + A–F（$freeChunks/$totalChunks 块）· G 关起需要解锁码';
     }
 
     return Container(
