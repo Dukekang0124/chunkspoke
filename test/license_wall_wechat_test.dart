@@ -90,6 +90,10 @@ void main() {
     await tester.pump();
     expect(copied, kWechatId, reason: '复制的必须是微信号本体，不带前后缀');
     expect(find.text('微信号已复制，去微信粘贴添加吧'), findsOneWidget);
+    // 真机上 SnackBar 被模态 sheet 整张盖住，可见反馈必须落在 sheet 上。
+    expect(find.text('已复制'), findsOneWidget,
+        reason: '复制后按钮要就地变「已复制」，否则用户什么都看不到');
+    expect(find.text('复制'), findsNothing);
     // 纯复制微信号，不嵌二维码图片（任务书 §六.8）。
     expect(find.byType(Image), findsNothing);
   });

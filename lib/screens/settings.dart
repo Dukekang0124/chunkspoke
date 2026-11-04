@@ -423,8 +423,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } else {
       title = '专业版';
       // 1.8.1（任务书 §四）：未激活时把价格摆到卡片上，点卡片先看怎么买而不是先要码。
+      // 换行是刻意的：trailing 占掉右侧宽度后，「永久买断」会被拦腰折断（永/久买断），
+      // 与其靠字宽去赌，不如把价格整行放在第二行。
       subtitle =
-          '已解锁 生存 S0 + A–F（$freeChunks/$totalChunks 块）· 早鸟 ¥$kEarlyBirdPrice 永久买断';
+          '已解锁 生存 S0 + A–F（$freeChunks/$totalChunks 块）\n早鸟 ¥$kEarlyBirdPrice 永久买断';
     }
 
     return Container(
