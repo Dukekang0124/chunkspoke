@@ -165,7 +165,9 @@ class SpeechService {
       _transcriber.transcribe(wavPath, phrases);
 
   /// B5：开放输出统一走全模型（不传场景词表），展示层只认这个原始文本。
-  /// [e2ePhrases] 仅供 debugTranscriberOverride 脚本化识别使用，生产路径忽略。
+  /// [e2ePhrases] 有两个用途：① debugTranscriberOverride 脚本化识别；
+  /// ② ASR-209 B 层：增强 zipformer 的**目标热词偏置**（生产路径里传进来的
+  /// 就是当前目标句/词块；实测带热词后 20M 空结果 10/40 → 0/40，WER 0.43 → 0.19）。
   Future<VoskResult> recognizeOpen(String wavPath,
       {List<String>? e2ePhrases}) async {
     final override = debugTranscriberOverride;
@@ -175,7 +177,9 @@ class SpeechService {
     }
     // ASR-191 模式 B：用户显式开启增强引擎后，开放式识别优先用它；
     // 未开启/未就绪/任何异常返回 null → 立刻继续用默认 Vosk（不改变默认路径）。
-    final enhanced = await EnhancedAsrService.instance.transcribeOpen(wavPath);
+    final hotwords = asrHotwordsFrom((e2ePhrases ?? const []).join(' '));
+    final enhanced = await EnhancedAsrService.instance
+        .transcribeOpen(wavPath, hotwords: hotwords);
     if (enhanced != null) {
       _lastOpenSource = AsrSource.enhanced;
       return enhanced;
@@ -202,7 +206,8 @@ class SpeechService {
     AsrRetryResult? best;
     if (!skipEnhanced) {
       try {
-        final e = await EnhancedAsrService.instance.transcribeOpen(wavPath);
+        final e = await EnhancedAsrService.instance.transcribeOpen(wavPath,
+            hotwords: asrHotwordsFrom(target));
         if (e != null && e.text.trim().isNotEmpty) {
           final cand = AsrRetryResult(
             text: e.text.trim(),

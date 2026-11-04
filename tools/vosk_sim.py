@@ -21,7 +21,13 @@ over under about into onto i you he she it we they me him her us them my your hi
 yours hers is am are was were be been being do does did have has had will would shall should can
 could may might must not no yes ok okay please this that these those here there what when where who
 whom why how which'''.split())
-CONFUSION_PAIRS = ({'a', 'an'}, {'the', 'this'}, {'to', 'too'}, {'on', 'in'})
+CONFUSION_PAIRS = ({'a', 'an'}, {'the', 'this'}, {'to', 'too'}, {'on', 'in'},
+                   {'what', 'that'}, {'what', 'with'}, {'was', 'well'},
+                   {'to', 'do'}, {'of', 'off'})
+
+# ASR-209 A 层第三通道的阈值（与 lib/services/phonetics.dart 的 kPhonRatio 同值；
+# 定标见 release/ASR-209/音素阈值定标.md）。
+PHON_RATIO = 0.85
 
 
 def normalize_speech(s):
@@ -47,6 +53,16 @@ def levenshtein(a, b):
     return dp[n]
 
 
+def _relaxed_short_function(a, b):
+    if len(a) <= 1 or len(b) <= 1:
+        return False
+    if len(a) > 4 or len(b) > 4:
+        return False
+    if a not in FUNCTION_WORDS or b not in FUNCTION_WORDS:
+        return False
+    return levenshtein(a, b) <= 2
+
+
 def word_close(a, b):
     a, b = normalize_speech(a), normalize_speech(b)
     if not a or not b:
@@ -55,10 +71,356 @@ def word_close(a, b):
         return True
     if any(a in p and b in p for p in CONFUSION_PAIRS):
         return True
+    # ASR-209 A 层归一化：数词等价（2 ↔ two）与口语缩合等价（wanna ↔ want）。
+    na, nb = number_value_of(a), number_value_of(b)
+    if na is not None and nb is not None and na == nb:
+        return True
+    ea = CONTRACTIONS.get(a)
+    if ea is not None and b in ea.split(' '):
+        return True
+    eb = CONTRACTIONS.get(b)
+    if eb is not None and a in eb.split(' '):
+        return True
+    # 单字母只认完全相同（含上方混淆对）：否则任意两字母编辑距离都是 1。
+    if len(a) == 1 or len(b) == 1:
+        return False
     if levenshtein(a, b) <= 1:
+        return True
+    if _relaxed_short_function(a, b):
+        return True
+    # ASR-209 A 层第三通道：音素级等价（g2p + 编辑距离）。
+    if phoneme_ratio(a, b) >= PHON_RATIO:
         return True
     sh, lo = (a, b) if len(a) <= len(b) else (b, a)
     return lo.startswith(sh) and (len(lo) - len(sh)) <= 1
+
+
+# ---------- ASR-209 A 层：口语折叠 + 粗音素（与 phonetics.dart 逐字对应） ----------
+EXCEPTIONS = {
+    'one': 'wan', 'two': 'tu', 'three': '0ri', 'four': 'for', 'five': 'fayv',
+    'six': 'siks', 'seven': 'sevan', 'eight': 'eyt', 'nine': 'nayn',
+    'ten': 'ten', 'eleven': 'elevan', 'twelve': 'twelv', 'twenty': 'twenti',
+    'dozen': 'dazan', 'zero': 'ziro',
+    'a': 'a', 'an': 'an', 'the': '0e', 'to': 'tu', 'too': 'tu', 'of': 'ov',
+    'are': 'ar', 'was': 'waz', 'were': 'wer', 'who': 'hu', 'what': 'wat',
+    'where': 'wer', 'there': '0er', 'their': '0er', 'they': '0ey',
+    'here': 'hir', 'your': 'yor', 'you': 'yu', 'our': 'awer',
+    'said': 'sed', 'says': 'sez', 'does': 'duz', 'done': 'dan',
+    'come': 'kam', 'some': 'sam', 'love': 'lav', 'give': 'giv',
+    'have': 'hav', 'live': 'liv', 'move': 'muv', 'gone': 'gon',
+    'could': 'kud', 'would': 'wud', 'should': 'Sud', 'been': 'bin',
+    'friend': 'frend', 'people': 'pepal', 'because': 'bikoz',
+    'busy': 'bizi', 'minute': 'minit', 'island': 'ayland',
+    'listen': 'lisan', 'answer': 'anser', 'know': 'no', 'knife': 'nayf',
+    'write': 'rayt', 'right': 'rayt', 'night': 'nayt', 'light': 'layt',
+    'great': 'greyt', 'break': 'breyk', 'read': 'rid', 'bread': 'bred',
+    'head': 'hed', 'money': 'mani', 'many': 'meni', 'any': 'eni',
+    'again': 'agen', 'half': 'haf', 'talk': 'tok', 'walk': 'wok',
+    'small': 'smol', 'call': 'kol', 'all': 'ol', 'ball': 'bol',
+    'door': 'dor', 'floor': 'flor', 'word': 'werd', 'work': 'werk',
+    'world': 'werld', 'learn': 'lern', 'early': 'erli', 'heart': 'hart',
+    'laugh': 'laf', 'enough': 'inaf', 'tough': 'taf', 'through': '0ru',
+    'though': '0o', 'thought': '0ot', 'bought': 'bot', 'brought': 'brot',
+    'caught': 'kot', 'taught': 'tot', 'daughter': 'doter',
+    'quiet': 'kwayet', 'quite': 'kwayt', 'question': 'kwesCan',
+    'sure': 'Sur', 'sugar': 'Suger', 'usually': 'yuZuali',
+    'water': 'woter', 'mother': 'ma0er', 'father': 'fa0er',
+    'brother': 'bra0er', 'weather': 'we0er', 'together': 'tuge0er',
+    'woman': 'wuman', 'women': 'wimin',
+    'pizza': 'pitsa', 'coffee': 'kofi', 'menu': 'menyu',
+    'restaurant': 'restarant', 'receipt': 'risit', 'hour': 'awer',
+    'iron': 'ayeron', 'science': 'sayens',
+    # 同音异拼（ASR-209 A 层定标样本）
+    'won': 'wan', 'hear': 'hir', 'piece': 'pis', 'peace': 'pis',
+    'whether': 'we0er', 'whole': 'hol', 'hole': 'hol', 'wood': 'wud',
+    'plain': 'pleyn', 'plane': 'pleyn', 'son': 'sun',
+    'weight': 'weyt', 'wait': 'weyt', 'wear': 'wer',
+    'find': 'faynd', 'fined': 'faynd', 'mind': 'maynd', 'kind': 'kaynd',
+    'which': 'wiC', 'witch': 'wiC', 'brake': 'breyk',
+    'fair': 'fer', 'fare': 'fer', 'tale': 'tel', 'knight': 'nayt',
+    'flour': 'flawer', 'flower': 'flawer',
+    'allowed': 'alawd', 'aloud': 'alawd', 'made': 'meyd', 'maid': 'meyd',
+    'buy': 'bay', 'by': 'bay', 'bye': 'bay', 'coat': 'kowt',
+    'theyre': '0er', 'youre': 'yor',
+}
+
+CONTRACTIONS = {
+    'wanna': 'want to',
+    'gonna': 'going to',
+    'gotta': 'got to',
+    'kinda': 'kind of',
+    'sorta': 'sort of',
+    'dunno': 'do not know',
+    'lemme': 'let me',
+    'gimme': 'give me',
+    'cuz': 'because',
+    'coz': 'because',
+    'cause': 'because',
+    'hafta': 'have to',
+    'oughta': 'ought to',
+    'tryna': 'trying to',
+    'whatcha': 'what are you',
+    'gotcha': 'got you',
+    'betcha': 'bet you',
+}
+
+_ONES = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
+         'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen',
+         'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen']
+_TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy',
+         'eighty', 'ninety']
+
+
+def number_word(n):
+    if n < 20:
+        return _ONES[n]
+    if n < 100:
+        r = n % 10
+        return _TENS[n // 10] + ('' if r == 0 else ' ' + _ONES[r])
+    if n < 1000:
+        r = n % 100
+        return _ONES[n // 100] + ' hundred' + ('' if r == 0 else ' ' + number_word(r))
+    if n < 1000000:
+        r = n % 1000
+        return number_word(n // 1000) + ' thousand' + ('' if r == 0 else ' ' + number_word(r))
+    return str(n)
+
+
+def number_value_of(token):
+    t = token.strip().lower()
+    if not t:
+        return None
+    if re.fullmatch(r'\d+', t):
+        return int(t)
+    total = current = 0
+    matched = False
+    for p in re.split(r'[\s\-]+', t):
+        if p in _ONES:
+            current += _ONES.index(p)
+            matched = True
+            continue
+        if p in _TENS and _TENS.index(p) > 0:
+            current += _TENS.index(p) * 10
+            matched = True
+            continue
+        if p == 'hundred':
+            current = (1 if current == 0 else current) * 100
+            matched = True
+            continue
+        if p == 'thousand':
+            total += (1 if current == 0 else current) * 1000
+            current = 0
+            matched = True
+            continue
+        return None
+    return total + current if matched else None
+
+
+def expand_spoken_tokens(tokens):
+    """只用于比较的口语折叠：缩合展开 + 纯数字转英文数词。"""
+    out = []
+    for t in tokens:
+        e = CONTRACTIONS.get(t)
+        if e is not None:
+            out.extend(e.split(' '))
+            continue
+        if re.fullmatch(r'\d+', t):
+            out.extend(number_word(int(t)).split(' '))
+            continue
+        out.append(t)
+    return out
+
+
+def _soft_e_next(n):
+    return bool(n) and n in 'eiy'
+
+
+def g2p(word):
+    w = re.sub(r"[^a-z']", '', word.lower()).replace("'", '')
+    if not w:
+        return ''
+    ex = EXCEPTIONS.get(w)
+    if ex is not None:
+        return ex
+    if len(w) <= 1:
+        return w
+
+    # 词尾静音 e：把紧邻它的那个元音标长（excite 的长音在 i，不在开头 e）。
+    long_idx = -1
+    if w.endswith('e') and len(w) > 2 and w[-2] not in 'aeiou' \
+            and re.search(r'[aeiou]', w[:-2]):
+        w = w[:-1]
+        for k in range(len(w) - 1, -1, -1):
+            if w[k] in 'aeiou':
+                long_idx = k
+                break
+
+    out = []
+    i = 0
+
+    def nxt(k):
+        return w[i + k] if i + k < len(w) else ''
+
+    def cat(at):
+        return w.startswith(at, i)
+
+    if w.startswith('kn') or w.startswith('gn'):
+        i = 1
+    if w.startswith('wr'):
+        i = 1
+    if w.startswith('ps'):
+        i = 1
+
+    while i < len(w):
+        c = w[i]
+        if cat('tion') or cat('sion'):
+            out.append('Sn')
+            i += 4
+            continue
+        if cat('ture'):
+            out.append('Cer')
+            i += 4
+            continue
+        if cat('ough'):
+            out.append('o')
+            i += 4
+            continue
+        if cat('ght'):
+            out.append('t')
+            i += 3
+            continue
+        if cat('igh'):
+            out.append('I')
+            i += 3
+            continue
+        if cat('th'):
+            out.append('0')
+            i += 2
+            continue
+        if cat('sh'):
+            out.append('S')
+            i += 2
+            continue
+        if cat('ch'):
+            out.append('C')
+            i += 2
+            continue
+        if cat('ph'):
+            out.append('f')
+            i += 2
+            continue
+        if cat('wh'):
+            out.append('w')
+            i += 2
+            continue
+        if cat('ck'):
+            out.append('k')
+            i += 2
+            continue
+        if cat('qu'):
+            out.append('kw')
+            i += 2
+            continue
+        if cat('ng'):
+            out.append('N')
+            i += 2
+            continue
+        if cat('gh'):
+            i += 2
+            continue
+        if cat('ee') or cat('ea'):
+            out.append('I')
+            i += 2
+            continue
+        if cat('oo'):
+            out.append('U')
+            i += 2
+            continue
+        if cat('ou'):
+            out.append('u')
+            i += 2
+            continue
+        if cat('ow'):
+            out.append('o')
+            i += 2
+            continue
+        if cat('ai') or cat('ay'):
+            out.append('e')
+            i += 2
+            continue
+        if cat('oa'):
+            out.append('o')
+            i += 2
+            continue
+        if cat('oi') or cat('oy'):
+            out.append('oy')
+            i += 2
+            continue
+        if cat('au') or cat('aw'):
+            out.append('o')
+            i += 2
+            continue
+        if cat('ie'):
+            out.append('i')
+            i += 2
+            continue
+        if cat('ei'):
+            out.append('e')
+            i += 2
+            continue
+        if cat('ue') or cat('ui') or cat('ew'):
+            out.append('u')
+            i += 2
+            continue
+        # 双写辅音折叠
+        if i + 1 < len(w) and w[i + 1] == c and c not in 'aeiou':
+            i += 1
+            continue
+
+        if c == 'c':
+            out.append('s' if _soft_e_next(nxt(1)) else 'k')
+        elif c == 'g':
+            out.append('j' if _soft_e_next(nxt(1)) else 'g')
+        elif c == 'x':
+            out.append('ks')
+        elif c == 'y':
+            out.append('y' if i == 0 else 'i')
+        elif c in 'aeiou':
+            out.append(c.upper() if i == long_idx else c)
+        elif c == 'h':
+            if i != len(w) - 1:
+                out.append('h')
+        else:
+            out.append(c)
+        i += 1
+    return ''.join(out)
+
+
+def phoneme_ratio(a, b):
+    pa, pb = g2p(a), g2p(b)
+    if not pa or not pb:
+        return 0.0
+    if pa == pb:
+        return 1.0
+    m, n = len(pa), len(pb)
+    dp = list(range(n + 1))
+    for i in range(1, m + 1):
+        prev, dp[0] = dp[0], i
+        for j in range(1, n + 1):
+            cur = dp[j]
+            dp[j] = min(dp[j] + 1, dp[j - 1] + 1,
+                        prev + (0 if pa[i - 1] == pb[j - 1] else 1))
+            prev = cur
+    return 1 - dp[n] / max(m, n)
+
+
+def _contains_token_window(rec, tgt):
+    if not tgt or len(tgt) > len(rec):
+        return False
+    for i in range(len(rec) - len(tgt) + 1):
+        if rec[i:i + len(tgt)] == tgt:
+            return True
+    return False
 
 
 def is_function(w):
@@ -115,16 +477,24 @@ def weighted_align(rec, tgt):
     return wsim, core_hit, matched
 
 
-def judge_speech(target, recognized, confidence=None, duration=None, min_dur=0.4):
+def judge_speech(target, recognized, confidence=None, duration=None, min_dur=0.4,
+                 min_similarity=0.5):
     tgt = tokenize(target)
     rec = tokenize(recognized)
+    tgt_fold = expand_spoken_tokens(tgt)
+    rec_fold = expand_spoken_tokens(rec)
     if not rec:
         return dict(passed=False, sim=0.0, reason='empty')
     if duration is not None and duration < min_dur:
         return dict(passed=False, sim=0.0, reason='tooShort')
-    if len(tgt) == len(rec) and all(a == b for a, b in zip(tgt, rec)):
+    # 完全匹配：原文逐词一致，或折叠后（数字/缩合）逐词一致。
+    if tgt == rec or tgt_fold == rec_fold:
         return dict(passed=True, sim=1.0, wsim=1.0, core=1.0, reason='exact')
-    wsim, core, _ = weighted_align(rec, tgt)
+    # 包含通道（ASR-209 A 层第一通道）：识别里有一整段与目标逐词相同。
+    if _contains_token_window(rec_fold, tgt_fold):
+        return dict(passed=True, sim=1.0, wsim=1.0, core=1.0,
+                    reason='fuzzy', layer='containment')
+    wsim, core, _matched = weighted_align(rec, tgt)
     if core < 0.7:
         return dict(passed=False, sim=wsim, reason='lowCore')
     if wsim < 0.8:

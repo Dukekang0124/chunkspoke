@@ -88,6 +88,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   JudgeOutcome? _judge;
   AsrGuardResult? _guard;
   bool _passed = false;
+  // ASR-209：模糊带（差一点）→ 允许重说不扣分；连续 3 次灰带后按普通失败处理。
+  bool _softBand = false;
+  int _softBands = 0;
   bool _stopping = false;
   SilenceAutoStop? _silence;
   int _attempts = 0; // 开口尝试次数（满 3 次展示正确答案 + 跳过入口）
@@ -541,6 +544,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     }
     if (!mounted) return; // 二过/降级重识是异步的，回到 UI 前重新确认挂载
     if (passed) Motion.of(context).success();
+    // ASR-209 灰带：文本已接近但没到判对线，且守门通过 → 不改判、不扣分，给「再录一遍」。
+    final softBand = !passed && g.ok && outcome.band == 'band' && _softBands < 3;
+    if (softBand) _softBands++;
     final accuracy = (outcome.similarity * 100).round();
     // A2① 平均准确度=文本匹配相似度：每次开口判定（通过与否）都记相似度，
     // 使「平均准确度」真实反映开口文本匹配，而不是恒为 0。
@@ -556,12 +562,13 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       _judge = outcome;
       _guard = g;
       _passed = passed;
+      _softBand = softBand;
     });
-    await _resolveAttempt(passed, accuracy: accuracy);
+    await _resolveAttempt(passed, accuracy: accuracy, softBand: softBand);
   }
 
   Future<void> _resolveAttempt(bool passed,
-      {int accuracy = 0, bool selfEval = false}) async {
+      {int accuracy = 0, bool selfEval = false, bool softBand = false}) async {
     final store = _p.chunkStore;
     if (passed) {
       // 每日目标：任意一次开口成功都计入今日进度（含句子闯关 persist=false），并完成当日打卡。
@@ -587,6 +594,12 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     }
     // persist=false（句子闯关模式）只推进流程，失败不得写词块 speakFail——
     // 否则「照着句子闯关失败」会污染该词块的失败计数（报告 §4 第 7 条）。
+    // ASR-209：灰带不写失败、不累加尝试次数——用户只是差一点，重说不扣分。
+    if (softBand) {
+      if (!mounted) return;
+      setState(() {});
+      return;
+    }
     if (widget.persist) {
       try {
         await store.applyEvent(widget.chunk.id, ChunkEvent.speakFail,
@@ -1056,13 +1069,15 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
             Column(
               children: [
                 Text(
-                  (_guard != null && !_guard!.ok)
-                      ? '⚠ 没听清，再说一遍'
-                      : (_judge!.reason == 'empty' ||
-                              _judge!.reason == 'lowConf' ||
-                              _judge!.reason == 'tooShort'
-                          ? '没有听清，请再说一遍'
-                          : '再试一次（错词已标红）'),
+                  _softBand
+                      ? '差一点，再录一遍不扣分'
+                      : ((_guard != null && !_guard!.ok)
+                          ? '⚠ 没听清，再说一遍'
+                          : (_judge!.reason == 'empty' ||
+                                  _judge!.reason == 'lowConf' ||
+                                  _judge!.reason == 'tooShort'
+                              ? '没有听清，请再说一遍'
+                              : '再试一次（错词已标红）')),
                   style: TextStyle(color: kPrimary)),
                 const SizedBox(height: 6),
                 if (_transcript.trim().isNotEmpty)
@@ -1165,6 +1180,13 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                             : '相似度：${(_judge!.similarity * 100).round()}%（词级匹配）',
                         style: TextStyle(
                             color: kTextMuted, fontSize: 12)),
+                  ),
+                if (_judge?.deviationHint != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(_judge!.deviationHint!,
+                        key: const Key('l4DeviationHint'),
+                        style: TextStyle(color: kTextMuted, fontSize: 12)),
                   ),
                 if (_passPending) ...[
                   const SizedBox(height: 6),

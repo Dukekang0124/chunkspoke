@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../models/content_pack.dart';
+import 'phonetics.dart';
 import 'speech_judge.dart';
 
 /// 六步学习管线（指令 M · 模块 B）纯逻辑层：无 I/O，供 UI 与单测共用。
@@ -421,9 +422,11 @@ FreeUseVerdict judgeFreeUse({
     return const FreeUseVerdict(
         pass: false, chunkUsed: false, wordCount: 0, reason: 'empty');
   }
-  final chunkWords = tokenizeSpeech(chunkText);
-  final used = _orderedCoverage(tokens, chunkWords) >= 1.0;
-  final extra = tokens.length - chunkWords.length;
+  // ASR-209：比较用折叠（数词转词 / wanna→want to），展示与字数仍用原 token。
+  final foldTokens = expandSpokenTokens(tokens);
+  final chunkWords = expandSpokenTokens(tokenizeSpeech(chunkText));
+  final used = _orderedCoverage(foldTokens, chunkWords) >= 1.0;
+  final extra = foldTokens.length - chunkWords.length;
   if (!used) {
     if (_onlyFunctionWordMissing(tokens, chunkWords)) {
       return FreeUseVerdict(
@@ -466,10 +469,13 @@ String pickChunkCandidate(List<String> candidates, String chunkText) {
       .where((c) => c.isNotEmpty)
       .toList(growable: false);
   if (list.isEmpty) return '';
-  final chunkWords = tokenizeSpeech(chunkText);
+  final chunkWords = expandSpokenTokens(tokenizeSpeech(chunkText));
   if (chunkWords.isEmpty) return list.first;
   for (final c in list) {
-    if (_orderedCoverage(tokenizeSpeech(c), chunkWords) >= 1.0) return c;
+    if (_orderedCoverage(expandSpokenTokens(tokenizeSpeech(c)), chunkWords) >=
+        1.0) {
+      return c;
+    }
   }
   return list.first;
 }
@@ -491,8 +497,22 @@ String freeUseHint(FreeUseVerdict v, String chunkText) {
 
 // —— 内部文本工具 ——
 
-bool _containsPhrase(String text, String phrase) =>
-    normalizeSpeech(text).contains(normalizeSpeech(phrase));
+bool _containsPhrase(String text, String phrase) {
+  final hay = expandSpokenTokens(tokenizeSpeech(text));
+  final needle = expandSpokenTokens(tokenizeSpeech(phrase));
+  if (needle.isEmpty || needle.length > hay.length) return false;
+  for (var i = 0; i + needle.length <= hay.length; i++) {
+    var hit = true;
+    for (var j = 0; j < needle.length; j++) {
+      if (hay[i + j] != needle[j]) {
+        hit = false;
+        break;
+      }
+    }
+    if (hit) return true;
+  }
+  return false;
+}
 
 String _replacePhrase(String text, String from, String to) {
   final idx = text.toLowerCase().indexOf(from.toLowerCase());
