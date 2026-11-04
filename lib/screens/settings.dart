@@ -422,8 +422,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       subtitle = 'G–T 不需要解锁码（共 $totalChunks 块，按进度解锁）';
     } else {
       title = '专业版';
+      // 1.8.1（任务书 §四）：未激活时把价格摆到卡片上，点卡片先看怎么买而不是先要码。
       subtitle =
-          '已解锁 生存 S0 + A–F（$freeChunks/$totalChunks 块）· G 关起需要解锁码';
+          '已解锁 生存 S0 + A–F（$freeChunks/$totalChunks 块）· 早鸟 ¥$kEarlyBirdPrice 永久买断';
     }
 
     return Container(
@@ -446,15 +447,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           trailing: unlocked
               ? Icon(Icons.arrow_forward_ios,
                   size: 16, color: kTextFaint)
-              : Text('输入解锁码',
-                  style: TextStyle(color: kPrimary, fontSize: 13)),
+              : Text('¥$kEarlyBirdPrice 解锁',
+                  style: TextStyle(
+                      color: kPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
+          // 已激活 → 看详情/换绑；未激活 → 先弹购买说明（任务书 §四）。
           onTap: lic == null
               ? null
-              : () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const LicenseActivateScreen()),
-                  ),
+              : () {
+                  if (unlocked) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const LicenseActivateScreen()),
+                    );
+                  } else {
+                    showWechatPurchaseSheet(context);
+                  }
+                },
         ),
       ),
     );

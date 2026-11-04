@@ -1,35 +1,35 @@
 {
-  "versionName": "1.8.0",
-  "versionCode": 4080,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.0/chunkspoke-latest.apk",
+  "versionName": "1.8.1",
+  "versionCode": 4081,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.1/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.0/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.8.0/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.1/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.8.1/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "4b7f7fff665801e831a60b496fb4bab6147fa2a53a1d9bd77a1b6613c6aa410e",
-  "size": 60211623,
-  "notes": "v1.8.0：新增「生存 S0」30 句零基础准入 + 9 篇慢速磨耳朵；免费口径 137→167 块（生存 S0 + A–F 全免）；词块与模块补 CEFR 难度轴；导入/重置也同事务同步学习断点。本版不改六步流程与识别判定口径。",
+  "sha256": "b22931702614db41e3e0f70bed66c0cf01749fcfbbcde9121199a29514466918",
+  "size": 60211787,
+  "notes": "v1.8.1：G 关墙点补全转化链路——墙上明示早鸟价 ¥68（原价 ¥128、前 200 名 · 永久买断），主按钮「加微信购买」直达购买说明（三步 + 微信号一键复制），已有码仍走原激活页；设置页专业版卡片同步标价、点击直达购买说明；学完免费区（生存 S0 + A–F = 167 块）且未激活时，结算页出现完成横幅。免费额度、内容与学习流程零改动。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.0/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.1/parts/apk.part0",
       "size": 15728640,
-      "sha256": "5a096d97860c4be2ba7a9cee47ef017d6bdc8784ffa7b57aa9fa13a160c687c4"
+      "sha256": "3586bc41889a4dfde26b8a15fa48dce04eec17457703f6cd0eac88efe2a2f00c"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.0/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.1/parts/apk.part1",
       "size": 15728640,
       "sha256": "a4294a1f0b86b3fd6db26b2a54e188d7c702a71920b7333656c33ce1516a9ccf"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.0/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.1/parts/apk.part2",
       "size": 15728640,
       "sha256": "5f08acad401b1dfe0d8253a0c8fb5763c18d41c49f669937cc5a7820efcb5cf4"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.0/parts/apk.part3",
-      "size": 13025703,
-      "sha256": "b028c8f828c64fda7af7bc47bb9af9dedd0f1914635142dd0d9bf02ebee97025"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.1/parts/apk.part3",
+      "size": 13025867,
+      "sha256": "35b6e49ba3ebcee45b73fc6d53b82a4ea00df19bc7fccedbeb9ecb08a4e162d8"
     }
   ],
   "model": {

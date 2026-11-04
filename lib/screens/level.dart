@@ -8,8 +8,10 @@ import '../services/state_machine.dart';
 import '../services/crash_log.dart';
 import '../services/review_notify.dart';
 import '../services/scene_progression.dart';
+import '../services/license_code.dart' show kFreeLevelCount;
 import '../services/license_state.dart';
 import '../services/session_report.dart';
+import '../screens/license_activate.dart' show showWechatPurchaseSheet, kEarlyBirdPrice;
 import '../ui/theme.dart';
 import '../ui/labels.dart';
 import '../ui/feedback.dart';
@@ -35,6 +37,11 @@ class _LevelScreenState extends State<LevelScreen> {
   Level? _nextScene;
   bool _nextUnlocked = false;
   int _nextMissing = 0;
+  // 1.8.1（任务书 §五）：免费区最后一关学完 + 未激活 → 结算页出转化横幅。
+  bool _freeTierDone = false;
+  bool _hasFullAccess = false;
+  int _freeChunks = 0;
+  int _totalChunks = 0;
 
   Future<void> _finish(SessionReport report) async {
     final progress = Provider.of<ProgressService>(context, listen: false);
@@ -78,6 +85,24 @@ class _LevelScreenState extends State<LevelScreen> {
           : null;
       next = nextSceneState(content.levels, widget.level.id, masteredKeys,
           allowed: lic?.allowsLevel);
+      // 1.8.1：本关是不是「免费区最后一关」（现网 = F），且这一关确实达标（≥80% 掌握）。
+      // 数字按内容包实时算，不写死 137/487 —— 1.8.0 起免费区是 生存 S0 + A–F = 167/517。
+      const freeIdx = kFreeLevelCount - 1;
+      final freeLast = (freeIdx >= 0 && freeIdx < content.levels.length)
+          ? content.levels[freeIdx]
+          : null;
+      final masteredHere = widget.level.chunks
+          .where((c) => masteredKeys.contains(c.id))
+          .length;
+      _freeTierDone = freeLast != null &&
+          widget.level.id == freeLast.id &&
+          masteredHere >= sceneUnlockTarget(widget.level);
+      _freeChunks = content.levels
+          .take(kFreeLevelCount)
+          .fold(0, (s, l) => s + l.chunks.length);
+      _totalChunks =
+          content.levels.fold(0, (s, l) => s + l.chunks.length);
+      _hasFullAccess = lic?.hasFullAccess ?? false;
     } catch (e, st) {
       CrashLog.write('Level.finish dims: $e', st);
     }
@@ -146,7 +171,11 @@ class _LevelScreenState extends State<LevelScreen> {
               nextReview: _nextReview,
               nextScene: _nextScene,
               nextUnlocked: _nextUnlocked,
-              nextMissing: _nextMissing)
+              nextMissing: _nextMissing,
+              freeTierDone: _freeTierDone,
+              hasFullAccess: _hasFullAccess,
+              freeChunks: _freeChunks,
+              totalChunks: _totalChunks)
           : PracticeLoop(level: widget.level, onDone: _finish),
     );
   }
@@ -160,6 +189,13 @@ class CompletionView extends StatefulWidget {
   final Level? nextScene;
   final bool nextUnlocked;
   final int nextMissing;
+
+  /// 1.8.1（任务书 §五）：免费区最后一关已达标 + 未激活 → 结算页底部出转化横幅。
+  /// 默认 false：老调用与既有测试行为不变，PRO/老用户也永远看不到横幅。
+  final bool freeTierDone;
+  final bool hasFullAccess;
+  final int freeChunks;
+  final int totalChunks;
   const CompletionView(
       {required this.level,
       required this.dims,
@@ -168,6 +204,10 @@ class CompletionView extends StatefulWidget {
       this.nextScene,
       this.nextUnlocked = false,
       this.nextMissing = 0,
+      this.freeTierDone = false,
+      this.hasFullAccess = false,
+      this.freeChunks = 0,
+      this.totalChunks = 0,
       super.key});
 
   @override
@@ -264,6 +304,12 @@ class _CompletionViewState extends State<CompletionView>
                 ),
                 const SizedBox(height: 20),
                 _reportCard(),
+                // 1.8.1（任务书 §五）：免费区最后一关学完 + 未激活 → 转化横幅。
+                // PRO / 老用户（hasFullAccess）永远不出现；没学完 F 也不出现。
+                if (widget.freeTierDone && !widget.hasFullAccess) ...[
+                  const SizedBox(height: 12),
+                  _freeContentCompleteBanner(),
+                ],
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
@@ -366,6 +412,48 @@ class _CompletionViewState extends State<CompletionView>
   void _replay() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => LevelScreen(level: widget.level)),
+    );
+  }
+
+  /// 免费内容走完横幅（任务书 §五）：数字按内容包实时算，不写死 137/487。
+  Widget _freeContentCompleteBanner() {
+    final remaining =
+        widget.totalChunks > widget.freeChunks ? widget.totalChunks - widget.freeChunks : 0;
+    final counts = widget.totalChunks > 0
+        ? '${widget.freeChunks}/${widget.totalChunks} 块 · 还有 $remaining 块等你解锁 · '
+        : '';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: kPrimary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('🎉 你已完成全部免费内容',
+              style: TextStyle(
+                  color: kText, fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text('$counts早鸟 ¥$kEarlyBirdPrice 永久买断',
+              style: TextStyle(color: kTextSecondary, fontSize: 13)),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              child: Text('了解详情',
+                  style: TextStyle(color: kOnPrimary, fontSize: 14)),
+              onPressed: () => showWechatPurchaseSheet(context),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
