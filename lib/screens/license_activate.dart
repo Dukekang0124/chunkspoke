@@ -331,7 +331,29 @@ Future<void> showWechatPurchaseSheet(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (ctx) => SafeArea(
+    builder: (_) => const _WechatPurchaseSheet(),
+  );
+}
+
+/// 购买说明 sheet 的内容体。
+///
+/// 做成有状态只为一件事：复制成功后按钮就地变「已复制」。
+/// 模态 sheet 整张盖在 Scaffold 之上，SnackBar 会被它挡在下面 —— 真机上等于
+/// 没有反馈，所以可见的确认必须画在 sheet 自己身上（SnackBar 保留给读屏播报）。
+class _WechatPurchaseSheet extends StatefulWidget {
+  const _WechatPurchaseSheet();
+
+  @override
+  State<_WechatPurchaseSheet> createState() => _WechatPurchaseSheetState();
+}
+
+class _WechatPurchaseSheetState extends State<_WechatPurchaseSheet> {
+  bool _copied = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final ctx = context;
+    return SafeArea(
       // 小屏/大字号时整张 sheet 可滚动，不让 Column 溢出（任务书只给静态高度会翻车）。
       child: ConstrainedBox(
         constraints:
@@ -390,20 +412,22 @@ Future<void> showWechatPurchaseSheet(BuildContext context) {
                     ),
                     const Spacer(),
                     TextButton.icon(
-                      icon: const Icon(Icons.copy, size: 16),
-                      label: const Text('复制'),
+                      icon: Icon(_copied ? Icons.check : Icons.copy, size: 16),
+                      label: Text(_copied ? '已复制' : '复制'),
                       style: TextButton.styleFrom(foregroundColor: kPrimary),
                       onPressed: () async {
                         await Clipboard.setData(
                             const ClipboardData(text: kWechatId));
-                        if (ctx.mounted) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            const SnackBar(
-                              content: Text('微信号已复制，去微信粘贴添加吧'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
+                        if (!ctx.mounted) return;
+                        // sheet 盖住了 SnackBar 的落点，可见反馈只能就地画：
+                        // 按钮变「已复制」；SnackBar 留着给读屏播报（SnackBar 自带 live region）。
+                        setState(() => _copied = true);
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          const SnackBar(
+                            content: Text('微信号已复制，去微信粘贴添加吧'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
                       },
                     ),
                   ],
@@ -425,15 +449,15 @@ Future<void> showWechatPurchaseSheet(BuildContext context) {
                   ),
                   child: Text('我知道了',
                       style: TextStyle(color: kOnPrimary, fontSize: 15)),
-                  onPressed: () => Navigator.pop(ctx),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ),
             ],
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// 辅助：步骤行（任务书 §三）。

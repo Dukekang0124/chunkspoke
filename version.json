@@ -7,14 +7,14 @@
     "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.8.1/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "b22931702614db41e3e0f70bed66c0cf01749fcfbbcde9121199a29514466918",
+  "sha256": "29c862966f380458b8773aa4fb784cc98ba42f6597d3be407f8dd7149a54fb79",
   "size": 60211787,
   "notes": "v1.8.1：G 关墙点补全转化链路——墙上明示早鸟价 ¥68（原价 ¥128、前 200 名 · 永久买断），主按钮「加微信购买」直达购买说明（三步 + 微信号一键复制），已有码仍走原激活页；设置页专业版卡片同步标价、点击直达购买说明；学完免费区（生存 S0 + A–F = 167 块）且未激活时，结算页出现完成横幅。免费额度、内容与学习流程零改动。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.1/parts/apk.part0",
       "size": 15728640,
-      "sha256": "3586bc41889a4dfde26b8a15fa48dce04eec17457703f6cd0eac88efe2a2f00c"
+      "sha256": "8bbfb26b532fe377b5336b1463b62d5e03c2ea8d5548f243ff9d7e9a548e1fc1"
     },
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.1/parts/apk.part1",
@@ -29,7 +29,7 @@
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.1/parts/apk.part3",
       "size": 13025867,
-      "sha256": "35b6e49ba3ebcee45b73fc6d53b82a4ea00df19bc7fccedbeb9ecb08a4e162d8"
+      "sha256": "1c9768dbe522232a072306d6f27a0b15e4d87dd856731282fce7943d90544db4"
     }
   ],
   "model": {
