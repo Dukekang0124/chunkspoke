@@ -841,7 +841,8 @@ class _PracticeLoopState extends State<PracticeLoop>
                 style: TextStyle(color: kTextSecondary, fontSize: 15)),
             if (gapAhead) ...[
               const SizedBox(height: 6),
-              Text('后面已有 $pending 块之外的词练过了，先补这一块就接上',
+              Text('它后面还有 ${_ledgerMastered - _resumeIndex} 块已练过 '
+                  '· 先补这一格就接上',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: kTextMuted, fontSize: 13)),
             ],
