@@ -397,11 +397,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final lic = Provider.of<LicenseState?>(context, listen: true);
     final content = Provider.of<ContentPack?>(context, listen: false);
     int countOf(Iterable<Level> lv) => lv.fold(0, (s, l) => s + l.chunks.length);
+    // 内容包尚未加载时的占位数（1.8.0 起 = 生存 S0 + A–F / 全部 21 关）。
     final freeChunks = content == null
-        ? 137
+        ? 167
         : countOf(content.levels.take(kFreeLevelCount));
     final totalChunks =
-        content == null ? 487 : countOf(content.levels);
+        content == null ? 517 : countOf(content.levels);
 
     final bool unlocked = lic?.hasFullAccess ?? false;
     final String title;

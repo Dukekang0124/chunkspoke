@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../services/loaders.dart';
 import '../services/recording.dart';
+import '../services/scene_progression.dart';
 import '../services/vosk_engine.dart';
 import '../ui/theme.dart';
 import '../ui/motion.dart';
@@ -58,8 +59,11 @@ class _FtueScreenState extends State<FtueScreen> {
 
   Future<void> _start() async {
     final content = Provider.of<ContentPack>(context, listen: false);
-    final level = content.levels.firstWhere((l) => l.id == 'A',
-        orElse: () => content.levels.first);
+    // ASR-208 §一.4：新用户第一站 = 生存 S0（可选模块），由 progressionTarget
+    // 单源决定；拿不到才退回 A（内容包异常时不能把人卡在引导里）。
+    final level = progressionTarget(content.levels, const {}) ??
+        content.levels.firstWhere((l) => l.id == 'A',
+            orElse: () => content.levels.first);
     await Provider.of<ProgressService>(context, listen: false).setSeenFtue(true);
     if (!mounted) return;
     final nav = Navigator.of(context);
