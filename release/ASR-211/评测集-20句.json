@@ -1,0 +1,29 @@
+{
+  "kind": "asr211-real-mic-set",
+  "version": "1.0",
+  "note": "指令 ASR-211 §一.5 建立的真人麦克风评测集：20 句全部取自 App 现有课程内容（不造绕口令），覆盖这次两案的失分点。今后「换不换识别引擎」的裁定以这套真机录音的实测为准，不再用 TTS 合成音频代替。",
+  "sampling": "老板真机（OPPO），正常手持距离，每句念 1 遍；念错的、卡壳的也照常收下并标注。录音用 App 内「分享录音」或系统录音机，命名 <序号>_<句子id>.wav，16k/单声道可直接喂（其它采样率脚本会重采样）。",
+  "metrics": ["pass/band/fail 三档占比", "WER 与容错 WER", "空结果数", "每句的实际转写文本（人工复核）"],
+  "items": [
+    {"idx": 1, "sid": "sv_s01", "level": "S0", "target": "Hello there, my friend.", "meaningCN": "你好啊，朋友。", "feature": "案2 原型：起音 hello 被吞成 O", "watch": "识别层丢词；判卷层维持 fail 是对的，看热词增强后能否救回"},
+    {"idx": 2, "sid": "sv_s04", "level": "S0", "target": "Please help me, I'm lost.", "meaningCN": "请帮帮我，我迷路了。", "feature": "撇号缩合 I'm", "watch": "ASR 常见给 i am / im"},
+    {"idx": 3, "sid": "sv_s06", "level": "S0", "target": "Call an ambulance, he is sick.", "meaningCN": "叫救护车，他不舒服。", "feature": "长句 + 辅音丛 + 连读", "watch": "call an 连读成 callan"},
+    {"idx": 4, "sid": "sv_s09", "level": "S0", "target": "Sorry, one more time, please.", "meaningCN": "抱歉，请再说一次。", "feature": "数词 one ↔ 1", "watch": "归一层数词等价"},
+    {"idx": 5, "sid": "sv_s11", "level": "S0", "target": "Speak slowly please, my English is poor.", "meaningCN": "请说慢一点，我英语不好。", "feature": "多词长句弱读", "watch": "is 被吞不塌核心命中率"},
+    {"idx": 6, "sid": "sv_s15", "level": "S0", "target": "Where is the exit, please?", "meaningCN": "请问出口在哪儿？", "feature": "th 音 + 元音连读", "watch": "where/wear 混淆对"},
+    {"idx": 7, "sid": "sv_s16", "level": "S0", "target": "Where is the hospital? I need a doctor.", "meaningCN": "医院在哪儿？我需要医生。", "feature": "两句合并", "watch": "asr 常把两句连成一串"},
+    {"idx": 8, "sid": "sv_s17", "level": "S0", "target": "Where is the toilet?", "meaningCN": "厕所在哪儿？", "feature": "th + 尾辅音", "watch": "toilet/toilet 的 /ɔɪ/"},
+    {"idx": 9, "sid": "sv_s21", "level": "S0", "target": "Do you speak English?", "meaningCN": "你会说英语吗？", "feature": "do you 弱读缩合", "watch": "dya/da 类误写"},
+    {"idx": 10, "sid": "sv_s24", "level": "S0", "target": "How do I pay by card?", "meaningCN": "我怎么刷卡付款？", "feature": "虚词 by + 短句", "watch": "by/buy 同音（混淆对已收）"},
+    {"idx": 11, "sid": "sv_s26", "level": "S0", "target": "What time do you open tomorrow?", "meaningCN": "你们明天几点开门？", "feature": "wh 起音", "watch": "what/wot"},
+    {"idx": 12, "sid": "sv_s27", "level": "S0", "target": "How long does it take by bus?", "meaningCN": "坐公交要多久？", "feature": "does it 连读", "watch": "doseit 一类粘连"},
+    {"idx": 13, "sid": "sv_s29", "level": "S0", "target": "Thank you for your help today.", "meaningCN": "谢谢你今天的帮助。", "feature": "for/your 弱读", "watch": "f/yo 元音弱化"},
+    {"idx": 14, "sid": "a_s03", "level": "A", "target": "I'm fine, thank you.", "meaningCN": "我很好，谢谢", "feature": "撇号 + 高频短句", "watch": "im/i am 两读都要过"},
+    {"idx": 15, "sid": "a_s06", "level": "A", "target": "What's your name, please?", "meaningCN": "请问你叫什么名字", "feature": "撇号 what's", "watch": "what is 展开等价"},
+    {"idx": 16, "sid": "b_s01", "level": "B", "target": "I'd like the menu, please.", "meaningCN": "我想要（礼貌）", "feature": "案1 原型：I'd → I would", "watch": "本次修的撇号缩合；期望落「差一点」而非直接失败"},
+    {"idx": 17, "sid": "b_s02", "level": "B", "target": "I'd like a glass of water.", "meaningCN": "一杯（饮品）", "feature": "a glass of 连读", "watch": "of 弱化成 ov"},
+    {"idx": 18, "sid": "b_s05", "level": "B", "target": "We want a table for two.", "meaningCN": "两人桌", "feature": "数词 two + want a 连读", "watch": " wanna 口语折叠"},
+    {"idx": 19, "sid": "b_s07", "level": "B", "target": "I'll have a cup of coffee.", "meaningCN": "一杯咖啡", "feature": "撇号 I'll + cup of", "watch": "i will / aiou 两读"},
+    {"idx": 20, "sid": "b_s17", "level": "B", "target": "I'm looking for the bank.", "meaningCN": "我在找", "feature": "looking for 弱读", "watch": "for/far 混淆"}
+  ]
+}

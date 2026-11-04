@@ -374,6 +374,7 @@ void main() {
         snapshotValid: true,
         wrongChunkIds: [],
         pendingChunkIds: ['x2', 'x3', 'x4'],
+        skippedChunkIds: [],
         masteredScores: [90, 88]);
     const clean = ModuleAudit(
         levelId: 'y',
@@ -386,18 +387,21 @@ void main() {
         snapshotValid: false,
         wrongChunkIds: [],
         pendingChunkIds: ['y1'],
+        skippedChunkIds: [],
         masteredScores: [88]);
 
-    test('progressSection：台账/断点/环/分数 四项同排 + 红名单汇总', () {
+    test('progressSection：台账/渲染值/断点/环/分数 五项同排 + 红名单汇总', () {
       final s = SelfCheck.progressSection([red, clean]);
       expect(s.title, '进度完整性');
       expect(s.hasFail, isTrue);
       expect(s.rows[0].state, CheckState.fail);
+      // ASR-211 修复 4：口径改成「台账 ⇄ UI 渲染值」并排，恒等式没了。
       expect(s.rows[0].value,
-          '台账 2/5 · 断点第 5 块 · 环 40% · 最低 88 / 均值 89.0');
+          '台账 已掌握 2/5 · 缺口 第 3 块 · 渲染「第 3 块 · 2/5」 · '
+          '断点第 5 块 · 环 40% · 最低 88 / 均值 89.0');
       expect(s.rows[1].state, CheckState.pass);
       expect(s.rows[1].value, contains('无断点'));
-      expect(s.rows.last.value, '2 个模块 · 红名单 1');
+      expect(s.rows.last.value, '2 个模块 · 红名单 1 · 跳块模块 0 · 待通过块 0');
     });
 
     test('progressSection：无模块时给黄牌而不是崩溃', () {
@@ -525,6 +529,7 @@ void main() {
           snapshotValid: false,
           wrongChunkIds: ['w1'],
           pendingChunkIds: [],
+          skippedChunkIds: [],
           masteredScores: [90, 92, 95]);
       SelfCheckReport build({List<ModuleAudit> audits = const [], CheckRow? extra}) {
         final sections = <CheckSection>[
@@ -690,6 +695,45 @@ void main() {
             of: find.byType(MasteryRing),
             matching: find.byType(CircularProgressIndicator)));
         expect(ring.value, closeTo(0.5, 0.001));
+      });
+    });
+
+    // ASR-211 修复 6：跳块模块（后面已掌握、前面还欠着）的 UI 语义。
+    testWidgets('跳块模块 → 断点写「第 X 块待通过 · 已掌握 N/M」并给补练入口',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(900, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.runAsync(() async {
+        final f = await _fx('gate_gap');
+        final level = _level('KP', 5);
+        // 掌握 0/1/3/4，独漏第 3 块（下标 2）：连续末端=4，缺口=第 3 块。
+        await _mastered(f.db, level.chunks[0].id);
+        await _mastered(f.db, level.chunks[1].id);
+        await _mastered(f.db, level.chunks[3].id);
+        await _mastered(f.db, level.chunks[4].id);
+        await f.p.setLearnResume(
+            level.id, _snap(2, level.chunks[2].id, phase: 1));
+        final content = ContentPack(version: 'test', levels: [level]);
+
+        await tester.pumpWidget(gate(f.p, content));
+        for (var i = 0; i < 12; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          await tester.pump(const Duration(milliseconds: 40));
+        }
+
+        expect(find.text('接着上次练'), findsOneWidget);
+        expect(find.textContaining('上次学到'), findsNothing,
+            reason: '跳块时不许再写「上次学到」——它会被读成「只练到第 3 块」');
+        expect(find.textContaining('第 3 块待通过 · 已掌握 4/5'), findsOneWidget);
+        expect(find.textContaining('它后面还有 2 块已练过'), findsOneWidget);
+        expect(find.textContaining('补练未通过块（1）'), findsOneWidget);
+        expect(find.textContaining('继续 · 第 3 块'), findsOneWidget,
+            reason: '按钮位置 = 台账缺口，不是快照块号');
+
+        final ring = tester.widget<CircularProgressIndicator>(find.descendant(
+            of: find.byType(MasteryRing),
+            matching: find.byType(CircularProgressIndicator)));
+        expect(ring.value, closeTo(0.8, 0.001), reason: '环取台账集合计数 4/5');
       });
     });
   });

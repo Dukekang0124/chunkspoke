@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import 'audio_format.dart';
+import 'progress_display.dart';
 import 'progress_integrity.dart';
 import 'update/update_service.dart';
 import 'update/version_compare.dart';
@@ -49,6 +50,7 @@ class SelfCheckReport {
     required this.sections,
     required this.localVersion,
     required this.localVersionCode,
+    this.orphans,
   });
 
   final DateTime at;
@@ -57,8 +59,16 @@ class SelfCheckReport {
   final String localVersion;
   final int localVersionCode;
 
+  /// ASR-211 修复 4：孤儿行扫描结果（迁移表裁定的数据源，随导出回传）。
+  final OrphanScan? orphans;
+
   List<ModuleAudit> get reds => ProgressIntegrity.reds(audits);
   int get weakTraceCount => audits.where((a) => a.wrongChunkIds.isNotEmpty).length;
+
+  /// 跳块模块数 / 待通过块总数（案三那类分歧的量化，进导出）。
+  int get gapModuleCount => audits.where((a) => a.gapAhead).length;
+  int get skippedChunkCount =>
+      audits.fold(0, (n, a) => n + a.skippedChunkIds.length);
 
   /// 提示项 = 全页黄牌条目数（可选包未下载、无音频缓存、某模块留痕待补…）。
   int get hintCount => sections.fold(
@@ -77,6 +87,9 @@ class SelfCheckReport {
         'allGreen': allGreen,
         'needsAction': needsAction,
         'hints': hintCount,
+        'gapModules': gapModuleCount,
+        'skippedChunks': skippedChunkCount,
+        'orphans': orphans?.toJson(),
         'reds': [for (final a in reds) a.toJson()],
         'audits': [for (final a in audits) a.toJson()],
         'sections': [for (final s in sections) s.toJson()],
@@ -90,33 +103,80 @@ class SelfCheck {
   ///
   /// 红名单判据：断点与台账不同位（陈旧快照）。
   /// 黄牌判据：已掌握但留痕不合格（错块），或整模块已掌握。
-  static CheckSection progressSection(List<ModuleAudit> audits) {
+  ///
+  /// ASR-211 修复 4：口径从「台账比台账」改成**台账比 UI 渲染值**——
+  /// 每行同时打印 [LevelDisplay.anchorLine]（用户真正看到的那句）与台账两个数，
+  /// 渲染值里没有台账那个计数就是红；跳块与孤儿行各出一行，进同一份导出。
+  static CheckSection progressSection(List<ModuleAudit> audits,
+      {OrphanScan? orphans}) {
     final rows = <CheckRow>[];
     if (audits.isEmpty) {
-      return const CheckSection('进度完整性', [
-        CheckRow('模块', '无已启用模块', CheckState.warn),
+      return CheckSection('进度完整性', [
+        const CheckRow('模块', '无已启用模块', CheckState.warn),
+        if (orphans != null) ...orphanRows(orphans),
       ]);
     }
+    var gapModules = 0;
+    var skipped = 0;
     for (final a in audits) {
+      final d = LevelDisplay.of(a);
       final resume = a.snapshotIndex < 0
           ? '无断点'
           : '断点第 ${a.snapshotIndex + 1} 块';
-      final ring = '${(a.ringRatio * 100).round()}%';
+      final ring = '${(d.ring * 100).round()}%';
       final score = a.minMasteredScore < 0
           ? '无分数留痕'
           : '最低 ${a.minMasteredScore} / 均值 ${a.avgMasteredScore.toStringAsFixed(1)}';
-      final state = !a.consistent
-          ? CheckState.fail
-          : (a.wrongChunkIds.isNotEmpty ? CheckState.warn : CheckState.pass);
-      final detail =
-          '台账 ${a.ledgerMastered}/${a.total} · $resume · 环 $ring · $score';
+      // 渲染值必须带上台账的「已掌握 N/M」（完成态文案是 N/N，同样命中）。
+      final ledgerCounter = '${a.ledgerMastered}/${a.total}';
+      final rendersLedger = d.anchorLine.contains(ledgerCounter) ||
+          (a.complete && d.anchorLine.contains('${a.total}/${a.total}'));
+      CheckState state;
+      if (!a.consistent) {
+        state = CheckState.fail;
+      } else if (!rendersLedger) {
+        state = CheckState.fail;
+      } else if (d.gapAhead || a.wrongChunkIds.isNotEmpty) {
+        state = CheckState.warn;
+      } else {
+        state = CheckState.pass;
+      }
+      if (d.gapAhead) {
+        gapModules++;
+        skipped += a.skippedChunkIds.length;
+      }
+      final detail = '${d.ledgerLine} · 渲染「${d.anchorLine}」 · $resume · '
+          '环 $ring · $score';
       rows.add(CheckRow(a.theme, detail, state));
     }
     final reds = ProgressIntegrity.reds(audits).length;
-    rows.add(CheckRow(
-        '汇总', '${audits.length} 个模块 · 红名单 $reds', reds == 0 ? CheckState.pass : CheckState.fail));
+    rows.add(CheckRow('汇总',
+        '${audits.length} 个模块 · 红名单 $reds · 跳块模块 $gapModules · 待通过块 $skipped',
+        reds == 0 ? CheckState.pass : CheckState.fail));
+    if (gapModules > 0) {
+      rows.add(CheckRow(
+          '跳块清单',
+          '$gapModules 个模块的缺口 ≠ 连续末端，共 $skipped 块待通过'
+          '（UI 已按「第 X 块待通过 · 已掌握 N/M」显示）',
+          CheckState.warn));
+    }
+    if (orphans != null) rows.addAll(orphanRows(orphans));
     return CheckSection('进度完整性', rows);
   }
+
+  /// ASR-211 修复 4：孤儿行（台账有、内容包没有）单独成行。
+  /// 迁移表做不做以这里的真机回执数据定夺，所以必须进导出。
+  static List<CheckRow> orphanRows(OrphanScan o) => [
+        CheckRow(
+            '孤儿行',
+            o.clean
+                ? '台账 ${o.rows} 行 / 内容包 ${o.contentKeys} 块 · 无孤儿'
+                : '台账 ${o.rows} 行 · 孤儿 ${o.count}（其中已掌握 ${o.orphanMastered}）'
+                    '· 样本 ${o.orphanKeys.take(5).join('、')}',
+            o.clean
+                ? CheckState.pass
+                : (o.orphanMastered > 0 ? CheckState.fail : CheckState.warn)),
+      ];
 
   /// 区块②之一：识别引擎自检。
   static List<CheckRow> engineRows({
@@ -324,14 +384,16 @@ class SelfCheck {
     required List<CheckRow> update,
     required String localVersion,
     required int localVersionCode,
+    OrphanScan? orphans,
   }) {
     return SelfCheckReport(
       at: at,
       audits: audits,
       localVersion: localVersion,
       localVersionCode: localVersionCode,
+      orphans: orphans,
       sections: [
-        progressSection(audits),
+        progressSection(audits, orphans: orphans),
         CheckSection('资源完整性', [...engine, ...packs, ...audio]),
         CheckSection('更新链路', update),
       ],

@@ -47,6 +47,11 @@ TARGETS = [
     "thank you so much for your help",
     "let me know if you need anything",
     "we should leave before it gets dark",
+    # ASR-211：带撇号的真实课程句（L0 生存包原文）。归一层要能把 i'd / i'm / i'll
+    # 和它们被 ASR 拆开的写法对上——夹具里没有撇号句，两侧写歪就查不出来。
+    "i'd like the menu please",
+    "i'm looking for the bank",
+    "i'll have a cup of coffee",
 ]
 
 

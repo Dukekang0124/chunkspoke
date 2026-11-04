@@ -206,6 +206,12 @@ def main():
     assets = os.path.join(ROOT, 'assets', 'version.json')
     if os.path.isdir(os.path.dirname(assets)):
         write_json(assets, obj)
+    # ASR-211 修复 7：官网同源副本一起写。三份拷贝过去靠人手抄（发布 SOP 里另有一步），
+    # 抄漏一次就是「主仓还挂着 1.7.3」；现在生成器一次落三处，verify_release 再逐份比。
+    site = os.path.join(ROOT, 'docs', 'version.json')
+    if os.path.isdir(os.path.dirname(site)):
+        write_json(site, obj)
+        print('  [gen] 同步 docs/version.json（官网同源副本）')
 
     if a.bump_pubspec:
         bump_pubspec(name, code)

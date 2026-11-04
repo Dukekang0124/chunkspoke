@@ -12,6 +12,7 @@ import 'services/license_gate.dart';
 import 'services/license_state.dart';
 import 'services/loaders.dart';
 import 'services/notification_service.dart';
+import 'services/progress_guard.dart';
 import 'services/review_notify.dart';
 import 'services/theme_provider.dart';
 import 'services/zipformer_asr.dart';
@@ -172,6 +173,9 @@ Future<void> bootstrap() async {
         child: const ChunkSpokeApp(),
       ),
     );
+    // ASR-211 修复 3（时机①）：冷启动全模块归位。首帧不被它拖慢，失败只留痕；
+    // 存量用户带着旧断点进来时，红名单在进入任何练习页之前就已经被台账改写。
+    ProgressGuard.scheduleColdStart(progress, content);
   } catch (e, st) {
     // 启动链路兜底：初始化失败也渲染应用内错误页（带重试），绝不静默退出。
     CrashLog.write('Bootstrap: $e', st);

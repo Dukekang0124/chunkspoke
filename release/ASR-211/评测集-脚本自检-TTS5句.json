@@ -1,0 +1,238 @@
+{
+  "kind": "asr211-real-mic-report",
+  "set": "release/ASR-211/评测集-20句.json",
+  "engine": "vosk-model-small-en-us-0.15",
+  "grammar": "open",
+  "model": "D:\\tmp\\vosk-model\\vosk-model-small-en-us-0.15",
+  "expected": 20,
+  "recorded": 5,
+  "missing": [
+    "sv_s04",
+    "sv_s06",
+    "sv_s09",
+    "sv_s11",
+    "sv_s15",
+    "sv_s16",
+    "sv_s17",
+    "sv_s21",
+    "sv_s24",
+    "sv_s26",
+    "sv_s27",
+    "sv_s29",
+    "a_s06",
+    "b_s02",
+    "b_s17"
+  ],
+  "pass": 5,
+  "band": 0,
+  "fail": 0,
+  "empty": 0,
+  "passRate": 1.0,
+  "passOrBandRate": 1.0,
+  "avgWer": 0.0,
+  "avgCloseWer": 0.0,
+  "topMissingContentWords": [],
+  "rows": [
+    {
+      "idx": 1,
+      "sid": "sv_s01",
+      "file": "S0_sv_s01_MicrosoftZiraDesktop_r0.wav",
+      "target": "Hello there, my friend.",
+      "feature": "案2 原型：起音 hello 被吞成 O",
+      "watch": "识别层丢词；判卷层维持 fail 是对的，看热词增强后能否救回",
+      "hyp": "hello there my friend",
+      "durSec": 2.58,
+      "passed": true,
+      "reason": "exact",
+      "band": "hit",
+      "coreHit": 1.0,
+      "sim": 1.0,
+      "layer": "",
+      "hint": "",
+      "wer": 0.0,
+      "closeWer": 0.0
+    },
+    {
+      "idx": 2,
+      "sid": "sv_s04",
+      "target": "Please help me, I'm lost.",
+      "feature": "撇号缩合 I'm",
+      "missing": true
+    },
+    {
+      "idx": 3,
+      "sid": "sv_s06",
+      "target": "Call an ambulance, he is sick.",
+      "feature": "长句 + 辅音丛 + 连读",
+      "missing": true
+    },
+    {
+      "idx": 4,
+      "sid": "sv_s09",
+      "target": "Sorry, one more time, please.",
+      "feature": "数词 one ↔ 1",
+      "missing": true
+    },
+    {
+      "idx": 5,
+      "sid": "sv_s11",
+      "target": "Speak slowly please, my English is poor.",
+      "feature": "多词长句弱读",
+      "missing": true
+    },
+    {
+      "idx": 6,
+      "sid": "sv_s15",
+      "target": "Where is the exit, please?",
+      "feature": "th 音 + 元音连读",
+      "missing": true
+    },
+    {
+      "idx": 7,
+      "sid": "sv_s16",
+      "target": "Where is the hospital? I need a doctor.",
+      "feature": "两句合并",
+      "missing": true
+    },
+    {
+      "idx": 8,
+      "sid": "sv_s17",
+      "target": "Where is the toilet?",
+      "feature": "th + 尾辅音",
+      "missing": true
+    },
+    {
+      "idx": 9,
+      "sid": "sv_s21",
+      "target": "Do you speak English?",
+      "feature": "do you 弱读缩合",
+      "missing": true
+    },
+    {
+      "idx": 10,
+      "sid": "sv_s24",
+      "target": "How do I pay by card?",
+      "feature": "虚词 by + 短句",
+      "missing": true
+    },
+    {
+      "idx": 11,
+      "sid": "sv_s26",
+      "target": "What time do you open tomorrow?",
+      "feature": "wh 起音",
+      "missing": true
+    },
+    {
+      "idx": 12,
+      "sid": "sv_s27",
+      "target": "How long does it take by bus?",
+      "feature": "does it 连读",
+      "missing": true
+    },
+    {
+      "idx": 13,
+      "sid": "sv_s29",
+      "target": "Thank you for your help today.",
+      "feature": "for/your 弱读",
+      "missing": true
+    },
+    {
+      "idx": 14,
+      "sid": "a_s03",
+      "file": "A_a_s03_MicrosoftZiraDesktop_r0.wav",
+      "target": "I'm fine, thank you.",
+      "feature": "撇号 + 高频短句",
+      "watch": "im/i am 两读都要过",
+      "hyp": "i'm fine thank you",
+      "durSec": 2.42,
+      "passed": true,
+      "reason": "exact",
+      "band": "hit",
+      "coreHit": 1.0,
+      "sim": 1.0,
+      "layer": "",
+      "hint": "",
+      "wer": 0.0,
+      "closeWer": 0.0
+    },
+    {
+      "idx": 15,
+      "sid": "a_s06",
+      "target": "What's your name, please?",
+      "feature": "撇号 what's",
+      "missing": true
+    },
+    {
+      "idx": 16,
+      "sid": "b_s01",
+      "file": "B_b_s01_MicrosoftZiraDesktop_r0.wav",
+      "target": "I'd like the menu, please.",
+      "feature": "案1 原型：I'd → I would",
+      "watch": "本次修的撇号缩合；期望落「差一点」而非直接失败",
+      "hyp": "i'd like the menu please",
+      "durSec": 2.71,
+      "passed": true,
+      "reason": "exact",
+      "band": "hit",
+      "coreHit": 1.0,
+      "sim": 1.0,
+      "layer": "",
+      "hint": "",
+      "wer": 0.0,
+      "closeWer": 0.0
+    },
+    {
+      "idx": 17,
+      "sid": "b_s02",
+      "target": "I'd like a glass of water.",
+      "feature": "a glass of 连读",
+      "missing": true
+    },
+    {
+      "idx": 18,
+      "sid": "b_s05",
+      "file": "B_b_s05_MicrosoftZiraDesktop_r0.wav",
+      "target": "We want a table for two.",
+      "feature": "数词 two + want a 连读",
+      "watch": " wanna 口语折叠",
+      "hyp": "we want a table for two",
+      "durSec": 2.23,
+      "passed": true,
+      "reason": "exact",
+      "band": "hit",
+      "coreHit": 1.0,
+      "sim": 1.0,
+      "layer": "",
+      "hint": "",
+      "wer": 0.0,
+      "closeWer": 0.0
+    },
+    {
+      "idx": 19,
+      "sid": "b_s07",
+      "file": "B_b_s07_MicrosoftZiraDesktop_r0.wav",
+      "target": "I'll have a cup of coffee.",
+      "feature": "撇号 I'll + cup of",
+      "watch": "i will / aiou 两读",
+      "hyp": "i'll have a cup of coffee",
+      "durSec": 2.21,
+      "passed": true,
+      "reason": "exact",
+      "band": "hit",
+      "coreHit": 1.0,
+      "sim": 1.0,
+      "layer": "",
+      "hint": "",
+      "wer": 0.0,
+      "closeWer": 0.0
+    },
+    {
+      "idx": 20,
+      "sid": "b_s17",
+      "target": "I'm looking for the bank.",
+      "feature": "looking for 弱读",
+      "missing": true
+    }
+  ],
+  "caveat": "判定与 App 同源（vosk_sim 判定前缀，Dart 侧 judge_parity 逐条对拍）。本报告是**引擎裁定依据**；TTS 合成集只能当回归看，不能拿来判换不换引擎。"
+}

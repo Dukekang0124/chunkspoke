@@ -29,6 +29,7 @@ sys.path.insert(0, HERE)
 import asr_bench  # noqa: E402
 
 DART_JUDGE = os.path.join(ROOT, "lib", "services", "speech_judge.dart")
+DART_PHONETICS = os.path.join(ROOT, "lib", "services", "phonetics.dart")
 
 
 class WerTest(unittest.TestCase):
@@ -98,6 +99,7 @@ class DriftGuardTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.dart = io.open(DART_JUDGE, encoding="utf-8").read()
+        cls.phon = io.open(DART_PHONETICS, encoding="utf-8").read()
 
     def test_function_word_set_matches_dart(self):
         m = re.search(r"const Set<String> _functionWords = \{(.*?)\};", self.dart, re.S)
@@ -114,6 +116,50 @@ class DriftGuardTest(unittest.TestCase):
                       for line in m.group(1).splitlines() if "{" in line}
         py_pairs = {frozenset(p) for p in asr_bench._J["CONFUSION_PAIRS"]}
         self.assertEqual(dart_pairs, py_pairs)
+
+    # ── phonetics.dart ⇄ vosk_sim.py（ASR-211 增）──────────────────────────
+    # 撇号缩合表这次两边各写一遍，写歪的那侧「案1」判成另一种结果，而对拍夹具
+    # 里没有带撇号的句子就查不出来。表名/阈值在这里钉死，改一边立刻红。
+
+    def test_phon_ratio_matches_dart(self):
+        m = re.search(r"const double kPhonRatio = ([0-9.]+)\s*;", self.phon)
+        self.assertIsNotNone(m, "phonetics.dart 里找不到 kPhonRatio 定义")
+        self.assertAlmostEqual(float(m.group(1)), asr_bench._J["PHON_RATIO"], places=6,
+                               msg="音素阈值漂移：同一句话两边判不一样")
+
+    def _dart_str_map(self, decl):
+        m = re.search(decl + r"\s*=\s*\{(.*?)\};", self.phon, re.S)
+        self.assertIsNotNone(m, "phonetics.dart 里找不到 %s 定义" % decl)
+        body = "\n".join(l for l in m.group(1).splitlines() if not l.strip().startswith("//"))
+        out = {}
+        for k, v in re.findall(r"['\"]([a-z']+)['\"]\s*:\s*['\"]([^'\"]+)['\"]", body):
+            out[k] = v
+        return out
+
+    def test_exception_table_matches_dart(self):
+        dart = self._dart_str_map(r"const Map<String, String> _exceptions")
+        py = dict(asr_bench._J["EXCEPTIONS"])
+        self.assertTrue(dart, "_exceptions 解析为空（Dart 写法变了，守卫失效）")
+        self.assertEqual(sorted(k for k in dart if k not in py), [], "Dart 有、Python 缺")
+        self.assertEqual(sorted(k for k in py if k not in dart), [], "Python 有、Dart 缺")
+        self.assertEqual({k: v for k, v in dart.items() if py.get(k) != v}, {},
+                         "同键不同音素")
+
+    def test_contraction_table_matches_dart(self):
+        m = re.search(r"const Map<String, List<String>> _spokenContractions\s*=\s*\{(.*?)\};",
+                      self.phon, re.S)
+        self.assertIsNotNone(m, "phonetics.dart 里找不到 _spokenContractions 定义")
+        body = "\n".join(l for l in m.group(1).splitlines() if not l.strip().startswith("//"))
+        dart = {}
+        for k, inner in re.findall(r"['\"]([a-z']+)['\"]\s*:\s*\[([^\]]*)\]", body):
+            dart[k] = re.findall(r"['\"]([a-z']+)['\"]", inner)
+        py = {k: list(v) for k, v in asr_bench._J["CONTRACTIONS"].items()}
+        # 缩合表是判卷归一的第一入口（ASR-211）：条数 + 键集合 + 展开结果三重核。
+        self.assertGreaterEqual(len(dart), 40, "_spokenContractions 解析异常（条目过少）")
+        self.assertEqual(sorted(set(dart) - set(py)), [], "Dart 有、Python 缺")
+        self.assertEqual(sorted(set(py) - set(dart)), [], "Python 有、Dart 缺")
+        self.assertEqual({k: (dart[k], py[k]) for k in dart if dart[k] != py[k]}, {},
+                         "同键不同展开")
 
     # ── 阈值漂移（1.5.9 增）：词表之外，数字也必须同值 ──────────────────────
     # 表一致但阈值不同 = 同一句话两边判不一样，对拍等于白做。

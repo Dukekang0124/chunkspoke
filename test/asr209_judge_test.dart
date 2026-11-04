@@ -170,4 +170,64 @@ void main() {
       expect(o.deviationHint, isNull);
     });
   });
+
+  // 指令 ASR-211 §一.4：案1 归一后必须落在「差一点」档（可重说、不扣分），
+  // 但 course↔cross 这类真说错**不许**因为改了归一就被放行；
+  // 案2（hello→O）是识别层丢词，判卷层**不碰**——这里钉住它仍是 fail，
+  // 谁想在判卷层把它"修好"就红。
+  group('ASR-211 案1/案2 固定用例', () {
+    test('案1：撇号缩合展开后落灰带（不放行 course↔cross）', () {
+      final o = judgeSpeech(
+          target: "I'd like the main course, please.",
+          recognized: 'i would like the man cross please');
+      expect(o.pass, isFalse);
+      expect(o.band, 'band', reason: '归一后 core=3/4、相似度达标 → 差一点，不是失败');
+      expect(o.reason, 'lowSim');
+      expect(o.coreHitRate, closeTo(0.75, 0.001));
+      expect(o.deviationHint, isNotNull);
+      expect(o.deviationHint, contains('main'), reason: '该提示 man→main 这一处');
+    });
+
+    test('案1 另一读法（漏 I would + cause）同样落灰带', () {
+      final o = judgeSpeech(
+          target: "I'd like the main course, please.",
+          recognized: 'i like the main cause please');
+      expect(o.pass, isFalse);
+      expect(o.band, 'band');
+    });
+
+    test('course 与 cross 不是近义词：真说错仍然对不上', () {
+      expect(wordClose('course', 'cross'), isFalse);
+      expect(wordClose("course", "cause"), isFalse);
+    });
+
+    test('main 与 man 靠音素通道对上', () {
+      expect(wordClose('main', 'man'), isTrue);
+    });
+
+    test("撇号缩合词干：i'd 对 i、sam's 对 sam、don't 对 do", () {
+      expect(wordClose("i'd", 'i'), isTrue);
+      expect(wordClose("sam's", 'sam'), isTrue);
+      expect(wordClose("don't", 'do'), isTrue);
+      expect(spokenExpansion("i'd"), ['i', 'would']);
+      expect(apostropheStem("i'd"), 'i');
+      expect(apostropheStem('i'), 'i');
+    });
+
+    test('案2：hello 整段只剩 O 属识别层丢词，判卷层维持 fail', () {
+      final o = judgeSpeech(
+          target: 'Hello there, my friend.', recognized: 'O');
+      expect(o.pass, isFalse);
+      expect(o.band, 'fail', reason: '核心词命中 0：不能在判卷层把它抬成灰带');
+      expect(o.coreHitRate, 0.0);
+    });
+
+    test('案2 的正常读法不受影响（仍判对）', () {
+      final o = judgeSpeech(
+          target: 'Hello there, my friend.',
+          recognized: 'hello there my frend');
+      expect(o.pass, isTrue);
+      expect(o.band, 'hit');
+    });
+  });
 }

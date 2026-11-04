@@ -10,6 +10,7 @@ import '../services/chunk_progress.dart';
 import '../services/database.dart';
 import '../services/crash_log.dart';
 import '../services/learning_flow.dart';
+import '../services/progress_display.dart';
 import '../services/progress_integrity.dart';
 import '../services/state_machine.dart';
 import '../services/session_report.dart';
@@ -87,6 +88,13 @@ class _PracticeLoopState extends State<PracticeLoop>
   bool _finished = false;
   LearnResume? _resume;
   int _resumeIndex = 0;
+
+  /// ASR-211 修复 2/6：台账派生的「已掌握块数」（锚定与非锚定会话同一口径）。
+  /// 环、断点块号、待通过文案全部读这两个数，不再各算各的。
+  int _ledgerMastered = 0;
+
+  /// ASR-211 修复 4/6：本页所有进度文案的唯一渲染模型（自检比对同一个对象）。
+  LevelDisplay? _display;
 
   /// ASR-203 修复 1/3/4：完整关卡会话的对账结果（台账派生的块号、环、完成态）。
   ModuleAudit? _audit;
@@ -255,7 +263,10 @@ class _PracticeLoopState extends State<PracticeLoop>
       // 陈旧「接着上次练」一律废除：只有台账确实停在模块中间某块才弹。
       showResume = !done && a.shouldOfferResume;
     } else {
-      index = resume?.chunkIndex ?? (start >= _total ? 0 : start);
+      // ASR-211 修复 2：非锚定会话（补练 / 自选块 / 复习）同样只认台账派生的位置。
+      // 快照只提供块内相位（_continueResume 里取 phase/stars），不再决定第几块——
+      // 否则「渲染值」有两个来源，自检按台账算就永远对不上这里的显示。
+      index = start >= _total ? 0 : start;
       showDone = false;
       showResume = !widget.reviewMode &&
           (resume != null || (mastered > 0 && mastered < _total));
@@ -263,6 +274,17 @@ class _PracticeLoopState extends State<PracticeLoop>
     setState(() {
       _resume = showResume ? resume : null;
       _resumeIndex = index;
+      _ledgerMastered = (full && a != null) ? a.ledgerMastered : mastered;
+      _display = (full && a != null)
+          ? LevelDisplay.of(a)
+          : LevelDisplay(
+              theme: widget.level.theme,
+              total: _total,
+              mastered: mastered,
+              gapIndex: index,
+              skipped: const [],
+              complete: _total > 0 && mastered >= _total,
+            );
       _ci = index;
       _phase = _order.first;
       _stars = StarBoard.empty;
@@ -279,7 +301,17 @@ class _PracticeLoopState extends State<PracticeLoop>
 
   Future<void> _writeResume() async {
     final p = _progress;
-    if (p == null || widget.reviewMode || _challenge || _finished) return;
+    // ASR-211 修复 2：块内书签只属于**锚定会话**（整模块闯关）。
+    // 补练/自选块会话的 _ci 是子集内的下标，写进 `learnResume_<levelId>` 会把
+    // 整模块的断点拽偏（案三「台账 21/25、断点第 10 块」的次路径来源之一）。
+    // 子集会话完成时的断点仍由 chunkStore 的台账派生式落，不经这里。
+    if (p == null ||
+        widget.reviewMode ||
+        !_isFullLevel ||
+        _challenge ||
+        _finished) {
+      return;
+    }
     if (!_ready || _ci >= _total) return;
     try {
       final data = LearnResume(
@@ -776,12 +808,20 @@ class _PracticeLoopState extends State<PracticeLoop>
   Widget _resumeGate() {
     final a = _audit;
     final r = _resume;
-    final from = r == null
+    final d = _display;
+    // ASR-211 修复 2：这里的块号与真正会打开的位置必须同源（台账派生的 _resumeIndex）。
+    // 快照的 chunkIndex 不再参与显示——「写着第 10 块、进去练第 22 块」就是这么来的。
+    //
+    // ASR-211 修复 6：跳块时（后面已掌握、前面还欠着）「上次学到 第 X 块」是误导，
+    // 换成语义正确的「第 X 块待通过 · 已掌握 N/M」，两个数同时报。
+    final bool gapAhead = d?.gapAhead ?? false;
+    final int pending = a?.pendingChunkIds.length ?? 0;
+    final phaseSuffix =
+        r == null ? '' : ' · ${phaseLabel(r.phase, reviewMode: false)}';
+    final headline = d == null
         ? '第 ${_resumeIndex + 1} 块'
-        : '第 ${r.chunkIndex + 1} 块 · ${phaseLabel(r.phase, reviewMode: false)}';
-    final double ring = a != null
-        ? a.ringRatio
-        : (_total > 0 ? _resumeIndex / _total : 0.0);
+        : (d.gapAhead ? d.anchorLine : '上次学到 ${d.anchorLine}');
+    final double ring = d?.ring ?? (_total > 0 ? _ledgerMastered / _total : 0.0);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
@@ -796,9 +836,16 @@ class _PracticeLoopState extends State<PracticeLoop>
                     fontSize: 22,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            Text('上次学到 $from',
+            Text('$headline$phaseSuffix',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: kTextSecondary, fontSize: 15)),
+            if (gapAhead) ...[
+              const SizedBox(height: 6),
+              Text('它后面还有 ${_ledgerMastered - _resumeIndex} 块已练过 '
+                  '· 先补这一格就接上',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: kTextMuted, fontSize: 13)),
+            ],
             const SizedBox(height: 26),
             SizedBox(
               width: double.infinity,
@@ -810,10 +857,7 @@ class _PracticeLoopState extends State<PracticeLoop>
                       borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: _continueResume,
-                child: Text(
-                    r == null
-                        ? '继续 · 第 ${_resumeIndex + 1} 块'
-                        : '继续 · ${phaseLabel(r.phase, reviewMode: false)}',
+                child: Text('继续 · 第 ${_resumeIndex + 1} 块$phaseSuffix',
                     style: TextStyle(
                         color: kOnPrimary,
                         fontSize: 17,
@@ -821,6 +865,15 @@ class _PracticeLoopState extends State<PracticeLoop>
               ),
             ),
             const SizedBox(height: 10),
+            if (gapAhead && pending > 0)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _startPendingCatchup,
+                  child: Text('补练未通过块（$pending）',
+                      style: TextStyle(color: kTextSecondary)),
+                ),
+              ),
             TextButton(
               onPressed: () {
                 _clearResume();
@@ -839,6 +892,25 @@ class _PracticeLoopState extends State<PracticeLoop>
     );
   }
 
+  /// ASR-211 修复 6：跳块补练入口——把本模块**未掌握**的块按课文顺序排成一个子会话。
+  /// 走非锚定路径（chunks != null），与「错块复习」同一套挂载方式。
+  void _startPendingCatchup() {
+    final pending = (_audit?.pendingChunkIds ?? const <String>[]).toSet();
+    final list =
+        widget.level.chunks.where((c) => pending.contains(c.id)).toList();
+    if (list.isEmpty) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: const Text('补练未通过块')),
+        body: PracticeLoop(
+          level: widget.level,
+          chunks: list,
+          onDone: (_) => Navigator.of(context).maybePop(),
+        ),
+      ),
+    ));
+  }
+
   void _continueResume() {
     final r = _resume;
     setState(() => _showResume = false);
@@ -848,7 +920,8 @@ class _PracticeLoopState extends State<PracticeLoop>
     }
     _timeoutTimer?.cancel();
     setState(() {
-      _ci = r.chunkIndex.clamp(0, _total - 1);
+      // ASR-211 修复 2：位置来自台账（_resumeIndex），快照只补相位与星数。
+      _ci = _resumeIndex.clamp(0, _total - 1);
       _phase = _order.contains(r.phase) ? r.phase : _order.first;
       _stars = r.stars;
     });
