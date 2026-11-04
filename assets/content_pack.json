@@ -19,7 +19,8 @@
             "article/L11",
             "freq/google-10000#1536"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "a02",
@@ -33,7 +34,8 @@
             "pack:level/A",
             "freq/google-10000#2357"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "a03",
@@ -48,7 +50,8 @@
             "article/L17",
             "freq/google-10000#1110"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "a04",
@@ -63,7 +66,8 @@
             "article/L11",
             "freq/google-10000#1281"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "a05",
@@ -78,7 +82,8 @@
             "article/L07,L11",
             "freq/google-10000#108"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "a06",
@@ -93,7 +98,8 @@
             "article/L17",
             "freq/google-10000#108"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "a07",
@@ -108,7 +114,8 @@
             "article/L07,L11",
             "freq/google-10000#1153"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "a08",
@@ -123,7 +130,8 @@
             "article/L11",
             "freq/google-10000#64"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "a09",
@@ -138,7 +146,8 @@
             "article/L17",
             "freq/google-10000#308"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "a10",
@@ -153,7 +162,8 @@
             "freq/google-10000#8462",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "a11",
@@ -167,7 +177,8 @@
             "pack:level/A",
             "freq/google-10000#1259"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "a12",
@@ -181,7 +192,8 @@
             "pack:level/A",
             "freq/google-10000#3535"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -300,7 +312,9 @@
         "a09",
         "a11",
         "a12"
-      ]
+      ],
+      "cefr": "A1",
+      "stage": "L1"
     },
     {
       "id": "B",
@@ -363,7 +377,8 @@
             "article/L13",
             "freq/google-10000#96"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "b02",
@@ -419,7 +434,8 @@
             "pack:level/B",
             "freq/google-10000#1275"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "b03",
@@ -467,7 +483,8 @@
             "pack:level/B",
             "freq/google-10000#1077"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "b04",
@@ -524,7 +541,8 @@
             "pack:level/B",
             "freq/google-10000#76"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "b05",
@@ -581,7 +599,8 @@
             "pack:level/B",
             "freq/google-10000#463"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "b06",
@@ -631,7 +650,8 @@
             "freq/google-10000#810",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "b07",
@@ -688,7 +708,8 @@
             "pack:level/B",
             "freq/google-10000#1929"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "b08",
@@ -741,7 +762,8 @@
             "article/L13",
             "freq/google-10000#3991"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "b09",
@@ -797,7 +819,8 @@
             "pack:level/B",
             "freq/google-10000#1840"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "b10",
@@ -853,7 +876,8 @@
             "pack:level/B",
             "freq/google-10000#2954"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "b11",
@@ -904,7 +928,8 @@
             "article/L19",
             "freq/google-10000#207"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "b12",
@@ -955,7 +980,8 @@
             "article/L18",
             "freq/google-10000#47"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "b13",
@@ -1012,7 +1038,8 @@
             "article/L22",
             "freq/google-10000#182"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "b14",
@@ -1064,7 +1091,8 @@
             "pack:level/B",
             "freq/google-10000#554"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "b15",
@@ -1120,7 +1148,8 @@
             "pack:level/B",
             "freq/google-10000#1485"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "b16",
@@ -1176,7 +1205,8 @@
             "pack:level/B",
             "freq/google-10000#1418"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "b17",
@@ -1230,7 +1260,8 @@
             "article/L22",
             "freq/google-10000#516"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "b18",
@@ -1281,7 +1312,8 @@
             "article/L22",
             "freq/google-10000#159"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "b19",
@@ -1327,7 +1359,8 @@
             "article/L22",
             "freq/google-10000#34"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "b20",
@@ -1379,7 +1412,8 @@
             "pack:level/B",
             "freq/google-10000#397"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "b21",
@@ -1435,7 +1469,8 @@
             "pack:level/B",
             "freq/google-10000#745"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "b22",
@@ -1492,7 +1527,8 @@
             "pack:level/B",
             "freq/google-10000#92"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "b23",
@@ -1545,7 +1581,8 @@
             "pack:level/B",
             "freq/google-10000#534"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "b24",
@@ -1594,7 +1631,8 @@
             "pack:level/B",
             "freq/google-10000#383"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "b25",
@@ -1642,7 +1680,8 @@
             "pack:level/B",
             "freq/google-10000#288"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -1857,7 +1896,9 @@
         "b03",
         "b04",
         "b13"
-      ]
+      ],
+      "cefr": "A1",
+      "stage": "L1"
     },
     {
       "id": "C",
@@ -1911,7 +1952,8 @@
             "article/L01,L13",
             "freq/google-10000#1929"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "c02",
@@ -1964,7 +2006,8 @@
             "article/L01",
             "freq/google-10000#3537"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c03",
@@ -2012,7 +2055,8 @@
             "pack:level/C",
             "freq/google-10000#3354"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c04",
@@ -2061,7 +2105,8 @@
             "article/L01",
             "freq/google-10000#123"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "c05",
@@ -2110,7 +2155,8 @@
             "pack:level/C",
             "freq/google-10000#70"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "c06",
@@ -2158,7 +2204,8 @@
             "pack:level/C",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c07",
@@ -2206,7 +2253,8 @@
             "pack:level/C",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c08",
@@ -2255,7 +2303,8 @@
             "pack:level/C",
             "freq/google-10000#2839"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c09",
@@ -2307,7 +2356,8 @@
             "pack:level/C",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c10",
@@ -2355,7 +2405,8 @@
             "pack:level/C",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c11",
@@ -2404,7 +2455,8 @@
             "article/L01",
             "freq/google-10000#336"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "c12",
@@ -2453,7 +2505,8 @@
             "article/L01",
             "freq/google-10000#1604"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "B1"
         },
         {
           "id": "c13",
@@ -2501,7 +2554,8 @@
             "pack:level/C",
             "freq/google-10000#461"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "c14",
@@ -2549,7 +2603,8 @@
             "pack:level/C",
             "freq/google-10000#349"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "c15",
@@ -2598,7 +2653,8 @@
             "pack:level/C",
             "freq/google-10000#8609"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c16",
@@ -2651,7 +2707,8 @@
             "freq/google-10000#unlisted",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c17",
@@ -2704,7 +2761,8 @@
             "pack:level/C",
             "freq/google-10000#3683"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c18",
@@ -2753,7 +2811,8 @@
             "pack:level/C",
             "freq/google-10000#7858"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c19",
@@ -2805,7 +2864,8 @@
             "pack:level/C",
             "freq/google-10000#4643"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "c20",
@@ -2849,7 +2909,8 @@
             "pack:level/C",
             "freq/google-10000#173"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "c21",
@@ -2903,7 +2964,8 @@
             "freq/google-10000#2238",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c22",
@@ -2957,7 +3019,8 @@
             "freq/google-10000#696",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "c23",
@@ -3013,7 +3076,8 @@
             "pack:level/C",
             "freq/google-10000#296"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "c24",
@@ -3066,7 +3130,8 @@
             "freq/google-10000#2743",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "c25",
@@ -3116,7 +3181,8 @@
             "article/L18",
             "freq/google-10000#1944"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -3322,7 +3388,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A1",
+      "stage": "L1"
     },
     {
       "id": "D",
@@ -3375,7 +3443,8 @@
             "pack:level/D",
             "freq/google-10000#3508"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "d02",
@@ -3425,7 +3494,8 @@
             "article/L02",
             "freq/google-10000#463"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "d03",
@@ -3478,7 +3548,8 @@
             "article/L02",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "d04",
@@ -3527,7 +3598,8 @@
             "article/L02",
             "freq/google-10000#6232"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "d05",
@@ -3581,7 +3653,8 @@
             "article/L02",
             "freq/google-10000#427"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "B1"
         },
         {
           "id": "d06",
@@ -3629,7 +3702,8 @@
             "pack:level/D",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "d07",
@@ -3673,7 +3747,8 @@
             "pack:level/D",
             "freq/google-10000#272"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "d08",
@@ -3722,7 +3797,8 @@
             "pack:level/D",
             "freq/google-10000#5883"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "d09",
@@ -3775,7 +3851,8 @@
             "pack:level/D",
             "freq/google-10000#3113"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "d10",
@@ -3824,7 +3901,8 @@
             "pack:level/D",
             "freq/google-10000#157"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "d11",
@@ -3873,7 +3951,8 @@
             "pack:level/D",
             "freq/google-10000#2660"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "d12",
@@ -3926,7 +4005,8 @@
             "pack:level/D",
             "freq/google-10000#132"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "B1"
         },
         {
           "id": "d13",
@@ -3975,7 +4055,8 @@
             "pack:level/D",
             "freq/google-10000#8723"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "d14",
@@ -4025,7 +4106,8 @@
             "article/L20",
             "freq/google-10000#417"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "d15",
@@ -4073,7 +4155,8 @@
             "pack:level/D",
             "freq/google-10000#1962"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "B1"
         },
         {
           "id": "d16",
@@ -4118,7 +4201,8 @@
             "pack:level/D",
             "freq/google-10000#155"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "d17",
@@ -4162,7 +4246,8 @@
             "pack:level/D",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B2"
         },
         {
           "id": "d18",
@@ -4214,7 +4299,8 @@
             "pack:level/D",
             "freq/google-10000#271"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "d19",
@@ -4264,7 +4350,8 @@
             "article/L02",
             "freq/google-10000#3653"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "d20",
@@ -4312,7 +4399,8 @@
             "pack:level/D",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "d21",
@@ -4360,7 +4448,8 @@
             "pack:level/D",
             "freq/google-10000#7318"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "d22",
@@ -4412,7 +4501,8 @@
             "pack:level/D",
             "freq/google-10000#5574"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "d23",
@@ -4456,7 +4546,8 @@
             "pack:level/D",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "d24",
@@ -4497,7 +4588,8 @@
             "pack:level/D",
             "freq/google-10000#5039"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "d25",
@@ -4550,7 +4642,8 @@
             "pack:level/D",
             "freq/google-10000#399"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -4756,7 +4849,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "B1",
+      "stage": "L2"
     },
     {
       "id": "E",
@@ -4813,7 +4908,8 @@
             "pack:level/E",
             "freq/google-10000#2706"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "e02",
@@ -4862,7 +4958,8 @@
             "pack:level/E",
             "freq/google-10000#848"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "e03",
@@ -4911,7 +5008,8 @@
             "article/L03",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "e04",
@@ -4961,7 +5059,8 @@
             "article/L01",
             "freq/google-10000#8614"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "e05",
@@ -5015,7 +5114,8 @@
             "article/L19",
             "freq/google-10000#869"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "e06",
@@ -5067,7 +5167,8 @@
             "pack:level/E",
             "freq/google-10000#8750"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "e07",
@@ -5112,7 +5213,8 @@
             "pack:level/E",
             "freq/google-10000#4063"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "e08",
@@ -5161,7 +5263,8 @@
             "pack:level/E",
             "freq/google-10000#2069"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "e09",
@@ -5209,7 +5312,8 @@
             "pack:level/E",
             "freq/google-10000#2445"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "e10",
@@ -5257,7 +5361,8 @@
             "pack:level/E",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "e11",
@@ -5305,7 +5410,8 @@
             "pack:level/E",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "e12",
@@ -5351,7 +5457,8 @@
             "article/L03",
             "freq/google-10000#417"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "e13",
@@ -5400,7 +5507,8 @@
             "freq/google-10000#unlisted",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "e14",
@@ -5445,7 +5553,8 @@
             "article/L03",
             "freq/google-10000#77"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "B1"
         },
         {
           "id": "e15",
@@ -5498,7 +5607,8 @@
             "pack:level/E",
             "freq/google-10000#1077"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "e16",
@@ -5547,7 +5657,8 @@
             "pack:level/E",
             "freq/google-10000#598"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "e17",
@@ -5600,7 +5711,8 @@
             "pack:level/E",
             "freq/google-10000#2743"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "e18",
@@ -5644,7 +5756,8 @@
             "pack:level/E",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "e19",
@@ -5697,7 +5810,8 @@
             "pack:level/E",
             "freq/google-10000#1975"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "e20",
@@ -5750,7 +5864,8 @@
             "pack:level/E",
             "freq/google-10000#1077"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "e21",
@@ -5798,7 +5913,8 @@
             "pack:level/E",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "e22",
@@ -5847,7 +5963,8 @@
             "pack:level/E",
             "freq/google-10000#42"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "e23",
@@ -5895,7 +6012,8 @@
             "pack:level/E",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "e24",
@@ -5940,7 +6058,8 @@
             "pack:level/E",
             "freq/google-10000#7858"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "e25",
@@ -5989,7 +6108,8 @@
             "pack:level/E",
             "freq/google-10000#1227"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -6195,7 +6315,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "B1",
+      "stage": "L2"
     },
     {
       "id": "F",
@@ -6246,7 +6368,8 @@
             "freq/google-10000#278",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "f02",
@@ -6294,7 +6417,8 @@
             "pack:level/F",
             "freq/google-10000#3965"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "f03",
@@ -6342,7 +6466,8 @@
             "pack:level/F",
             "freq/google-10000#971"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "B1"
         },
         {
           "id": "f04",
@@ -6390,7 +6515,8 @@
             "pack:level/F",
             "freq/google-10000#424"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "f05",
@@ -6438,7 +6564,8 @@
             "pack:level/F",
             "freq/google-10000#336"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "f06",
@@ -6486,7 +6613,8 @@
             "pack:level/F",
             "freq/google-10000#682"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "f07",
@@ -6535,7 +6663,8 @@
             "pack:level/F",
             "freq/google-10000#7680"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "f08",
@@ -6583,7 +6712,8 @@
             "pack:level/F",
             "freq/google-10000#3947"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "f09",
@@ -6631,7 +6761,8 @@
             "pack:level/F",
             "freq/google-10000#5174"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "f10",
@@ -6685,7 +6816,8 @@
             "freq/google-10000#4643",
             "merge/text"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "f11",
@@ -6735,7 +6867,8 @@
             "article/L03",
             "freq/google-10000#1019"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "f12",
@@ -6784,7 +6917,8 @@
             "pack:level/F",
             "freq/google-10000#436"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "f13",
@@ -6832,7 +6966,8 @@
             "pack:level/F",
             "freq/google-10000#1980"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "f14",
@@ -6876,7 +7011,8 @@
             "pack:level/F",
             "freq/google-10000#433"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B2"
         },
         {
           "id": "f15",
@@ -6928,7 +7064,8 @@
             "pack:level/F",
             "freq/google-10000#1886"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "f16",
@@ -6977,7 +7114,8 @@
             "article/L03",
             "freq/google-10000#4930"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "f17",
@@ -7021,7 +7159,8 @@
             "pack:level/F",
             "freq/google-10000#1046"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "f18",
@@ -7069,7 +7208,8 @@
             "pack:level/F",
             "freq/google-10000#101"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "f19",
@@ -7118,7 +7258,8 @@
             "pack:level/F",
             "freq/google-10000#6742"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "f20",
@@ -7166,7 +7307,8 @@
             "pack:level/F",
             "freq/google-10000#693"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "f21",
@@ -7214,7 +7356,8 @@
             "pack:level/F",
             "freq/google-10000#789"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "f22",
@@ -7258,7 +7401,8 @@
             "pack:level/F",
             "freq/google-10000#970"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "f23",
@@ -7306,7 +7450,8 @@
             "pack:level/F",
             "freq/google-10000#2348"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "f24",
@@ -7355,7 +7500,8 @@
             "pack:level/F",
             "freq/google-10000#445"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "f25",
@@ -7404,7 +7550,8 @@
             "pack:level/F",
             "freq/google-10000#774"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -7610,7 +7757,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "G",
@@ -7665,7 +7814,8 @@
             "freq/google-10000#278",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "g02",
@@ -7713,7 +7863,8 @@
             "pack:level/G",
             "freq/google-10000#2262"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "g03",
@@ -7761,7 +7912,8 @@
             "pack:level/G",
             "freq/google-10000#3001"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "g04",
@@ -7810,7 +7962,8 @@
             "pack:level/G",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "g05",
@@ -7855,7 +8008,8 @@
             "article/L03",
             "freq/google-10000#314"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "B1"
         },
         {
           "id": "g06",
@@ -7904,7 +8058,8 @@
             "pack:level/G",
             "freq/google-10000#1019"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "g07",
@@ -7953,7 +8108,8 @@
             "article/L13",
             "freq/google-10000#413"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "g08",
@@ -8001,7 +8157,8 @@
             "pack:level/G",
             "freq/google-10000#6069"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "g09",
@@ -8047,7 +8204,8 @@
             "article/L18",
             "freq/google-10000#655"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "g10",
@@ -8100,7 +8258,8 @@
             "freq/google-10000#2743",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "g11",
@@ -8150,7 +8309,8 @@
             "freq/google-10000#810",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "g12",
@@ -8204,7 +8364,8 @@
             "freq/google-10000#4643",
             "merge/text"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "g13",
@@ -8253,7 +8414,8 @@
             "pack:level/G",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "g14",
@@ -8302,7 +8464,8 @@
             "pack:level/G",
             "freq/google-10000#3519"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "g15",
@@ -8351,7 +8514,8 @@
             "pack:level/G",
             "freq/google-10000#7135"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "g16",
@@ -8399,7 +8563,8 @@
             "pack:level/G",
             "freq/google-10000#3889"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "g17",
@@ -8452,7 +8617,8 @@
             "pack:level/G",
             "freq/google-10000#227"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "g18",
@@ -8504,7 +8670,8 @@
             "pack:level/G",
             "freq/google-10000#485"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "g19",
@@ -8552,7 +8719,8 @@
             "pack:level/G",
             "freq/google-10000#924"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "g20",
@@ -8605,7 +8773,8 @@
             "pack:level/G",
             "freq/google-10000#1042"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "g21",
@@ -8653,7 +8822,8 @@
             "pack:level/G",
             "freq/google-10000#42"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "g22",
@@ -8702,7 +8872,8 @@
             "pack:level/G",
             "freq/google-10000#2433"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B2"
         },
         {
           "id": "g23",
@@ -8750,7 +8921,8 @@
             "pack:level/G",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "g24",
@@ -8798,7 +8970,8 @@
             "pack:level/G",
             "freq/google-10000#1376"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "g25",
@@ -8851,7 +9024,8 @@
             "pack:level/G",
             "freq/google-10000#89"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -9057,7 +9231,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "H",
@@ -9108,7 +9284,8 @@
             "article/L04,L12",
             "freq/google-10000#159"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "h02",
@@ -9154,7 +9331,8 @@
             "article/L04,L05,L12",
             "freq/google-10000#2421"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "h03",
@@ -9208,7 +9386,8 @@
             "article/L05,L12",
             "freq/google-10000#1003"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "h04",
@@ -9262,7 +9441,8 @@
             "article/L12",
             "freq/google-10000#1003"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h05",
@@ -9315,7 +9495,8 @@
             "article/L12",
             "freq/google-10000#2198"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "h06",
@@ -9372,7 +9553,8 @@
             "article/L10",
             "freq/google-10000#121"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "h07",
@@ -9420,7 +9602,8 @@
             "pack:level/H",
             "freq/google-10000#1053"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "h08",
@@ -9472,7 +9655,8 @@
             "pack:level/H",
             "freq/google-10000#1523"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h09",
@@ -9524,7 +9708,8 @@
             "pack:level/H",
             "freq/google-10000#791"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h10",
@@ -9572,7 +9757,8 @@
             "pack:level/H",
             "freq/google-10000#856"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "h11",
@@ -9628,7 +9814,8 @@
             "pack:level/H",
             "freq/google-10000#447"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "h12",
@@ -9688,7 +9875,8 @@
             "pack:level/H",
             "freq/google-10000#233"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h13",
@@ -9744,7 +9932,8 @@
             "pack:level/H",
             "freq/google-10000#1652"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h14",
@@ -9792,7 +9981,8 @@
             "pack:level/H",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h15",
@@ -9844,7 +10034,8 @@
             "pack:level/H",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h16",
@@ -9897,7 +10088,8 @@
             "pack:level/H",
             "freq/google-10000#1967"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "h17",
@@ -9945,7 +10137,8 @@
             "pack:level/H",
             "freq/google-10000#196"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "h18",
@@ -10001,7 +10194,8 @@
             "pack:level/H",
             "freq/google-10000#1075"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "h19",
@@ -10049,7 +10243,8 @@
             "pack:level/H",
             "freq/google-10000#3201"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "h20",
@@ -10097,7 +10292,8 @@
             "pack:level/H",
             "freq/google-10000#5154"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "h21",
@@ -10149,7 +10345,8 @@
             "pack:level/H",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h22",
@@ -10197,7 +10394,8 @@
             "pack:level/H",
             "freq/google-10000#1993"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "h23",
@@ -10245,7 +10443,8 @@
             "pack:level/H",
             "freq/google-10000#7697"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h24",
@@ -10297,7 +10496,8 @@
             "pack:level/H",
             "freq/google-10000#1966"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "h25",
@@ -10345,7 +10545,8 @@
             "pack:level/H",
             "freq/google-10000#202"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -10555,7 +10756,9 @@
       "combos": [
         "h03",
         "h05"
-      ]
+      ],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "I",
@@ -10604,7 +10807,8 @@
             "pack:level/I",
             "freq/google-10000#871"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "i02",
@@ -10652,7 +10856,8 @@
             "pack:level/I",
             "freq/google-10000#210"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "i03",
@@ -10705,7 +10910,8 @@
             "article/L06,L12",
             "freq/google-10000#1302"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "i04",
@@ -10754,7 +10960,8 @@
             "article/L04,L05,L15",
             "freq/google-10000#1183"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "i05",
@@ -10799,7 +11006,8 @@
             "article/L09",
             "freq/google-10000#1340"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "i06",
@@ -10852,7 +11060,8 @@
             "article/L10",
             "freq/google-10000#2686"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "B1"
         },
         {
           "id": "i07",
@@ -10904,7 +11113,8 @@
             "pack:level/I",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "i08",
@@ -10956,7 +11166,8 @@
             "pack:level/I",
             "freq/google-10000#4475"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "i09",
@@ -11004,7 +11215,8 @@
             "pack:level/I",
             "freq/google-10000#548"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "i10",
@@ -11052,7 +11264,8 @@
             "pack:level/I",
             "freq/google-10000#1732"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "i11",
@@ -11100,7 +11313,8 @@
             "pack:level/I",
             "freq/google-10000#754"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "i12",
@@ -11148,7 +11362,8 @@
             "pack:level/I",
             "freq/google-10000#470"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "i13",
@@ -11196,7 +11411,8 @@
             "pack:level/I",
             "freq/google-10000#165"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "i14",
@@ -11244,7 +11460,8 @@
             "pack:level/I",
             "freq/google-10000#946"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "i15",
@@ -11292,7 +11509,8 @@
             "pack:level/I",
             "freq/google-10000#469"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "i16",
@@ -11345,7 +11563,8 @@
             "pack:level/I",
             "freq/google-10000#1302"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "i17",
@@ -11394,7 +11613,8 @@
             "pack:level/I",
             "freq/google-10000#240"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "i18",
@@ -11443,7 +11663,8 @@
             "pack:level/I",
             "freq/google-10000#1302"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "i19",
@@ -11491,7 +11712,8 @@
             "pack:level/I",
             "freq/google-10000#1694"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "i20",
@@ -11543,7 +11765,8 @@
             "pack:level/I",
             "freq/google-10000#4213"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "i21",
@@ -11595,7 +11818,8 @@
             "pack:level/I",
             "freq/google-10000#6181"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "i22",
@@ -11643,7 +11867,8 @@
             "pack:level/I",
             "freq/google-10000#1038"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "i23",
@@ -11703,7 +11928,8 @@
             "pack:level/I",
             "freq/google-10000#2588"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "i24",
@@ -11751,7 +11977,8 @@
             "pack:level/I",
             "freq/google-10000#4296"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "i25",
@@ -11796,7 +12023,8 @@
             "pack:level/I",
             "freq/google-10000#3543"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         }
       ],
       "sentences": [
@@ -12002,7 +12230,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "J",
@@ -12052,7 +12282,8 @@
             "article/L05,L09,L15",
             "freq/google-10000#50"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "j02",
@@ -12106,7 +12337,8 @@
             "article/L06",
             "freq/google-10000#233"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "j03",
@@ -12160,7 +12392,8 @@
             "article/L06,L15",
             "freq/google-10000#978"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "j04",
@@ -12213,7 +12446,8 @@
             "pack:level/J",
             "freq/google-10000#3535"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j05",
@@ -12263,7 +12497,8 @@
             "article/L14",
             "freq/google-10000#457"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "j06",
@@ -12311,7 +12546,8 @@
             "pack:level/J",
             "freq/google-10000#1536"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j07",
@@ -12359,7 +12595,8 @@
             "pack:level/J",
             "freq/google-10000#2357"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j08",
@@ -12412,7 +12649,8 @@
             "article/L08",
             "freq/google-10000#1009"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "j09",
@@ -12460,7 +12698,8 @@
             "pack:level/J",
             "freq/google-10000#6159"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "j10",
@@ -12513,7 +12752,8 @@
             "article/L16",
             "freq/google-10000#593"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "j11",
@@ -12562,7 +12802,8 @@
             "pack:level/J",
             "freq/google-10000#4729"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j12",
@@ -12611,7 +12852,8 @@
             "pack:level/J",
             "freq/google-10000#5417"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j13",
@@ -12664,7 +12906,8 @@
             "article/L04,L14",
             "freq/google-10000#50"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "j14",
@@ -12716,7 +12959,8 @@
             "pack:level/J",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j15",
@@ -12761,7 +13005,8 @@
             "pack:level/J",
             "freq/google-10000#1041"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j16",
@@ -12809,7 +13054,8 @@
             "pack:level/J",
             "freq/google-10000#3410"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "j17",
@@ -12854,7 +13100,8 @@
             "pack:level/J",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j18",
@@ -12899,7 +13146,8 @@
             "article/L21",
             "freq/google-10000#42"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "j19",
@@ -12947,7 +13195,8 @@
             "pack:level/J",
             "freq/google-10000#4047"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j20",
@@ -12996,7 +13245,8 @@
             "article/L09",
             "freq/google-10000#4161"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "j21",
@@ -13044,7 +13294,8 @@
             "pack:level/J",
             "freq/google-10000#5136"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "j22",
@@ -13092,7 +13343,8 @@
             "pack:level/J",
             "freq/google-10000#307"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "j23",
@@ -13141,7 +13393,8 @@
             "pack:level/J",
             "freq/google-10000#392"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "j24",
@@ -13194,7 +13447,8 @@
             "pack:level/J",
             "freq/google-10000#1048"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "j25",
@@ -13250,7 +13504,8 @@
             "pack:level/J",
             "freq/google-10000#1966"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -13456,7 +13711,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "K",
@@ -13509,7 +13766,8 @@
             "pack:level/K",
             "freq/google-10000#6339"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "k02",
@@ -13558,7 +13816,8 @@
             "article/L06,L15",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "k03",
@@ -13607,7 +13866,8 @@
             "pack:level/K",
             "freq/google-10000#4664"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "k04",
@@ -13655,7 +13915,8 @@
             "pack:level/K",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "k05",
@@ -13707,7 +13968,8 @@
             "pack:level/K",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "k06",
@@ -13756,7 +14018,8 @@
             "article/L20",
             "freq/google-10000#486"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "k07",
@@ -13805,7 +14068,8 @@
             "pack:level/K",
             "freq/google-10000#1971"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "k08",
@@ -13854,7 +14118,8 @@
             "pack:level/K",
             "freq/google-10000#3332"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "k09",
@@ -13902,7 +14167,8 @@
             "pack:level/K",
             "freq/google-10000#3384"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "k10",
@@ -13950,7 +14216,8 @@
             "pack:level/K",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "k11",
@@ -13994,7 +14261,8 @@
             "pack:level/K",
             "freq/google-10000#1903"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "k12",
@@ -14043,7 +14311,8 @@
             "pack:level/K",
             "freq/google-10000#2798"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "k13",
@@ -14088,7 +14357,8 @@
             "article/L06",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "k14",
@@ -14140,7 +14410,8 @@
             "pack:level/K",
             "freq/google-10000#5287"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "k15",
@@ -14189,7 +14460,8 @@
             "pack:level/K",
             "freq/google-10000#3799"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "k16",
@@ -14234,7 +14506,8 @@
             "pack:level/K",
             "freq/google-10000#2671"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "k17",
@@ -14282,7 +14555,8 @@
             "pack:level/K",
             "freq/google-10000#903"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "k18",
@@ -14334,7 +14608,8 @@
             "pack:level/K",
             "freq/google-10000#4517"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "k19",
@@ -14378,7 +14653,8 @@
             "pack:level/K",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "k20",
@@ -14431,7 +14707,8 @@
             "pack:level/K",
             "freq/google-10000#477"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "B1"
         },
         {
           "id": "k21",
@@ -14480,7 +14757,8 @@
             "pack:level/K",
             "freq/google-10000#2486"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "k22",
@@ -14528,7 +14806,8 @@
             "pack:level/K",
             "freq/google-10000#1056"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "k23",
@@ -14576,7 +14855,8 @@
             "pack:level/K",
             "freq/google-10000#3043"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "k24",
@@ -14628,7 +14908,8 @@
             "pack:level/K",
             "freq/google-10000#7932"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "k25",
@@ -14676,7 +14957,8 @@
             "pack:level/K",
             "freq/google-10000#768"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -14882,7 +15164,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "L",
@@ -14935,7 +15219,8 @@
             "pack:level/L",
             "freq/google-10000#1276"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "l02",
@@ -14984,7 +15269,8 @@
             "pack:level/L",
             "freq/google-10000#5019"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l03",
@@ -15032,7 +15318,8 @@
             "pack:level/L",
             "freq/google-10000#5620"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l04",
@@ -15080,7 +15367,8 @@
             "pack:level/L",
             "freq/google-10000#6476"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l05",
@@ -15120,7 +15408,8 @@
             "pack:level/L",
             "freq/google-10000#6288"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l06",
@@ -15169,7 +15458,8 @@
             "pack:level/L",
             "freq/google-10000#7279"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "l07",
@@ -15221,7 +15511,8 @@
             "pack:level/L",
             "freq/google-10000#9823"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "l08",
@@ -15271,7 +15562,8 @@
             "article/L16",
             "freq/google-10000#7300"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "l09",
@@ -15324,7 +15616,8 @@
             "article/L10",
             "freq/google-10000#8248"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "l10",
@@ -15377,7 +15670,8 @@
             "article/L24",
             "freq/google-10000#4092"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "B1"
         },
         {
           "id": "l11",
@@ -15426,7 +15720,8 @@
             "pack:level/L",
             "freq/google-10000#7495"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l12",
@@ -15478,7 +15773,8 @@
             "pack:level/L",
             "freq/google-10000#8932"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "l13",
@@ -15526,7 +15822,8 @@
             "pack:level/L",
             "freq/google-10000#6802"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "l14",
@@ -15580,7 +15877,8 @@
             "article/L24",
             "freq/google-10000#869"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "l15",
@@ -15629,7 +15927,8 @@
             "pack:level/L",
             "freq/google-10000#8614"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l16",
@@ -15687,7 +15986,8 @@
             "article/L20",
             "freq/google-10000#869"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "l17",
@@ -15736,7 +16036,8 @@
             "pack:level/L",
             "freq/google-10000#4316"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l18",
@@ -15789,7 +16090,8 @@
             "article/L24",
             "freq/google-10000#1110"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "l19",
@@ -15831,7 +16133,8 @@
             "article/L24",
             "freq/google-10000#869"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "l20",
@@ -15876,7 +16179,8 @@
             "pack:level/L",
             "freq/google-10000#9670"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "l21",
@@ -15928,7 +16232,8 @@
             "pack:level/L",
             "freq/google-10000#2017"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l22",
@@ -15980,7 +16285,8 @@
             "pack:level/L",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "l23",
@@ -16032,7 +16338,8 @@
             "pack:level/L",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l24",
@@ -16081,7 +16388,8 @@
             "pack:level/L",
             "freq/google-10000#620"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "l25",
@@ -16134,7 +16442,8 @@
             "pack:level/L",
             "freq/google-10000#869"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -16340,7 +16649,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "M",
@@ -16398,7 +16709,8 @@
             "article/L08,L14,L16",
             "freq/google-10000#324"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m02",
@@ -16454,7 +16766,8 @@
             "pack:level/M",
             "freq/google-10000#79"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "m03",
@@ -16503,7 +16816,8 @@
             "article/L08",
             "freq/google-10000#1722"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m04",
@@ -16552,7 +16866,8 @@
             "article/L08",
             "freq/google-10000#7212"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "m05",
@@ -16600,7 +16915,8 @@
             "pack:level/M",
             "freq/google-10000#1582"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "m06",
@@ -16649,7 +16965,8 @@
             "pack:level/M",
             "freq/google-10000#2923"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "m07",
@@ -16694,7 +17011,8 @@
             "article/L16",
             "freq/google-10000#4309"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "m08",
@@ -16743,7 +17061,8 @@
             "article/L19",
             "freq/google-10000#96"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m09",
@@ -16793,7 +17112,8 @@
             "article/L19",
             "freq/google-10000#96"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m10",
@@ -16847,7 +17167,8 @@
             "article/L19",
             "freq/google-10000#155"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m11",
@@ -16896,7 +17217,8 @@
             "pack:level/M",
             "freq/google-10000#837"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m12",
@@ -16944,7 +17266,8 @@
             "pack:level/M",
             "freq/google-10000#151"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "m13",
@@ -16992,7 +17315,8 @@
             "pack:level/M",
             "freq/google-10000#4124"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "m14",
@@ -17037,7 +17361,8 @@
             "article/L16",
             "freq/google-10000#572"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m15",
@@ -17081,7 +17406,8 @@
             "pack:level/M",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "m16",
@@ -17129,7 +17455,8 @@
             "pack:level/M",
             "freq/google-10000#1405"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "m17",
@@ -17177,7 +17504,8 @@
             "pack:level/M",
             "freq/google-10000#3612"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "m18",
@@ -17229,7 +17557,8 @@
             "pack:level/M",
             "freq/google-10000#713"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "m19",
@@ -17277,7 +17606,8 @@
             "pack:level/M",
             "freq/google-10000#471"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "m20",
@@ -17330,7 +17660,8 @@
             "article/L16",
             "freq/google-10000#5640"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "m21",
@@ -17374,7 +17705,8 @@
             "pack:level/M",
             "freq/google-10000#5360"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "m22",
@@ -17428,7 +17760,8 @@
             "freq/google-10000#202",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m23",
@@ -17478,7 +17811,8 @@
             "freq/google-10000#427",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m24",
@@ -17528,7 +17862,8 @@
             "article/L21",
             "freq/google-10000#713"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "m25",
@@ -17580,7 +17915,8 @@
             "pack:level/M",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         }
       ],
       "sentences": [
@@ -17790,7 +18126,9 @@
       "combos": [
         "m03",
         "m23"
-      ]
+      ],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "N",
@@ -17844,7 +18182,8 @@
             "article/L19",
             "freq/google-10000#96"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "n02",
@@ -17896,7 +18235,8 @@
             "pack:level/N",
             "freq/google-10000#503"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n03",
@@ -17944,7 +18284,8 @@
             "pack:level/N",
             "freq/google-10000#438"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "n04",
@@ -17992,7 +18333,8 @@
             "pack:level/N",
             "freq/google-10000#1482"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n05",
@@ -18045,7 +18387,8 @@
             "pack:level/N",
             "freq/google-10000#2718"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n06",
@@ -18098,7 +18441,8 @@
             "pack:level/N",
             "freq/google-10000#2962"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n07",
@@ -18146,7 +18490,8 @@
             "pack:level/N",
             "freq/google-10000#2613"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n08",
@@ -18191,7 +18536,8 @@
             "pack:level/N",
             "freq/google-10000#6619"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "n09",
@@ -18240,7 +18586,8 @@
             "pack:level/N",
             "freq/google-10000#4585"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "n10",
@@ -18292,7 +18639,8 @@
             "pack:level/N",
             "freq/google-10000#1996"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "n11",
@@ -18338,7 +18686,8 @@
             "pack:level/N",
             "freq/google-10000#1582"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "n12",
@@ -18392,7 +18741,8 @@
             "article/L22",
             "freq/google-10000#369"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "n13",
@@ -18440,7 +18790,8 @@
             "pack:level/N",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n14",
@@ -18489,7 +18840,8 @@
             "pack:level/N",
             "freq/google-10000#1418"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n15",
@@ -18537,7 +18889,8 @@
             "pack:level/N",
             "freq/google-10000#2080"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n16",
@@ -18585,7 +18938,8 @@
             "pack:level/N",
             "freq/google-10000#2140"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n17",
@@ -18638,7 +18992,8 @@
             "article/L17",
             "freq/google-10000#64"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "n18",
@@ -18690,7 +19045,8 @@
             "pack:level/N",
             "freq/google-10000#107"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "n19",
@@ -18738,7 +19094,8 @@
             "pack:level/N",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n20",
@@ -18790,7 +19147,8 @@
             "pack:level/N",
             "freq/google-10000#590"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n21",
@@ -18839,7 +19197,8 @@
             "pack:level/N",
             "freq/google-10000#2845"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "n22",
@@ -18884,7 +19243,8 @@
             "pack:level/N",
             "freq/google-10000#4785"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "n23",
@@ -18933,7 +19293,8 @@
             "pack:level/N",
             "freq/google-10000#3581"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "n24",
@@ -18986,7 +19347,8 @@
             "pack:level/N",
             "freq/google-10000#840"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "n25",
@@ -19038,7 +19400,8 @@
             "pack:level/N",
             "freq/google-10000#1646"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         }
       ],
       "sentences": [
@@ -19244,7 +19607,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "O",
@@ -19299,7 +19664,8 @@
             "article/L09,L10,L14,L15",
             "freq/google-10000#207"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "o02",
@@ -19343,7 +19709,8 @@
             "pack:level/O",
             "freq/google-10000#1070"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "o03",
@@ -19396,7 +19763,8 @@
             "article/L07,L09",
             "freq/google-10000#76"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "o04",
@@ -19458,7 +19826,8 @@
             "article/L21",
             "freq/google-10000#1070"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "o05",
@@ -19509,7 +19878,8 @@
             "article/L21",
             "freq/google-10000#68"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "o06",
@@ -19565,7 +19935,8 @@
             "pack:level/O",
             "freq/google-10000#4595"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "o07",
@@ -19617,7 +19988,8 @@
             "pack:level/O",
             "freq/google-10000#2469"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "o08",
@@ -19674,7 +20046,8 @@
             "pack:level/O",
             "freq/google-10000#626"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "o09",
@@ -19726,7 +20099,8 @@
             "pack:level/O",
             "freq/google-10000#5398"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "o10",
@@ -19774,7 +20148,8 @@
             "pack:level/O",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "o11",
@@ -19827,7 +20202,8 @@
             "pack:level/O",
             "freq/google-10000#6110"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B2"
         },
         {
           "id": "o12",
@@ -19884,7 +20260,8 @@
             "article/L08",
             "freq/google-10000#6498"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "o13",
@@ -19937,7 +20314,8 @@
             "pack:level/O",
             "freq/google-10000#8184"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "o14",
@@ -19985,7 +20363,8 @@
             "pack:level/O",
             "freq/google-10000#5292"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "o15",
@@ -20033,7 +20412,8 @@
             "pack:level/O",
             "freq/google-10000#1825"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "o16",
@@ -20085,7 +20465,8 @@
             "pack:level/O",
             "freq/google-10000#4783"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "o17",
@@ -20138,7 +20519,8 @@
             "freq/google-10000#8462",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "o18",
@@ -20187,7 +20569,8 @@
             "pack:level/O",
             "freq/google-10000#9830"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "o19",
@@ -20233,7 +20616,8 @@
             "article/L21",
             "freq/google-10000#55"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "o20",
@@ -20282,7 +20666,8 @@
             "article/L21",
             "freq/google-10000#150"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "o21",
@@ -20335,7 +20720,8 @@
             "pack:level/O",
             "freq/google-10000#2778"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "o22",
@@ -20387,7 +20773,8 @@
             "pack:level/O",
             "freq/google-10000#5412"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "o23",
@@ -20440,7 +20827,8 @@
             "pack:level/O",
             "freq/google-10000#1070"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "o24",
@@ -20488,7 +20876,8 @@
             "pack:level/O",
             "freq/google-10000#1271"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "o25",
@@ -20537,7 +20926,8 @@
             "article/L21",
             "freq/google-10000#542"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -20743,7 +21133,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "P",
@@ -20803,7 +21195,8 @@
             "article/L24",
             "freq/google-10000#483"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "p02",
@@ -20856,7 +21249,8 @@
             "pack:level/P",
             "freq/google-10000#873"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p03",
@@ -20909,7 +21303,8 @@
             "pack:level/P",
             "freq/google-10000#713"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p04",
@@ -20958,7 +21353,8 @@
             "pack:level/P",
             "freq/google-10000#4442"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p05",
@@ -21009,7 +21405,8 @@
             "freq/google-10000#535",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "p06",
@@ -21063,7 +21460,8 @@
             "freq/google-10000#64",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "p07",
@@ -21111,7 +21509,8 @@
             "pack:level/P",
             "freq/google-10000#552"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p08",
@@ -21161,7 +21560,8 @@
             "freq/google-10000#427",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "p09",
@@ -21215,7 +21615,8 @@
             "freq/google-10000#2238",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p10",
@@ -21268,7 +21669,8 @@
             "pack:level/P",
             "freq/google-10000#1070"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p11",
@@ -21314,7 +21716,8 @@
             "article/L23",
             "freq/google-10000#123"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "p12",
@@ -21372,7 +21775,8 @@
             "article/L08",
             "freq/google-10000#1230"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p13",
@@ -21420,7 +21824,8 @@
             "pack:level/P",
             "freq/google-10000#808"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p14",
@@ -21468,7 +21873,8 @@
             "pack:level/P",
             "freq/google-10000#635"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p15",
@@ -21522,7 +21928,8 @@
             "freq/google-10000#696",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p16",
@@ -21574,7 +21981,8 @@
             "pack:level/P",
             "freq/google-10000#1961"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p17",
@@ -21624,7 +22032,8 @@
             "article/L17",
             "freq/google-10000#435"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "p18",
@@ -21672,7 +22081,8 @@
             "pack:level/P",
             "freq/google-10000#3333"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B2"
         },
         {
           "id": "p19",
@@ -21726,7 +22136,8 @@
             "article/L23",
             "freq/google-10000#384"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "p20",
@@ -21779,7 +22190,8 @@
             "pack:level/P",
             "freq/google-10000#873"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p21",
@@ -21829,7 +22241,8 @@
             "article/L17",
             "freq/google-10000#683"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "p22",
@@ -21877,7 +22290,8 @@
             "pack:level/P",
             "freq/google-10000#4151"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "p23",
@@ -21934,7 +22348,8 @@
             "pack:level/P",
             "freq/google-10000#2485"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "p24",
@@ -21979,7 +22394,8 @@
             "pack:level/P",
             "freq/google-10000#1913"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "p25",
@@ -22035,7 +22451,8 @@
             "pack:level/P",
             "freq/google-10000#4328"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         }
       ],
       "sentences": [
@@ -22245,7 +22662,9 @@
       "combos": [
         "p05",
         "p23"
-      ]
+      ],
+      "cefr": "A1",
+      "stage": "L1"
     },
     {
       "id": "Q",
@@ -22308,7 +22727,8 @@
             "article/L18",
             "freq/google-10000#483"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "q02",
@@ -22367,7 +22787,8 @@
             "article/L18",
             "freq/google-10000#1281"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "q03",
@@ -22419,7 +22840,8 @@
             "pack:level/Q",
             "freq/google-10000#2751"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "q04",
@@ -22472,7 +22894,8 @@
             "pack:level/Q",
             "freq/google-10000#3552"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "q05",
@@ -22529,7 +22952,8 @@
             "article/L24",
             "freq/google-10000#25"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "q06",
@@ -22586,7 +23010,8 @@
             "pack:level/Q",
             "freq/google-10000#751"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B2"
         },
         {
           "id": "q07",
@@ -22639,7 +23064,8 @@
             "pack:level/Q",
             "freq/google-10000#5736"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "q08",
@@ -22696,7 +23122,8 @@
             "pack:level/Q",
             "freq/google-10000#233"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "q09",
@@ -22745,7 +23172,8 @@
             "pack:level/Q",
             "freq/google-10000#1663"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "q10",
@@ -22794,7 +23222,8 @@
             "article/L20",
             "freq/google-10000#713"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "q11",
@@ -22844,7 +23273,8 @@
             "article/L20",
             "freq/google-10000#1096"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "q12",
@@ -22892,7 +23322,8 @@
             "pack:level/Q",
             "freq/google-10000#3612"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "q13",
@@ -22946,7 +23377,8 @@
             "freq/google-10000#202",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "q14",
@@ -22999,7 +23431,8 @@
             "pack:level/Q",
             "freq/google-10000#820"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "q15",
@@ -23051,7 +23484,8 @@
             "pack:level/Q",
             "freq/google-10000#2485"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "q16",
@@ -23103,7 +23537,8 @@
             "pack:level/Q",
             "freq/google-10000#919"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "q17",
@@ -23155,7 +23590,8 @@
             "pack:level/Q",
             "freq/google-10000#6735"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "q18",
@@ -23207,7 +23643,8 @@
             "pack:level/Q",
             "freq/google-10000#5360"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "q19",
@@ -23260,7 +23697,8 @@
             "pack:level/Q",
             "freq/google-10000#1384"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "q20",
@@ -23313,7 +23751,8 @@
             "pack:level/Q",
             "freq/google-10000#6711"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "q21",
@@ -23365,7 +23804,8 @@
             "pack:level/Q",
             "freq/google-10000#1582"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "q22",
@@ -23413,7 +23853,8 @@
             "pack:level/Q",
             "freq/google-10000#4328"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "q23",
@@ -23467,7 +23908,8 @@
             "article/L23",
             "freq/google-10000#207"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "q24",
@@ -23521,7 +23963,8 @@
             "article/L23",
             "freq/google-10000#495"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "q25",
@@ -23573,7 +24016,8 @@
             "pack:level/Q",
             "freq/google-10000#2752"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -23779,7 +24223,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "R",
@@ -23838,7 +24284,8 @@
             "article/L05,L07",
             "freq/google-10000#1307"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A2"
         },
         {
           "id": "r02",
@@ -23892,7 +24339,8 @@
             "article/L10",
             "freq/google-10000#514"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "r03",
@@ -23942,7 +24390,8 @@
             "article/L09",
             "freq/google-10000#5022"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "r04",
@@ -23986,7 +24435,8 @@
             "pack:level/R",
             "freq/google-10000#1004"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "r05",
@@ -24034,7 +24484,8 @@
             "pack:level/R",
             "freq/google-10000#446"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "r06",
@@ -24078,7 +24529,8 @@
             "pack:level/R",
             "freq/google-10000#5786"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "r07",
@@ -24127,7 +24579,8 @@
             "pack:level/R",
             "freq/google-10000#2523"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "r08",
@@ -24172,7 +24625,8 @@
             "pack:level/R",
             "freq/google-10000#2442"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "r09",
@@ -24226,7 +24680,8 @@
             "freq/google-10000#64",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "r10",
@@ -24281,7 +24736,8 @@
             "freq/google-10000#535",
             "merge/text"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "r11",
@@ -24335,7 +24791,8 @@
             "article/L20",
             "freq/google-10000#495"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "r12",
@@ -24388,7 +24845,8 @@
             "freq/google-10000#8462",
             "merge/text"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "r13",
@@ -24441,7 +24899,8 @@
             "article/L20",
             "freq/google-10000#1004"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "r14",
@@ -24490,7 +24949,8 @@
             "pack:level/R",
             "freq/google-10000#6802"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "r15",
@@ -24539,7 +24999,8 @@
             "pack:level/R",
             "freq/google-10000#1560"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "r16",
@@ -24594,7 +25055,8 @@
             "article/L20",
             "freq/google-10000#77"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "r17",
@@ -24638,7 +25100,8 @@
             "pack:level/R",
             "freq/google-10000#4756"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "r18",
@@ -24691,7 +25154,8 @@
             "pack:level/R",
             "freq/google-10000#877"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "r19",
@@ -24739,7 +25203,8 @@
             "pack:level/R",
             "freq/google-10000#1160"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "r20",
@@ -24791,7 +25256,8 @@
             "pack:level/R",
             "freq/google-10000#3872"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "r21",
@@ -24835,7 +25301,8 @@
             "pack:level/R",
             "freq/google-10000#807"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "r22",
@@ -24883,7 +25350,8 @@
             "pack:level/R",
             "freq/google-10000#4965"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "r23",
@@ -24931,7 +25399,8 @@
             "pack:level/R",
             "freq/google-10000#2742"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "r24",
@@ -24975,7 +25444,8 @@
             "pack:level/R",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B2"
         },
         {
           "id": "r25",
@@ -25028,7 +25498,8 @@
             "pack:level/R",
             "freq/google-10000#3718"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -25234,7 +25705,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "S",
@@ -25291,7 +25764,8 @@
             "pack:level/S",
             "freq/google-10000#4729"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s02",
@@ -25341,7 +25815,8 @@
             "article/L24",
             "freq/google-10000#77"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "s03",
@@ -25390,7 +25865,8 @@
             "pack:level/S",
             "freq/google-10000#6215"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s04",
@@ -25439,7 +25915,8 @@
             "pack:level/S",
             "freq/google-10000#3577"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s05",
@@ -25487,7 +25964,8 @@
             "pack:level/S",
             "freq/google-10000#8647"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "s06",
@@ -25536,7 +26014,8 @@
             "pack:level/S",
             "freq/google-10000#1929"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s07",
@@ -25588,7 +26067,8 @@
             "pack:level/S",
             "freq/google-10000#2217"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s08",
@@ -25642,7 +26122,8 @@
             "article/L23",
             "freq/google-10000#271"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "s09",
@@ -25691,7 +26172,8 @@
             "pack:level/S",
             "freq/google-10000#1748"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s10",
@@ -25740,7 +26222,8 @@
             "pack:level/S",
             "freq/google-10000#2050"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s11",
@@ -25789,7 +26272,8 @@
             "pack:level/S",
             "freq/google-10000#1980"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "s12",
@@ -25838,7 +26322,8 @@
             "pack:level/S",
             "freq/google-10000#3604"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s13",
@@ -25892,7 +26377,8 @@
             "article/L07",
             "freq/google-10000#125"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "s14",
@@ -25944,7 +26430,8 @@
             "pack:level/S",
             "freq/google-10000#4107"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "s15",
@@ -25992,7 +26479,8 @@
             "pack:level/S",
             "freq/google-10000#5216"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "s16",
@@ -26040,7 +26528,8 @@
             "pack:level/S",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "s17",
@@ -26093,7 +26582,8 @@
             "pack:level/S",
             "freq/google-10000#2685"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s18",
@@ -26142,7 +26632,8 @@
             "pack:level/S",
             "freq/google-10000#2069"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "s19",
@@ -26192,7 +26683,8 @@
             "article/L21",
             "freq/google-10000#107"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "s20",
@@ -26244,7 +26736,8 @@
             "pack:level/S",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s21",
@@ -26289,7 +26782,8 @@
             "pack:level/S",
             "freq/google-10000#2683"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s22",
@@ -26338,7 +26832,8 @@
             "pack:level/S",
             "freq/google-10000#1256"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s23",
@@ -26387,7 +26882,8 @@
             "pack:level/S",
             "freq/google-10000#8750"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "s24",
@@ -26439,7 +26935,8 @@
             "pack:level/S",
             "freq/google-10000#689"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "s25",
@@ -26488,7 +26985,8 @@
             "pack:level/S",
             "freq/google-10000#473"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -26694,7 +27192,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     },
     {
       "id": "T",
@@ -26752,7 +27252,8 @@
             "article/L04,L15",
             "freq/google-10000#271"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "t02",
@@ -26804,7 +27305,8 @@
             "pack:level/T",
             "freq/google-10000#271"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "t03",
@@ -26858,7 +27360,8 @@
             "article/L22",
             "freq/google-10000#568"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "t04",
@@ -26911,7 +27414,8 @@
             "pack:level/T",
             "freq/google-10000#3632"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "t05",
@@ -26964,7 +27468,8 @@
             "pack:level/T",
             "freq/google-10000#577"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A2"
         },
         {
           "id": "t06",
@@ -27010,7 +27515,8 @@
             "article/L22",
             "freq/google-10000#432"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "B1"
         },
         {
           "id": "t07",
@@ -27062,7 +27568,8 @@
             "pack:level/T",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "t08",
@@ -27110,7 +27617,8 @@
             "pack:level/T",
             "freq/google-10000#7858"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "t09",
@@ -27158,7 +27666,8 @@
             "pack:level/T",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "t10",
@@ -27210,7 +27719,8 @@
             "pack:level/T",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "t11",
@@ -27263,7 +27773,8 @@
             "pack:level/T",
             "freq/google-10000#5198"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "t12",
@@ -27312,7 +27823,8 @@
             "pack:level/T",
             "freq/google-10000#1256"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "t13",
@@ -27360,7 +27872,8 @@
             "pack:level/T",
             "freq/google-10000#7275"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "t14",
@@ -27409,7 +27922,8 @@
             "pack:level/T",
             "freq/google-10000#7856"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "t15",
@@ -27462,7 +27976,8 @@
             "pack:level/T",
             "freq/google-10000#1797"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "t16",
@@ -27510,7 +28025,8 @@
             "pack:level/T",
             "freq/google-10000#1482"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "t17",
@@ -27554,7 +28070,8 @@
             "pack:level/T",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "t18",
@@ -27602,7 +28119,8 @@
             "pack:level/T",
             "freq/google-10000#9090"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A2"
         },
         {
           "id": "t19",
@@ -27650,7 +28168,8 @@
             "pack:level/T",
             "freq/google-10000#unlisted"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "t20",
@@ -27700,7 +28219,8 @@
             "article/L22",
             "freq/google-10000#568"
           ],
-          "tier": "T0"
+          "tier": "T0",
+          "cefr": "A1"
         },
         {
           "id": "t21",
@@ -27748,7 +28268,8 @@
             "pack:level/T",
             "freq/google-10000#9492"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "B1"
         },
         {
           "id": "t22",
@@ -27796,7 +28317,8 @@
             "pack:level/T",
             "freq/google-10000#3024"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "t23",
@@ -27848,7 +28370,8 @@
             "pack:level/T",
             "freq/google-10000#774"
           ],
-          "tier": "T1"
+          "tier": "T1",
+          "cefr": "A1"
         },
         {
           "id": "t24",
@@ -27900,7 +28423,8 @@
             "pack:level/T",
             "freq/google-10000#1525"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         },
         {
           "id": "t25",
@@ -27950,7 +28474,8 @@
             "pack:level/T",
             "freq/google-10000#1594"
           ],
-          "tier": "T2"
+          "tier": "T2",
+          "cefr": "A1"
         }
       ],
       "sentences": [
@@ -28156,7 +28681,9 @@
         }
       ],
       "requires_chunks": [],
-      "combos": []
+      "combos": [],
+      "cefr": "A2",
+      "stage": "L1"
     }
   ]
 }

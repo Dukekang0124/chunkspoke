@@ -1,0 +1,4458 @@
+{
+  "sources": {
+    "cefrj-vocabulary-profile-1.5.csv": "b0dd3c635f1c9a4fdf1490c7e5b7c48e8bbe55b652ad0c9860a95f98e10ae498",
+    "octanove-vocabulary-profile-c1c2-1.0.csv": "18c33a407f2f89f7b8de9671c6d45fe3ea0bce45e7d2d7dcaab48d73e0f7b380"
+  },
+  "medianFreqByLevel": {
+    "A1": 871,
+    "A2": 2486,
+    "B1": 3552,
+    "B2": 2433
+  },
+  "chunks": {
+    "a01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "Good morning",
+      "freqRank": 1536
+    },
+    "a02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "Good evening",
+      "freqRank": 2357
+    },
+    "a03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I'm fine",
+      "freqRank": 1110
+    },
+    "a04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "thank you",
+      "freqRank": 1281
+    },
+    "a05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "my name is",
+      "freqRank": 108
+    },
+    "a06": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "what's your name",
+      "freqRank": 108
+    },
+    "a07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "nice to meet you",
+      "freqRank": 1153
+    },
+    "a08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "see you",
+      "freqRank": 64
+    },
+    "a09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "take care",
+      "freqRank": 308
+    },
+    "a10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "Excuse me",
+      "freqRank": 8462
+    },
+    "a11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "everyone",
+      "freqRank": 1259
+    },
+    "a12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "tomorrow",
+      "freqRank": 3535
+    },
+    "b01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I'd like",
+      "freqRank": 96
+    },
+    "b02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a glass of",
+      "freqRank": 1275
+    },
+    "b03": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the menu",
+      "freqRank": 1077
+    },
+    "b04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "some help",
+      "freqRank": 76
+    },
+    "b05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a table for two",
+      "freqRank": 463
+    },
+    "b06": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the bill",
+      "freqRank": 810
+    },
+    "b07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a cup of coffee",
+      "freqRank": 1929
+    },
+    "b08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a bottle of",
+      "freqRank": 3991
+    },
+    "b09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a piece of",
+      "freqRank": 1840
+    },
+    "b10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a pair of",
+      "freqRank": 2954
+    },
+    "b11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "could I have",
+      "freqRank": 207
+    },
+    "b12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "do you have",
+      "freqRank": 47
+    },
+    "b13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I need",
+      "freqRank": 182
+    },
+    "b14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "give me",
+      "freqRank": 554
+    },
+    "b15": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "pass me",
+      "freqRank": 1485
+    },
+    "b16": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "bring me",
+      "freqRank": 1418
+    },
+    "b17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I'm looking for",
+      "freqRank": 516
+    },
+    "b18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "where can I",
+      "freqRank": 159
+    },
+    "b19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "can you",
+      "freqRank": 34
+    },
+    "b20": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a little",
+      "freqRank": 397
+    },
+    "b21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a lot of",
+      "freqRank": 745
+    },
+    "b22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "some more",
+      "freqRank": 92
+    },
+    "b23": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "a little less",
+      "freqRank": 534
+    },
+    "b24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "another one",
+      "freqRank": 383
+    },
+    "b25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the same",
+      "freqRank": 288
+    },
+    "c01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a coffee",
+      "freqRank": 1929
+    },
+    "c02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "with milk",
+      "freqRank": 3537
+    },
+    "c03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "no sugar",
+      "freqRank": 3354
+    },
+    "c04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "to go",
+      "freqRank": 123
+    },
+    "c05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "for here",
+      "freqRank": 70
+    },
+    "c06": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "a latte",
+      "freqRank": 0
+    },
+    "c07": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "an espresso",
+      "freqRank": 0
+    },
+    "c08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "iced tea",
+      "freqRank": 2839
+    },
+    "c09": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "a muffin",
+      "freqRank": 0
+    },
+    "c10": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "a croissant",
+      "freqRank": 0
+    },
+    "c11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "what size",
+      "freqRank": 336
+    },
+    "c12": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a medium",
+      "freqRank": 1604
+    },
+    "c13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a large",
+      "freqRank": 461
+    },
+    "c14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a small",
+      "freqRank": 349
+    },
+    "c15": {
+      "cefr": "A1",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "any flavor",
+      "freqRank": 8609
+    },
+    "c16": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "a refill",
+      "freqRank": 0
+    },
+    "c17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "sit by the window",
+      "freqRank": 3683
+    },
+    "c18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "free wifi",
+      "freqRank": 7858
+    },
+    "c19": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the receipt",
+      "freqRank": 4643
+    },
+    "c20": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "my order",
+      "freqRank": 173
+    },
+    "c21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "wait a moment",
+      "freqRank": 2238
+    },
+    "c22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "right away",
+      "freqRank": 696
+    },
+    "c23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "on the house",
+      "freqRank": 296
+    },
+    "c24": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a tip",
+      "freqRank": 2743
+    },
+    "c25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it's closed",
+      "freqRank": 1944
+    },
+    "d01": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a reservation",
+      "freqRank": 3508
+    },
+    "d02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "book a table",
+      "freqRank": 463
+    },
+    "d03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the waiter",
+      "freqRank": 0
+    },
+    "d04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a starter",
+      "freqRank": 6232
+    },
+    "d05": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "main course",
+      "freqRank": 427
+    },
+    "d06": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a dessert",
+      "freqRank": 0
+    },
+    "d07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the special",
+      "freqRank": 272
+    },
+    "d08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "today's soup",
+      "freqRank": 5883
+    },
+    "d09": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "cook it rare",
+      "freqRank": 3113
+    },
+    "d10": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "well done",
+      "freqRank": 157
+    },
+    "d11": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "medium rare",
+      "freqRank": 2660
+    },
+    "d12": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "make it spicy",
+      "freqRank": 132
+    },
+    "d13": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "go vegetarian",
+      "freqRank": 8723
+    },
+    "d14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "food allergies",
+      "freqRank": 417
+    },
+    "d15": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "I recommend",
+      "freqRank": 1962
+    },
+    "d16": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "tastes good",
+      "freqRank": 155
+    },
+    "d17": {
+      "cefr": "B2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B2"
+      ],
+      "text": "too salty",
+      "freqRank": 0
+    },
+    "d18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the check",
+      "freqRank": 271
+    },
+    "d19": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "split the bill",
+      "freqRank": 3653
+    },
+    "d20": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it's on me",
+      "freqRank": 0
+    },
+    "d21": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a fork",
+      "freqRank": 7318
+    },
+    "d22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a knife",
+      "freqRank": 5574
+    },
+    "d23": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a napkin",
+      "freqRank": 0
+    },
+    "d24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "enjoy your meal",
+      "freqRank": 5039
+    },
+    "d25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "save leftovers",
+      "freqRank": 399
+    },
+    "e01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "eat out",
+      "freqRank": 2706
+    },
+    "e02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "fast food",
+      "freqRank": 848
+    },
+    "e03": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a snack",
+      "freqRank": 0
+    },
+    "e04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "feel hungry",
+      "freqRank": 8614
+    },
+    "e05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "feel full",
+      "freqRank": 869
+    },
+    "e06": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a bite",
+      "freqRank": 8750
+    },
+    "e07": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "taste tasty",
+      "freqRank": 4063
+    },
+    "e08": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "stay fresh",
+      "freqRank": 2069
+    },
+    "e09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "too sweet",
+      "freqRank": 2445
+    },
+    "e10": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "very sour",
+      "freqRank": 0
+    },
+    "e11": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "so bitter",
+      "freqRank": 0
+    },
+    "e12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "order food",
+      "freqRank": 417
+    },
+    "e13": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "a refill",
+      "freqRank": 0
+    },
+    "e14": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "get takeaway",
+      "freqRank": 77
+    },
+    "e15": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "a menu card",
+      "freqRank": 1077
+    },
+    "e16": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "pay by card",
+      "freqRank": 598
+    },
+    "e17": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "leave a tip",
+      "freqRank": 2743
+    },
+    "e18": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "the restroom",
+      "freqRank": 0
+    },
+    "e19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a high chair",
+      "freqRank": 1975
+    },
+    "e20": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "a kids menu",
+      "freqRank": 1077
+    },
+    "e21": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "no peanuts",
+      "freqRank": 0
+    },
+    "e22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "gluten free",
+      "freqRank": 42
+    },
+    "e23": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a straw",
+      "freqRank": 0
+    },
+    "e24": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "the wifi password",
+      "freqRank": 7858
+    },
+    "e25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "open late",
+      "freqRank": 1227
+    },
+    "f01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "how much",
+      "freqRank": 278
+    },
+    "f02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "too expensive",
+      "freqRank": 3965
+    },
+    "f03": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a discount",
+      "freqRank": 971
+    },
+    "f04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "on sale",
+      "freqRank": 424
+    },
+    "f05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a size",
+      "freqRank": 336
+    },
+    "f06": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "try on",
+      "freqRank": 682
+    },
+    "f07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a fitting room",
+      "freqRank": 7680
+    },
+    "f08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "too tight",
+      "freqRank": 3947
+    },
+    "f09": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "too loose",
+      "freqRank": 5174
+    },
+    "f10": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a receipt",
+      "freqRank": 4643
+    },
+    "f11": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "cash only",
+      "freqRank": 1019
+    },
+    "f12": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "credit card",
+      "freqRank": 436
+    },
+    "f13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a bag",
+      "freqRank": 1980
+    },
+    "f14": {
+      "cefr": "B2",
+      "source": "cefrj",
+      "words": [
+        "B2"
+      ],
+      "text": "in stock",
+      "freqRank": 433
+    },
+    "f15": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "sold out",
+      "freqRank": 1886
+    },
+    "f16": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a refund",
+      "freqRank": 4930
+    },
+    "f17": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "exchange it",
+      "freqRank": 1046
+    },
+    "f18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the price",
+      "freqRank": 101
+    },
+    "f19": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "something cheaper",
+      "freqRank": 6742
+    },
+    "f20": {
+      "cefr": "A1",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "a color",
+      "freqRank": 693
+    },
+    "f21": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a style",
+      "freqRank": 789
+    },
+    "f22": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a brand",
+      "freqRank": 970
+    },
+    "f23": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a warranty",
+      "freqRank": 2348
+    },
+    "f24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "look around",
+      "freqRank": 445
+    },
+    "f25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "window shopping",
+      "freqRank": 774
+    },
+    "g01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "how much",
+      "freqRank": 278
+    },
+    "g02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a dollar",
+      "freqRank": 2262
+    },
+    "g03": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a euro",
+      "freqRank": 3001
+    },
+    "g04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "ten yuan",
+      "freqRank": 0
+    },
+    "g05": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "the total",
+      "freqRank": 314
+    },
+    "g06": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "pay cash",
+      "freqRank": 1019
+    },
+    "g07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "by card",
+      "freqRank": 413
+    },
+    "g08": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a coin",
+      "freqRank": 6069
+    },
+    "g09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "keep the change",
+      "freqRank": 655
+    },
+    "g10": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a tip",
+      "freqRank": 2743
+    },
+    "g11": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the bill",
+      "freqRank": 810
+    },
+    "g12": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a receipt",
+      "freqRank": 4643
+    },
+    "g13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "ten yuan",
+      "freqRank": 0
+    },
+    "g14": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "twenty total",
+      "freqRank": 3519
+    },
+    "g15": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "fifty back",
+      "freqRank": 7135
+    },
+    "g16": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a hundred",
+      "freqRank": 3889
+    },
+    "g17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "first in line",
+      "freqRank": 227
+    },
+    "g18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the second",
+      "freqRank": 485
+    },
+    "g19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "in half",
+      "freqRank": 924
+    },
+    "g20": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "make it double",
+      "freqRank": 1042
+    },
+    "g21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it is free",
+      "freqRank": 42
+    },
+    "g22": {
+      "cefr": "B2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B2"
+      ],
+      "text": "a price tag",
+      "freqRank": 2433
+    },
+    "g23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "too pricey",
+      "freqRank": 0
+    },
+    "g24": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a budget",
+      "freqRank": 1376
+    },
+    "g25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "on me",
+      "freqRank": 89
+    },
+    "h01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "where is",
+      "freqRank": 159
+    },
+    "h02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "go straight",
+      "freqRank": 2421
+    },
+    "h03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "turn left",
+      "freqRank": 1003
+    },
+    "h04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "turn right",
+      "freqRank": 1003
+    },
+    "h05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "at the corner",
+      "freqRank": 2198
+    },
+    "h06": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "next to",
+      "freqRank": 121
+    },
+    "h07": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "across from",
+      "freqRank": 1053
+    },
+    "h08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "behind it",
+      "freqRank": 1523
+    },
+    "h09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "in front of",
+      "freqRank": 791
+    },
+    "h10": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "how far",
+      "freqRank": 856
+    },
+    "h11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "on the left",
+      "freqRank": 447
+    },
+    "h12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "on the right",
+      "freqRank": 233
+    },
+    "h13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a block",
+      "freqRank": 1652
+    },
+    "h14": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "a crossroad",
+      "freqRank": 0
+    },
+    "h15": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the subway",
+      "freqRank": 0
+    },
+    "h16": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a bus stop",
+      "freqRank": 1967
+    },
+    "h17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a map",
+      "freqRank": 196
+    },
+    "h18": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I am lost",
+      "freqRank": 1075
+    },
+    "h19": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "the exit",
+      "freqRank": 3201
+    },
+    "h20": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the entrance",
+      "freqRank": 5154
+    },
+    "h21": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "a detour",
+      "freqRank": 0
+    },
+    "h22": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "on foot",
+      "freqRank": 1993
+    },
+    "h23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "by taxi",
+      "freqRank": 7697
+    },
+    "h24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a minute",
+      "freqRank": 1966
+    },
+    "h25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "this way",
+      "freqRank": 202
+    },
+    "i01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the bank",
+      "freqRank": 871
+    },
+    "i02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a hotel",
+      "freqRank": 210
+    },
+    "i03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the station",
+      "freqRank": 1302
+    },
+    "i04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the airport",
+      "freqRank": 1183
+    },
+    "i05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a hospital",
+      "freqRank": 1340
+    },
+    "i06": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a pharmacy",
+      "freqRank": 2686
+    },
+    "i07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a supermarket",
+      "freqRank": 0
+    },
+    "i08": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a mall",
+      "freqRank": 4475
+    },
+    "i09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a park",
+      "freqRank": 548
+    },
+    "i10": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a museum",
+      "freqRank": 1732
+    },
+    "i11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a beach",
+      "freqRank": 754
+    },
+    "i12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a library",
+      "freqRank": 470
+    },
+    "i13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a school",
+      "freqRank": 165
+    },
+    "i14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a church",
+      "freqRank": 946
+    },
+    "i15": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a market",
+      "freqRank": 469
+    },
+    "i16": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "a gas station",
+      "freqRank": 1302
+    },
+    "i17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a post office",
+      "freqRank": 240
+    },
+    "i18": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "a police station",
+      "freqRank": 1302
+    },
+    "i19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a restaurant",
+      "freqRank": 1694
+    },
+    "i20": {
+      "cefr": "A2",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "a cafe",
+      "freqRank": 4213
+    },
+    "i21": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a gym",
+      "freqRank": 6181
+    },
+    "i22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a bar",
+      "freqRank": 1038
+    },
+    "i23": {
+      "cefr": "A1",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "a theater",
+      "freqRank": 2588
+    },
+    "i24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a temple",
+      "freqRank": 4296
+    },
+    "i25": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "go downtown",
+      "freqRank": 3543
+    },
+    "j01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "what time",
+      "freqRank": 50
+    },
+    "j02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "right now",
+      "freqRank": 233
+    },
+    "j03": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "a bit later",
+      "freqRank": 978
+    },
+    "j04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "see you tomorrow",
+      "freqRank": 3535
+    },
+    "j05": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "next week",
+      "freqRank": 457
+    },
+    "j06": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "this morning",
+      "freqRank": 1536
+    },
+    "j07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "this evening",
+      "freqRank": 2357
+    },
+    "j08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "on Monday",
+      "freqRank": 1009
+    },
+    "j09": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "at noon",
+      "freqRank": 6159
+    },
+    "j10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "at night",
+      "freqRank": 593
+    },
+    "j11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "wake early",
+      "freqRank": 4729
+    },
+    "j12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "arrive late",
+      "freqRank": 5417
+    },
+    "j13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "on time",
+      "freqRank": 50
+    },
+    "j14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "in a hurry",
+      "freqRank": 0
+    },
+    "j15": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "make plans",
+      "freqRank": 1041
+    },
+    "j16": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "must cancel",
+      "freqRank": 3410
+    },
+    "j17": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "let's reschedule",
+      "freqRank": 0
+    },
+    "j18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "are you free",
+      "freqRank": 42
+    },
+    "j19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I am busy",
+      "freqRank": 4047
+    },
+    "j20": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "an appointment",
+      "freqRank": 4161
+    },
+    "j21": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a deadline",
+      "freqRank": 5136
+    },
+    "j22": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "for a while",
+      "freqRank": 307
+    },
+    "j23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "every day",
+      "freqRank": 392
+    },
+    "j24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "see you soon",
+      "freqRank": 1048
+    },
+    "j25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "in a minute",
+      "freqRank": 1966
+    },
+    "k01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it is sunny",
+      "freqRank": 6339
+    },
+    "k02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it is rainy",
+      "freqRank": 0
+    },
+    "k03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "sky is cloudy",
+      "freqRank": 4664
+    },
+    "k04": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "it is windy",
+      "freqRank": 0
+    },
+    "k05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it is snowy",
+      "freqRank": 0
+    },
+    "k06": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it is hot",
+      "freqRank": 486
+    },
+    "k07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "feel cold",
+      "freqRank": 1971
+    },
+    "k08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "room is warm",
+      "freqRank": 3332
+    },
+    "k09": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a storm",
+      "freqRank": 3384
+    },
+    "k10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it is foggy",
+      "freqRank": 0
+    },
+    "k11": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the temperature",
+      "freqRank": 1903
+    },
+    "k12": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "ten degrees",
+      "freqRank": 2798
+    },
+    "k13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "an umbrella",
+      "freqRank": 0
+    },
+    "k14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a coat",
+      "freqRank": 5287
+    },
+    "k15": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "rain boots",
+      "freqRank": 3799
+    },
+    "k16": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "check forecast",
+      "freqRank": 2671
+    },
+    "k17": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "clear up",
+      "freqRank": 903
+    },
+    "k18": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "pour down",
+      "freqRank": 4517
+    },
+    "k19": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a breeze",
+      "freqRank": 0
+    },
+    "k20": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2",
+        "B1"
+      ],
+      "text": "air is humid",
+      "freqRank": 477
+    },
+    "k21": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "air is dry",
+      "freqRank": 2486
+    },
+    "k22": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a season",
+      "freqRank": 1056
+    },
+    "k23": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "the climate",
+      "freqRank": 3043
+    },
+    "k24": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "in the shade",
+      "freqRank": 7932
+    },
+    "k25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the weather",
+      "freqRank": 768
+    },
+    "l01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I am happy",
+      "freqRank": 1276
+    },
+    "l02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "look sad",
+      "freqRank": 5019
+    },
+    "l03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "so tired",
+      "freqRank": 5620
+    },
+    "l04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "is angry",
+      "freqRank": 6476
+    },
+    "l05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I am excited",
+      "freqRank": 6288
+    },
+    "l06": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "feel nervous",
+      "freqRank": 7279
+    },
+    "l07": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I am bored",
+      "freqRank": 9823
+    },
+    "l08": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "stay calm",
+      "freqRank": 7300
+    },
+    "l09": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I am worried",
+      "freqRank": 8248
+    },
+    "l10": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "I am proud",
+      "freqRank": 4092
+    },
+    "l11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "feel lonely",
+      "freqRank": 7495
+    },
+    "l12": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I am grateful",
+      "freqRank": 8932
+    },
+    "l13": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I am confused",
+      "freqRank": 6802
+    },
+    "l14": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "feel relaxed",
+      "freqRank": 869
+    },
+    "l15": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "still hungry",
+      "freqRank": 8614
+    },
+    "l16": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "feel thirsty",
+      "freqRank": 869
+    },
+    "l17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "feel sick",
+      "freqRank": 4316
+    },
+    "l18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I am fine",
+      "freqRank": 1110
+    },
+    "l19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I feel great",
+      "freqRank": 869
+    },
+    "l20": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I feel awful",
+      "freqRank": 9670
+    },
+    "l21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "miss you",
+      "freqRank": 2017
+    },
+    "l22": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "cheer up",
+      "freqRank": 0
+    },
+    "l23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "no worries",
+      "freqRank": 0
+    },
+    "l24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "take it easy",
+      "freqRank": 620
+    },
+    "l25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "feel better",
+      "freqRank": 869
+    },
+    "m01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I think",
+      "freqRank": 324
+    },
+    "m02": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "in my view",
+      "freqRank": 79
+    },
+    "m03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I agree",
+      "freqRank": 1722
+    },
+    "m04": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I disagree",
+      "freqRank": 7212
+    },
+    "m05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "maybe we",
+      "freqRank": 1582
+    },
+    "m06": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "probably rain",
+      "freqRank": 2923
+    },
+    "m07": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I prefer",
+      "freqRank": 4309
+    },
+    "m08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I like",
+      "freqRank": 96
+    },
+    "m09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I don't like",
+      "freqRank": 96
+    },
+    "m10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it's good",
+      "freqRank": 155
+    },
+    "m11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it's bad",
+      "freqRank": 837
+    },
+    "m12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the best",
+      "freqRank": 151
+    },
+    "m13": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the worst",
+      "freqRank": 4124
+    },
+    "m14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "it is important",
+      "freqRank": 572
+    },
+    "m15": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "that is useless",
+      "freqRank": 0
+    },
+    "m16": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "this is useful",
+      "freqRank": 1405
+    },
+    "m17": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I doubt",
+      "freqRank": 3612
+    },
+    "m18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "for sure",
+      "freqRank": 713
+    },
+    "m19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "not really",
+      "freqRank": 471
+    },
+    "m20": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "to be honest",
+      "freqRank": 5640
+    },
+    "m21": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "I suppose",
+      "freqRank": 5360
+    },
+    "m22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "no way",
+      "freqRank": 202
+    },
+    "m23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "of course",
+      "freqRank": 427
+    },
+    "m24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I'm not sure",
+      "freqRank": 713
+    },
+    "m25": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "what a pity",
+      "freqRank": 0
+    },
+    "n01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "would you like",
+      "freqRank": 96
+    },
+    "n02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "come with me",
+      "freqRank": 503
+    },
+    "n03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "join us",
+      "freqRank": 438
+    },
+    "n04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "be my guest",
+      "freqRank": 1482
+    },
+    "n05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "save a seat",
+      "freqRank": 2718
+    },
+    "n06": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a dinner party",
+      "freqRank": 2962
+    },
+    "n07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a birthday",
+      "freqRank": 2613
+    },
+    "n08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "let's celebrate",
+      "freqRank": 6619
+    },
+    "n09": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "you're invited",
+      "freqRank": 4585
+    },
+    "n10": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "count me in",
+      "freqRank": 1996
+    },
+    "n11": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "maybe next time",
+      "freqRank": 1582
+    },
+    "n12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I'd love to",
+      "freqRank": 369
+    },
+    "n13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I can't",
+      "freqRank": 0
+    },
+    "n14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "bring a friend",
+      "freqRank": 1418
+    },
+    "n15": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "pick you up",
+      "freqRank": 2080
+    },
+    "n16": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "drop you off",
+      "freqRank": 2140
+    },
+    "n17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "see you there",
+      "freqRank": 64
+    },
+    "n18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "on the list",
+      "freqRank": 107
+    },
+    "n19": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "please RSVP",
+      "freqRank": 0
+    },
+    "n20": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a gift",
+      "freqRank": 590
+    },
+    "n21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "dress code",
+      "freqRank": 2845
+    },
+    "n22": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "casual is fine",
+      "freqRank": 4785
+    },
+    "n23": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "formal tonight",
+      "freqRank": 3581
+    },
+    "n24": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "a plus one",
+      "freqRank": 840
+    },
+    "n25": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the host",
+      "freqRank": 1646
+    },
+    "o01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "could you",
+      "freqRank": 207
+    },
+    "o02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "would you mind",
+      "freqRank": 1070
+    },
+    "o03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "help me please",
+      "freqRank": 76
+    },
+    "o04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "if you don't mind",
+      "freqRank": 1070
+    },
+    "o05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "when you can",
+      "freqRank": 68
+    },
+    "o06": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "no rush",
+      "freqRank": 4595
+    },
+    "o07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "bear with me",
+      "freqRank": 2469
+    },
+    "o08": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "make a request",
+      "freqRank": 626
+    },
+    "o09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "do me a favor",
+      "freqRank": 5398
+    },
+    "o10": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "lend me",
+      "freqRank": 0
+    },
+    "o11": {
+      "cefr": "B2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B2"
+      ],
+      "text": "spare a moment",
+      "freqRank": 6110
+    },
+    "o12": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I was wondering",
+      "freqRank": 6498
+    },
+    "o13": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "it's not urgent",
+      "freqRank": 8184
+    },
+    "o14": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "at your convenience",
+      "freqRank": 5292
+    },
+    "o15": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "thank you in advance",
+      "freqRank": 1825
+    },
+    "o16": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I appreciate it",
+      "freqRank": 4783
+    },
+    "o17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "excuse me",
+      "freqRank": 8462
+    },
+    "o18": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "sorry to bother",
+      "freqRank": 9830
+    },
+    "o19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "may I",
+      "freqRank": 55
+    },
+    "o20": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "after you",
+      "freqRank": 150
+    },
+    "o21": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "go ahead",
+      "freqRank": 2778
+    },
+    "o22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "be careful",
+      "freqRank": 5412
+    },
+    "o23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "mind the step",
+      "freqRank": 1070
+    },
+    "o24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "hold on",
+      "freqRank": 1271
+    },
+    "o25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "let me help",
+      "freqRank": 542
+    },
+    "p01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "yes I will",
+      "freqRank": 483
+    },
+    "p02": {
+      "cefr": "A1",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "no thanks",
+      "freqRank": 873
+    },
+    "p03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "sure no problem",
+      "freqRank": 713
+    },
+    "p04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "okay I see",
+      "freqRank": 4442
+    },
+    "p05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "got it",
+      "freqRank": 535
+    },
+    "p06": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I see",
+      "freqRank": 64
+    },
+    "p07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "no problem",
+      "freqRank": 552
+    },
+    "p08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "of course",
+      "freqRank": 427
+    },
+    "p09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "wait a moment",
+      "freqRank": 2238
+    },
+    "p10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "never mind",
+      "freqRank": 1070
+    },
+    "p11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "let's go",
+      "freqRank": 123
+    },
+    "p12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "good idea",
+      "freqRank": 1230
+    },
+    "p13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "that works",
+      "freqRank": 808
+    },
+    "p14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "not yet",
+      "freqRank": 635
+    },
+    "p15": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "right away",
+      "freqRank": 696
+    },
+    "p16": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "just a sec",
+      "freqRank": 1961
+    },
+    "p17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "me too",
+      "freqRank": 435
+    },
+    "p18": {
+      "cefr": "B2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B2"
+      ],
+      "text": "me neither",
+      "freqRank": 3333
+    },
+    "p19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "why not",
+      "freqRank": 384
+    },
+    "p20": {
+      "cefr": "A1",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "no thanks",
+      "freqRank": 873
+    },
+    "p21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "you're welcome",
+      "freqRank": 683
+    },
+    "p22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "my pleasure",
+      "freqRank": 4151
+    },
+    "p23": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "exactly right",
+      "freqRank": 2485
+    },
+    "p24": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "perhaps another",
+      "freqRank": 1913
+    },
+    "p25": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "definitely yes",
+      "freqRank": 4328
+    },
+    "q01": {
+      "cefr": "A1",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "yes please",
+      "freqRank": 483
+    },
+    "q02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "no thank you",
+      "freqRank": 1281
+    },
+    "q03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I guess so",
+      "freqRank": 2751
+    },
+    "q04": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "absolutely agree",
+      "freqRank": 3552
+    },
+    "q05": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "not at all",
+      "freqRank": 25
+    },
+    "q06": {
+      "cefr": "B2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B2"
+      ],
+      "text": "by all means",
+      "freqRank": 751
+    },
+    "q07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I'm afraid not",
+      "freqRank": 5736
+    },
+    "q08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "that's right",
+      "freqRank": 233
+    },
+    "q09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "that's wrong",
+      "freqRank": 1663
+    },
+    "q10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "are you sure",
+      "freqRank": 713
+    },
+    "q11": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "I'm certain",
+      "freqRank": 1096
+    },
+    "q12": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "doubt it",
+      "freqRank": 3612
+    },
+    "q13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "no way",
+      "freqRank": 202
+    },
+    "q14": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "sure thing",
+      "freqRank": 820
+    },
+    "q15": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "not exactly",
+      "freqRank": 2485
+    },
+    "q16": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "sort of",
+      "freqRank": 919
+    },
+    "q17": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "on the contrary",
+      "freqRank": 6735
+    },
+    "q18": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "I suppose not",
+      "freqRank": 5360
+    },
+    "q19": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "quite good",
+      "freqRank": 1384
+    },
+    "q20": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "hardly any",
+      "freqRank": 6711
+    },
+    "q21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "maybe yes",
+      "freqRank": 1582
+    },
+    "q22": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "definitely not",
+      "freqRank": 4328
+    },
+    "q23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "could be",
+      "freqRank": 207
+    },
+    "q24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I'd say no",
+      "freqRank": 495
+    },
+    "q25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "we agreed",
+      "freqRank": 2752
+    },
+    "r01": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I don't understand",
+      "freqRank": 1307
+    },
+    "r02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "say that again",
+      "freqRank": 514
+    },
+    "r03": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "speak slowly",
+      "freqRank": 5022
+    },
+    "r04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "what does mean",
+      "freqRank": 1004
+    },
+    "r05": {
+      "cefr": "A1",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "in English",
+      "freqRank": 446
+    },
+    "r06": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "please translate",
+      "freqRank": 5786
+    },
+    "r07": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "speak louder",
+      "freqRank": 2523
+    },
+    "r08": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "say clearly",
+      "freqRank": 2442
+    },
+    "r09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I see",
+      "freqRank": 64
+    },
+    "r10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "got it",
+      "freqRank": 535
+    },
+    "r11": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "say pardon",
+      "freqRank": 495
+    },
+    "r12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "excuse me",
+      "freqRank": 8462
+    },
+    "r13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "what do you mean",
+      "freqRank": 1004
+    },
+    "r14": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "I'm confused",
+      "freqRank": 6802
+    },
+    "r15": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "make sense",
+      "freqRank": 1560
+    },
+    "r16": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I get it",
+      "freqRank": 77
+    },
+    "r17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "could you repeat",
+      "freqRank": 4756
+    },
+    "r18": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "in other words",
+      "freqRank": 877
+    },
+    "r19": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "I follow",
+      "freqRank": 1160
+    },
+    "r20": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "missed that",
+      "freqRank": 3872
+    },
+    "r21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a word",
+      "freqRank": 807
+    },
+    "r22": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a phrase",
+      "freqRank": 4965
+    },
+    "r23": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the meaning",
+      "freqRank": 2742
+    },
+    "r24": {
+      "cefr": "B2",
+      "source": "cefrj",
+      "words": [
+        "B2"
+      ],
+      "text": "please clarify",
+      "freqRank": 0
+    },
+    "r25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "I'm listening",
+      "freqRank": 3718
+    },
+    "s01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "wake up",
+      "freqRank": 4729
+    },
+    "s02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "get up",
+      "freqRank": 77
+    },
+    "s03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "brush teeth",
+      "freqRank": 6215
+    },
+    "s04": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "take a shower",
+      "freqRank": 3577
+    },
+    "s05": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "get dressed",
+      "freqRank": 8647
+    },
+    "s06": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "make coffee",
+      "freqRank": 1929
+    },
+    "s07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "have breakfast",
+      "freqRank": 2217
+    },
+    "s08": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "check phone",
+      "freqRank": 271
+    },
+    "s09": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "feed the cat",
+      "freqRank": 1748
+    },
+    "s10": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "walk the dog",
+      "freqRank": 2050
+    },
+    "s11": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "pack my bag",
+      "freqRank": 1980
+    },
+    "s12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "catch the bus",
+      "freqRank": 3604
+    },
+    "s13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "go to work",
+      "freqRank": 125
+    },
+    "s14": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a alarm",
+      "freqRank": 4107
+    },
+    "s15": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a routine",
+      "freqRank": 5216
+    },
+    "s16": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "on weekdays",
+      "freqRank": 0
+    },
+    "s17": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "early bird",
+      "freqRank": 2685
+    },
+    "s18": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "fresh air",
+      "freqRank": 2069
+    },
+    "s19": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a to-do list",
+      "freqRank": 107
+    },
+    "s20": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a habit",
+      "freqRank": 0
+    },
+    "s21": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "sleep well",
+      "freqRank": 2683
+    },
+    "s22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "stay in bed",
+      "freqRank": 1256
+    },
+    "s23": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a quick bite",
+      "freqRank": 8750
+    },
+    "s24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "head out",
+      "freqRank": 689
+    },
+    "s25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "start the day",
+      "freqRank": 473
+    },
+    "t01": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "check in",
+      "freqRank": 271
+    },
+    "t02": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "check out",
+      "freqRank": 271
+    },
+    "t03": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a room key",
+      "freqRank": 568
+    },
+    "t04": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "a twin room",
+      "freqRank": 3632
+    },
+    "t05": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "A2"
+      ],
+      "text": "a single room",
+      "freqRank": 577
+    },
+    "t06": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "room service",
+      "freqRank": 432
+    },
+    "t07": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a towel",
+      "freqRank": 0
+    },
+    "t08": {
+      "cefr": "A1",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "the wifi",
+      "freqRank": 7858
+    },
+    "t09": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "the elevator",
+      "freqRank": 0
+    },
+    "t10": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "a balcony",
+      "freqRank": 0
+    },
+    "t11": {
+      "cefr": "A2",
+      "source": "cefrj",
+      "words": [
+        "A2"
+      ],
+      "text": "air conditioning",
+      "freqRank": 5198
+    },
+    "t12": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "make the bed",
+      "freqRank": 1256
+    },
+    "t13": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "do the dishes",
+      "freqRank": 7275
+    },
+    "t14": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "A1",
+        "B1"
+      ],
+      "text": "take out trash",
+      "freqRank": 7856
+    },
+    "t15": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "clean the room",
+      "freqRank": 1797
+    },
+    "t16": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a guest",
+      "freqRank": 1482
+    },
+    "t17": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "the landlord",
+      "freqRank": 0
+    },
+    "t18": {
+      "cefr": "A2",
+      "source": "freqRank-kNN",
+      "words": [],
+      "text": "a neighbor",
+      "freqRank": 9090
+    },
+    "t19": {
+      "cefr": "A1",
+      "source": "module-modal",
+      "words": [],
+      "text": "the doorman",
+      "freqRank": 0
+    },
+    "t20": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a key card",
+      "freqRank": 568
+    },
+    "t21": {
+      "cefr": "B1",
+      "source": "cefrj",
+      "words": [
+        "B1"
+      ],
+      "text": "a heater",
+      "freqRank": 9492
+    },
+    "t22": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the lights",
+      "freqRank": 3024
+    },
+    "t23": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "a window",
+      "freqRank": 774
+    },
+    "t24": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "the floor",
+      "freqRank": 1525
+    },
+    "t25": {
+      "cefr": "A1",
+      "source": "cefrj",
+      "words": [
+        "A1"
+      ],
+      "text": "make yourself at home",
+      "freqRank": 1594
+    }
+  },
+  "chunkDist": {
+    "A1": 309,
+    "A2": 115,
+    "B1": 56,
+    "B2": 7
+  },
+  "license": "CEFR-J / Tono Laboratory, TUFS（研究商用均可，须署名）"
+}
