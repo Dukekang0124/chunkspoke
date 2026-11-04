@@ -179,16 +179,25 @@ def main():
     urls = [u.strip() for u in [url, *a.urls] if u and u.strip()]
     urls = list(dict.fromkeys(urls))
 
-    obj = {
+    # 未纳管字段原样带过去（v1.4.2 模型外移 model、语音包 voiceModel、
+    # 增强识别包 asrModel 等跨版本清单）。以前只保 model 一项：
+    # 换一次生成器就把高清包/增强包清单静默丢掉，客户端会「凭空没有可选包」。
+    # 例外是 parts —— 它是整包的分片哈希，随 APK 变，必须由
+    # tools/gen_release_manifest.py / stage_release.py 重算，这里不假装会算。
+    managed = {'versionName', 'versionCode', 'url', 'urls', 'sha256', 'size',
+               'notes', 'parts'}
+    obj = {k: v for k, v in old.items() if k not in managed}
+    if 'parts' in old:
+        print('  ⚠ 本工具不重算分片清单 parts：发布请用 stage_release.py 的产物覆盖'
+              '（否则 parts 仍是上一版的哈希，分片下载会校验失败）')
+    obj.update({
         'versionName': name,
         'versionCode': code,
         'url': url,
         'sha256': sha,
         'size': size,
         'notes': a.notes if a.notes is not None else (old.get('notes') or ''),
-    }
-    if old.get('model'):
-        obj['model'] = old['model']  # v1.4.2 模型外移清单（name/modelVersion/sha256/parts）跨版本保留
+    })
     if len(urls) > 1:
         obj['urls'] = urls  # 备用源：主源失败时客户端按顺序重试
 
