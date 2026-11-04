@@ -75,11 +75,15 @@ def word_close(a, b):
     na, nb = number_value_of(a), number_value_of(b)
     if na is not None and nb is not None and na == nb:
         return True
-    ea = CONTRACTIONS.get(a)
-    if ea is not None and b in ea.split(' '):
+    ea = spoken_expansion(a)
+    if ea is not None and b in ea:
         return True
-    eb = CONTRACTIONS.get(b)
-    if eb is not None and a in eb.split(' '):
+    eb = spoken_expansion(b)
+    if eb is not None and a in eb:
+        return True
+    # ASR-211：撇号词干等价（i'd ↔ i、sam's ↔ sam）——ASR 常把缩合词只给前半段。
+    sa = apostrophe_stem(a)
+    if sa and sa == apostrophe_stem(b):
         return True
     # 单字母只认完全相同（含上方混淆对）：否则任意两字母编辑距离都是 1。
     if len(a) == 1 or len(b) == 1:
@@ -145,24 +149,56 @@ EXCEPTIONS = {
 }
 
 CONTRACTIONS = {
-    'wanna': 'want to',
-    'gonna': 'going to',
-    'gotta': 'got to',
-    'kinda': 'kind of',
-    'sorta': 'sort of',
-    'dunno': 'do not know',
-    'lemme': 'let me',
-    'gimme': 'give me',
-    'cuz': 'because',
-    'coz': 'because',
-    'cause': 'because',
-    'hafta': 'have to',
-    'oughta': 'ought to',
-    'tryna': 'trying to',
-    'whatcha': 'what are you',
-    'gotcha': 'got you',
-    'betcha': 'bet you',
+    'wanna': ['want', 'to'],
+    'gonna': ['going', 'to'],
+    'gotta': ['got', 'to'],
+    'kinda': ['kind', 'of'],
+    'sorta': ['sort', 'of'],
+    'dunno': ['do', 'not', 'know'],
+    'lemme': ['let', 'me'],
+    'gimme': ['give', 'me'],
+    'cuz': ['because'],
+    'coz': ['because'],
+    'cause': ['because'],
+    'hafta': ['have', 'to'],
+    'oughta': ['ought', 'to'],
+    'tryna': ['trying', 'to'],
+    'whatcha': ['what', 'are', 'you'],
+    'gotcha': ['got', 'you'],
+    'betcha': ['bet', 'you'],
+    # 撇号缩合（ASR-211）：normalize_speech 保留撇号，"I'd like…" 的目标 token
+    # 是 i'd，识别常给 i would 或只剩 i —— 不对齐就会白丢一个核心词。
+    "i'd": ['i', 'would'], "i'll": ['i', 'will'], "i'm": ['i', 'am'],
+    "i've": ['i', 'have'],
+    "you'd": ['you', 'would'], "you'll": ['you', 'will'],
+    "you're": ['you', 'are'], "you've": ['you', 'have'],
+    "he'd": ['he', 'would'], "he'll": ['he', 'will'], "he's": ['he', 'is'],
+    "she'd": ['she', 'would'], "she'll": ['she', 'will'], "she's": ['she', 'is'],
+    "we'd": ['we', 'would'], "we'll": ['we', 'will'], "we're": ['we', 'are'],
+    "we've": ['we', 'have'],
+    "they'd": ['they', 'would'], "they'll": ['they', 'will'],
+    "they're": ['they', 'are'], "they've": ['they', 'have'],
+    "it's": ['it', 'is'], "that's": ['that', 'is'], "this's": ['this', 'is'],
+    "there's": ['there', 'is'], "who's": ['who', 'is'], "what's": ['what', 'is'],
+    "let's": ['let', 'us'], "one's": ['one', 'is'],
+    "don't": ['do', 'not'], "doesn't": ['does', 'not'], "didn't": ['did', 'not'],
+    "isn't": ['is', 'not'], "aren't": ['are', 'not'], "wasn't": ['was', 'not'],
+    "weren't": ['were', 'not'], "can't": ['can', 'not'],
+    "couldn't": ['could', 'not'], "shouldn't": ['should', 'not'],
+    "wouldn't": ['would', 'not'], "won't": ['will', 'not'],
+    "mustn't": ['must', 'not'], "haven't": ['have', 'not'],
+    "hasn't": ['has', 'not'], "hadn't": ['had', 'not'],
 }
+
+
+def spoken_expansion(token):
+    return CONTRACTIONS.get(token)
+
+
+def apostrophe_stem(token):
+    i = token.find("'")
+    return token if i <= 0 else token[:i]
+
 
 _ONES = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
          'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen',
@@ -220,9 +256,9 @@ def expand_spoken_tokens(tokens):
     """只用于比较的口语折叠：缩合展开 + 纯数字转英文数词。"""
     out = []
     for t in tokens:
-        e = CONTRACTIONS.get(t)
+        e = spoken_expansion(t)
         if e is not None:
-            out.extend(e.split(' '))
+            out.extend(e)
             continue
         if re.fullmatch(r'\d+', t):
             out.extend(number_word(int(t)).split(' '))
@@ -477,6 +513,38 @@ def weighted_align(rec, tgt):
     return wsim, core_hit, matched
 
 
+def unweighted_similarity(rec, tgt):
+    """Dart `_align` 的未加权词级相似度：1 − 词编辑距离 / max(长度)。
+
+    只在报告与灰带分级里用（Python 基准的判定线本身仍是加权两指标），
+    缺了它就没法复现 Dart 的 `band` 三档。
+    """
+    n, m = len(rec), len(tgt)
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(n + 1):
+        dp[i][0] = i
+    for j in range(m + 1):
+        dp[0][j] = j
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            cost = 0 if word_close(rec[i - 1], tgt[j - 1]) else 1
+            dp[i][j] = min(dp[i - 1][j] + 1, dp[i][j - 1] + 1,
+                           dp[i - 1][j - 1] + cost)
+    denom = n if n > m else m
+    return 1.0 if denom == 0 else 1 - dp[n][m] / denom
+
+
+def _band(passed, reason, core, wsim, unw):
+    """与 Dart judgeSpeech 同一套灰带规则（lowConf 不算灰带：那是没听清）。"""
+    if passed:
+        return 'hit'
+    if reason == 'lowConf':
+        return 'fail'
+    if core >= 0.5 and unw >= 0.5 and wsim >= 0.6:
+        return 'band'
+    return 'fail'
+
+
 def judge_speech(target, recognized, confidence=None, duration=None, min_dur=0.4,
                  min_similarity=0.5):
     tgt = tokenize(target)
@@ -484,24 +552,33 @@ def judge_speech(target, recognized, confidence=None, duration=None, min_dur=0.4
     tgt_fold = expand_spoken_tokens(tgt)
     rec_fold = expand_spoken_tokens(rec)
     if not rec:
-        return dict(passed=False, sim=0.0, reason='empty')
+        return dict(passed=False, sim=0.0, reason='empty', core=0.0,
+                    wsim=0.0, align=0.0, band='fail')
     if duration is not None and duration < min_dur:
-        return dict(passed=False, sim=0.0, reason='tooShort')
+        return dict(passed=False, sim=0.0, reason='tooShort', core=0.0,
+                    wsim=0.0, align=0.0, band='fail')
     # 完全匹配：原文逐词一致，或折叠后（数字/缩合）逐词一致。
     if tgt == rec or tgt_fold == rec_fold:
-        return dict(passed=True, sim=1.0, wsim=1.0, core=1.0, reason='exact')
+        return dict(passed=True, sim=1.0, wsim=1.0, core=1.0, align=1.0,
+                    reason='exact', band='hit')
     # 包含通道（ASR-209 A 层第一通道）：识别里有一整段与目标逐词相同。
     if _contains_token_window(rec_fold, tgt_fold):
-        return dict(passed=True, sim=1.0, wsim=1.0, core=1.0,
-                    reason='fuzzy', layer='containment')
+        return dict(passed=True, sim=1.0, wsim=1.0, core=1.0, align=1.0,
+                    reason='fuzzy', layer='containment', band='hit')
     wsim, core, _matched = weighted_align(rec, tgt)
+    unw = unweighted_similarity(rec, tgt)
+    base = dict(core=round(core, 6), wsim=round(wsim, 6), align=round(unw, 6))
     if core < 0.7:
-        return dict(passed=False, sim=wsim, reason='lowCore')
+        return dict(base, passed=False, sim=wsim, reason='lowCore',
+                    band=_band(False, 'lowCore', core, wsim, unw))
     if wsim < 0.8:
-        return dict(passed=False, sim=wsim, reason='lowSim')
+        return dict(base, passed=False, sim=wsim, reason='lowSim',
+                    band=_band(False, 'lowSim', core, wsim, unw))
     if confidence is not None and confidence < 0.45:
-        return dict(passed=False, sim=wsim, reason='lowConf')
-    return dict(passed=True, sim=wsim, reason='fuzzy')
+        return dict(base, passed=False, sim=wsim, reason='lowConf',
+                    band=_band(False, 'lowConf', core, wsim, unw))
+    return dict(base, passed=True, sim=wsim, reason='fuzzy',
+                band=_band(True, 'ok', core, wsim, unw))
 
 
 def vosk_grammar_words(phrases):

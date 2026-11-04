@@ -119,12 +119,39 @@ void main() {
   });
 
   test('弱读/缩合还原', () {
-    expect(contractionExpansion('wanna'), 'want to');
-    expect(contractionExpansion('gonna'), 'going to');
-    expect(contractionExpansion('dunno'), 'do not know');
-    expect(contractionExpansion('hafta'), 'have to');
-    expect(contractionExpansion('cause'), 'because');
-    expect(contractionExpansion('notaword'), isNull);
+    expect(spokenExpansion('wanna'), ['want', 'to']);
+    expect(spokenExpansion('gonna'), ['going', 'to']);
+    expect(spokenExpansion('dunno'), ['do', 'not', 'know']);
+    expect(spokenExpansion('hafta'), ['have', 'to']);
+    expect(spokenExpansion('cause'), ['because']);
+    expect(spokenExpansion('notaword'), isNull);
+  });
+
+  // ASR-211 修复 1：撇号缩合与所有格进归一层。
+  test('撇号缩合还原与词干', () {
+    expect(spokenExpansion("i'd"), ['i', 'would']);
+    expect(spokenExpansion("they're"), ['they', 'are']);
+    expect(spokenExpansion("don't"), ['do', 'not']);
+    expect(spokenExpansion("can't"), ['can', 'not']);
+    expect(spokenExpansion("it's"), ['it', 'is']);
+    expect(apostropheStem("sam's"), 'sam');
+    expect(apostropheStem('sam'), 'sam');
+    expect(apostropheStem("'cause"), "'cause", reason: '首字符是撇号时不截断');
+    expect(expandSpokenTokens(["i'd", 'like']), ['i', 'would', 'like']);
+  });
+
+  test('虚词表覆盖课程里的缩合写法', () {
+    // 内容包 L0/L1 里高频出现的撇号形式，逐条必须有表项或可被词干规则吃掉。
+    const inCourse = [
+      "i'd", "i'll", "i'm", "i've", "you're", "you've", "we're", "they're",
+      "it's", "that's", "there's", "what's", "who's", "let's", "he's", "she's",
+      "don't", "doesn't", "didn't", "isn't", "aren't", "can't", "won't",
+      "couldn't", "shouldn't", "wouldn't", "haven't", "hasn't", "hadn't",
+    ];
+    for (final t in inCourse) {
+      expect(spokenExpansion(t), isNotNull, reason: '$t 缺缩合表项');
+      expect(apostropheStem(t), isNotEmpty);
+    }
   });
 
   test('空串与单字符', () {

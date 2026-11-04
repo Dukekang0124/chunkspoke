@@ -68,29 +68,92 @@ const Map<String, String> _exceptions = {
   'theyre': '0er', 'youre': 'yor',
 };
 
-/// 多词弱读/连读合并（ASR 常把两词转成一个口语词）。
-/// 归一化层把右侧先还原成标准写法，再进入分词。
-const Map<String, String> _contractions = {
-  'wanna': 'want to',
-  'gonna': 'going to',
-  'gotta': 'got to',
-  'kinda': 'kind of',
-  'sorta': 'sort of',
-  'dunno': 'do not know',
-  'lemme': 'let me',
-  'gimme': 'give me',
-  'cuz': 'because',
-  'coz': 'because',
-  'cause': 'because',
-  'hafta': 'have to',
-  'oughta': 'ought to',
-  'tryna': 'trying to',
-  'whatcha': 'what are you',
-  'gotcha': 'got you',
-  'betcha': 'bet you',
+/// 口语缩合 → 标准词序列（判卷折叠 + 词级等价共用），两类：
+///  ① 连读合并（wanna/gonna…）：ASR 常把两词转成一个口语词；
+///  ② **撇号缩合**（i'd / don't / it's…）：`normalizeSpeech` 保留撇号，
+///    于是 "I'd like the main course." 的目标 token 是 `i'd`，而识别常给
+///    `i would`（两个 token）或只剩 `i`。旧版把 `i'd` 当实词又对不上任何写法，
+///    核心词命中率被白压一档 —— ASR-211 案1 的真实根因。
+///
+/// 键一律小写（进入这里前都已规范化）。多义的 `i'd` 取 `would`（本包语句全是
+/// "I'd like/…"）；`wordClose` 走「展开后任一词相等」，所以 `i'd↔i`、`i'd↔would`
+/// 都算同一词，不需要猜语义。
+const Map<String, List<String>> _spokenContractions = {
+  'wanna': ['want', 'to'],
+  'gonna': ['going', 'to'],
+  'gotta': ['got', 'to'],
+  'kinda': ['kind', 'of'],
+  'sorta': ['sort', 'of'],
+  'dunno': ['do', 'not', 'know'],
+  'lemme': ['let', 'me'],
+  'gimme': ['give', 'me'],
+  'cuz': ['because'],
+  'coz': ['because'],
+  'cause': ['because'],
+  'hafta': ['have', 'to'],
+  'oughta': ['ought', 'to'],
+  'tryna': ['trying', 'to'],
+  'whatcha': ['what', 'are', 'you'],
+  'gotcha': ['got', 'you'],
+  'betcha': ['bet', 'you'],
+  // 撇号缩合（ASR-211）
+  "i'd": ['i', 'would'],
+  "i'll": ['i', 'will'],
+  "i'm": ['i', 'am'],
+  "i've": ['i', 'have'],
+  "you'd": ['you', 'would'],
+  "you'll": ['you', 'will'],
+  "you're": ['you', 'are'],
+  "you've": ['you', 'have'],
+  "he'd": ['he', 'would'],
+  "he'll": ['he', 'will'],
+  "he's": ['he', 'is'],
+  "she'd": ['she', 'would'],
+  "she'll": ['she', 'will'],
+  "she's": ['she', 'is'],
+  "we'd": ['we', 'would'],
+  "we'll": ['we', 'will'],
+  "we're": ['we', 'are'],
+  "we've": ['we', 'have'],
+  "they'd": ['they', 'would'],
+  "they'll": ['they', 'will'],
+  "they're": ['they', 'are'],
+  "they've": ['they', 'have'],
+  "it's": ['it', 'is'],
+  "that's": ['that', 'is'],
+  "this's": ['this', 'is'],
+  "there's": ['there', 'is'],
+  "who's": ['who', 'is'],
+  "what's": ['what', 'is'],
+  "let's": ['let', 'us'],
+  "one's": ['one', 'is'],
+  "don't": ['do', 'not'],
+  "doesn't": ['does', 'not'],
+  "didn't": ['did', 'not'],
+  "isn't": ['is', 'not'],
+  "aren't": ['are', 'not'],
+  "wasn't": ['was', 'not'],
+  "weren't": ['were', 'not'],
+  "can't": ['can', 'not'],
+  "couldn't": ['could', 'not'],
+  "shouldn't": ['should', 'not'],
+  "wouldn't": ['would', 'not'],
+  "won't": ['will', 'not'],
+  "mustn't": ['must', 'not'],
+  "haven't": ['have', 'not'],
+  "hasn't": ['has', 'not'],
+  "hadn't": ['had', 'not'],
 };
 
-String? contractionExpansion(String token) => _contractions[token];
+/// 缩合展开；不是缩合词返回 null。
+List<String>? spokenExpansion(String token) => _spokenContractions[token];
+
+/// 撇号词干：`i'd`→`i`、`don't`→`don`、`sam's`→`sam`。
+/// 用于「所有格/缩合只多了后半截」的等价（`Sam's` vs `Sam`）。
+String apostropheStem(String token) {
+  final i = token.indexOf("'");
+  return i <= 0 ? token : token.substring(0, i);
+}
 
 const List<String> _ones = [
   'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
@@ -165,9 +228,9 @@ int? numberValueOf(String token) {
 List<String> expandSpokenTokens(List<String> tokens) {
   final out = <String>[];
   for (final t in tokens) {
-    final e = _contractions[t];
+    final e = _spokenContractions[t];
     if (e != null) {
-      out.addAll(e.split(' '));
+      out.addAll(e);
       continue;
     }
     if (RegExp(r'^\d+$').hasMatch(t)) {

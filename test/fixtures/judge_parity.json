@@ -1095,6 +1095,282 @@
       }
     },
     {
+      "target": "i'd like the menu please",
+      "hyp": "i'd like the menu please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'd like the menu please",
+      "hyp": "I'D LIKE THE MENU PLEASE!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'd like the menu please",
+      "hyp": "i'd like menu please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9545
+      }
+    },
+    {
+      "target": "i'd like the menu please",
+      "hyp": "like the menu please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.697
+      }
+    },
+    {
+      "target": "i'd like the menu please",
+      "hyp": "i'd like the please menu",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9242
+      }
+    },
+    {
+      "target": "i'd like the menu please",
+      "hyp": "i'd likt the menu please",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'd like the menu please",
+      "hyp": "i'd like the menu please you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'm looking for the bank",
+      "hyp": "i'm looking for the bank",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'm looking for the bank",
+      "hyp": "I'M LOOKING FOR THE BANK!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'm looking for the bank",
+      "hyp": "i'm looking the bank",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9545
+      }
+    },
+    {
+      "target": "i'm looking for the bank",
+      "hyp": "looking for the bank",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.697
+      }
+    },
+    {
+      "target": "i'm looking for the bank",
+      "hyp": "i'm loo king for the bank",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6212
+      }
+    },
+    {
+      "target": "i'm looking for the bank",
+      "hyp": "i'm looking for bank the",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9242
+      }
+    },
+    {
+      "target": "i'm looking for the bank",
+      "hyp": "i'm lookint for the bank",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'm looking for the bank",
+      "hyp": "i'm looking for the bank you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'll have a cup of coffee",
+      "hyp": "i'll have a cup of coffee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "完全一致",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'll have a cup of coffee",
+      "hyp": "I'LL HAVE A CUP OF COFFEE!",
+      "confidence": null,
+      "durationSec": null,
+      "note": "大小写与标点不影响",
+      "expect": {
+        "passed": true,
+        "reason": "exact",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'll have a cup of coffee",
+      "hyp": "i'll a cup of coffee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个虚词",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9565
+      }
+    },
+    {
+      "target": "i'll have a cup of coffee",
+      "hyp": "have a cup of coffee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "漏一个实词",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.7101
+      }
+    },
+    {
+      "target": "i'll have a cup of coffee",
+      "hyp": "i'll have a cup of cof fee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "整词被拆",
+      "expect": {
+        "passed": false,
+        "reason": "lowCore",
+        "similarity": 0.6812
+      }
+    },
+    {
+      "target": "i'll have a cup of coffee",
+      "hyp": "i'll have a cup coffee of",
+      "confidence": null,
+      "durationSec": null,
+      "note": "末两词颠倒",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 0.9275
+      }
+    },
+    {
+      "target": "i'll have a cup of coffee",
+      "hyp": "i'lt have a cup of coffee",
+      "confidence": null,
+      "durationSec": null,
+      "note": "实词错一个字母",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
+      "target": "i'll have a cup of coffee",
+      "hyp": "i'll have a cup of coffee you know",
+      "confidence": null,
+      "durationSec": null,
+      "note": "尾巴多词（噪声）",
+      "expect": {
+        "passed": true,
+        "reason": "fuzzy",
+        "similarity": 1.0
+      }
+    },
+    {
       "target": "i would like a cup of coffee",
       "hyp": "i would like a cup of coffee",
       "confidence": 0.9,

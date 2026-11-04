@@ -111,6 +111,9 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
         update: updateRows,
         localVersion: pi?.version ?? '—',
         localVersionCode: localCode,
+        // ASR-211 修复 4：孤儿行（台账有、内容包没有）随自检归档一起回传，
+        // 「要不要做 id 迁移表」看这份真机数据，不靠猜。
+        orphans: await ProgressIntegrity.orphans(progress, content),
       );
 
       String? path;
@@ -139,6 +142,9 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
   }
 
   /// 一键修复：把红名单模块的陈旧断点全部按台账归位，再复跑一次自检。
+  ///
+  /// ASR-211 修复 3：与冷启动/回前台/打开模块共用 `reconcileAll` 这一个入口
+  /// （时机④）。它自己重扫台账，不吃页面上可能已过期的报告。
   Future<void> _heal() async {
     final report = _report;
     if (report == null || _healing) return;
@@ -146,10 +152,14 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
     final progress = Provider.of<ProgressService>(context, listen: false);
     final content = Provider.of<ContentPack>(context, listen: false);
     try {
-      await ProgressIntegrity.healAll(progress, content, report.audits);
+      final r =
+          await ProgressIntegrity.reconcileAll(progress, content, reason: 'heal_button');
       await progress
-          .logEvent('self_check_heal', {'healed': report.reds.length})
-          .catchError((_) {});
+          .logEvent('self_check_heal', {
+        'healed': r.healed,
+        'reds': r.reds,
+        'remaining': r.remaining,
+      }).catchError((_) {});
     } finally {
       if (mounted) setState(() => _healing = false);
     }

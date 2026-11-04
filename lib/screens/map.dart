@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../models/content_pack.dart';
 import '../services/chunk_asset.dart';
+import '../services/crash_log.dart';
 import '../services/loaders.dart';
 import '../services/license_state.dart';
+import '../services/progress_guard.dart';
 import '../services/scene_progression.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
@@ -45,13 +48,37 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   Future<_MapData>? _future;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _future = _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// ASR-211 修复 3（时机②）：回前台先把全模块断点按台账归位，再刷新地图。
+  /// 节流与重入由 [ProgressGuard] 兜；归位真改了东西才重新取数，避免无谓重建。
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !mounted) return;
+    final progress = Provider.of<ProgressService>(context, listen: false);
+    final content = Provider.of<ContentPack>(context, listen: false);
+    unawaited(ProgressGuard.run(progress, content, reason: 'resume')
+        .then((r) {
+      if (!mounted || r == null || r.healed == 0) return;
+      setState(() => _future = _load());
+    })
+        .catchError((Object e, StackTrace st) {
+      CrashLog.write('MapScreen.resume: $e', st);
+    }));
   }
 
   /// 两条轴各取所需：

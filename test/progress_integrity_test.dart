@@ -374,6 +374,7 @@ void main() {
         snapshotValid: true,
         wrongChunkIds: [],
         pendingChunkIds: ['x2', 'x3', 'x4'],
+        skippedChunkIds: [],
         masteredScores: [90, 88]);
     const clean = ModuleAudit(
         levelId: 'y',
@@ -386,18 +387,21 @@ void main() {
         snapshotValid: false,
         wrongChunkIds: [],
         pendingChunkIds: ['y1'],
+        skippedChunkIds: [],
         masteredScores: [88]);
 
-    test('progressSection：台账/断点/环/分数 四项同排 + 红名单汇总', () {
+    test('progressSection：台账/渲染值/断点/环/分数 五项同排 + 红名单汇总', () {
       final s = SelfCheck.progressSection([red, clean]);
       expect(s.title, '进度完整性');
       expect(s.hasFail, isTrue);
       expect(s.rows[0].state, CheckState.fail);
+      // ASR-211 修复 4：口径改成「台账 ⇄ UI 渲染值」并排，恒等式没了。
       expect(s.rows[0].value,
-          '台账 2/5 · 断点第 5 块 · 环 40% · 最低 88 / 均值 89.0');
+          '台账 已掌握 2/5 · 缺口 第 3 块 · 渲染「第 3 块 · 2/5」 · '
+          '断点第 5 块 · 环 40% · 最低 88 / 均值 89.0');
       expect(s.rows[1].state, CheckState.pass);
       expect(s.rows[1].value, contains('无断点'));
-      expect(s.rows.last.value, '2 个模块 · 红名单 1');
+      expect(s.rows.last.value, '2 个模块 · 红名单 1 · 跳块模块 0 · 待通过块 0');
     });
 
     test('progressSection：无模块时给黄牌而不是崩溃', () {
@@ -525,6 +529,7 @@ void main() {
           snapshotValid: false,
           wrongChunkIds: ['w1'],
           pendingChunkIds: [],
+          skippedChunkIds: [],
           masteredScores: [90, 92, 95]);
       SelfCheckReport build({List<ModuleAudit> audits = const [], CheckRow? extra}) {
         final sections = <CheckSection>[

@@ -98,10 +98,15 @@ bool wordClose(String a, String b) {
   final na = numberValueOf(a);
   final nb = numberValueOf(b);
   if (na != null && nb != null && na == nb) return true;
-  final ea = contractionExpansion(a);
-  if (ea != null && ea.split(' ').contains(b)) return true;
-  final eb = contractionExpansion(b);
-  if (eb != null && eb.split(' ').contains(a)) return true;
+  final ea = spokenExpansion(a);
+  if (ea != null && ea.contains(b)) return true;
+  final eb = spokenExpansion(b);
+  if (eb != null && eb.contains(a)) return true;
+  // ASR-211：撇号词干等价（i'd ↔ i、Sam's ↔ Sam、don't ↔ don't 的截断写法）。
+  // 只认「撇号前的那一截」，不放宽编辑距离，所以不会把 not 当成 don。
+  final sa = apostropheStem(a);
+  final sb = apostropheStem(b);
+  if (sa.isNotEmpty && sa == sb) return true;
   // 单字母只认完全相同（含上方混淆对）：否则任意两个字母编辑距离都是 1，
   // 会把 "x" 当成 "e"，让骨架/槽位校验虚高。
   if (a.length == 1 || b.length == 1) return false;
@@ -133,6 +138,17 @@ const Set<String> _functionWords = {
 };
 
 bool isFunctionWord(String w) => _functionWords.contains(w);
+
+/// 「写法不同、其实是同一个说法」的形态差：撇号缩合展开（i'd ↔ i / would）
+/// 或撇号词干相同（Sam's ↔ Sam）。这类不算用户的发音偏差，**不进**
+/// 「按发音判对：xxx→yyy」提示（ASR-211：提示里出现 `would→i'd` 只会让人看不懂）。
+bool _isFormVariant(String r, String t) {
+  final er = spokenExpansion(r);
+  if (er != null && er.contains(t)) return true;
+  final et = spokenExpansion(t);
+  if (et != null && et.contains(r)) return true;
+  return apostropheStem(r).isNotEmpty && apostropheStem(r) == apostropheStem(t);
+}
 
 /// 判定结果。
 /// [layer]：命中的漏斗层 —— 'exact'（完全匹配）/ 'containment'（包含目标句）/
@@ -458,7 +474,8 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
         matched[j - 1] = true;
         if (rec[i - 1] == tgt[j - 1]) {
           exact[j - 1] = true;
-        } else if (!isFunctionWord(tgt[j - 1])) {
+        } else if (!isFunctionWord(tgt[j - 1]) &&
+            !_isFormVariant(rec[i - 1], tgt[j - 1])) {
           devs.add('${rec[i - 1]}→${tgt[j - 1]}');
         }
       }

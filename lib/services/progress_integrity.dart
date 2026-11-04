@@ -1,6 +1,8 @@
 import '../models/content_pack.dart';
+import 'crash_log.dart';
 import 'learning_flow.dart';
 import 'loaders.dart';
+import 'state_machine.dart';
 
 /// ASR-203：进度对账层。
 ///
@@ -21,6 +23,7 @@ class ModuleAudit {
     required this.snapshotValid,
     required this.wrongChunkIds,
     required this.pendingChunkIds,
+    required this.skippedChunkIds,
     required this.masteredScores,
   });
 
@@ -49,10 +52,19 @@ class ModuleAudit {
   /// 未掌握块
   final List<String> pendingChunkIds;
 
+  /// ASR-211 修复 4/6：跳块清单——**位于已掌握末端之前**却还没过的块。
+  /// 缺口（首个未掌握位置）与连续末端（已掌握块数）不等价时，这批块就是「待通过」，
+  /// UI 必须同时报两个数，不能再让人以为「第 10 块 = 只练到第 10 块」。
+  final List<String> skippedChunkIds;
+
   /// 已掌握块的开口分留痕（自检页「分数」列）
   final List<int> masteredScores;
 
   bool get complete => total > 0 && ledgerMastered >= total;
+
+  /// 跳块态：缺口 ≠ 连续末端（整关完成时不算）。
+  bool get gapAhead =>
+      !complete && skippedChunkIds.isNotEmpty && ledgerMastered != ledgerNextIndex;
 
   /// 陈旧断点：**未完成的模块**里，快照与台账不同位（落后=双源分歧，超前/串块=脏数据）。
   ///
@@ -99,6 +111,9 @@ class ModuleAudit {
         'wrongChunks': wrongChunkIds.length,
         'wrongChunkIds': wrongChunkIds,
         'pendingChunks': pendingChunkIds.length,
+        'skippedChunks': skippedChunkIds.length,
+        'skippedChunkIds': skippedChunkIds,
+        'gapAhead': gapAhead,
         'minMasteredScore': minMasteredScore,
         'avgMasteredScore': avgMasteredScore,
         'consistent': consistent,
@@ -146,6 +161,17 @@ class ProgressIntegrity {
       if (row.l2OneTry != 1 || row.lastScore < 80) wrong.add(k);
     }
 
+    // ASR-211 修复 4：跳块清单 = 「最后一个已掌握块」之前仍未掌握的块。
+    // 案三报的就是这个数与连续末端不等价（台账 21/25、缺口第 10 块）。
+    var lastMastered = -1;
+    for (var i = 0; i < keys.length; i++) {
+      if (mastered.contains(keys[i])) lastMastered = i;
+    }
+    final skipped = <String>[];
+    for (var i = 0; i < keys.length && i < lastMastered; i++) {
+      if (!mastered.contains(keys[i])) skipped.add(keys[i]);
+    }
+
     return ModuleAudit(
       levelId: level.id,
       theme: level.theme,
@@ -157,6 +183,7 @@ class ProgressIntegrity {
       snapshotValid: snapshotValid,
       wrongChunkIds: wrong,
       pendingChunkIds: pending,
+      skippedChunkIds: skipped,
       masteredScores: scores,
     );
   }
@@ -219,4 +246,157 @@ class ProgressIntegrity {
   /// 红名单：所有「台账与快照不符」的模块（自检页与发版扫描共用）。
   static List<ModuleAudit> reds(List<ModuleAudit> audits) =>
       audits.where((a) => !a.consistent).toList();
+
+  /// ASR-211 修复 4：孤儿行扫描——台账有记录、当前内容包已查不到该块。
+  ///
+  /// 1.8.0 内容返工若换过块 id，存量用户的掌握记录会变成孤儿（数字对不上、
+  /// 看起来像「进度丢了」）。**要不要做 id 迁移表，以这份数据的真机回执定夺**
+  /// （指令 ASR-211 §三），不靠猜。
+  static Future<OrphanScan> orphans(ProgressService p, ContentPack content) async {
+    final contentIds = <String>{
+      for (final lv in content.levels)
+        for (final c in lv.chunks) c.id,
+    };
+    final rows = await p.chunkStore.allRows();
+    final out = <String>[];
+    var mastered = 0;
+    for (final r in rows) {
+      if (contentIds.contains(r.chunkKey)) continue;
+      out.add(r.chunkKey);
+      if (r.level == ChunkLevel.mastered) mastered++;
+    }
+    out.sort();
+    return OrphanScan(
+      rows: rows.length,
+      contentKeys: contentIds.length,
+      orphanKeys: out,
+      orphanMastered: mastered,
+    );
+  }
+
+  /// ASR-211 修复 3：全模块归位（四个时机共用这一个入口）。
+  ///
+  /// 之前只有「打开模块」和「点一键修复」会自愈；补练/复习等非锚定会话进来时，
+  /// 台账没人收拾。现在 ① 冷启动 ② 回前台 ③ 打开模块 ④ 自检/一键修复
+  /// 都走这里，红名单当场改写并留事件（诊断导出可见）。
+  static Future<ReconcileResult> reconcileAll(
+      ProgressService p, ContentPack content,
+      {String reason = 'manual'}) async {
+    final before = await auditAll(p, content);
+    final byId = {for (final l in content.levels) l.id: l};
+    final redBefore = reds(before);
+    final after = <ModuleAudit>[];
+    var healed = 0;
+    for (final a in before) {
+      final lv = byId[a.levelId];
+      if (a.consistent || lv == null) {
+        after.add(a);
+        continue;
+      }
+      after.add(await heal(p, lv, a));
+      healed++;
+    }
+    if (redBefore.isNotEmpty) {
+      try {
+        await p.logEvent('progress_reconcile', {
+          'reason': reason,
+          'scanned': before.length,
+          'reds': redBefore.length,
+          'healed': healed,
+          'levels': [
+            for (final a in redBefore)
+              {
+                'level': a.levelId,
+                'snap': a.snapshotIndex,
+                'ledger': a.ledgerNextIndex,
+                'snapValid': a.snapshotValid,
+              }
+          ],
+        });
+      } catch (e, st) {
+        CrashLog.write('reconcileAll log: $e', st);
+      }
+    }
+    return ReconcileResult(
+      reason: reason,
+      scanned: before.length,
+      reds: redBefore.length,
+      healed: healed,
+      remaining: reds(after).length,
+      audits: after,
+      gapModules: after.where((a) => a.gapAhead).length,
+      skippedChunks:
+          after.fold<int>(0, (n, a) => n + a.skippedChunkIds.length),
+    );
+  }
+}
+
+/// 孤儿行扫描结果（进自检页与诊断导出）。
+class OrphanScan {
+  const OrphanScan({
+    required this.rows,
+    required this.contentKeys,
+    required this.orphanKeys,
+    required this.orphanMastered,
+  });
+
+  /// 台账总行数
+  final int rows;
+
+  /// 当前内容包的块 id 数（分母，便于核对是不是包本身变小了）
+  final int contentKeys;
+
+  /// 台账有、内容包没有的块 key（样本最多 50 个进导出，计数不受限）
+  final List<String> orphanKeys;
+
+  /// 孤儿里按关卡轴已掌握的行数 = 真丢进度的风险面
+  final int orphanMastered;
+
+  int get count => orphanKeys.length;
+  bool get clean => count == 0;
+
+  Map<String, Object?> toJson() => {
+        'ledgerRows': rows,
+        'contentKeys': contentKeys,
+        'orphans': count,
+        'orphanMastered': orphanMastered,
+        'orphanKeysSample': orphanKeys.take(50).toList(),
+      };
+}
+
+/// 一次全模块归位的结论（四时机与诊断导出共用）。
+class ReconcileResult {
+  const ReconcileResult({
+    required this.reason,
+    required this.scanned,
+    required this.reds,
+    required this.healed,
+    required this.remaining,
+    required this.audits,
+    required this.gapModules,
+    required this.skippedChunks,
+  });
+
+  final String reason;
+  final int scanned;
+  final int reds;
+  final int healed;
+  final int remaining;
+  final List<ModuleAudit> audits;
+
+  /// 跳块模块数 / 待通过块总数（案三那类分歧的量化）
+  final int gapModules;
+  final int skippedChunks;
+
+  bool get clean => remaining == 0;
+
+  Map<String, Object?> toJson() => {
+        'reason': reason,
+        'scanned': scanned,
+        'reds': reds,
+        'healed': healed,
+        'remaining': remaining,
+        'gapModules': gapModules,
+        'skippedChunks': skippedChunks,
+      };
 }
