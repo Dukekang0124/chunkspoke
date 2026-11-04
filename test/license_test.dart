@@ -208,8 +208,9 @@ void main() {
       );
       await lic.load();
       expect(lic.hasLicense, isFalse);
-      expect(lic.allowsLevel(5), isTrue, reason: 'A–F 恒免费');
-      expect(lic.allowsLevel(6), isFalse, reason: 'G 起要码');
+      // ASR-208 §一.4：免费区 = 生存 S0 + A–F，边界按 kFreeLevelCount 走，不写死索引。
+      expect(lic.allowsLevel(kFreeLevelCount - 1), isTrue, reason: '免费区内恒可学');
+      expect(lic.allowsLevel(kFreeLevelCount), isFalse, reason: '边界起（G 关）要码');
       expect(lic.allows(LicenseFeature.speechAssessment), isTrue);
       expect(lic.allows(LicenseFeature.studyCalendar), isTrue);
       expect(lic.allows(LicenseFeature.dataBackup), isTrue);
@@ -224,7 +225,7 @@ void main() {
       expect(await db.getKv(kKvLicenseVerifyState), kVerifyOk);
       expect(await db.getKv(kKvLicenseSecretFp), '88f56da5');
       expect(lic.isPro, isTrue);
-      expect(lic.allowsLevel(6), isTrue);
+      expect(lic.allowsLevel(kFreeLevelCount), isTrue, reason: 'PRO 解锁免费边界之外');
       expect(lic.tail, '5T0C');
 
       // 重启后判据仍可查询（同一把 db）
@@ -268,7 +269,7 @@ void main() {
       await lic.applyWhitelist(WhitelistLookup.revoked);
       expect(lic.verifyState, kVerifyRejected);
       expect(lic.isPro, isFalse);
-      expect(lic.allowsLevel(6), isFalse);
+      expect(lic.allowsLevel(kFreeLevelCount), isFalse);
       expect(await db.getKv(kKvLicenseVerifyState), kVerifyRejected);
 
       await lic.applyWhitelist(WhitelistLookup.absent);
@@ -393,7 +394,7 @@ void main() {
       );
       await lic.load();
       expect(lic.hasFullAccess, isTrue);
-      expect(lic.allowsLevel(6), isTrue);
+      expect(lic.allowsLevel(kFreeLevelCount), isTrue);
       await (await db.db).close();
     });
   });

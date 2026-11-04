@@ -214,9 +214,24 @@ void main() {
           as Map<String, dynamic>);
       expect(validateContentPackReferences(content), isEmpty);
       expect(validateListeningPack(pack, content), isEmpty);
+      // ASR-207 §三.1：难度轴已回填 —— 断言从「未声明」改为「声明且字面量合法」。
+      expect(content.levels.every((l) => kStageKeys.contains(l.stage)), isTrue,
+          reason: '20/20 模块必须声明 L0–L3 阶梯');
+      expect(content.levels.every((l) => kCefrKeys.contains(l.cefr)), isTrue,
+          reason: '20/20 模块必须声明 CEFR 档');
       expect(
-          content.levels.every((l) => l.stage.isEmpty && l.cefr.isEmpty), isTrue);
-      expect(pack.articles.every((a) => a.moduleIds.isEmpty && a.kind.isEmpty),
+          content.levels.every((l) =>
+              l.chunks.every((c) => c.cefr.isEmpty || kCefrKeys.contains(c.cefr))),
+          isTrue,
+          reason: '词块 CEFR 档只能是五档之一');
+      final tagged = content.levels
+          .expand((l) => l.chunks)
+          .where((c) => c.cefr.isNotEmpty)
+          .length;
+      expect(tagged, content.levels.expand((l) => l.chunks).length,
+          reason: 'Chunk.cefr 必须 100% 回填');
+      expect(pack.articles.every((a) => a.moduleIds.isEmpty ||
+              a.moduleIds.every((m) => content.levels.any((l) => l.id == m))),
           isTrue);
     });
   });

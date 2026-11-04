@@ -19,12 +19,24 @@ import '../ui/pressable.dart';
 
 String _cn(Level lv) => sceneCn(lv.theme);
 
-/// 难度分组（按内容顺序切三档：入门 / 进阶 / 挑战）。
+/// 难度分组（按**主线顺序**切三档：入门 / 进阶 / 挑战）。
+///
+/// ASR-208：可选模块（生存 S0）不占三档名额，单独成组置顶 —— 它插在链首，
+/// 若仍按原始下标切档，A–T 的分档会被整体悄悄挪一位（入门会吞掉 H、挑战少一关）。
 const List<(String, int, int)> _tiers = [
   ('入门', 0, 9),
   ('进阶', 9, 18),
   ('挑战', 18, 999),
 ];
+
+/// 主线序号 = 原始下标减去它前面的可选模块数（A 仍是 0，T 仍是 19）。
+int _mainIndex(List<Level> levels, int index) {
+  var n = 0;
+  for (var i = 0; i < index; i++) {
+    if (!levels[i].optional) n++;
+  }
+  return n;
+}
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -152,14 +164,32 @@ class _MapScreenState extends State<MapScreen> {
                 onReturn: _reload,
               ),
               const SizedBox(height: 18),
+              if (levels.any((lv) => lv.optional)) ...[
+                const _TierHeader('生存'),
+                const SizedBox(height: 8),
+                for (final e in levels.asMap().entries)
+                  if (e.value.optional)
+                    _SceneRow(
+                      level: e.value,
+                      index: e.key,
+                      unlocked: unlockedAt(e.key),
+                      licenseLocked: licenseLockedAt(e.key),
+                      lockedHint: null,
+                      masteredCount: masteredIn(e.value),
+                      onReturn: _reload,
+                    ),
+                const SizedBox(height: 14),
+              ],
               for (final (label, start, end) in _tiers)
-                if (start < levels.length) ...[
+                if (start < levels.where((lv) => !lv.optional).length) ...[
                   _TierHeader(label),
                   const SizedBox(height: 8),
                   ...levels
                       .asMap()
                       .entries
-                      .where((e) => e.key >= start && e.key < end)
+                      .where((e) => !e.value.optional &&
+                          _mainIndex(levels, e.key) >= start &&
+                          _mainIndex(levels, e.key) < end)
                       .map((e) => _SceneRow(
                             level: e.value,
                             index: e.key,
@@ -308,7 +338,7 @@ class _SceneRow extends StatelessWidget {
         await showLicenseWallSheet(
           context,
           title: 'G 关起需要解锁码',
-          detail: 'A–F 共 6 个场景（137 块）随便学，永久免费；'
+          detail: '生存 S0 + A–F 共 7 个场景（167 块）随便学，永久免费；'
               'G 关起的场景需要一枚解锁码。'
               '你已经学过的内容、复习和评测都不受影响。',
         );

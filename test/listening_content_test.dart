@@ -21,8 +21,9 @@ void main() {
   });
 
   group('浸泡层内容 schema', () {
-    test('24 篇 · 按级别折算时长 45-210 秒 · 校验 0 错', () {
-      expect(pack.articles.length, 24);
+    test('33 篇 · 按级别折算时长 45-210 秒 · 校验 0 错', () {
+      // ASR-208 §二：L0 先行包 +9 篇慢速对话（L25–L33）。
+      expect(pack.articles.length, 33);
       expect(validateListeningPack(pack, content), isEmpty);
       for (final a in pack.articles) {
         final atNormal = a.wordCount / 150 * 60 + (a.sentences.length - 1) * 0.3;
@@ -32,14 +33,14 @@ void main() {
       }
     });
 
-    test('分级分布：A1×5 / A2×2 / B1×14 / B2×1 / C1×2，级别与默认语速成对出现', () {
+    test('分级分布：A1×14 / A2×2 / B1×14 / B2×1 / C1×2，级别与默认语速成对出现', () {
       final byLevel = <String, int>{};
       for (final a in pack.articles) {
         byLevel[a.level.key] = (byLevel[a.level.key] ?? 0) + 1;
         expect(a.levelRaw, a.level.key, reason: '${a.id} 级别字面量须规范');
         expect(a.baseRate, a.level.baseRate, reason: '${a.id} baseRate 须等于本级默认');
       }
-      expect(byLevel, {'A1': 5, 'A2': 2, 'B1': 14, 'B2': 1, 'C1': 2});
+      expect(byLevel, {'A1': 14, 'A2': 2, 'B1': 14, 'B2': 1, 'C1': 2});
       // A1 三篇必须真的更短更慢：词数与句均都低于 B1 任一篇
       final a1MaxWords =
           pack.articles.where((a) => a.level == ListeningLevel.a1).map((a) => a.wordCount).reduce((x, y) => x > y ? x : y);
@@ -93,10 +94,11 @@ void main() {
       }
     });
 
-    test('八个场景成组，无 Day N 编号库，级别文案不构成门槛', () {
+    test('九个场景成组，无 Day N 编号库，级别文案不构成门槛', () {
       expect(pack.articles.map((a) => a.scene).toSet(), {
         'food', 'airport', 'work', 'hospital', // 首批四场景
         'greet', 'direction', 'shop', 'radio', // 指令 S 新增四场景
+        'survival', // ASR-208：L0 生存先行包九篇
       });
       for (final a in pack.articles) {
         final text = '${a.title} ${a.summaryCN}';

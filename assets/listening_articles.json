@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generatedAt": "2026-10-25",
+  "generatedAt": "2026-11-04",
   "articles": [
     {
       "id": "L01",
@@ -6683,6 +6683,1889 @@
           "id": "L24s30",
           "text": "The coffee machine is still there, and the kitchen is still mine.",
           "meaningCN": "咖啡机还在，厨房还是我的。",
+          "chunks": []
+        }
+      ]
+    },
+    {
+      "id": "L25",
+      "title": "Hello, I'm Lost",
+      "scene": "survival",
+      "sceneLabel": "生存",
+      "summaryCN": "落地第一天在酒店门口迷路：先开口打招呼，承认听不懂，再把路问出来。",
+      "updatedAt": "2026-11-04",
+      "level": "A1",
+      "baseRate": 0.75,
+      "collectLimit": 6,
+      "audioUrl": "",
+      "kind": "slow_dialog",
+      "moduleIds": [
+        "S0"
+      ],
+      "sentences": [
+        {
+          "id": "L25s1",
+          "text": "Hello there!",
+          "meaningCN": "你好啊！",
+          "chunks": [
+            {
+              "id": "sv01",
+              "text": "hello there",
+              "meaningCN": "你好啊"
+            }
+          ]
+        },
+        {
+          "id": "L25s2",
+          "text": "Hi, good morning.",
+          "meaningCN": "嗨，早上好。",
+          "chunks": []
+        },
+        {
+          "id": "L25s3",
+          "text": "Sorry, I'm lost.",
+          "meaningCN": "抱歉，我迷路了。",
+          "chunks": [
+            {
+              "id": "sv07",
+              "text": "I'm lost",
+              "meaningCN": "我迷路了"
+            }
+          ]
+        },
+        {
+          "id": "L25s4",
+          "text": "Lost? Where do you stay?",
+          "meaningCN": "迷路了？你住哪儿？",
+          "chunks": []
+        },
+        {
+          "id": "L25s5",
+          "text": "The Green Hotel.",
+          "meaningCN": "格林酒店。",
+          "chunks": []
+        },
+        {
+          "id": "L25s6",
+          "text": "Pardon me?",
+          "meaningCN": "劳驾，你说什么？",
+          "chunks": [
+            {
+              "id": "sv02",
+              "text": "pardon me",
+              "meaningCN": "劳驾；请原谅"
+            }
+          ]
+        },
+        {
+          "id": "L25s7",
+          "text": "The Green Hotel, near the park.",
+          "meaningCN": "格林酒店，在公园附近。",
+          "chunks": []
+        },
+        {
+          "id": "L25s8",
+          "text": "Oh, I know that place.",
+          "meaningCN": "哦，我知道那个地方。",
+          "chunks": []
+        },
+        {
+          "id": "L25s9",
+          "text": "Do you speak English?",
+          "meaningCN": "你会说英语吗？",
+          "chunks": [
+            {
+              "id": "sv21",
+              "text": "do you speak English",
+              "meaningCN": "你会说英语吗"
+            }
+          ]
+        },
+        {
+          "id": "L25s10",
+          "text": "Yes, a little.",
+          "meaningCN": "会一点。",
+          "chunks": []
+        },
+        {
+          "id": "L25s11",
+          "text": "My English is poor.",
+          "meaningCN": "我英语不好。",
+          "chunks": [
+            {
+              "id": "sv22",
+              "text": "my English is poor",
+              "meaningCN": "我英语不好"
+            }
+          ]
+        },
+        {
+          "id": "L25s12",
+          "text": "That is fine. Slowly is good.",
+          "meaningCN": "没关系，慢慢说就好。",
+          "chunks": []
+        },
+        {
+          "id": "L25s13",
+          "text": "I am new here.",
+          "meaningCN": "我是新来的。",
+          "chunks": [
+            {
+              "id": "sv23",
+              "text": "I am new here",
+              "meaningCN": "我是新来的"
+            }
+          ]
+        },
+        {
+          "id": "L25s14",
+          "text": "I arrive this morning.",
+          "meaningCN": "我今天早上刚到。",
+          "chunks": []
+        },
+        {
+          "id": "L25s15",
+          "text": "This way, please.",
+          "meaningCN": "请走这边。",
+          "chunks": []
+        },
+        {
+          "id": "L25s16",
+          "text": "Walk two blocks, then turn left.",
+          "meaningCN": "走两个街区，然后左转。",
+          "chunks": []
+        },
+        {
+          "id": "L25s17",
+          "text": "Two blocks, then left.",
+          "meaningCN": "两个街区，然后左转。",
+          "chunks": []
+        },
+        {
+          "id": "L25s18",
+          "text": "Yes. Do you want a map?",
+          "meaningCN": "对。你要地图吗？",
+          "chunks": []
+        },
+        {
+          "id": "L25s19",
+          "text": "Yes, please.",
+          "meaningCN": "要的，谢谢。",
+          "chunks": []
+        },
+        {
+          "id": "L25s20",
+          "text": "Here is a small one.",
+          "meaningCN": "给你一张小的。",
+          "chunks": []
+        },
+        {
+          "id": "L25s21",
+          "text": "You are very kind.",
+          "meaningCN": "你真好。",
+          "chunks": []
+        },
+        {
+          "id": "L25s22",
+          "text": "Have a good first day.",
+          "meaningCN": "祝你第一天顺利。",
+          "chunks": []
+        },
+        {
+          "id": "L25s23",
+          "text": "The hotel is not far.",
+          "meaningCN": "酒店不远。",
+          "chunks": []
+        },
+        {
+          "id": "L25s24",
+          "text": "I can walk there now.",
+          "meaningCN": "我现在能走过去。",
+          "chunks": []
+        },
+        {
+          "id": "L25s25",
+          "text": "Maps help. I take one.",
+          "meaningCN": "地图有用，我拿一张。",
+          "chunks": []
+        }
+      ]
+    },
+    {
+      "id": "L26",
+      "title": "Say That Again, Please",
+      "scene": "survival",
+      "sceneLabel": "生存",
+      "summaryCN": "听不懂不代表要闭嘴：请对方重复、放慢、写下来，是活下来的第一课。",
+      "updatedAt": "2026-11-04",
+      "level": "A1",
+      "baseRate": 0.75,
+      "collectLimit": 6,
+      "audioUrl": "",
+      "kind": "slow_dialog",
+      "moduleIds": [
+        "S0"
+      ],
+      "sentences": [
+        {
+          "id": "L26s1",
+          "text": "Sorry, one more time?",
+          "meaningCN": "抱歉，能再说一次吗？",
+          "chunks": [
+            {
+              "id": "sv09",
+              "text": "sorry, one more time",
+              "meaningCN": "抱歉，再说一次"
+            }
+          ]
+        },
+        {
+          "id": "L26s2",
+          "text": "One more time? OK.",
+          "meaningCN": "再说一次？好的。",
+          "chunks": []
+        },
+        {
+          "id": "L26s3",
+          "text": "Please say that again.",
+          "meaningCN": "请再说一遍。",
+          "chunks": [
+            {
+              "id": "sv10",
+              "text": "please say that again",
+              "meaningCN": "请再说一遍"
+            }
+          ]
+        },
+        {
+          "id": "L26s4",
+          "text": "Slowly, please.",
+          "meaningCN": "慢一点，好吗？",
+          "chunks": []
+        },
+        {
+          "id": "L26s5",
+          "text": "Speak slowly please.",
+          "meaningCN": "请说慢一点。",
+          "chunks": [
+            {
+              "id": "sv11",
+              "text": "speak slowly please",
+              "meaningCN": "请说慢一点"
+            }
+          ]
+        },
+        {
+          "id": "L26s6",
+          "text": "Better now?",
+          "meaningCN": "现在好点了吗？",
+          "chunks": []
+        },
+        {
+          "id": "L26s7",
+          "text": "Much better.",
+          "meaningCN": "好多了。",
+          "chunks": []
+        },
+        {
+          "id": "L26s8",
+          "text": "What does this mean?",
+          "meaningCN": "这是什么意思？",
+          "chunks": [
+            {
+              "id": "sv13",
+              "text": "what does this mean",
+              "meaningCN": "这是什么意思"
+            }
+          ]
+        },
+        {
+          "id": "L26s9",
+          "text": "This word? It is a name.",
+          "meaningCN": "这个单词吗？它是个名字。",
+          "chunks": []
+        },
+        {
+          "id": "L26s10",
+          "text": "A street name.",
+          "meaningCN": "街道的名字。",
+          "chunks": []
+        },
+        {
+          "id": "L26s11",
+          "text": "I see. And this number?",
+          "meaningCN": "明白。那这个号码呢？",
+          "chunks": []
+        },
+        {
+          "id": "L26s12",
+          "text": "The room number, five one two.",
+          "meaningCN": "房间号，512。",
+          "chunks": []
+        },
+        {
+          "id": "L26s13",
+          "text": "Can you write it down?",
+          "meaningCN": "你能写下来吗？",
+          "chunks": [
+            {
+              "id": "sv12",
+              "text": "can you write it down",
+              "meaningCN": "你能写下来吗"
+            }
+          ]
+        },
+        {
+          "id": "L26s14",
+          "text": "Sure. Give me a pen.",
+          "meaningCN": "当然，给我一支笔。",
+          "chunks": []
+        },
+        {
+          "id": "L26s15",
+          "text": "Here you are.",
+          "meaningCN": "给你。",
+          "chunks": []
+        },
+        {
+          "id": "L26s16",
+          "text": "Pardon me, one more thing.",
+          "meaningCN": "劳驾，还有一件事。",
+          "chunks": [
+            {
+              "id": "sv02",
+              "text": "pardon me",
+              "meaningCN": "劳驾；请原谅"
+            }
+          ]
+        },
+        {
+          "id": "L26s17",
+          "text": "The wifi, what is the code?",
+          "meaningCN": "无线网的密码是什么？",
+          "chunks": []
+        },
+        {
+          "id": "L26s18",
+          "text": "Write it here, all caps.",
+          "meaningCN": "写在这儿，全部大写。",
+          "chunks": []
+        },
+        {
+          "id": "L26s19",
+          "text": "All caps, OK.",
+          "meaningCN": "全大写，好的。",
+          "chunks": []
+        },
+        {
+          "id": "L26s20",
+          "text": "Anything else?",
+          "meaningCN": "还要别的吗？",
+          "chunks": []
+        },
+        {
+          "id": "L26s21",
+          "text": "No, that is all.",
+          "meaningCN": "不用了，就这些。",
+          "chunks": []
+        },
+        {
+          "id": "L26s22",
+          "text": "Now you can read it.",
+          "meaningCN": "现在你能看清了。",
+          "chunks": []
+        },
+        {
+          "id": "L26s23",
+          "text": "I write the code here.",
+          "meaningCN": "我把密码写在这儿。",
+          "chunks": []
+        },
+        {
+          "id": "L26s24",
+          "text": "Slowly is kind.",
+          "meaningCN": "说得慢，是善意。",
+          "chunks": []
+        },
+        {
+          "id": "L26s25",
+          "text": "Thank you. This helps a lot.",
+          "meaningCN": "谢谢，这很有用。",
+          "chunks": []
+        }
+      ]
+    },
+    {
+      "id": "L27",
+      "title": "Which Way From Here?",
+      "scene": "survival",
+      "sceneLabel": "生存",
+      "summaryCN": "问路三连：怎么走、这条路对不对、出口和厕所在哪儿，问完再道谢。",
+      "updatedAt": "2026-11-04",
+      "level": "A1",
+      "baseRate": 0.75,
+      "collectLimit": 6,
+      "audioUrl": "",
+      "kind": "slow_dialog",
+      "moduleIds": [
+        "S0"
+      ],
+      "sentences": [
+        {
+          "id": "L27s1",
+          "text": "Excuse me, where is the toilet?",
+          "meaningCN": "劳驾，厕所在哪儿？",
+          "chunks": [
+            {
+              "id": "sv17",
+              "text": "where is the toilet",
+              "meaningCN": "厕所在哪儿"
+            }
+          ]
+        },
+        {
+          "id": "L27s2",
+          "text": "Second floor, on the right.",
+          "meaningCN": "二楼，右手边。",
+          "chunks": []
+        },
+        {
+          "id": "L27s3",
+          "text": "Thank you.",
+          "meaningCN": "谢谢。",
+          "chunks": []
+        },
+        {
+          "id": "L27s4",
+          "text": "Now, how do I get there?",
+          "meaningCN": "那么，我怎么到那儿？",
+          "chunks": [
+            {
+              "id": "sv14",
+              "text": "how do I get there",
+              "meaningCN": "我怎么到那儿"
+            }
+          ]
+        },
+        {
+          "id": "L27s5",
+          "text": "To the station? Take the bus.",
+          "meaningCN": "去车站吗？坐公交。",
+          "chunks": []
+        },
+        {
+          "id": "L27s6",
+          "text": "Is this the right way?",
+          "meaningCN": "这条路对吗？",
+          "chunks": [
+            {
+              "id": "sv28",
+              "text": "is this the right way",
+              "meaningCN": "这条路对吗"
+            }
+          ]
+        },
+        {
+          "id": "L27s7",
+          "text": "Yes, straight ahead.",
+          "meaningCN": "对，一直往前走。",
+          "chunks": []
+        },
+        {
+          "id": "L27s8",
+          "text": "Straight. OK.",
+          "meaningCN": "一直走，好。",
+          "chunks": []
+        },
+        {
+          "id": "L27s9",
+          "text": "Where is the exit?",
+          "meaningCN": "出口在哪儿？",
+          "chunks": [
+            {
+              "id": "sv15",
+              "text": "where is the exit",
+              "meaningCN": "出口在哪儿"
+            }
+          ]
+        },
+        {
+          "id": "L27s10",
+          "text": "The back exit, near the shop.",
+          "meaningCN": "后面那个出口，在商店旁边。",
+          "chunks": []
+        },
+        {
+          "id": "L27s11",
+          "text": "Can you write it down?",
+          "meaningCN": "你能写下来吗？",
+          "chunks": [
+            {
+              "id": "sv12",
+              "text": "can you write it down",
+              "meaningCN": "你能写下来吗"
+            }
+          ]
+        },
+        {
+          "id": "L27s12",
+          "text": "The bus stop name? Sure.",
+          "meaningCN": "车站的名字？当然。",
+          "chunks": []
+        },
+        {
+          "id": "L27s13",
+          "text": "Write the number too.",
+          "meaningCN": "把线路号也写上。",
+          "chunks": []
+        },
+        {
+          "id": "L27s14",
+          "text": "Line eight, every ten minutes.",
+          "meaningCN": "8 路，每十分钟一班。",
+          "chunks": []
+        },
+        {
+          "id": "L27s15",
+          "text": "Every ten minutes. Good.",
+          "meaningCN": "十分钟一班，挺好。",
+          "chunks": []
+        },
+        {
+          "id": "L27s16",
+          "text": "How much is the ticket?",
+          "meaningCN": "车票多少钱？",
+          "chunks": []
+        },
+        {
+          "id": "L27s17",
+          "text": "Two dollars, at the machine.",
+          "meaningCN": "两美元，在售票机买。",
+          "chunks": []
+        },
+        {
+          "id": "L27s18",
+          "text": "The machine. I understand.",
+          "meaningCN": "售票机，我明白了。",
+          "chunks": []
+        },
+        {
+          "id": "L27s19",
+          "text": "You look fine.",
+          "meaningCN": "你看起来不慌了。",
+          "chunks": []
+        },
+        {
+          "id": "L27s20",
+          "text": "Thank you for your help.",
+          "meaningCN": "谢谢你的帮助。",
+          "chunks": [
+            {
+              "id": "sv29",
+              "text": "thank you for your help",
+              "meaningCN": "谢谢你的帮助"
+            }
+          ]
+        },
+        {
+          "id": "L27s21",
+          "text": "The bus, number eight.",
+          "meaningCN": "公交，八路。",
+          "chunks": []
+        },
+        {
+          "id": "L27s22",
+          "text": "I wait here, then.",
+          "meaningCN": "那我就在这儿等。",
+          "chunks": []
+        },
+        {
+          "id": "L27s23",
+          "text": "Anytime. Have a good day.",
+          "meaningCN": "不客气，祝你今天愉快。",
+          "chunks": []
+        }
+      ]
+    },
+    {
+      "id": "L28",
+      "title": "Not Well Today",
+      "scene": "survival",
+      "sceneLabel": "生存",
+      "summaryCN": "身体不舒服时怎么开口：说清哪儿疼、要不要救护车、医院在哪儿。",
+      "updatedAt": "2026-11-04",
+      "level": "A1",
+      "baseRate": 0.75,
+      "collectLimit": 6,
+      "audioUrl": "",
+      "kind": "slow_dialog",
+      "moduleIds": [
+        "S0"
+      ],
+      "sentences": [
+        {
+          "id": "L28s1",
+          "text": "I'm not feeling well.",
+          "meaningCN": "我不太舒服。",
+          "chunks": [
+            {
+              "id": "sv18",
+              "text": "I'm not feeling well",
+              "meaningCN": "我不太舒服"
+            }
+          ]
+        },
+        {
+          "id": "L28s2",
+          "text": "Oh no. Since when?",
+          "meaningCN": "糟了。从什么时候开始？",
+          "chunks": []
+        },
+        {
+          "id": "L28s3",
+          "text": "Since lunch, I think.",
+          "meaningCN": "我想是午饭以后。",
+          "chunks": []
+        },
+        {
+          "id": "L28s4",
+          "text": "Where does it hurt?",
+          "meaningCN": "哪儿疼？",
+          "chunks": []
+        },
+        {
+          "id": "L28s5",
+          "text": "It hurts here.",
+          "meaningCN": "这儿疼。",
+          "chunks": [
+            {
+              "id": "sv19",
+              "text": "it hurts here",
+              "meaningCN": "这儿疼"
+            }
+          ]
+        },
+        {
+          "id": "L28s6",
+          "text": "Here, under the ribs.",
+          "meaningCN": "这儿，肋骨下面。",
+          "chunks": []
+        },
+        {
+          "id": "L28s7",
+          "text": "Do you need help?",
+          "meaningCN": "你需要帮忙吗？",
+          "chunks": []
+        },
+        {
+          "id": "L28s8",
+          "text": "I need help, please.",
+          "meaningCN": "我需要帮助，拜托。",
+          "chunks": [
+            {
+              "id": "sv03",
+              "text": "I need help",
+              "meaningCN": "我需要帮助"
+            }
+          ]
+        },
+        {
+          "id": "L28s9",
+          "text": "I need a doctor.",
+          "meaningCN": "我需要医生。",
+          "chunks": [
+            {
+              "id": "sv20",
+              "text": "I need a doctor",
+              "meaningCN": "我需要医生"
+            }
+          ]
+        },
+        {
+          "id": "L28s10",
+          "text": "OK. Stay with me.",
+          "meaningCN": "好，先别走开。",
+          "chunks": []
+        },
+        {
+          "id": "L28s11",
+          "text": "Should we call an ambulance?",
+          "meaningCN": "要叫救护车吗？",
+          "chunks": []
+        },
+        {
+          "id": "L28s12",
+          "text": "Call an ambulance, please.",
+          "meaningCN": "请叫救护车。",
+          "chunks": [
+            {
+              "id": "sv06",
+              "text": "call an ambulance",
+              "meaningCN": "叫救护车"
+            }
+          ]
+        },
+        {
+          "id": "L28s13",
+          "text": "Not yet. First, water.",
+          "meaningCN": "还不用。先来点水。",
+          "chunks": []
+        },
+        {
+          "id": "L28s14",
+          "text": "Where is the hospital?",
+          "meaningCN": "医院在哪儿？",
+          "chunks": [
+            {
+              "id": "sv16",
+              "text": "where is the hospital",
+              "meaningCN": "医院在哪儿"
+            }
+          ]
+        },
+        {
+          "id": "L28s15",
+          "text": "Two streets away, open now.",
+          "meaningCN": "两条街外，现在开着。",
+          "chunks": []
+        },
+        {
+          "id": "L28s16",
+          "text": "Can you walk?",
+          "meaningCN": "你能走吗？",
+          "chunks": []
+        },
+        {
+          "id": "L28s17",
+          "text": "Slowly, but yes.",
+          "meaningCN": "走得慢，但能走。",
+          "chunks": []
+        },
+        {
+          "id": "L28s18",
+          "text": "I stay with you.",
+          "meaningCN": "我陪着你。",
+          "chunks": []
+        },
+        {
+          "id": "L28s19",
+          "text": "Thank you. Really.",
+          "meaningCN": "谢谢，真的。",
+          "chunks": []
+        },
+        {
+          "id": "L28s20",
+          "text": "That is nothing.",
+          "meaningCN": "这没什么。",
+          "chunks": []
+        },
+        {
+          "id": "L28s21",
+          "text": "Tell the doctor everything.",
+          "meaningCN": "把情况都告诉医生。",
+          "chunks": []
+        },
+        {
+          "id": "L28s22",
+          "text": "I will. I remember now.",
+          "meaningCN": "我会的，我记住了。",
+          "chunks": []
+        },
+        {
+          "id": "L28s23",
+          "text": "Water helps a little.",
+          "meaningCN": "喝点水好一些。",
+          "chunks": []
+        },
+        {
+          "id": "L28s24",
+          "text": "I sit down, then we go.",
+          "meaningCN": "我坐一会儿，然后走。",
+          "chunks": []
+        },
+        {
+          "id": "L28s25",
+          "text": "Do you have medicine?",
+          "meaningCN": "你带药了吗？",
+          "chunks": []
+        },
+        {
+          "id": "L28s26",
+          "text": "No, none with me.",
+          "meaningCN": "没有，我身上没有。",
+          "chunks": []
+        }
+      ]
+    },
+    {
+      "id": "L29",
+      "title": "Something Is Wrong",
+      "scene": "survival",
+      "sceneLabel": "生存",
+      "summaryCN": "包不见了：先说「出问题了」「请帮帮我」，再谈报警和护照。",
+      "updatedAt": "2026-11-04",
+      "level": "A1",
+      "baseRate": 0.75,
+      "collectLimit": 6,
+      "audioUrl": "",
+      "kind": "slow_dialog",
+      "moduleIds": [
+        "S0"
+      ],
+      "sentences": [
+        {
+          "id": "L29s1",
+          "text": "Something is wrong.",
+          "meaningCN": "出问题了。",
+          "chunks": [
+            {
+              "id": "sv08",
+              "text": "something is wrong",
+              "meaningCN": "出问题了"
+            }
+          ]
+        },
+        {
+          "id": "L29s2",
+          "text": "Wrong? What happened?",
+          "meaningCN": "出事了？怎么了？",
+          "chunks": []
+        },
+        {
+          "id": "L29s3",
+          "text": "My bag is gone.",
+          "meaningCN": "我的包不见了。",
+          "chunks": []
+        },
+        {
+          "id": "L29s4",
+          "text": "Gone? Where was it?",
+          "meaningCN": "不见了？刚才在哪儿？",
+          "chunks": []
+        },
+        {
+          "id": "L29s5",
+          "text": "On this chair, ten minutes.",
+          "meaningCN": "就在这椅子上，十分钟前。",
+          "chunks": []
+        },
+        {
+          "id": "L29s6",
+          "text": "Please help me.",
+          "meaningCN": "请帮帮我。",
+          "chunks": [
+            {
+              "id": "sv04",
+              "text": "please help me",
+              "meaningCN": "请帮帮我"
+            }
+          ]
+        },
+        {
+          "id": "L29s7",
+          "text": "I help you. Calm down.",
+          "meaningCN": "我会帮你，先别急。",
+          "chunks": []
+        },
+        {
+          "id": "L29s8",
+          "text": "I need help now.",
+          "meaningCN": "我现在需要帮助。",
+          "chunks": [
+            {
+              "id": "sv03",
+              "text": "I need help",
+              "meaningCN": "我需要帮助"
+            }
+          ]
+        },
+        {
+          "id": "L29s9",
+          "text": "Yes, I hear you.",
+          "meaningCN": "在，我听到你了。",
+          "chunks": []
+        },
+        {
+          "id": "L29s10",
+          "text": "Should I call the police?",
+          "meaningCN": "我该报警吗？",
+          "chunks": []
+        },
+        {
+          "id": "L29s11",
+          "text": "Call the police, yes.",
+          "meaningCN": "报警，对。",
+          "chunks": [
+            {
+              "id": "sv05",
+              "text": "call the police",
+              "meaningCN": "报警"
+            }
+          ]
+        },
+        {
+          "id": "L29s12",
+          "text": "Do you speak English?",
+          "meaningCN": "你会说英语吗？",
+          "chunks": [
+            {
+              "id": "sv21",
+              "text": "do you speak English",
+              "meaningCN": "你会说英语吗"
+            }
+          ]
+        },
+        {
+          "id": "L29s13",
+          "text": "A little. Slowly, OK?",
+          "meaningCN": "会一点，慢慢说好吗？",
+          "chunks": []
+        },
+        {
+          "id": "L29s14",
+          "text": "OK. My name is Sam.",
+          "meaningCN": "好，我叫 Sam。",
+          "chunks": []
+        },
+        {
+          "id": "L29s15",
+          "text": "What is your name?",
+          "meaningCN": "你叫什么名字？",
+          "chunks": []
+        },
+        {
+          "id": "L29s16",
+          "text": "I am Lee.",
+          "meaningCN": "我姓李。",
+          "chunks": []
+        },
+        {
+          "id": "L29s17",
+          "text": "Pardon me, one question.",
+          "meaningCN": "劳驾，问一个问题。",
+          "chunks": [
+            {
+              "id": "sv02",
+              "text": "pardon me",
+              "meaningCN": "劳驾；请原谅"
+            }
+          ]
+        },
+        {
+          "id": "L29s18",
+          "text": "The bag, what is inside?",
+          "meaningCN": "包里有什么？",
+          "chunks": []
+        },
+        {
+          "id": "L29s19",
+          "text": "My passport and cash.",
+          "meaningCN": "我的护照和现金。",
+          "chunks": []
+        },
+        {
+          "id": "L29s20",
+          "text": "Passport is serious.",
+          "meaningCN": "护照的事比较大。",
+          "chunks": []
+        },
+        {
+          "id": "L29s21",
+          "text": "I know. That is why I'm here.",
+          "meaningCN": "我知道，所以我来了。",
+          "chunks": []
+        },
+        {
+          "id": "L29s22",
+          "text": "Stay here. I call now.",
+          "meaningCN": "你在这儿等，我现在就打。",
+          "chunks": []
+        },
+        {
+          "id": "L29s23",
+          "text": "Thank you for staying.",
+          "meaningCN": "谢谢你留下来。",
+          "chunks": []
+        },
+        {
+          "id": "L29s24",
+          "text": "Of course.",
+          "meaningCN": "应该的。",
+          "chunks": []
+        },
+        {
+          "id": "L29s25",
+          "text": "I wait right here.",
+          "meaningCN": "我就在这儿等。",
+          "chunks": []
+        }
+      ]
+    },
+    {
+      "id": "L30",
+      "title": "How Do I Pay?",
+      "scene": "survival",
+      "sceneLabel": "生存",
+      "summaryCN": "在柜台付款签字：怎么付、在哪儿签、这一行什么意思、要多久到账。",
+      "updatedAt": "2026-11-04",
+      "level": "A1",
+      "baseRate": 0.75,
+      "collectLimit": 6,
+      "audioUrl": "",
+      "kind": "slow_dialog",
+      "moduleIds": [
+        "S0"
+      ],
+      "sentences": [
+        {
+          "id": "L30s1",
+          "text": "How do I pay?",
+          "meaningCN": "我怎么付款？",
+          "chunks": [
+            {
+              "id": "sv24",
+              "text": "how do I pay",
+              "meaningCN": "我怎么付款"
+            }
+          ]
+        },
+        {
+          "id": "L30s2",
+          "text": "Card or cash, both fine.",
+          "meaningCN": "刷卡或现金都可以。",
+          "chunks": []
+        },
+        {
+          "id": "L30s3",
+          "text": "I have card.",
+          "meaningCN": "我有卡。",
+          "chunks": []
+        },
+        {
+          "id": "L30s4",
+          "text": "Then tap here.",
+          "meaningCN": "那就在这儿碰一下。",
+          "chunks": []
+        },
+        {
+          "id": "L30s5",
+          "text": "Where do I sign?",
+          "meaningCN": "我在哪儿签字？",
+          "chunks": [
+            {
+              "id": "sv25",
+              "text": "where do I sign",
+              "meaningCN": "我在哪儿签字"
+            }
+          ]
+        },
+        {
+          "id": "L30s6",
+          "text": "On the line, right side.",
+          "meaningCN": "在线上，右边。",
+          "chunks": []
+        },
+        {
+          "id": "L30s7",
+          "text": "What does this mean?",
+          "meaningCN": "这是什么意思？",
+          "chunks": [
+            {
+              "id": "sv13",
+              "text": "what does this mean",
+              "meaningCN": "这是什么意思"
+            }
+          ]
+        },
+        {
+          "id": "L30s8",
+          "text": "Small print, the rules.",
+          "meaningCN": "小字是规则。",
+          "chunks": []
+        },
+        {
+          "id": "L30s9",
+          "text": "Just sign it.",
+          "meaningCN": "签上就行。",
+          "chunks": []
+        },
+        {
+          "id": "L30s10",
+          "text": "OK. Done.",
+          "meaningCN": "好，签完了。",
+          "chunks": []
+        },
+        {
+          "id": "L30s11",
+          "text": "One more thing.",
+          "meaningCN": "还有一件事。",
+          "chunks": []
+        },
+        {
+          "id": "L30s12",
+          "text": "Yes?",
+          "meaningCN": "什么事？",
+          "chunks": []
+        },
+        {
+          "id": "L30s13",
+          "text": "What time do you open?",
+          "meaningCN": "你们几点开门？",
+          "chunks": [
+            {
+              "id": "sv26",
+              "text": "what time do you open",
+              "meaningCN": "你们几点开门"
+            }
+          ]
+        },
+        {
+          "id": "L30s14",
+          "text": "Eight, every day.",
+          "meaningCN": "每天八点。",
+          "chunks": []
+        },
+        {
+          "id": "L30s15",
+          "text": "Do you close at night?",
+          "meaningCN": "你们晚上关门吗？",
+          "chunks": []
+        },
+        {
+          "id": "L30s16",
+          "text": "Ten, sharp.",
+          "meaningCN": "十点整。",
+          "chunks": []
+        },
+        {
+          "id": "L30s17",
+          "text": "How long does it take?",
+          "meaningCN": "要多久？",
+          "chunks": [
+            {
+              "id": "sv27",
+              "text": "how long does it take",
+              "meaningCN": "要多久"
+            }
+          ]
+        },
+        {
+          "id": "L30s18",
+          "text": "The refund? About a week.",
+          "meaningCN": "退款吗？大约一周。",
+          "chunks": []
+        },
+        {
+          "id": "L30s19",
+          "text": "A week. OK.",
+          "meaningCN": "一周，好吧。",
+          "chunks": []
+        },
+        {
+          "id": "L30s20",
+          "text": "Here is your receipt.",
+          "meaningCN": "这是你的小票。",
+          "chunks": []
+        },
+        {
+          "id": "L30s21",
+          "text": "Keep it, please.",
+          "meaningCN": "请留着。",
+          "chunks": []
+        },
+        {
+          "id": "L30s22",
+          "text": "I keep it.",
+          "meaningCN": "我会留着。",
+          "chunks": []
+        },
+        {
+          "id": "L30s23",
+          "text": "Thank you for your help.",
+          "meaningCN": "谢谢你的帮助。",
+          "chunks": [
+            {
+              "id": "sv29",
+              "text": "thank you for your help",
+              "meaningCN": "谢谢你的帮助"
+            }
+          ]
+        },
+        {
+          "id": "L30s24",
+          "text": "Have a good evening.",
+          "meaningCN": "祝你晚上愉快。",
+          "chunks": []
+        },
+        {
+          "id": "L30s25",
+          "text": "See you tomorrow morning.",
+          "meaningCN": "明天早上见。",
+          "chunks": []
+        },
+        {
+          "id": "L30s26",
+          "text": "Same time, same place.",
+          "meaningCN": "老时间，老地方。",
+          "chunks": []
+        },
+        {
+          "id": "L30s27",
+          "text": "Cash, or a card?",
+          "meaningCN": "现金还是卡？",
+          "chunks": []
+        },
+        {
+          "id": "L30s28",
+          "text": "That is easy.",
+          "meaningCN": "那样就简单。",
+          "chunks": []
+        }
+      ]
+    },
+    {
+      "id": "L31",
+      "title": "Ten Minutes On Foot",
+      "scene": "survival",
+      "sceneLabel": "生存",
+      "summaryCN": "跟邻居打听去市场的路：走多远、多久到、几点开门、路上怎么快一点。",
+      "updatedAt": "2026-11-04",
+      "level": "A1",
+      "baseRate": 0.75,
+      "collectLimit": 6,
+      "audioUrl": "",
+      "kind": "slow_dialog",
+      "moduleIds": [
+        "S0"
+      ],
+      "sentences": [
+        {
+          "id": "L31s1",
+          "text": "Hello there, neighbor.",
+          "meaningCN": "你好啊，邻居。",
+          "chunks": [
+            {
+              "id": "sv01",
+              "text": "hello there",
+              "meaningCN": "你好啊"
+            }
+          ]
+        },
+        {
+          "id": "L31s2",
+          "text": "Hello, long time no see.",
+          "meaningCN": "你好，好久不见。",
+          "chunks": []
+        },
+        {
+          "id": "L31s3",
+          "text": "Quick question.",
+          "meaningCN": "问个小问题。",
+          "chunks": []
+        },
+        {
+          "id": "L31s4",
+          "text": "Sure, go ahead.",
+          "meaningCN": "你说。",
+          "chunks": []
+        },
+        {
+          "id": "L31s5",
+          "text": "Is this the right way?",
+          "meaningCN": "这条路对吗？",
+          "chunks": [
+            {
+              "id": "sv28",
+              "text": "is this the right way",
+              "meaningCN": "这条路对吗"
+            }
+          ]
+        },
+        {
+          "id": "L31s6",
+          "text": "To the market? Yes.",
+          "meaningCN": "去市场吗？对的。",
+          "chunks": []
+        },
+        {
+          "id": "L31s7",
+          "text": "How do I get there fast?",
+          "meaningCN": "怎么到那儿最快？",
+          "chunks": [
+            {
+              "id": "sv14",
+              "text": "how do I get there",
+              "meaningCN": "我怎么到那儿"
+            }
+          ]
+        },
+        {
+          "id": "L31s8",
+          "text": "Walk, or take the bus.",
+          "meaningCN": "走路，或者坐公交。",
+          "chunks": []
+        },
+        {
+          "id": "L31s9",
+          "text": "How long does it take?",
+          "meaningCN": "要多久？",
+          "chunks": [
+            {
+              "id": "sv27",
+              "text": "how long does it take",
+              "meaningCN": "要多久"
+            }
+          ]
+        },
+        {
+          "id": "L31s10",
+          "text": "Ten minutes on foot.",
+          "meaningCN": "走路十分钟。",
+          "chunks": []
+        },
+        {
+          "id": "L31s11",
+          "text": "And the market?",
+          "meaningCN": "市场呢？",
+          "chunks": []
+        },
+        {
+          "id": "L31s12",
+          "text": "What time do you open?",
+          "meaningCN": "那儿几点开门？",
+          "chunks": [
+            {
+              "id": "sv26",
+              "text": "what time do you open",
+              "meaningCN": "你们几点开门"
+            }
+          ]
+        },
+        {
+          "id": "L31s13",
+          "text": "I don't own it.",
+          "meaningCN": "那店不是我开的。",
+          "chunks": []
+        },
+        {
+          "id": "L31s14",
+          "text": "Sorry, wrong question.",
+          "meaningCN": "抱歉，问错了。",
+          "chunks": []
+        },
+        {
+          "id": "L31s15",
+          "text": "It opens at eight.",
+          "meaningCN": "它八点开门。",
+          "chunks": []
+        },
+        {
+          "id": "L31s16",
+          "text": "Eight, before the crowd.",
+          "meaningCN": "八点，趁人少。",
+          "chunks": []
+        },
+        {
+          "id": "L31s17",
+          "text": "The bus stop, where?",
+          "meaningCN": "车站在哪儿？",
+          "chunks": []
+        },
+        {
+          "id": "L31s18",
+          "text": "Across the street.",
+          "meaningCN": "街对面。",
+          "chunks": []
+        },
+        {
+          "id": "L31s19",
+          "text": "Do you need a list?",
+          "meaningCN": "你需要购物清单吗？",
+          "chunks": []
+        },
+        {
+          "id": "L31s20",
+          "text": "Yes, milk and bread.",
+          "meaningCN": "需要，牛奶和面包。",
+          "chunks": []
+        },
+        {
+          "id": "L31s21",
+          "text": "I buy nothing today.",
+          "meaningCN": "我今天什么都不买。",
+          "chunks": []
+        },
+        {
+          "id": "L31s22",
+          "text": "Good, you are free.",
+          "meaningCN": "挺好，那你很清闲。",
+          "chunks": []
+        },
+        {
+          "id": "L31s23",
+          "text": "Not free. Just fast.",
+          "meaningCN": "不清闲，只是图快。",
+          "chunks": []
+        },
+        {
+          "id": "L31s24",
+          "text": "Haha. Then run.",
+          "meaningCN": "哈哈，那快跑。",
+          "chunks": []
+        },
+        {
+          "id": "L31s25",
+          "text": "See you later, neighbor.",
+          "meaningCN": "回头见，邻居。",
+          "chunks": [
+            {
+              "id": "sv30",
+              "text": "see you later",
+              "meaningCN": "回头见"
+            }
+          ]
+        },
+        {
+          "id": "L31s26",
+          "text": "See you, have fun.",
+          "meaningCN": "回头见，买得顺利。",
+          "chunks": []
+        }
+      ]
+    },
+    {
+      "id": "L32",
+      "title": "At the Service Window",
+      "scene": "survival",
+      "sceneLabel": "生存",
+      "summaryCN": "办事窗口填表：听不懂就请对方重复、放慢、写下来，最后把字签对。",
+      "updatedAt": "2026-11-04",
+      "level": "A1",
+      "baseRate": 0.75,
+      "collectLimit": 6,
+      "audioUrl": "",
+      "kind": "slow_dialog",
+      "moduleIds": [
+        "S0"
+      ],
+      "sentences": [
+        {
+          "id": "L32s1",
+          "text": "Next, please.",
+          "meaningCN": "下一位，请。",
+          "chunks": []
+        },
+        {
+          "id": "L32s2",
+          "text": "Hello. I have a form.",
+          "meaningCN": "你好，我有一张表。",
+          "chunks": []
+        },
+        {
+          "id": "L32s3",
+          "text": "Pardon me, my English is poor.",
+          "meaningCN": "劳驾，我英语不好。",
+          "chunks": [
+            {
+              "id": "sv02",
+              "text": "pardon me",
+              "meaningCN": "劳驾；请原谅"
+            },
+            {
+              "id": "sv22",
+              "text": "my English is poor",
+              "meaningCN": "我英语不好"
+            }
+          ]
+        },
+        {
+          "id": "L32s4",
+          "text": "That is OK. Slowly.",
+          "meaningCN": "没关系，慢慢来。",
+          "chunks": []
+        },
+        {
+          "id": "L32s5",
+          "text": "Please say that again.",
+          "meaningCN": "请再说一遍。",
+          "chunks": [
+            {
+              "id": "sv10",
+              "text": "please say that again",
+              "meaningCN": "请再说一遍"
+            }
+          ]
+        },
+        {
+          "id": "L32s6",
+          "text": "The form, please.",
+          "meaningCN": "请把表格给我。",
+          "chunks": []
+        },
+        {
+          "id": "L32s7",
+          "text": "Here. And this line?",
+          "meaningCN": "在这儿。那这一格呢？",
+          "chunks": []
+        },
+        {
+          "id": "L32s8",
+          "text": "What does this mean?",
+          "meaningCN": "这是什么意思？",
+          "chunks": [
+            {
+              "id": "sv13",
+              "text": "what does this mean",
+              "meaningCN": "这是什么意思"
+            }
+          ]
+        },
+        {
+          "id": "L32s9",
+          "text": "Your last address.",
+          "meaningCN": "你上一个住址。",
+          "chunks": []
+        },
+        {
+          "id": "L32s10",
+          "text": "Speak slowly please.",
+          "meaningCN": "请说慢一点。",
+          "chunks": [
+            {
+              "id": "sv11",
+              "text": "speak slowly please",
+              "meaningCN": "请说慢一点"
+            }
+          ]
+        },
+        {
+          "id": "L32s11",
+          "text": "Slowly: last, address.",
+          "meaningCN": "慢读：上一个，住址。",
+          "chunks": []
+        },
+        {
+          "id": "L32s12",
+          "text": "Ah, I understand now.",
+          "meaningCN": "啊，我懂了。",
+          "chunks": []
+        },
+        {
+          "id": "L32s13",
+          "text": "Can you write it down?",
+          "meaningCN": "你能写下来吗？",
+          "chunks": [
+            {
+              "id": "sv12",
+              "text": "can you write it down",
+              "meaningCN": "你能写下来吗"
+            }
+          ]
+        },
+        {
+          "id": "L32s14",
+          "text": "Your address? I write it.",
+          "meaningCN": "你的地址？我写下来。",
+          "chunks": []
+        },
+        {
+          "id": "L32s15",
+          "text": "Yes, the old one.",
+          "meaningCN": "对，旧的那个。",
+          "chunks": []
+        },
+        {
+          "id": "L32s16",
+          "text": "Number twelve, Hill Street.",
+          "meaningCN": "十二号，希尔街。",
+          "chunks": []
+        },
+        {
+          "id": "L32s17",
+          "text": "Twelve, Hill Street. Done.",
+          "meaningCN": "十二号希尔街，好了。",
+          "chunks": []
+        },
+        {
+          "id": "L32s18",
+          "text": "What about this stamp?",
+          "meaningCN": "这个章怎么办？",
+          "chunks": []
+        },
+        {
+          "id": "L32s19",
+          "text": "You sign, then I stamp.",
+          "meaningCN": "你签字，然后我盖章。",
+          "chunks": []
+        },
+        {
+          "id": "L32s20",
+          "text": "Sign here? Like this?",
+          "meaningCN": "在这儿签？这样吗？",
+          "chunks": []
+        },
+        {
+          "id": "L32s21",
+          "text": "Exactly.",
+          "meaningCN": "就是这样。",
+          "chunks": []
+        },
+        {
+          "id": "L32s22",
+          "text": "My English is poor, but today works.",
+          "meaningCN": "我英语不好，但今天办成了。",
+          "chunks": [
+            {
+              "id": "sv22",
+              "text": "my English is poor",
+              "meaningCN": "我英语不好"
+            }
+          ]
+        },
+        {
+          "id": "L32s23",
+          "text": "Today works. Good job.",
+          "meaningCN": "办成了，挺好。",
+          "chunks": []
+        },
+        {
+          "id": "L32s24",
+          "text": "I read it back to you.",
+          "meaningCN": "我读一遍给你听。",
+          "chunks": []
+        },
+        {
+          "id": "L32s25",
+          "text": "Clear. Thank you.",
+          "meaningCN": "清楚了，谢谢。",
+          "chunks": []
+        },
+        {
+          "id": "L32s26",
+          "text": "Thank you for patience.",
+          "meaningCN": "谢谢你的耐心。",
+          "chunks": []
+        }
+      ]
+    },
+    {
+      "id": "L33",
+      "title": "New Here, Lost Again",
+      "scene": "survival",
+      "sceneLabel": "生存",
+      "summaryCN": "第一周的日常：承认自己是新来的，把电梯、厕所、出口一件件问明白。",
+      "updatedAt": "2026-11-04",
+      "level": "A1",
+      "baseRate": 0.75,
+      "collectLimit": 6,
+      "audioUrl": "",
+      "kind": "slow_dialog",
+      "moduleIds": [
+        "S0"
+      ],
+      "sentences": [
+        {
+          "id": "L33s1",
+          "text": "I am new here.",
+          "meaningCN": "我是新来的。",
+          "chunks": [
+            {
+              "id": "sv23",
+              "text": "I am new here",
+              "meaningCN": "我是新来的"
+            }
+          ]
+        },
+        {
+          "id": "L33s2",
+          "text": "First week? It shows.",
+          "meaningCN": "第一周？看得出来。",
+          "chunks": []
+        },
+        {
+          "id": "L33s3",
+          "text": "I'm lost again.",
+          "meaningCN": "我又迷路了。",
+          "chunks": [
+            {
+              "id": "sv07",
+              "text": "I'm lost",
+              "meaningCN": "我迷路了"
+            }
+          ]
+        },
+        {
+          "id": "L33s4",
+          "text": "Again? Where do you go?",
+          "meaningCN": "又迷路？你要去哪儿？",
+          "chunks": []
+        },
+        {
+          "id": "L33s5",
+          "text": "The lift.",
+          "meaningCN": "电梯。",
+          "chunks": []
+        },
+        {
+          "id": "L33s6",
+          "text": "Behind you.",
+          "meaningCN": "在你身后。",
+          "chunks": []
+        },
+        {
+          "id": "L33s7",
+          "text": "Oh. Thank you.",
+          "meaningCN": "哦，谢谢。",
+          "chunks": []
+        },
+        {
+          "id": "L33s8",
+          "text": "Where is the toilet?",
+          "meaningCN": "厕所在哪儿？",
+          "chunks": [
+            {
+              "id": "sv17",
+              "text": "where is the toilet",
+              "meaningCN": "厕所在哪儿"
+            }
+          ]
+        },
+        {
+          "id": "L33s9",
+          "text": "Down the hall, first door.",
+          "meaningCN": "走廊尽头，第一间。",
+          "chunks": []
+        },
+        {
+          "id": "L33s10",
+          "text": "First door, OK.",
+          "meaningCN": "第一间，好的。",
+          "chunks": []
+        },
+        {
+          "id": "L33s11",
+          "text": "And the exit?",
+          "meaningCN": "那出口呢？",
+          "chunks": []
+        },
+        {
+          "id": "L33s12",
+          "text": "Where is the exit?",
+          "meaningCN": "出口在哪儿？",
+          "chunks": [
+            {
+              "id": "sv15",
+              "text": "where is the exit",
+              "meaningCN": "出口在哪儿"
+            }
+          ]
+        },
+        {
+          "id": "L33s13",
+          "text": "Two exits. This one, near stairs.",
+          "meaningCN": "两个出口，这个在楼梯旁。",
+          "chunks": []
+        },
+        {
+          "id": "L33s14",
+          "text": "Near the stairs.",
+          "meaningCN": "在楼梯旁边。",
+          "chunks": []
+        },
+        {
+          "id": "L33s15",
+          "text": "I walk with you.",
+          "meaningCN": "我和你一起走。",
+          "chunks": []
+        },
+        {
+          "id": "L33s16",
+          "text": "Really? Thank you.",
+          "meaningCN": "真的吗？谢谢。",
+          "chunks": []
+        },
+        {
+          "id": "L33s17",
+          "text": "It is nothing.",
+          "meaningCN": "没什么。",
+          "chunks": []
+        },
+        {
+          "id": "L33s18",
+          "text": "Today my head is full.",
+          "meaningCN": "今天脑子里塞满了。",
+          "chunks": []
+        },
+        {
+          "id": "L33s19",
+          "text": "Full is normal.",
+          "meaningCN": "塞满很正常。",
+          "chunks": []
+        },
+        {
+          "id": "L33s20",
+          "text": "You are patient.",
+          "meaningCN": "你真有耐心。",
+          "chunks": []
+        },
+        {
+          "id": "L33s21",
+          "text": "Everyone is here.",
+          "meaningCN": "这儿的人都这样。",
+          "chunks": []
+        },
+        {
+          "id": "L33s22",
+          "text": "That helps a lot.",
+          "meaningCN": "这对我帮助很大。",
+          "chunks": []
+        },
+        {
+          "id": "L33s23",
+          "text": "Thank you for your help.",
+          "meaningCN": "谢谢你的帮助。",
+          "chunks": [
+            {
+              "id": "sv29",
+              "text": "thank you for your help",
+              "meaningCN": "谢谢你的帮助"
+            }
+          ]
+        },
+        {
+          "id": "L33s24",
+          "text": "Anytime, new friend.",
+          "meaningCN": "随时来问，新朋友。",
+          "chunks": []
+        },
+        {
+          "id": "L33s25",
+          "text": "See you later.",
+          "meaningCN": "回头见。",
+          "chunks": [
+            {
+              "id": "sv30",
+              "text": "see you later",
+              "meaningCN": "回头见"
+            }
+          ]
+        },
+        {
+          "id": "L33s26",
+          "text": "I take a photo too.",
+          "meaningCN": "我也拍张照片。",
+          "chunks": []
+        },
+        {
+          "id": "L33s27",
+          "text": "Clever. See you then.",
+          "meaningCN": "真聪明，那就到时见。",
+          "chunks": []
+        },
+        {
+          "id": "L33s28",
+          "text": "See you, take care.",
+          "meaningCN": "回头见，慢走。",
           "chunks": []
         }
       ]

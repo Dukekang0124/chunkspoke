@@ -151,7 +151,7 @@ class LicenseState extends ChangeNotifier {
   /// 全量权益 = PRO 或老用户。老用户终身全量，不受任何墙影响。
   bool get hasFullAccess => isPro || legacyEligible;
 
-  /// G-1/G-2/G-3 的唯一判据：A–F 恒真；G 起要全量权益。
+  /// G-1/G-2/G-3 的唯一判据：生存 S0 + A–F 恒真；G 起要全量权益（ASR-208 §一.4）。
   bool allowsLevel(int index) => index < kFreeLevelCount || hasFullAccess;
 
   /// G-5/G-6/G-7 的统一出口。
