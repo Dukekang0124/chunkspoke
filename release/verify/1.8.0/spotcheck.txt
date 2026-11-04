@@ -1,0 +1,12 @@
+# 1.8.0 三源抽验（tools/spotcheck.sh 1.8.0 4080 · 2026-11-04 10:13:52）
+
+== 1/3 三源清单（1.8.0）
+  raw.githubusercontent.com    http=200 sha=0df4290517e717c5 1.8.0 4080
+  dukekang0124.github.io       http=200 sha=0df4290517e717c5 1.8.0 4080
+  cdn.jsdelivr.net             http=200 sha=0df4290517e717c5 1.8.0 4080
+== 2/3 官网首页
+  ✓ 下载链已指 apk/1.8.0/
+  ✓ 版本徽标 v1.8.0
+== 3/3 分片全文 sha（part0）
+  ✓ part0 sha256 = 5a096d97860c4be2ba7a9cee47ef017d6bdc8784ffa7b57aa9fa13a160c687c4（15728640 B）
+[抽验通过] 1.8.0 链路完好
