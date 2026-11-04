@@ -11,6 +11,8 @@
 ///      置信度**缺失**（null，非 0）时以文本相似度为准，禁止当作 0 拒判。
 library;
 
+import 'phonetics.dart';
+
 /// 置信度门槛（实测定标：10 条正确朗读样本；见文件末「阈值定标」）。
 /// 0.45 = 能通过全部正确样本的最高阈值（下调自旧的 0.6）。
 const double kConfThreshold = 0.45;
@@ -92,12 +94,24 @@ bool wordClose(String a, String b) {
   if (a.isEmpty || b.isEmpty) return false;
   if (a == b) return true;
   if (kConfusionPairs.any((p) => p.contains(a) && p.contains(b))) return true;
+  // ASR-209 A 层归一化：数词等价（2 ↔ two）与口语缩合等价（wanna ↔ want）。
+  final na = numberValueOf(a);
+  final nb = numberValueOf(b);
+  if (na != null && nb != null && na == nb) return true;
+  final ea = contractionExpansion(a);
+  if (ea != null && ea.split(' ').contains(b)) return true;
+  final eb = contractionExpansion(b);
+  if (eb != null && eb.split(' ').contains(a)) return true;
   // 单字母只认完全相同（含上方混淆对）：否则任意两个字母编辑距离都是 1，
   // 会把 "x" 当成 "e"，让骨架/槽位校验虚高。
   if (a.length == 1 || b.length == 1) return false;
   if (_levenshtein(a, b) <= 1) return true;
   // S3：短虚词（≤4 字母、双方都在虚词表）放宽到 ED≤2，兜 what/that/with 这类误识。
   if (_relaxedShortFunction(a, b)) return true;
+  // ASR-209 A 层第三通道：音素级等价（g2p + 编辑距离，阈值见 phonetics.dart
+  // 的 kPhonRatio 定标注释）。兜 write/right、there/their 这类「同音不同拼写」；
+  // 真不同音的词（snack/snake=0.75）仍被拒。
+  if (phonemeRatio(a, b) >= kPhonRatio) return true;
   final shorter = a.length <= b.length ? a : b;
   final longer = a.length <= b.length ? b : a;
   return longer.startsWith(shorter) && (longer.length - shorter.length) <= 1;
@@ -121,7 +135,10 @@ const Set<String> _functionWords = {
 bool isFunctionWord(String w) => _functionWords.contains(w);
 
 /// 判定结果。
-/// [layer]：命中的漏斗层 —— 'exact'（完全匹配快速通道）/ 'fuzzy'（模糊层）/ 'reject'。
+/// [layer]：命中的漏斗层 —— 'exact'（完全匹配）/ 'containment'（包含目标句）/
+///   'fuzzy'（模糊层）/ 'reject'。
+/// [band]：ASR-209 分级 —— 'hit'（判对）/ 'band'（模糊带：差一点，可重说不扣分）/
+///   'fail'（明确失败）。UI 用 band 决定是否计入一次失败。
 /// [targetMatched] 与目标逐词对齐后，该目标词是否被识别命中（用于错词标红）。
 class JudgeOutcome {
   final bool pass;
@@ -130,7 +147,8 @@ class JudgeOutcome {
   final double coreHitRate; // 0..1，目标内容词命中率
   final double? confidence; // 来自 Vosk；null = 字段缺失（不参与拒判）
   final String reason; // 'ok' | 'empty' | 'tooShort' | 'lowCore' | 'lowSim' | 'lowConf'
-  final String layer; // 'exact' | 'fuzzy' | 'reject'
+  final String layer; // 'exact' | 'containment' | 'fuzzy' | 'reject'
+  final String band; // 'hit' | 'band' | 'fail'
   final List<String> targetWords;
   final List<String> recognizedWords;
   final List<bool> targetMatched;
@@ -138,6 +156,9 @@ class JudgeOutcome {
   /// 与 [targetMatched] 同长：命中的目标词里，哪些是**完全相同**（true）
   /// 而不是近似命中（false）。仅供发音评测的三档着色展示，不参与判定。
   final List<bool> targetExact;
+
+  /// 判对但不是逐字一致时的词对（识别 → 目标），如 right→write。
+  final List<String> deviations;
 
   JudgeOutcome({
     required this.pass,
@@ -151,7 +172,13 @@ class JudgeOutcome {
     required this.recognizedWords,
     required this.targetMatched,
     this.targetExact = const [],
+    this.band = 'fail',
+    this.deviations = const [],
   });
+
+  /// 「按发音判对」的偏差提示；逐字一致时为空。
+  String? get deviationHint =>
+      deviations.isEmpty ? null : '按发音判对：${deviations.take(3).join('、')}';
 }
 
 JudgeOutcome _reject(String reason, List<String> tgt, List<String> rec, double? conf,
@@ -187,6 +214,9 @@ JudgeOutcome judgeSpeech({
   // L1 规范化层：所有比对在此之后。
   final tgt = tokenizeSpeech(target);
   final rec = tokenizeSpeech(recognized);
+  // ASR-209：只用于比较的「口语折叠」（数词转词 / 缩合展开），不改 UI 词位。
+  final tgtFold = expandSpokenTokens(tgt);
+  final recFold = expandSpokenTokens(rec);
 
   // ④ 空结果/静音 → 不通过。
   if (rec.isEmpty) return _reject('empty', tgt, rec, confidence);
@@ -197,7 +227,7 @@ JudgeOutcome judgeSpeech({
   }
 
   // L2 完全匹配快速通道：规范化后逐词完全一致 → 直接放行（不叠加置信度）。
-  if (_exactSequence(tgt, rec)) {
+  if (_exactSequence(tgt, rec) || _exactSequence(tgtFold, recFold)) {
     return JudgeOutcome(
       pass: true,
       similarity: 1.0,
@@ -206,6 +236,26 @@ JudgeOutcome judgeSpeech({
       confidence: confidence,
       reason: 'ok',
       layer: 'exact',
+      band: 'hit',
+      targetWords: tgt,
+      recognizedWords: rec,
+      targetMatched: List.filled(tgt.length, true),
+      targetExact: List.filled(tgt.length, true),
+    );
+  }
+
+  // L2.5 包含通道（A 层第一通道）：识别文本里有一整段与目标句逐词相同
+  // （前后多说了口头语不算错）。用折叠后的 token 做窗口匹配。
+  if (_containsTokenWindow(recFold, tgtFold)) {
+    return JudgeOutcome(
+      pass: true,
+      similarity: 1.0,
+      weightedSimilarity: 1.0,
+      coreHitRate: 1.0,
+      confidence: confidence,
+      reason: 'ok',
+      layer: 'containment',
+      band: 'hit',
       targetWords: tgt,
       recognizedWords: rec,
       targetMatched: List.filled(tgt.length, true),
@@ -236,6 +286,22 @@ JudgeOutcome judgeSpeech({
     pass = true;
   }
 
+  // ASR-209 分级：命中 / 灰带 / 明确失败。
+  // 灰带 = 文本已接近（核心词至少命中一半、整句相似度 ≥0.5、加权 ≥0.6），
+  // 只是没到判对线 → UI 允许「再读一遍不扣分」，不计一次失败。
+  // 置信度不足（lowConf）不算灰带：那是没听清，守门器会给重说提示。
+  String band;
+  if (pass) {
+    band = 'hit';
+  } else if (reason != 'lowConf' &&
+      weighted.coreHitRate >= 0.5 &&
+      align.similarity >= 0.5 &&
+      weighted.weightedSim >= 0.6) {
+    band = 'band';
+  } else {
+    band = 'fail';
+  }
+
   return JudgeOutcome(
     pass: pass,
     similarity: align.similarity,
@@ -244,11 +310,29 @@ JudgeOutcome judgeSpeech({
     confidence: confidence,
     reason: reason,
     layer: pass ? 'fuzzy' : 'reject',
+    band: band,
+    deviations: weighted.deviations,
     targetWords: tgt,
     recognizedWords: rec,
     targetMatched: weighted.matched,
     targetExact: weighted.exact,
   );
+}
+
+/// [rec] 中是否存在一段与 [tgt] 逐词相同的连续窗口。
+bool _containsTokenWindow(List<String> rec, List<String> tgt) {
+  if (tgt.isEmpty || tgt.length > rec.length) return false;
+  for (var i = 0; i + tgt.length <= rec.length; i++) {
+    var hit = true;
+    for (var j = 0; j < tgt.length; j++) {
+      if (rec[i + j] != tgt[j]) {
+        hit = false;
+        break;
+      }
+    }
+    if (hit) return true;
+  }
+  return false;
 }
 
 bool _exactSequence(List<String> a, List<String> b) {
@@ -317,7 +401,9 @@ class _WeightedAlignment {
   final double coreHitRate;
   final List<bool> matched;
   final List<bool> exact;
-  _WeightedAlignment(this.weightedSim, this.coreHitRate, this.matched, this.exact);
+  final List<String> deviations;
+  _WeightedAlignment(this.weightedSim, this.coreHitRate, this.matched, this.exact,
+      this.deviations);
 }
 
 /// 内容词加权的词级比对。
@@ -360,15 +446,21 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
   final denom = tgt.fold<double>(0, (sum, w) => sum + del(w));
   final weightedSim = denom == 0 ? 1.0 : (1 - dist / denom).clamp(0.0, 1.0);
 
-  // 回溯逐词命中标记（只标记真正的匹配项）。
+  // 回溯逐词命中标记（只标记真正的匹配项）；非逐字一致但被判为等价的
+  // 词对（同音/缩合/数词）记入 deviations，供「按发音判对」提示。
   final matched = List.filled(m, false);
   final exact = List.filled(m, false);
+  final devs = <String>[];
   var i = n, j = m;
   while (i > 0 && j > 0) {
     if (dp[i][j] == dp[i - 1][j - 1] + sub(rec[i - 1], tgt[j - 1])) {
       if (wordClose(rec[i - 1], tgt[j - 1])) {
         matched[j - 1] = true;
-        if (rec[i - 1] == tgt[j - 1]) exact[j - 1] = true;
+        if (rec[i - 1] == tgt[j - 1]) {
+          exact[j - 1] = true;
+        } else if (!isFunctionWord(tgt[j - 1])) {
+          devs.add('${rec[i - 1]}→${tgt[j - 1]}');
+        }
       }
       i--;
       j--;
@@ -387,7 +479,8 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
   }
   final coreHitRate = contentCount == 0 ? 1.0 : contentHit / contentCount;
 
-  return _WeightedAlignment(weightedSim, coreHitRate, matched, exact);
+  return _WeightedAlignment(
+      weightedSim, coreHitRate, matched, exact, devs.reversed.toList());
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

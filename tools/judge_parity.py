@@ -158,14 +158,15 @@ def build_cases():
 
     # 已知差（不是 bug，是两侧口径不同）：Dart 在加权层之外还有一条**未加权**
     # 底线 kMinSimilarity=0.5（防「噪声里凑出目标词」混过），Python 基准只算加权。
-    # 尾噪 5 个虚词时：Python wsim 0.833 → 放行；Dart 未加权 0.375 → lowSim 拒判。
-    # 钉在这里，哪天两边口径统一了，这条会立刻红。
+    # 噪声**插进**目标词之间（不是整段尾巴）：包含通道不命中，加权 0.833 → 放行；
+    # Dart 未加权 0.375 → lowSim 拒判。钉在这里，哪天两边口径统一了，这条会立刻红。
+    # （注意：整段尾巴追加的口头语走包含通道，两侧都放行，不再属于已知差。）
     cases.append({
         "target": "good morning everyone",
-        "hyp": "good morning everyone and the so if to",
+        "hyp": "so good and morning the everyone if and",
         "confidence": None,
         "durationSec": None,
-        "note": "噪声尾 5 个虚词：Dart 走未加权 0.5 底线拒判，Python 只看加权放行 → 已知差",
+        "note": "噪声插进目标词之间：Dart 走未加权 0.5 底线拒判，Python 只看加权放行 → 已知差",
         "divergence": "noiseFloor",
     })
 

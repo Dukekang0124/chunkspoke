@@ -63,8 +63,12 @@ class _FakeBackend implements AsrBackend {
 
   @override
   Future<String> transcribe(String wavPath,
-          {List<String> hotwords = const []}) async =>
-      text;
+      {List<String> hotwords = const []}) async {
+    lastHotwords = hotwords;
+    return text;
+  }
+
+  List<String> lastHotwords = const [];
 
   @override
   Future<void> dispose() async {
@@ -182,6 +186,31 @@ void main() {
       // 第二次复用常驻后端，不重复加载。
       await svc.transcribeOpen('/tmp/b.wav');
       expect(backend.initCalls, 1);
+    });
+
+    test('ASR-209 B 层：目标热词随开放识别下传到后端', () async {
+      await prefs.setEnhancedEnabled(true);
+      final backend = _FakeBackend();
+      final svc = EnhancedAsrService(
+        loadManifest: () async => _manifest(),
+        createStore: (_) async => _FakeStore(ready: true),
+        createBackend: () => backend,
+        prefs: prefs,
+      );
+      await svc.refresh();
+      await svc.transcribeOpen('/tmp/a.wav',
+          hotwords: asrHotwordsFrom("I'd like the menu, please."));
+      expect(backend.lastHotwords, ['I', 'D', 'LIKE', 'THE', 'MENU', 'PLEASE']);
+    });
+
+    test('ASR-209 B 层：热词归一化=大写纯字母、去重、限量', () {
+      expect(asrHotwordsFrom('Good morning, everyone.'),
+          ['GOOD', 'MORNING', 'EVERYONE']);
+      expect(asrHotwordsFrom("it's a test — a TEST!"),
+          ['IT', 'S', 'A', 'TEST']);
+      expect(asrHotwordsFrom(''), isEmpty);
+      expect(asrHotwordsFrom('one two three four five', max: 3),
+          ['ONE', 'TWO', 'THREE']);
     });
 
     test('后端加载失败 → 返回 null 留给 Vosk，并留下可读原因', () async {

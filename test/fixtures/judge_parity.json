@@ -83,7 +83,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.8833
+        "similarity": 1.0
       }
     },
     {
@@ -179,7 +179,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.9028
+        "similarity": 1.0
       }
     },
     {
@@ -263,7 +263,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.8571
+        "similarity": 1.0
       }
     },
     {
@@ -347,7 +347,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.8654
+        "similarity": 1.0
       }
     },
     {
@@ -443,7 +443,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.9028
+        "similarity": 1.0
       }
     },
     {
@@ -539,7 +539,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.9067
+        "similarity": 1.0
       }
     },
     {
@@ -623,7 +623,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.8
+        "similarity": 1.0
       }
     },
     {
@@ -719,7 +719,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.8727
+        "similarity": 1.0
       }
     },
     {
@@ -815,7 +815,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.8986
+        "similarity": 1.0
       }
     },
     {
@@ -899,7 +899,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.9028
+        "similarity": 1.0
       }
     },
     {
@@ -995,7 +995,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.9213
+        "similarity": 1.0
       }
     },
     {
@@ -1091,7 +1091,7 @@
       "expect": {
         "passed": true,
         "reason": "fuzzy",
-        "similarity": 0.9213
+        "similarity": 1.0
       }
     },
     {
@@ -1192,10 +1192,10 @@
     },
     {
       "target": "good morning everyone",
-      "hyp": "good morning everyone and the so if to",
+      "hyp": "so good and morning the everyone if and",
       "confidence": null,
       "durationSec": null,
-      "note": "噪声尾 5 个虚词：Dart 走未加权 0.5 底线拒判，Python 只看加权放行 → 已知差",
+      "note": "噪声插进目标词之间：Dart 走未加权 0.5 底线拒判，Python 只看加权放行 → 已知差",
       "divergence": "noiseFloor",
       "expect": {
         "passed": true,

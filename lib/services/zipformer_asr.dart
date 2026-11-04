@@ -544,7 +544,14 @@ class EnhancedAsrService extends ChangeNotifier {
   }
 
   /// 开放式识别。未启用/未就绪/任何异常 → null，调用方继续 Vosk。
-  Future<VoskResult?> transcribeOpen(String wavPath) async {
+  ///
+  /// [hotwords]：目标句/词块作为**上下文偏置**注入（ASR-209 B 层实测：
+  /// 517 句 TTS 集上，20M int8 不带热词 WER 0.43、10/40 空结果；带目标热词
+  /// +beam search 后 WER 0.19、空结果 0）。判卷场景本来就知道目标句，
+  /// 用它偏置是正当的。注意：热词只在 beam search 下生效，且必须是大写纯字母
+  /// token（带标点会被 sherpa 整条丢弃，见 [asrHotwordsFrom]）。
+  Future<VoskResult?> transcribeOpen(String wavPath,
+      {List<String> hotwords = const []}) async {
     if (!_enabled) return null;
     try {
       if (_backend?.isLoaded != true) {
@@ -555,7 +562,8 @@ class EnhancedAsrService extends ChangeNotifier {
         final dir = await store.modelDirPath();
         if (!await _loadBackend(dir)) return null;
       }
-      final text = await _backend!.transcribe(wavPath);
+      final text =
+          await _backend!.transcribe(wavPath, hotwords: hotwords);
       return VoskResult(text, null);
     } catch (e) {
       _lastError = '增强识别失败，已回落 Vosk';
@@ -564,4 +572,18 @@ class EnhancedAsrService extends ChangeNotifier {
       return null;
     }
   }
+}
+
+/// 目标句 → sherpa 热词表：大写、纯字母、去重、最多 12 个。
+///
+/// 必须是这个形状，否则 `createStream(hotwords:)` 里 `EncodeBase` 找不到
+/// token（实测 "WE WANT A TABLE FOR TWO." 因句点整条被跳过）。
+List<String> asrHotwordsFrom(String text, {int max = 16}) {
+  final out = <String>[];
+  for (final raw in text.toUpperCase().split(RegExp(r'[^A-Z]+'))) {
+    if (raw.isEmpty || out.contains(raw)) continue;
+    out.add(raw);
+    if (out.length >= max) break;
+  }
+  return out;
 }

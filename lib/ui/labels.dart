@@ -28,6 +28,9 @@ const Map<String, String> _sceneCN = {
   'Yes & no': '是与否',
   'Sleep & rest': '睡眠与休息',
   'Review': '复习',
+  // ASR-209 六：S0 生存包标题此前回退成英文，导致标题与副标题同为
+  // "Survival First"（level.dart 标题用 sceneCn、副标题用 theme）。
+  'Survival First': '生存英语',
 };
 
 String sceneCn(String theme) => _sceneCN[theme] ?? theme;
