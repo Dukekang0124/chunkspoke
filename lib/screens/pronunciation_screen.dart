@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/content_pack.dart';
+import '../services/asr_budget.dart';
 import '../services/loaders.dart';
 import '../services/pronunciation_score.dart';
 import '../services/recording.dart';
@@ -127,7 +128,8 @@ class _PronunciationScreenState extends State<PronunciationScreen> {
       _toast('没有拿到录音，请重试');
       return;
     }
-    final r = await _speech.recognizeOpen(recPath);
+    // ASR-213 P0-1：解码预算（进度页「发音评分」自检）。
+    final r = await recognizeWithinBudget(() => _speech.recognizeOpen(recPath));
     final dur = await _speech.durationSec(recPath);
     final res = scorePronunciation(
       target: s.text,

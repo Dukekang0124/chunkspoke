@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
+import '../services/asr_budget.dart';
 import '../services/asr_guard.dart';
 import '../services/crash_log.dart';
 import '../services/learning_flow.dart';
@@ -165,7 +166,9 @@ class _SubstituteStepState extends State<SubstituteStep> {
     String text = '';
     List<double>? confs;
     if (await _speech.initVosk()) {
-      final r = await _speech.recognizeOpen(usePath, e2ePhrases: _phrases);
+      // ASR-213 P0-1：解码预算（六步第 5 步「定向替换」与跟读同一口径）。
+      final r = await recognizeWithinBudget(
+          () => _speech.recognizeOpen(usePath, e2ePhrases: _phrases));
       text = r.text;
       confs = r.wordConfidences;
     } else if (_p.azureKey != null && _p.azureRegion != null) {

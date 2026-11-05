@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chunkspoke_flutter/services/asr_budget.dart';
 import 'package:chunkspoke_flutter/services/vosk_engine.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +33,28 @@ void main() {
       expect(kRecordCap, const Duration(seconds: 12));
       // _graceTo2s 的最短录音是 2 秒；上限必须留足说完一句的余量。
       expect(kRecordCap.inSeconds, greaterThan(2));
+    });
+  });
+
+  group('ASR-213 防复发闸：识别调用必须过预算', () {
+    /// 生产里每一个 `recognizeOpen(` 调用点都必须包在 `recognizeWithinBudget` 内。
+    /// 曾经漏过 4 处（含六步第 5 步「定向替换」），差点让 changelog 变成又一例文案超实装。
+    /// 按「调用次数 ≤ 包装次数」整体比对，跨行写法也算得准。
+    test('lib 下不存在没包预算的 recognizeOpen 调用', () {
+      final bad = <String>[];
+      for (final f in Directory('lib').listSync(recursive: true).whereType<File>()) {
+        if (!f.path.endsWith('.dart')) continue;
+        final p = f.path.replaceAll(r'\', '/');
+        if (p.endsWith('services/asr_budget.dart') || p.endsWith('services/speech.dart')) {
+          continue; // 前者是定义，后者是服务自身的转发
+        }
+        final src = f.readAsStringSync();
+        final calls = 'recognizeOpen('.allMatches(src).length;
+        if (calls == 0) continue;
+        final wrapped = 'recognizeWithinBudget'.allMatches(src).length;
+        if (wrapped < calls) bad.add('$p: 调用 $calls 处 / 包装 $wrapped 处');
+      }
+      expect(bad, isEmpty, reason: '这些识别调用没走 3 秒预算，静音会退回无限等待');
     });
   });
 
