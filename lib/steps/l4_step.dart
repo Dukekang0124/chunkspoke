@@ -9,6 +9,7 @@ import '../services/crash_log.dart';
 import '../services/loaders.dart';
 import '../services/recording.dart';
 import '../services/speech.dart';
+import '../services/vosk_engine.dart' show VoskResult;
 import '../services/state_machine.dart';
 import '../services/speech_judge.dart';
 import '../ui/theme.dart';
@@ -138,6 +139,19 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
         widget.targetText,
         ...?widget.recognitionPhrases,
       }.toList(growable: false);
+
+  /// ASR-214 F3：判定「句首被吞」时拿哪句当参照。
+  /// 目标本身就是整句（跟读步）→ 直接用它；目标是词块（自由造句）→
+  /// 从本级句子里找第一句含该块的句子，找不到就退回目标本身。
+  String get _referenceSentence {
+    final t = widget.targetText.trim();
+    if (tokenizeSpeech(t).length >= 3) return t;
+    final lower = t.toLowerCase();
+    for (final p in _phrases) {
+      if (p.toLowerCase().contains(lower)) return p;
+    }
+    return t;
+  }
 
   /// M1：来源标注——Vosk 默认路径不加噪音，只在降级重识时如实标注。
   String _srcLabel(AsrSource? s) {
@@ -510,11 +524,16 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     // 展示口径不变（一过原文优先），只有二过同时过守门+判定才改判「过」；
     // 二过强制开 checkChunkStack——强制解码会把噪声拼成目标句且置信度虚高。
     if (!passed && _recPath != null) {
-      final retry = await _speech.recognizeWithTargetGrammarRetry(
-        wavPath: _recPath!,
-        targetSentence: widget.targetText,
-        firstText: text,
-      );
+      // ASR-214 F4：词表并进本级其他句/块。旧实现只喂了词块两个词，实测受限解码
+      // 产出 `main course course main` 这种重复串；clip 300/400 ms 时喂整句更好。
+      // ASR-214 F5：二过也在 3 s 预算内（ASR-213 只包了一过，二过仍可能干等）。
+      final retry = await withinBudget<VoskResult>(() =>
+          _speech.recognizeWithTargetGrammarRetry(
+            wavPath: _recPath!,
+            targetSentence: widget.targetText,
+            firstText: text,
+            extraPhrases: _phrases,
+          ));
       if (retry != null) {
         final g2 = guardAsr(
           raw: retry.text,
@@ -543,14 +562,15 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       if (mounted) {
         setState(() => _thinkingText = '正在用更精准的方式再听一遍…');
       }
-      final fb = await _speech.retryOpenWithFallback(
-        wavPath: _recPath!,
-        target: widget.targetText,
-        keywords: asrKeywords(widget.targetText),
-        skipEnhanced: source == AsrSource.enhanced,
-        azureKey: _p.azureKey,
-        azureRegion: _p.azureRegion,
-      );
+      final fb = await withinBudget<AsrRetryResult>(() =>
+          _speech.retryOpenWithFallback(
+            wavPath: _recPath!,
+            target: widget.targetText,
+            keywords: asrKeywords(widget.targetText),
+            skipEnhanced: source == AsrSource.enhanced,
+            azureKey: _p.azureKey,
+            azureRegion: _p.azureRegion,
+          ));
       if (mounted) setState(() => _thinkingText = '识别中…');
       if (fb != null) {
         final g3 = guardAsr(
@@ -578,7 +598,18 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     if (!mounted) return; // 二过/降级重识是异步的，回到 UI 前重新确认挂载
     if (passed) Motion.of(context).success();
     // ASR-209 灰带：文本已接近但没到判对线，且守门通过 → 不改判、不扣分，给「再录一遍」。
-    final softBand = !passed && g.ok && outcome.band == 'band' && _softBands < 3;
+    // ASR-214 F3：句首被吞（尾部逐字对上、缺目标首词）同样按「接近」处理，
+    // 不把采集侧丢词算成用户说错（实测丢 300–500 ms 就会落在这里）。
+    final onsetLoss = !passed &&
+        g.ok &&
+        onsetLossSuspected(
+            target: widget.targetText,
+            recognized: finalText,
+            reference: _referenceSentence);
+    final softBand = !passed &&
+        g.ok &&
+        (outcome.band == 'band' || onsetLoss) &&
+        _softBands < 3;
     if (softBand) _softBands++;
     final accuracy = (outcome.similarity * 100).round();
     // A2① 平均准确度=文本匹配相似度：每次开口判定（通过与否）都记相似度，

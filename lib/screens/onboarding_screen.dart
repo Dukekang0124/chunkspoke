@@ -135,7 +135,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text('已为 30+ 学习者提供服务',
+                    Text('全部内容在本机离线可用 · 不需要账号',
                         style: TextStyle(color: kTextFaint, fontSize: 12)),
                   ],
                 ),

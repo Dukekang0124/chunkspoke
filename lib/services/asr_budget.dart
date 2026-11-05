@@ -43,3 +43,49 @@ bool shouldShowChangelog({
   if (seenForVersion != null) return true;
   return legacyOneShot;
 }
+
+/// ASR-214 F1 · 一过用哪个引擎的**单源判据**。
+///
+/// 真机取证（`release/ASR-214/`）：第 6/6 步自由造句，目标词块 `main course`，
+/// 参考句 "The main course was great."，用户被回 `USE WAS GREAT（增强识别）`。
+/// 本机生产同款模型复现：
+///  · Vosk small-en-us-0.15 自由解码在理想音频上逐字全对；
+///  · zipformer-en-20M-int8 **零截断**就把 "the main" 听成 "in"，
+///    截 300 ms 精确复现 `USE WAS GREAT`；
+///  · 40 句生产口径实测（前卷 2 s，无截断）：Vosk WER 0.049 / 整句全对 82.5%，
+///    zipformer WER 0.432 / 整句全对 40.0%、空结果 10/40。
+/// 而 ASR-191「模式 B」把增强做成了**主引擎**（用户一开就顶掉 Vosk），
+/// 与「并列」拍板不符，直接造成「用户说对了却被判错」。
+///
+/// 判据固定为：**Vosk 有文本就用 Vosk；只有它空结果时才让增强兜底**。
+/// 两引擎取优仍归判定层（grammar 二过 + retryOpenWithFallback），不在这里做。
+bool useEnhancedFirstPass({
+  required bool voskHasText,
+  required bool enhancedHasText,
+}) =>
+    !voskHasText && enhancedHasText;
+
+/// ASR-214 F5 · 二过与降级的预算包装（返回可空）。
+///
+/// ASR-213 P0-1 只包了**一过** `recognizeOpen`；grammar 二过与 M1 降级重识
+/// 仍是裸 await——它们同样能拖到十几秒，用户卡在「识别中…」一样是 P0。
+/// 现在三段都在同一个 [kAsrBudget] 下，超预算按「没有结果」收口，
+/// 判定层自然走「没听到声音」分支，不改判、不扣分。
+Future<T?> withinBudget<T>(Future<T?> Function() run,
+    {Duration budget = kAsrBudget}) {
+  // 不用 Future.timeout：它的 onTimeout 泛型在 T 非空时会推成 T（不是 T?），
+  // 单测里 `withinBudget<String>` 直接运行时类型崩——手写 Completer 才可控。
+  final done = Completer<T?>();
+  final timer = Timer(budget, () {
+    if (!done.isCompleted) done.complete(null);
+  });
+  run().then((value) {
+    timer.cancel();
+    if (!done.isCompleted) done.complete(value);
+  }).catchError((Object _) {
+    // 二过/降级自己炸了不该拖垮判定：按「没有结果」收口，一过结论原样保留。
+    timer.cancel();
+    if (!done.isCompleted) done.complete(null);
+  });
+  return done.future;
+}

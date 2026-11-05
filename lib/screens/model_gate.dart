@@ -190,6 +190,14 @@ class _ModelGateState extends State<ModelGate> {
         const SizedBox(height: 4),
         Text('${_fmtSpeed(p?.bytesPerSecond ?? 0)}  ·  剩余 ${_fmtEta(p?.remaining)}',
             style: TextStyle(color: kTextMuted, fontSize: 12)),
+        // ASR-215 P3-2：按返回直接退出 App 会让人以为下载失败（实测进度其实没丢）。
+        const SizedBox(height: 10),
+        Text('现在离开也没关系：下载会继续，回来接着传。',
+            style: TextStyle(color: kTextMuted, fontSize: 12),
+            textAlign: TextAlign.center),
+        Text('进度可在「设置 → 诊断」里看。',
+            style: TextStyle(color: kTextMuted, fontSize: 12),
+            textAlign: TextAlign.center),
       ],
     );
   }

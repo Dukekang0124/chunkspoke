@@ -622,6 +622,28 @@ def recognize(wav_path, target):
 j = json.load(io.open(PACK, encoding='utf-8'))
 tasks = [dict(level=l['id'], target=s['text'], sid=s['id'])
          for l in j['levels'] for s in l.get('sentences', [])]
+
+def onset_loss_suspected(target, recognized, reference=None):
+    """ASR-214 F3 镜像：与 lib/services/speech_judge.dart 的 onsetLossSuspected 逐字同判。
+    句首被吞（丢 300–500ms）时，尾部逐字对上但目标词块缺首词 —— 不该记用户失败。"""
+    rec = tokenize(recognized)
+    ref = tokenize(target if not (reference or '').strip() else reference)
+    tgt = tokenize(target)
+    if not rec or not ref or not tgt:
+        return False
+    if len(rec) >= len(ref):
+        return False
+    if all(any(word_close(t, r) for r in rec) for t in tgt):
+        return False
+    tail = 0
+    for i in range(1, min(len(rec), len(ref)) + 1):
+        if word_close(ref[-i], rec[-i]):
+            tail += 1
+        else:
+            break
+    return tail >= 2
+
+
 results = []
 files = os.listdir(WAV_DIR)
 bysid = collections.defaultdict(list)

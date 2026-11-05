@@ -222,7 +222,15 @@ ListeningHomeData buildListeningHome({
     }
   }
 
-  final recent = [...articles]..sort(_recentOrder);
+  // ASR-215 P2-3：「最近 7 天推荐」与「从 X 开始听」引导**同源**。
+  // 实测缺陷（1.8.3 走查 E3_ear.png）：同屏上方推 B1 机场值机、下方引导从 A1 开始，
+  // 新人不知道点哪个。先算引导级别，再按它收敛推荐排序。
+  final guidance = _guidance(articles, masteredChunkIds, learnedChunkIds);
+  final recent = [...articles]..sort((a, b) {
+    final pref =
+        _levelPref(a, guidance?.level) - _levelPref(b, guidance?.level);
+    return pref != 0 ? pref : _recentOrder(a, b);
+  });
   final scenes = _sceneGroups(recent);
   final levels = _levelGroups(recent);
   final levelsPresent = [for (final g in levels) g.level];
@@ -237,7 +245,7 @@ ListeningHomeData buildListeningHome({
     scenes: scenes,
     levels: levels,
     levelsPresent: levelsPresent,
-    guidance: _guidance(articles, masteredChunkIds, learnedChunkIds),
+    guidance: guidance,
     reviewPlaylist: _reviewPlaylist(articles, dueChunkIds),
     noNewContent: allHeard,
     dueReviews: dueReviews,
@@ -378,6 +386,10 @@ ListeningArticle? _reunionPick(
 
 int _learnedCount(ListeningArticle a, Set<String> learnedChunkIds) =>
     a.chunks.where((c) => learnedChunkIds.contains(c.id)).length;
+
+/// ASR-215 P2-3：与引导级别同篇目的排前面（同源，不再自相矛盾）。
+int _levelPref(ListeningArticle a, ListeningLevel? level) =>
+    (level != null && a.level == level) ? 0 : 1;
 
 int _recentOrder(ListeningArticle a, ListeningArticle b) {
   final ad = a.updatedDate;

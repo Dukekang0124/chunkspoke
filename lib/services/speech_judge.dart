@@ -512,3 +512,38 @@ _WeightedAlignment _weightedAlign(List<String> rec, List<String> tgt) {
 //    0.66 / 0.49 / 0.55 / 0.72 / 0.50 → min=0.45，故阈值取 0.45（最小值即下界）。
 //    ⚠️ 真机 10 条样本采集需在设备上完成（本仓库无录音环境），此处为定标方法 + 代表样布。
 // ─────────────────────────────────────────────────────────────────────────────
+
+/// ASR-214 F3 · 「句首被吞」嫌疑判据（单源，判定层与 UI 共用）。
+///
+/// 实测（`release/ASR-214/`）：句首丢 300–500 ms 时，Vosk 把
+/// "the main course was great" 听成 `course was great` —— 词块 `main course`
+/// 因缺 `main` 判死，但**尾部逐字对上了**。用户其实说对了，只是开头没进录音，
+/// 这种时候记「失败」并说「没用上 main course」是把采集问题算到用户头上。
+///
+/// 三条同时成立才算嫌疑（宁可漏判，不可误放行）：
+///  1. [recognized] 比 [reference] 短（丢词方向是开头，不是多说话）；
+///  2. [target] 的词**没有全部**命中（否则判定层早判过了）；
+///  3. 与 [reference] 共享**≥2 个连续尾部词**（`was great` 这种）。
+bool onsetLossSuspected({
+  required String target,
+  required String recognized,
+  String? reference,
+}) {
+  final rec = tokenizeSpeech(recognized);
+  final ref = tokenizeSpeech(
+      (reference == null || reference.trim().isEmpty) ? target : reference);
+  final tgt = tokenizeSpeech(target);
+  if (rec.isEmpty || ref.isEmpty || tgt.isEmpty) return false;
+  if (rec.length >= ref.length) return false;
+  final allHit = tgt.every((t) => rec.any((r) => wordClose(t, r)));
+  if (allHit) return false;
+  var tail = 0;
+  for (var i = 1; i <= rec.length && i <= ref.length; i++) {
+    if (wordClose(ref[ref.length - i], rec[rec.length - i])) {
+      tail++;
+    } else {
+      break;
+    }
+  }
+  return tail >= 2;
+}
