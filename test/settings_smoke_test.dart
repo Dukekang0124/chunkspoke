@@ -110,8 +110,16 @@ void main() {
       expect(find.text('保存'), findsOneWidget);
       expect(find.text('检查更新'), findsOneWidget);
       expect(find.text('高级'), findsOneWidget);
-      // 未启用在线 AI 时：仅「Azure 密钥」「Azure 区域」两个常驻输入框。
-      expect(find.byType(TextField), findsNWidgets(2));
+      // ASR-215 P2-2：Azure 密钥/区域从首屏收进「高级（可选）」。
+      // 实测依据：1.8.3 新用户一进设置就撞见两个「粘贴密钥」输入框（E5_settings.png），
+      // 99% 用不到还会误以为不填不能用。现在默认折叠，点开才见。
+      expect(find.text('高级（可选）：云端识别密钥'), findsOneWidget);
+      expect(find.byType(TextField), findsNothing,
+          reason: 'Azure 输入框不得暴露在设置首屏');
+      await tester.tap(find.text('高级（可选）：云端识别密钥'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(TextField), findsNWidgets(2),
+          reason: '展开后必须仍是那两个 Azure 输入框');
       // TTS 修复入口常驻设置页。
       expect(find.text('语音朗读（TTS）'), findsOneWidget);
       // 录音留存开关已移入语音分组（常驻），分享入口默认不出现。

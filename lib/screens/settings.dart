@@ -1684,6 +1684,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       );
 
+  /// ASR-215 P2-2：Azure 密钥/区域从设置首屏收进「高级」。
+  /// 实测依据（1.8.3 新用户走查 E5_settings.png）：新人一进设置就撞见两个
+  /// 「粘贴密钥」输入框，99% 用不到，还会误以为不填就不能用——本产品默认全离线，
+  /// 这组字段只是「本机没听清时改用微软云端兜底」的可选开关。
+  Widget _advancedCloudCard() => ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        shape: const Border(),
+        title: Text('高级（可选）：云端识别密钥',
+            style: TextStyle(color: kText, fontSize: 15)),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Text('默认不用填。只有你想让本机没听清的那句走微软云端再听一遍时才用。',
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
+        ),
+        children: [
+          Align(alignment: Alignment.centerLeft, child: _label('Azure 语音密钥')),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _key,
+            obscureText: true,
+            style: TextStyle(color: kText),
+            decoration: _dec('粘贴密钥（可选）'),
+          ),
+          const SizedBox(height: 12),
+          Align(alignment: Alignment.centerLeft, child: _label('Azure 区域')),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _region,
+            style: TextStyle(color: kText),
+            decoration: _dec('例如 eastasia（可选）'),
+          ),
+          const SizedBox(height: 8),
+        ],
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1693,22 +1728,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _label('Azure 语音密钥'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _key,
-              obscureText: true,
-              style: TextStyle(color: kText),
-              decoration: _dec('粘贴密钥（可选）'),
-            ),
-            const SizedBox(height: 12),
-            _label('Azure 区域'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _region,
-              style: TextStyle(color: kText),
-              decoration: _dec('例如 eastasia（可选）'),
-            ),
+            _advancedCloudCard(),
             const SizedBox(height: 16),
             _engineRow(),
             const SizedBox(height: 12),
