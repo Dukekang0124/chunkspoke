@@ -481,6 +481,17 @@ class ProgressService {
   Future<void> setChangelogSeenVersion(String v) =>
       _put('changelogSeenVersion', v);
 
+  /// ASR-216 D：同一词块的语音失败次数**跨屏记账**。
+  /// 没有这本账，「补练未通过块」就是死循环：同一台仪器对同一个词必然再次失败。
+  int voiceFailCount(String chunkId) =>
+      int.tryParse(_kv('voiceFail.$chunkId') ?? '') ?? 0;
+
+  Future<void> noteVoiceFail(String chunkId) =>
+      _put('voiceFail.$chunkId', '${voiceFailCount(chunkId) + 1}');
+
+  Future<void> clearVoiceFails(String chunkId) =>
+      _put('voiceFail.$chunkId', '0');
+
   // —— 体验开关（B7）：音效开关（震动跟随系统，无需独立开关）——
   bool get soundOn => _kv('soundOn') != 'false'; // 默认开
   Future<void> setSoundOn(bool v) => _put('soundOn', v.toString());

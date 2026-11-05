@@ -71,6 +71,16 @@ bool useEnhancedFirstPass({
 /// 仍是裸 await——它们同样能拖到十几秒，用户卡在「识别中…」一样是 P0。
 /// 现在三段都在同一个 [kAsrBudget] 下，超预算按「没有结果」收口，
 /// 判定层自然走「没听到声音」分支，不改判、不扣分。
+/// ASR-216 · 「同一块说了几次仍没被听清」之后该怎么办的单源判据。
+///
+/// 真机实况：`a croissant` 被识别成 `i a the cross own`（借词被切成 cross+own），
+/// 增强引擎直接吐 `NG`；判定要求词块整词出现 → 用户说对了也判不过，
+/// 而 1.8.4 我把「改转写/打字作答」折进了「更多选择」，等于把逃生口藏起来。
+/// 外部先例（已核到官方文档）：Rosetta Stone 语音连续失败 3 次后让用户在
+/// 「继续用语音 / 暂时停用语音」之间选；Duolingo 口语题有 CAN'T SPEAK NOW；
+/// Speechling 有「不录音」直接看答案。开口不该是硬闸门。
+bool shouldOfferTypingFirst(int voiceFails) => voiceFails >= 2;
+
 Future<T?> withinBudget<T>(Future<T?> Function() run,
     {Duration budget = kAsrBudget}) {
   // 不用 Future.timeout：它的 onTimeout 泛型在 T 非空时会推成 T（不是 T?），
