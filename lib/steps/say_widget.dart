@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/asr_budget.dart';
 import '../services/asr_guard.dart';
 import '../services/loaders.dart';
 import '../services/crash_log.dart';
@@ -226,7 +227,9 @@ class _SayWidgetState extends State<SayWidget> {
     final recPath = path ?? _recPath;
     final r = recPath == null
         ? const VoskResult('', null)
-        : await _speech.recognizeOpen(recPath, e2ePhrases: [widget.sentence]);
+        // ASR-213 P0-1：解码预算 3 秒，超时按空转写收口（与六步跟读同一口径）。
+        : await recognizeWithinBudget(
+            () => _speech.recognizeOpen(recPath, e2ePhrases: [widget.sentence]));
     final text = r.text;
     final conf = r.confidence;
     setState(() {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
+import '../services/asr_budget.dart';
 import '../services/asr_guard.dart';
 import '../services/crash_log.dart';
 import '../services/loaders.dart';
@@ -104,6 +105,10 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   bool _followPlaying = false;
   String? _followPath;
   Timer? _followPlayTimer;
+  // ASR-213 P0-1：录音硬上限（到点自动收口去判定，防「忘了点停止」）。
+  Timer? _capTimer;
+  // ASR-213 P1-3：失败屏的次要出口折进「更多选择」，一屏只留 1 主 2 次。
+  bool _moreExits = false;
   // P1-2 反向产出（轻量版）：隐藏英文、只给中文，逼用户从中文产出英文。
   bool _reverse = false;
 
@@ -244,6 +249,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
       _rec.stop();
     }
     _rec.stopPlay();
+    _capTimer?.cancel();
     _breathCtrl.dispose();
     super.dispose();
   }
@@ -403,9 +409,32 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     }
     _listenStart = DateTime.now();
     _stopping = false;
+    _moreExits = false;
     _levelSub?.cancel();
     _levelSub = _rec.levels.listen(_applyLevel);
     _silence?.attach(_rec.levels);
+    // ASR-213 P0-1：硬上限。用户说完忘了点停止，也不能一直停在录音态。
+    _capTimer?.cancel();
+    _capTimer = Timer(kRecordCap, () {
+      if (mounted && _listening) _stop();
+    });
+  }
+
+  /// ASR-213 P0-1：「识别中…」不再是死等——给一条明确的退路。
+  /// 取消只收口 UI 等待，本次不计一次开口尝试（`_attempts` 不加），
+  /// 回到待录状态让用户重说。
+  void _cancelThinking() {
+    _capTimer?.cancel();
+    _cancelLevels();
+    _stopping = false;
+    if (!mounted) return;
+    setState(() {
+      _thinking = false;
+      _thinkingText = '识别中…';
+      _judge = null;
+      _guard = null;
+      _passed = false;
+    });
   }
 
   Future<void> _graceTo2s() async {
@@ -420,6 +449,7 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   Future<void> _stop() async {
     if (_stopping) return;
     _stopping = true;
+    _capTimer?.cancel();
     _silence?.detach();
     await _graceTo2s();
     if (!mounted) return;
@@ -434,7 +464,10 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     if (path != null) _recPath = path;
     final usePath = path ?? _recPath;
     if (usePath != null && await _speech.initVosk()) {
-      final r = await _speech.recognizeOpen(usePath, e2ePhrases: _phrases);
+      // ASR-213 P0-1：解码预算 3 秒。静音/长录音实测能拖到 10–16 秒，
+      // 超预算按空转写收口，交给守门器与判定层走「没听清」分支。
+      final r = await recognizeWithinBudget(
+          () => _speech.recognizeOpen(usePath, e2ePhrases: _phrases));
       final dur = await _speech.durationSec(usePath);
       if (!mounted) return;
       await _finishWith(r.text, r.confidence, dur,
@@ -740,11 +773,17 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   }
 
   /// 目标句：未通过时按逐词对齐把错词标红（matched=false）。
+  ///
+  /// ASR-213 P1-4：**空转写不标红**。静音时 `targetMatched` 全 false，整句目标
+  /// 被染红加粗，用户读成「我说错了」，而实际是根本没收到声音——那是设备/权限
+  /// 问题，不该用「你说错了」的颜色去说。此时维持正常色，由上方文案负责说明。
   Widget _targetSentence() {
     final judge = _judge;
+    final noSpeech = _transcript.trim().isEmpty && !_edited;
     final words =
         judge != null ? judge.targetWords : widget.targetText.split(' ');
-    final matched = judge?.targetMatched;
+    final matched =
+        noSpeech ? null : judge?.targetMatched;
     return Wrap(
       spacing: 6,
       runSpacing: 6,
@@ -1042,6 +1081,12 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 CircularProgressIndicator(color: kPrimary),
                 const SizedBox(height: 10),
                 Text(_thinkingText, style: TextStyle(color: kTextMuted)),
+                // ASR-213 P0-1：等待期间必须能退出，否则用户只能杀进程。
+                TextButton(
+                  onPressed: _cancelThinking,
+                  child: Text('等太久了？取消重说',
+                      style: TextStyle(color: kTextFaint)),
+                ),
               ],
             )
           else if (_listening)
@@ -1069,15 +1114,17 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
             Column(
               children: [
                 Text(
-                  _softBand
-                      ? '差一点，再录一遍不扣分'
-                      : ((_guard != null && !_guard!.ok)
-                          ? '⚠ 没听清，再说一遍'
-                          : (_judge!.reason == 'empty' ||
-                                  _judge!.reason == 'lowConf' ||
-                                  _judge!.reason == 'tooShort'
-                              ? '没有听清，请再说一遍'
-                              : '再试一次（错词已标红）')),
+                  _transcript.trim().isEmpty && !_edited
+                      ? '没听到声音 · 不是你说错了'
+                      : (_softBand
+                          ? '差一点，再录一遍不扣分'
+                          : ((_guard != null && !_guard!.ok)
+                              ? '⚠ 没听清，再说一遍'
+                              : (_judge!.reason == 'empty' ||
+                                      _judge!.reason == 'lowConf' ||
+                                      _judge!.reason == 'tooShort'
+                                  ? '没有听清，请再说一遍'
+                                  : '再试一次（错词已标红）'))),
                   style: TextStyle(color: kPrimary)),
                 const SizedBox(height: 6),
                 if (_transcript.trim().isNotEmpty)
@@ -1137,23 +1184,33 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                     ),
                   ],
                 ),
-                if (!_levelActive)
-                  TextButton(
-                    onPressed: () => _rec.openSettings(),
-                    child: Text('去设置检查麦克风权限',
-                        style: TextStyle(color: kTextFaint)),
-                  ),
-                if (!_followAlong)
-                  TextButton(
-                    onPressed: () => setState(() => _followAlong = true),
-                    child: Text('先跟着读，不评分也可以 →',
-                        style: TextStyle(color: kPrimary)),
-                  ),
+                // ASR-213 P1-3：失败屏原本同屏堆 6 个出口（跳过按钮 + 先跳过这一步
+                // 文字链重复；看答案 / 跟读不评分 / 打字作答语义重叠）。收成
+                // 「1 主 2 次 + 更多选择」，次要出口折叠，减少新人选择瘫痪。
                 TextButton(
-                  onPressed: _judgeEdited,
-                  child: Text('改转写 / 打字作答（不计发音分）',
-                      style: TextStyle(color: kTextMuted)),
+                  onPressed: () => setState(() => _moreExits = !_moreExits),
+                  child: Text(_moreExits ? '收起更多选择 ⌃' : '更多选择 ⌄',
+                      style: TextStyle(color: kTextFaint)),
                 ),
+                if (_moreExits) ...[
+                  if (!_levelActive)
+                    TextButton(
+                      onPressed: () => _rec.openSettings(),
+                      child: Text('去设置检查麦克风权限',
+                          style: TextStyle(color: kTextFaint)),
+                    ),
+                  if (!_followAlong)
+                    TextButton(
+                      onPressed: () => setState(() => _followAlong = true),
+                      child: Text('先跟着读，不评分也可以 →',
+                          style: TextStyle(color: kPrimary)),
+                    ),
+                  TextButton(
+                    onPressed: _judgeEdited,
+                    child: Text('改转写 / 打字作答（不计发音分）',
+                        style: TextStyle(color: kTextMuted)),
+                  ),
+                ],
               ],
             )
           else if (_judge != null && _passed)
