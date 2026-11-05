@@ -110,6 +110,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   Timer? _capTimer;
   // ASR-213 P1-3：失败屏的次要出口折进「更多选择」，一屏只留 1 主 2 次。
   bool _moreExits = false;
+
+  /// ASR-216：本块累计的语音失败次数（含上次会话）。≥2 就把打字出口提到一级。
+  int _voiceFails = 0;
   // P1-2 反向产出（轻量版）：隐藏英文、只给中文，逼用户从中文产出英文。
   bool _reverse = false;
 
@@ -424,6 +427,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     _listenStart = DateTime.now();
     _stopping = false;
     _moreExits = false;
+    // ASR-216：进屏先读账——上次已经撞过两次的话，这次一进来就给出口，不再藏。
+    _voiceFails = _p.voiceFailCount(widget.chunk.id);
+    if (shouldOfferTypingFirst(_voiceFails)) _moreExits = true;
     _levelSub?.cancel();
     _levelSub = _rec.levels.listen(_applyLevel);
     _silence?.attach(_rec.levels);
@@ -597,6 +603,14 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
     }
     if (!mounted) return; // 二过/降级重识是异步的，回到 UI 前重新确认挂载
     if (passed) Motion.of(context).success();
+    // ASR-216 D：语音判不过就记一笔；任何通道通过都清账。
+    if (!passed) {
+      _voiceFails++;
+      unawaited(_p.noteVoiceFail(widget.chunk.id));
+    } else if (_voiceFails > 0) {
+      _voiceFails = 0;
+      unawaited(_p.clearVoiceFails(widget.chunk.id));
+    }
     // ASR-209 灰带：文本已接近但没到判对线，且守门通过 → 不改判、不扣分，给「再录一遍」。
     // ASR-214 F3：句首被吞（尾部逐字对上、缺目标首词）同样按「接近」处理，
     // 不把采集侧丢词算成用户说错（实测丢 300–500 ms 就会落在这里）。
@@ -1215,9 +1229,30 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                     ),
                   ],
                 ),
+                // ASR-216：连续两次没被听清 → 明说不是用户的问题，并把打字出口
+                // 提成一级按钮（1.8.4 的折叠把它藏在了最需要它的那一屏）。
+                if (shouldOfferTypingFirst(_voiceFails)) ...[
+                  Text('这台机器两次没听清你——这不是你的问题。',
+                      style: TextStyle(color: kTextSecondary, fontSize: 12),
+                      textAlign: TextAlign.center),
+                  Text('不想再录了就直接把句子打出来，照样算过。',
+                      style: TextStyle(color: kTextSecondary, fontSize: 12),
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.tonal(
+                      onPressed: _judgeEdited,
+                      child: Text('打字作答（不计发音分）',
+                          style: TextStyle(color: kOnPrimary)),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                ],
                 // ASR-213 P1-3：失败屏原本同屏堆 6 个出口（跳过按钮 + 先跳过这一步
                 // 文字链重复；看答案 / 跟读不评分 / 打字作答语义重叠）。收成
                 // 「1 主 2 次 + 更多选择」，次要出口折叠，减少新人选择瘫痪。
+                // ASR-216 起：撞过两次的人默认展开，不再要求他先发现「更多选择」。
                 TextButton(
                   onPressed: () => setState(() => _moreExits = !_moreExits),
                   child: Text(_moreExits ? '收起更多选择 ⌃' : '更多选择 ⌄',

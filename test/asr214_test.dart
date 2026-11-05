@@ -136,4 +136,29 @@ void main() {
       expect(latest.contains('增强识别'), isTrue, reason: '本版必须交代引擎位次调整');
     });
   });
+
+  group('ASR-216 卡死出口', () {
+    test('两次没听清就该把打字出口摊开（阈值单源）', () {
+      expect(shouldOfferTypingFirst(0), isFalse);
+      expect(shouldOfferTypingFirst(1), isFalse);
+      expect(shouldOfferTypingFirst(2), isTrue);
+      expect(shouldOfferTypingFirst(3), isTrue);
+    });
+
+    test('防复发：失败屏的一级打字按钮 + 跨屏记账都在', () {
+      final step = File('lib/steps/l4_step.dart').readAsStringSync();
+      expect(step.contains('shouldOfferTypingFirst(_voiceFails)'), isTrue,
+          reason: '失败屏必须按次数决定是否摊开打字出口');
+      expect(step.contains('_p.voiceFailCount(widget.chunk.id)'), isTrue,
+          reason: '进屏必须读上次的失败账，否则补练回环仍是死循环');
+      expect(step.contains('_p.noteVoiceFail(widget.chunk.id)'), isTrue,
+          reason: '语音判不过要记一笔');
+      expect(step.contains('_p.clearVoiceFails(widget.chunk.id)'), isTrue,
+          reason: '任何通道通过都要清账');
+      final loaders = File('lib/services/loaders.dart').readAsStringSync();
+      for (final m in ['voiceFailCount', 'noteVoiceFail', 'clearVoiceFails']) {
+        expect(loaders.contains(m), isTrue, reason: 'ProgressService 缺 $m');
+      }
+    });
+  });
 }

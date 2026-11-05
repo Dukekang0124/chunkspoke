@@ -1,35 +1,35 @@
 {
-  "versionName": "1.8.5",
-  "versionCode": 4085,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.5/chunkspoke-latest.apk",
+  "versionName": "1.8.5.1",
+  "versionCode": 4086,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.5.1/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.5/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.8.5/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.5.1/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.8.5.1/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "4529101bf9ddd0265712ff922e1833f3a8c10c3b5f1cfaf210b69f8547233a37",
-  "size": 60277427,
-  "notes": "v1.8.5：识别修复波（ASR-214）+ 观感项。开了「增强识别」的用户此前会被它顶掉默认引擎——40 句实测默认引擎整句全对 82.5%、增强只有 40%；现在默认引擎永远先听，增强只在它什么都没听出来时兜底。句首被吞不再算你说错（走灰带不扣分）；二过词表加宽；识别预算补齐到二过与降级重识。另：Azure 密钥收进高级、磨耳朵推荐与引导同源、下载离开给提示、撤下无法核实的学习者数字。判卷阈值、内容、激活码零改动。",
+  "sha256": "015a9c7943ca9953239ee19435bbe96d4a7144679e0da4f6b6eb87b0e6953c86",
+  "size": 60277283,
+  "notes": "v1.8.5.1 热修：自由造句连续两次没被听清时，不再让你无限「再说一遍」——直接给一级按钮「打字作答（不计发音分）」，明说这不是你的问题，打出来照样算过；同一词块的语音失败次数改为跨屏记账，上次撞过两次的话这次一进屏就摊开出口。判卷阈值、识别引擎、内容、激活码零改动。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5.1/parts/apk.part0",
       "size": 15728640,
-      "sha256": "c425c681685efc0b72320db87f66dbe75738de3f617841a9d82968e42287aeea"
+      "sha256": "5b46f765d1dcabffe32572a20b6e64a8c6025b21eba7c372faebb4923489aa0e"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5.1/parts/apk.part1",
       "size": 15728640,
       "sha256": "baca1148451d5750e1a3fbd2c174708ca921c561923571252620d75a424dfe00"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5.1/parts/apk.part2",
       "size": 15728640,
       "sha256": "9b9067d1e209271744fdeeb9bf093adefd34910b47acb2158d8cd5947f04b02d"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5/parts/apk.part3",
-      "size": 13091507,
-      "sha256": "04800c71c133d436c00c6264e6fe84a2d8af9e149d53532b84a18408e48c8947"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5.1/parts/apk.part3",
+      "size": 13091363,
+      "sha256": "41aefcd1b3297c1fb3ca47bd5f352a1cc191daf78d46f1a4b233a71c03605ede"
     }
   ],
   "model": {
