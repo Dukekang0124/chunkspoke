@@ -1,0 +1,11 @@
+== 1/3 三源清单（1.8.4）
+  raw.githubusercontent.com    http=200 sha=a9a31d5a0901f31e 1.8.4 4084
+  dukekang0124.github.io       http=404 sha=b620507312c5e975 解析失败
+    ✗ 三次重试后仍不可达
+  cdn.jsdelivr.net             http=200 sha=a9a31d5a0901f31e 1.8.4 4084
+== 2/3 官网首页
+  ✓ 下载链已指 apk/1.8.4/
+  ✓ 版本徽标 v1.8.4
+== 3/3 分片全文 sha（part0）
+  ✓ part0 sha256 = 178377dca230021e0f437bc2b8bac82742763718dd197358df0eacb0ae318924（15728640 B）
+[抽验失败] 见上面 ✗ 项
