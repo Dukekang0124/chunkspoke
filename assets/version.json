@@ -7,8 +7,8 @@
     "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.8.4/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "473e99b8dad3a52c8f34161fbd2b33c1fdd4ba2bff3ea824dfe78deb7f7cc909",
-  "size": 60211703,
+  "sha256": "a261986e26159c85df50279e6bc199a981d4d8a7e29382b102d696b9bbe419c2",
+  "size": 60211807,
   "notes": "v1.8.4：新用户实测热修波（ASR-213）。开口跟读、定向替换、自由造句、磨耳朵句级跟读、发音评分共 7 处识别调用全部纳入 3 秒预算，另加 12 秒录音上限与「取消重说」出口，静音不再干等 10-16 秒；没听到声音不再把整句目标标红；失败屏出口收成一个主两个次；全新安装不再弹老用户才看得懂的更新日志。判卷阈值、识别引擎、学习内容零改动。",
   "parts": [
     {
@@ -28,8 +28,8 @@
     },
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.4/parts/apk.part3",
-      "size": 13025783,
-      "sha256": "e3d107bcc675e1cad20baf65458ae0b09f7d1957c46f7ec893a375c17f6e6687"
+      "size": 13025887,
+      "sha256": "f6b8819af7a8a115f8c74e94543bcffc4eb8f6249e3e1d19652714a3b990e0f6"
     }
   ],
   "model": {
