@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/content_pack.dart';
+import '../services/asr_budget.dart';
 import '../services/asr_guard.dart';
 import '../services/loaders.dart';
 import '../services/recording.dart';
@@ -403,7 +404,9 @@ class _FreeBuildScreenState extends State<FreeBuildScreen>
     List<double> wordConfs = const [];
     try {
       // B5：开放输出走全模型（不传场景词表），原文不做任何改写。
-      final res = await _speech.recognizeOpen(path, e2ePhrases: [target]);
+      // ASR-213 P0-1：解码预算（自由造句沙盒）。
+      final res = await recognizeWithinBudget(
+          () => _speech.recognizeOpen(path, e2ePhrases: [target]));
       text = res.text.trim();
       wordConfs = res.wordConfidences;
     } catch (_) {}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import '../services/asr_budget.dart';
 import '../services/changelog.dart';
 import '../services/loaders.dart';
 import '../ui/badge_count.dart';
@@ -48,13 +49,26 @@ class _AppNavState extends State<AppNav> with WidgetsBindingObserver {
     }
   }
 
-  /// A6：首启一次性「本次更新」清单，标题/内容由当前版本号动态生成，看过记忆不再弹。
+  /// A6：一次性「本次更新」清单，标题/内容由当前版本号动态生成，看过记忆不再弹。
+  ///
+  /// ASR-213 P1-1：全新安装 **不弹**——新用户第一次点「开始学习」就被一屏老用户
+  /// 才看得懂的修复日志挡住，是实测抓到的首启噪音。判据见 [shouldShowChangelog]。
   Future<void> _maybeShowChangelog() async {
     final p = Provider.of<ProgressService>(context, listen: false);
-    if (p.seenChangelog140) return;
     final info = await PackageInfo.fromPlatform();
-    final c = buildChangelog(info.version);
+    final version = info.version;
+    if (!shouldShowChangelog(
+      seenForVersion: p.changelogSeenVersion,
+      legacyOneShot: p.seenChangelog140,
+      currentVersion: version,
+    )) {
+      // 新装用户：只记账，不打扰；下次升级才会看到更新说明。
+      if (p.changelogSeenVersion == null) await p.setChangelogSeenVersion(version);
+      return;
+    }
+    final c = buildChangelog(version);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await p.setChangelogSeenVersion(version);
       await p.setSeenChangelog140();
       if (!mounted) return;
       showDialog<void>(
@@ -62,15 +76,22 @@ class _AppNavState extends State<AppNav> with WidgetsBindingObserver {
         builder: (_) => AlertDialog(
           backgroundColor: kCard,
           title: Text(c.title, style: TextStyle(color: kText)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final item in c.items) ...[
-                Text(item, style: TextStyle(color: kTextSecondary)),
-                const SizedBox(height: 6),
-              ],
-            ],
+          // ASR-213 P1-2：正文改成限高内滚动，按钮固定在 actions 区。
+          // 旧写法是裸 Column，条目一多就把正文顶到按钮下面叠在一起。
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final item in c.items) ...[
+                    Text(item, style: TextStyle(color: kTextSecondary)),
+                    const SizedBox(height: 6),
+                  ],
+                ],
+              ),
+            ),
           ),
           actions: [
             TextButton(

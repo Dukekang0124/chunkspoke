@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../models/content_pack.dart';
 import '../models/listening_article.dart';
+import '../services/asr_budget.dart';
 import '../services/asr_guard.dart';
 import '../services/chunk_asset.dart';
 import '../services/listening_audio.dart';
@@ -1969,7 +1970,8 @@ class _ShadowReadSheetState extends State<_ShadowReadSheet> {
       _snack('识别引擎没就绪，本次不判定');
       return;
     }
-    final r = await _speech.recognizeOpen(path);
+    // ASR-213 P0-1：解码预算（磨耳朵句级轻跟读）。
+    final r = await recognizeWithinBudget(() => _speech.recognizeOpen(path));
     final dur = await _speech.durationSec(path);
     if (!mounted) return;
     final v = judgeShadowRead(

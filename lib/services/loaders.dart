@@ -471,6 +471,16 @@ class ProgressService {
   bool get seenChangelog140 => _kv('seenChangelog140') == 'true';
   Future<void> setSeenChangelog140() => _put('seenChangelog140', 'true');
 
+  /// ASR-213 P1-1：按版本号记账「本次更新」清单看过没有（空 = 本机从没记过）。
+  /// 旧的一次性标记 `seenChangelog140` 保留，只用来区分「老用户升级」与「全新安装」。
+  String? get changelogSeenVersion {
+    final v = _kv('changelogSeenVersion');
+    return (v == null || v.isEmpty) ? null : v;
+  }
+
+  Future<void> setChangelogSeenVersion(String v) =>
+      _put('changelogSeenVersion', v);
+
   // —— 体验开关（B7）：音效开关（震动跟随系统，无需独立开关）——
   bool get soundOn => _kv('soundOn') != 'false'; // 默认开
   Future<void> setSoundOn(bool v) => _put('soundOn', v.toString());

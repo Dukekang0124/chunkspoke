@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
+import '../services/asr_budget.dart';
 import '../services/asr_guard.dart';
 import '../services/crash_log.dart';
 import '../services/learning_flow.dart';
@@ -201,8 +202,9 @@ class _FreeUseStepState extends State<FreeUseStep> {
       List<double>? confs;
       AsrSource? src;
       if (await _speech.initVosk()) {
-        final r = await _speech.recognizeOpen(path,
-            e2ePhrases: [widget.referenceText, widget.chunk.text]);
+        // ASR-213 P0-1：解码预算，与跟读同一条口径（单源见 asr_budget.dart）。
+        final r = await recognizeWithinBudget(() => _speech.recognizeOpen(path,
+            e2ePhrases: [widget.referenceText, widget.chunk.text]));
         // S1：多候选里挑一条真用上词块的（小模型常把 what 听成 ud，
         // 但第 2/3 条候选往往是对的）。挑不回来则退回主候选，交给 S0/S2。
         text = pickChunkCandidate(
