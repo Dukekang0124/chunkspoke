@@ -1,0 +1,1546 @@
+{
+ "sample": {
+  "n": 40,
+  "voice": "Microsoft Zira Desktop",
+  "rate": 0,
+  "wavDir": "D:\\tmp\\asr209b\\wav",
+  "padLeadSec": 2.0,
+  "padTailSec": 0.5
+ },
+ "models": {
+  "vosk": {
+   "path": "D:\\tmp\\vosk-model\\vosk-model-small-en-us-0.15",
+   "files": [
+    {
+     "name": "README",
+     "bytes": 199,
+     "sha256": "c0cf286e4f7783306c5f6469b37db69228fb16803b03cae661edb2d7bba64ebb"
+    },
+    {
+     "name": "am/final.mdl",
+     "bytes": 15962575,
+     "sha256": "75370a0137f9daf8f469dedd7daa4513ae7a621f03240c6e512e2b50b656a7b6"
+    },
+    {
+     "name": "conf/mfcc.conf",
+     "bytes": 131,
+     "sha256": "1e2228006d01d805ad1c267fee9f79709ca87ac51bd82b0e3f5c69ba543f0fc4"
+    },
+    {
+     "name": "conf/model.conf",
+     "bytes": 290,
+     "sha256": "8f14cb1eeb07c762c371db648c6be688d347236155ca0f64fb13b6567a8ce81f"
+    },
+    {
+     "name": "graph/Gr.fst",
+     "bytes": 24013795,
+     "sha256": "023c8b7e30704a9e37765c635c252e608a02f361235bf94abdcf2a5225d85b20"
+    },
+    {
+     "name": "graph/HCLr.fst",
+     "bytes": 22416994,
+     "sha256": "5caafba3081e1646545ac6bff0dd7a318e53dcbdc86f237909ce1d2ac1293d34"
+    },
+    {
+     "name": "graph/disambig_tid.int",
+     "bytes": 102,
+     "sha256": "9ad87cc166d0998f08f758f47a6223a120dfffcbee805c4849c3aa5e6bb3c0fc"
+    },
+    {
+     "name": "graph/phones/word_boundary.int",
+     "bytes": 1761,
+     "sha256": "da199d9c991e0e84681ddbb34627b915b26302d50a8fdaa23c51e2bc3a50b5c3"
+    },
+    {
+     "name": "ivector/final.dubm",
+     "bytes": 168048,
+     "sha256": "8c5d7dd69d2122313baaf19f61f35dd3fa18b70c62ac0687e311e1c46e6daca7"
+    },
+    {
+     "name": "ivector/final.ie",
+     "bytes": 8288887,
+     "sha256": "3f37faf90c375b9e4740b569398b5829ed9cc07d19be6d441f72c3b71d7efcc6"
+    },
+    {
+     "name": "ivector/final.mat",
+     "bytes": 44975,
+     "sha256": "ddd83586dc5f928cda8738b922c85ffe38fc789cb5f9151a712ca12f37265382"
+    },
+    {
+     "name": "ivector/global_cmvn.stats",
+     "bytes": 1080,
+     "sha256": "33be09afcc80059847a275c3d043b51f1ab954c7c2438ddbbf4745e8ba144ff9"
+    },
+    {
+     "name": "ivector/online_cmvn.conf",
+     "bytes": 95,
+     "sha256": "a2f3571754b64297cb7efb2e7ca3df61995c5a45fcbb97188f90613552bb2dfe"
+    },
+    {
+     "name": "ivector/splice.conf",
+     "bytes": 35,
+     "sha256": "9f0c5f7c82d18eaf25d8bce470efa9f7741f88411fe428774bc0a9bb69a24756"
+    }
+   ],
+   "totalBytes": 70898967
+  },
+  "zipformer": {
+   "path": "D:\\tmp\\spike\\models\\sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+   "files": [
+    {
+     "name": "README.md",
+     "bytes": 304,
+     "sha256": "505f6b0e8a39f066a0794c4fb0b5689533d3bcd9d1dc5e5f47ccffeef1af9877"
+    },
+    {
+     "name": "decoder-epoch-99-avg-1.int8.onnx",
+     "bytes": 539499,
+     "sha256": "21e2a2acd961b3ac72f55be2f10f1a285e1b0b0ba010d7c0b6eab141411b163c"
+    },
+    {
+     "name": "decoder-epoch-99-avg-1.onnx",
+     "bytes": 2092272,
+     "sha256": "45a7f940ecfb53d89fa270ad11b88b961e53a317203eb24b1c8e95ed208b0f30"
+    },
+    {
+     "name": "encoder-epoch-99-avg-1.int8.onnx",
+     "bytes": 42845182,
+     "sha256": "3810755ce7c3ab26b42a8bcf39d191308fa27fb0f53358823ba46141d03b7eb3"
+    },
+    {
+     "name": "encoder-epoch-99-avg-1.onnx",
+     "bytes": 88804590,
+     "sha256": "f77a22f4ff94604e1afb2aeb13504d7699363528c047c97d3436087c95c9b659"
+    },
+    {
+     "name": "export-onnx-en-20M.sh",
+     "bytes": 998,
+     "sha256": "76abe8e1f8f134fa33a1df07d21240a7c8e7033be1d7c9587d45ed36a46d2e59"
+    },
+    {
+     "name": "joiner-epoch-99-avg-1.int8.onnx",
+     "bytes": 259572,
+     "sha256": "e085d73b593cf9b0707f370dbd656d58327d3fe36d80d849202ef81df02cb01e"
+    },
+    {
+     "name": "joiner-epoch-99-avg-1.onnx",
+     "bytes": 1026462,
+     "sha256": "343e17dffa4f386ca206e00d3c406908f68f473c3d35968d6c3cddd5b8559a94"
+    },
+    {
+     "name": "tokens.txt",
+     "bytes": 5048,
+     "sha256": "49e3c2646595fd907228b3c6787069658f67b17377c60aeb8619c4551b2316fb"
+    },
+    {
+     "name": "test_wavs/0.wav",
+     "bytes": 212044,
+     "sha256": "6bc58a4efdf20daac252b6b1502632601a71efe0308f6757dc1eda34891a7e4f"
+    },
+    {
+     "name": "test_wavs/1.wav",
+     "bytes": 534924,
+     "sha256": "5143a6ba93c4b274e2c4ac22deb75c2c48936c853f0519add1de828b6c79cc5a"
+    },
+    {
+     "name": "test_wavs/8k.wav",
+     "bytes": 77244,
+     "sha256": "f6f3c8b33e2534cdc154fe773ad2750f1f6a2ca5096179cdf037ae782456613e"
+    },
+    {
+     "name": "test_wavs/trans.txt",
+     "bytes": 449,
+     "sha256": "b9ac44e7b794abb1a2d5faf0005e98a665971e7ac2ed15435832cc34edaa9100"
+    }
+   ],
+   "totalBytes": 136398588
+  }
+ },
+ "runs": [
+  {
+   "engine": "vosk-small-en-us-0.15",
+   "n": 40,
+   "wer": 0.0492,
+   "wordEdits": 9,
+   "refWords": 183,
+   "empty": 0,
+   "exactHitRate": 0.825,
+   "avgDecodeSec": 1.0461,
+   "avgRtf": 0.2196,
+   "audioSecTotal": 90.5,
+   "rows": [
+    {
+     "id": "A_a_s01",
+     "ref": "Good morning, everyone.",
+     "hyp": "good morning everyone",
+     "edits": 0,
+     "words": 3,
+     "wer": 0.0,
+     "decodeSec": 0.5433,
+     "audioSec": 2.53,
+     "rtf": 0.108
+    },
+    {
+     "id": "A_a_s02",
+     "ref": "Good evening, everyone.",
+     "hyp": "good evening everyone",
+     "edits": 0,
+     "words": 3,
+     "wer": 0.0,
+     "decodeSec": 0.625,
+     "audioSec": 2.505,
+     "rtf": 0.1249
+    },
+    {
+     "id": "A_a_s03",
+     "ref": "I'm fine, thank you.",
+     "hyp": "i'm fine thank you",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.9525,
+     "audioSec": 2.42,
+     "rtf": 0.1936
+    },
+    {
+     "id": "A_a_s04",
+     "ref": "Thank you so much.",
+     "hyp": "thank you so much",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.9371,
+     "audioSec": 1.985,
+     "rtf": 0.2089
+    },
+    {
+     "id": "A_a_s05",
+     "ref": "My name is Lily.",
+     "hyp": "my name is lili",
+     "edits": 1,
+     "words": 4,
+     "wer": 0.25,
+     "decodeSec": 1.034,
+     "audioSec": 1.825,
+     "rtf": 0.2391
+    },
+    {
+     "id": "A_a_s06",
+     "ref": "What's your name, please?",
+     "hyp": "what's your name please",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 1.0477,
+     "audioSec": 2.615,
+     "rtf": 0.2048
+    },
+    {
+     "id": "A_a_s07",
+     "ref": "Nice to meet you, too.",
+     "hyp": "nice to meet you too",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.9954,
+     "audioSec": 2.465,
+     "rtf": 0.2005
+    },
+    {
+     "id": "A_a_s08",
+     "ref": "See you tomorrow.",
+     "hyp": "see you tomorrow",
+     "edits": 0,
+     "words": 3,
+     "wer": 0.0,
+     "decodeSec": 1.0303,
+     "audioSec": 1.84,
+     "rtf": 0.2374
+    },
+    {
+     "id": "A_a_s09",
+     "ref": "Take care, everyone.",
+     "hyp": "take care everyone",
+     "edits": 0,
+     "words": 3,
+     "wer": 0.0,
+     "decodeSec": 1.1279,
+     "audioSec": 2.455,
+     "rtf": 0.2276
+    },
+    {
+     "id": "A_a_s10",
+     "ref": "Excuse me, please.",
+     "hyp": "excuse me please",
+     "edits": 0,
+     "words": 3,
+     "wer": 0.0,
+     "decodeSec": 1.0114,
+     "audioSec": 2.575,
+     "rtf": 0.1993
+    },
+    {
+     "id": "A_a_s11",
+     "ref": "Nice to meet you, everyone.",
+     "hyp": "nice to meet you every one",
+     "edits": 2,
+     "words": 5,
+     "wer": 0.4,
+     "decodeSec": 1.0709,
+     "audioSec": 2.75,
+     "rtf": 0.204
+    },
+    {
+     "id": "A_a_s12",
+     "ref": "See you again, everyone.",
+     "hyp": "see you again every one",
+     "edits": 2,
+     "words": 4,
+     "wer": 0.5,
+     "decodeSec": 1.1269,
+     "audioSec": 2.685,
+     "rtf": 0.2173
+    },
+    {
+     "id": "B_b_s01",
+     "ref": "I'd like the menu, please.",
+     "hyp": "i'd like the menu please",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.0875,
+     "audioSec": 2.71,
+     "rtf": 0.2087
+    },
+    {
+     "id": "B_b_s02",
+     "ref": "I'd like a glass of water.",
+     "hyp": "i'd like a glass of water",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 1.0587,
+     "audioSec": 2.195,
+     "rtf": 0.2255
+    },
+    {
+     "id": "B_b_s03",
+     "ref": "Can I see the menu?",
+     "hyp": "can i see the menu",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.0453,
+     "audioSec": 1.945,
+     "rtf": 0.2352
+    },
+    {
+     "id": "B_b_s04",
+     "ref": "I need some help, thanks.",
+     "hyp": "i need some help thanks",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.1402,
+     "audioSec": 2.735,
+     "rtf": 0.2178
+    },
+    {
+     "id": "B_b_s05",
+     "ref": "We want a table for two.",
+     "hyp": "we want a table for two",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 1.0331,
+     "audioSec": 2.235,
+     "rtf": 0.2182
+    },
+    {
+     "id": "B_b_s06",
+     "ref": "Could we have the bill?",
+     "hyp": "could we have the bill",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.0039,
+     "audioSec": 1.845,
+     "rtf": 0.231
+    },
+    {
+     "id": "B_b_s07",
+     "ref": "I'll have a cup of coffee.",
+     "hyp": "i'll have a cup of coffee",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 1.1698,
+     "audioSec": 2.215,
+     "rtf": 0.2481
+    },
+    {
+     "id": "B_b_s08",
+     "ref": "Bring a bottle of wine.",
+     "hyp": "bring a bottle of wine",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.1389,
+     "audioSec": 1.99,
+     "rtf": 0.2537
+    },
+    {
+     "id": "B_b_s09",
+     "ref": "I ate a piece of cake.",
+     "hyp": "i eat a piece of cake",
+     "edits": 1,
+     "words": 6,
+     "wer": 0.16666666666666666,
+     "decodeSec": 1.0722,
+     "audioSec": 2.075,
+     "rtf": 0.2344
+    },
+    {
+     "id": "B_b_s10",
+     "ref": "I bought a pair of shoes.",
+     "hyp": "i bought a pair of shoes",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 1.064,
+     "audioSec": 2.215,
+     "rtf": 0.2257
+    },
+    {
+     "id": "B_b_s11",
+     "ref": "Could I have some water?",
+     "hyp": "could i have some water",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.1342,
+     "audioSec": 1.98,
+     "rtf": 0.2532
+    },
+    {
+     "id": "B_b_s12",
+     "ref": "Do you have a map?",
+     "hyp": "do you have a map",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.07,
+     "audioSec": 1.84,
+     "rtf": 0.2466
+    },
+    {
+     "id": "B_b_s13",
+     "ref": "I need a taxi, please.",
+     "hyp": "i need a taxi please",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.202,
+     "audioSec": 2.7,
+     "rtf": 0.2312
+    },
+    {
+     "id": "B_b_s14",
+     "ref": "Give me the red one.",
+     "hyp": "give me the red one",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.0865,
+     "audioSec": 1.89,
+     "rtf": 0.2475
+    },
+    {
+     "id": "B_b_s15",
+     "ref": "Pass me the salt, please.",
+     "hyp": "pass me the salt please",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.1645,
+     "audioSec": 2.745,
+     "rtf": 0.222
+    },
+    {
+     "id": "B_b_s16",
+     "ref": "Bring me the check, thanks.",
+     "hyp": "bring me the check things",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 1.1692,
+     "audioSec": 2.805,
+     "rtf": 0.2204
+    },
+    {
+     "id": "B_b_s17",
+     "ref": "I'm looking for the bank.",
+     "hyp": "i'm looking for the bank",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.0222,
+     "audioSec": 2.0,
+     "rtf": 0.2271
+    },
+    {
+     "id": "B_b_s18",
+     "ref": "Where can I sit down?",
+     "hyp": "where can i sit down",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.0012,
+     "audioSec": 1.99,
+     "rtf": 0.223
+    },
+    {
+     "id": "B_b_s19",
+     "ref": "Can you help me?",
+     "hyp": "can you help me",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.9929,
+     "audioSec": 1.735,
+     "rtf": 0.2344
+    },
+    {
+     "id": "B_b_s20",
+     "ref": "Just a little, thanks.",
+     "hyp": "just a little things",
+     "edits": 1,
+     "words": 4,
+     "wer": 0.25,
+     "decodeSec": 1.1029,
+     "audioSec": 2.575,
+     "rtf": 0.2173
+    },
+    {
+     "id": "B_b_s21",
+     "ref": "We have a lot of time.",
+     "hyp": "we have a lot of time",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 1.0904,
+     "audioSec": 2.055,
+     "rtf": 0.2394
+    },
+    {
+     "id": "B_b_s22",
+     "ref": "I want some more, please.",
+     "hyp": "i want some more please",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.1976,
+     "audioSec": 2.76,
+     "rtf": 0.2277
+    },
+    {
+     "id": "B_b_s23",
+     "ref": "Make it a little less.",
+     "hyp": "make it a little less",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 1.0719,
+     "audioSec": 2.015,
+     "rtf": 0.2374
+    },
+    {
+     "id": "B_b_s24",
+     "ref": "I'll take another one.",
+     "hyp": "i'll take another one",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 1.0796,
+     "audioSec": 1.965,
+     "rtf": 0.2418
+    },
+    {
+     "id": "B_b_s25",
+     "ref": "I'll have the same.",
+     "hyp": "i'll have the same",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.9908,
+     "audioSec": 1.795,
+     "rtf": 0.2307
+    },
+    {
+     "id": "C_c_s01",
+     "ref": "I'll get a coffee.",
+     "hyp": "i'll get a coffee",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.9272,
+     "audioSec": 1.83,
+     "rtf": 0.2141
+    },
+    {
+     "id": "C_c_s02",
+     "ref": "Coffee with milk, please.",
+     "hyp": "coffee with milk please",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 1.2515,
+     "audioSec": 2.77,
+     "rtf": 0.2375
+    },
+    {
+     "id": "C_c_s03",
+     "ref": "Tea, no sugar.",
+     "hyp": "t no sugar",
+     "edits": 1,
+     "words": 3,
+     "wer": 0.3333333333333333,
+     "decodeSec": 0.9718,
+     "audioSec": 2.25,
+     "rtf": 0.2046
+    }
+   ]
+  },
+  {
+   "engine": "sherpa-zipformer-en-20M-int8",
+   "n": 40,
+   "wer": 0.4317,
+   "wordEdits": 79,
+   "refWords": 183,
+   "empty": 10,
+   "exactHitRate": 0.4,
+   "avgDecodeSec": 0.1767,
+   "avgRtf": 0.0371,
+   "audioSecTotal": 90.5,
+   "rows": [
+    {
+     "id": "A_a_s01",
+     "ref": "Good morning, everyone.",
+     "hyp": "",
+     "edits": 3,
+     "words": 3,
+     "wer": 1.0,
+     "decodeSec": 0.2309,
+     "audioSec": 2.53,
+     "rtf": 0.0459
+    },
+    {
+     "id": "A_a_s02",
+     "ref": "Good evening, everyone.",
+     "hyp": "",
+     "edits": 3,
+     "words": 3,
+     "wer": 1.0,
+     "decodeSec": 0.1786,
+     "audioSec": 2.505,
+     "rtf": 0.0357
+    },
+    {
+     "id": "A_a_s03",
+     "ref": "I'm fine, thank you.",
+     "hyp": "I'M FINE THANK YOU",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.2575,
+     "audioSec": 2.42,
+     "rtf": 0.0523
+    },
+    {
+     "id": "A_a_s04",
+     "ref": "Thank you so much.",
+     "hyp": "",
+     "edits": 4,
+     "words": 4,
+     "wer": 1.0,
+     "decodeSec": 0.1988,
+     "audioSec": 1.985,
+     "rtf": 0.0443
+    },
+    {
+     "id": "A_a_s05",
+     "ref": "My name is Lily.",
+     "hyp": "MY NAME IS LILY",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.1567,
+     "audioSec": 1.825,
+     "rtf": 0.0362
+    },
+    {
+     "id": "A_a_s06",
+     "ref": "What's your name, please?",
+     "hyp": "WHAT'S YOUR NAME PLEASE",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.1807,
+     "audioSec": 2.615,
+     "rtf": 0.0353
+    },
+    {
+     "id": "A_a_s07",
+     "ref": "Nice to meet you, too.",
+     "hyp": "",
+     "edits": 5,
+     "words": 5,
+     "wer": 1.0,
+     "decodeSec": 0.1755,
+     "audioSec": 2.465,
+     "rtf": 0.0354
+    },
+    {
+     "id": "A_a_s08",
+     "ref": "See you tomorrow.",
+     "hyp": "SEE YOU TO MORROW",
+     "edits": 2,
+     "words": 3,
+     "wer": 0.6666666666666666,
+     "decodeSec": 0.1573,
+     "audioSec": 1.84,
+     "rtf": 0.0363
+    },
+    {
+     "id": "A_a_s09",
+     "ref": "Take care, everyone.",
+     "hyp": "",
+     "edits": 3,
+     "words": 3,
+     "wer": 1.0,
+     "decodeSec": 0.1778,
+     "audioSec": 2.455,
+     "rtf": 0.0359
+    },
+    {
+     "id": "A_a_s10",
+     "ref": "Excuse me, please.",
+     "hyp": "EXCUSE ME PLEASE",
+     "edits": 0,
+     "words": 3,
+     "wer": 0.0,
+     "decodeSec": 0.1768,
+     "audioSec": 2.575,
+     "rtf": 0.0348
+    },
+    {
+     "id": "A_a_s11",
+     "ref": "Nice to meet you, everyone.",
+     "hyp": "",
+     "edits": 5,
+     "words": 5,
+     "wer": 1.0,
+     "decodeSec": 0.1845,
+     "audioSec": 2.75,
+     "rtf": 0.0351
+    },
+    {
+     "id": "A_a_s12",
+     "ref": "See you again, everyone.",
+     "hyp": "SEE YOU AGAIN EVERY ONE",
+     "edits": 2,
+     "words": 4,
+     "wer": 0.5,
+     "decodeSec": 0.1833,
+     "audioSec": 2.685,
+     "rtf": 0.0353
+    },
+    {
+     "id": "B_b_s01",
+     "ref": "I'd like the menu, please.",
+     "hyp": "U PLEASE",
+     "edits": 4,
+     "words": 5,
+     "wer": 0.8,
+     "decodeSec": 0.22,
+     "audioSec": 2.71,
+     "rtf": 0.0422
+    },
+    {
+     "id": "B_b_s02",
+     "ref": "I'd like a glass of water.",
+     "hyp": "I'D LIKE A GLASS OF WATER",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 0.1817,
+     "audioSec": 2.195,
+     "rtf": 0.0387
+    },
+    {
+     "id": "B_b_s03",
+     "ref": "Can I see the menu?",
+     "hyp": "IN I SEE THE MENU",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.1589,
+     "audioSec": 1.945,
+     "rtf": 0.0358
+    },
+    {
+     "id": "B_b_s04",
+     "ref": "I need some help, thanks.",
+     "hyp": "I NEED SOME HELP THANKS",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.1901,
+     "audioSec": 2.735,
+     "rtf": 0.0363
+    },
+    {
+     "id": "B_b_s05",
+     "ref": "We want a table for two.",
+     "hyp": "O",
+     "edits": 6,
+     "words": 6,
+     "wer": 1.0,
+     "decodeSec": 0.1719,
+     "audioSec": 2.235,
+     "rtf": 0.0363
+    },
+    {
+     "id": "B_b_s06",
+     "ref": "Could we have the bill?",
+     "hyp": "",
+     "edits": 5,
+     "words": 5,
+     "wer": 1.0,
+     "decodeSec": 0.1536,
+     "audioSec": 1.845,
+     "rtf": 0.0354
+    },
+    {
+     "id": "B_b_s07",
+     "ref": "I'll have a cup of coffee.",
+     "hyp": "I'LL HAVE A CUP OF COFFEE",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 0.1672,
+     "audioSec": 2.215,
+     "rtf": 0.0355
+    },
+    {
+     "id": "B_b_s08",
+     "ref": "Bring a bottle of wine.",
+     "hyp": "A BOTTLE OF WINE",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.1593,
+     "audioSec": 1.99,
+     "rtf": 0.0355
+    },
+    {
+     "id": "B_b_s09",
+     "ref": "I ate a piece of cake.",
+     "hyp": "I ATE A PIECE OF CAKE",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 0.1653,
+     "audioSec": 2.075,
+     "rtf": 0.0361
+    },
+    {
+     "id": "B_b_s10",
+     "ref": "I bought a pair of shoes.",
+     "hyp": "I BOUGHT A PAIR OF SHOES",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 0.2007,
+     "audioSec": 2.215,
+     "rtf": 0.0426
+    },
+    {
+     "id": "B_b_s11",
+     "ref": "Could I have some water?",
+     "hyp": "",
+     "edits": 5,
+     "words": 5,
+     "wer": 1.0,
+     "decodeSec": 0.1527,
+     "audioSec": 1.98,
+     "rtf": 0.0341
+    },
+    {
+     "id": "B_b_s12",
+     "ref": "Do you have a map?",
+     "hyp": "UV A MAP",
+     "edits": 3,
+     "words": 5,
+     "wer": 0.6,
+     "decodeSec": 0.1542,
+     "audioSec": 1.84,
+     "rtf": 0.0355
+    },
+    {
+     "id": "B_b_s13",
+     "ref": "I need a taxi, please.",
+     "hyp": "I NEED A TAXI PLEASE",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.1857,
+     "audioSec": 2.7,
+     "rtf": 0.0357
+    },
+    {
+     "id": "B_b_s14",
+     "ref": "Give me the red one.",
+     "hyp": "Y THE RED ONE",
+     "edits": 2,
+     "words": 5,
+     "wer": 0.4,
+     "decodeSec": 0.16,
+     "audioSec": 1.89,
+     "rtf": 0.0364
+    },
+    {
+     "id": "B_b_s15",
+     "ref": "Pass me the salt, please.",
+     "hyp": "",
+     "edits": 5,
+     "words": 5,
+     "wer": 1.0,
+     "decodeSec": 0.1865,
+     "audioSec": 2.745,
+     "rtf": 0.0356
+    },
+    {
+     "id": "B_b_s16",
+     "ref": "Bring me the check, thanks.",
+     "hyp": "S",
+     "edits": 5,
+     "words": 5,
+     "wer": 1.0,
+     "decodeSec": 0.2008,
+     "audioSec": 2.805,
+     "rtf": 0.0378
+    },
+    {
+     "id": "B_b_s17",
+     "ref": "I'm looking for the bank.",
+     "hyp": "I'M LOOKING FOR THE BANK",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.1525,
+     "audioSec": 2.0,
+     "rtf": 0.0339
+    },
+    {
+     "id": "B_b_s18",
+     "ref": "Where can I sit down?",
+     "hyp": "WHERE CAN I SIT DOWN",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.1579,
+     "audioSec": 1.99,
+     "rtf": 0.0352
+    },
+    {
+     "id": "B_b_s19",
+     "ref": "Can you help me?",
+     "hyp": "UP ME",
+     "edits": 3,
+     "words": 4,
+     "wer": 0.75,
+     "decodeSec": 0.1542,
+     "audioSec": 1.735,
+     "rtf": 0.0364
+    },
+    {
+     "id": "B_b_s20",
+     "ref": "Just a little, thanks.",
+     "hyp": "'S A LITTLE THANKS",
+     "edits": 1,
+     "words": 4,
+     "wer": 0.25,
+     "decodeSec": 0.179,
+     "audioSec": 2.575,
+     "rtf": 0.0353
+    },
+    {
+     "id": "B_b_s21",
+     "ref": "We have a lot of time.",
+     "hyp": "T OF TIME",
+     "edits": 4,
+     "words": 6,
+     "wer": 0.6666666666666666,
+     "decodeSec": 0.1709,
+     "audioSec": 2.055,
+     "rtf": 0.0375
+    },
+    {
+     "id": "B_b_s22",
+     "ref": "I want some more, please.",
+     "hyp": "I WANT SOME MORE PLEASE",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.1874,
+     "audioSec": 2.76,
+     "rtf": 0.0356
+    },
+    {
+     "id": "B_b_s23",
+     "ref": "Make it a little less.",
+     "hyp": "",
+     "edits": 5,
+     "words": 5,
+     "wer": 1.0,
+     "decodeSec": 0.158,
+     "audioSec": 2.015,
+     "rtf": 0.035
+    },
+    {
+     "id": "B_b_s24",
+     "ref": "I'll take another one.",
+     "hyp": "I'LL TAKE ANOTHER ONE",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.1539,
+     "audioSec": 1.965,
+     "rtf": 0.0345
+    },
+    {
+     "id": "B_b_s25",
+     "ref": "I'll have the same.",
+     "hyp": "I'LL HAVE THE SAME",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.1549,
+     "audioSec": 1.795,
+     "rtf": 0.0361
+    },
+    {
+     "id": "C_c_s01",
+     "ref": "I'll get a coffee.",
+     "hyp": "I'LL GET A COFFEE",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.1591,
+     "audioSec": 1.83,
+     "rtf": 0.0367
+    },
+    {
+     "id": "C_c_s02",
+     "ref": "Coffee with milk, please.",
+     "hyp": "Y WITH MILK PLEASE",
+     "edits": 1,
+     "words": 4,
+     "wer": 0.25,
+     "decodeSec": 0.1873,
+     "audioSec": 2.77,
+     "rtf": 0.0355
+    },
+    {
+     "id": "C_c_s03",
+     "ref": "Tea, no sugar.",
+     "hyp": "NO SUGAR",
+     "edits": 1,
+     "words": 3,
+     "wer": 0.3333333333333333,
+     "decodeSec": 0.1855,
+     "audioSec": 2.25,
+     "rtf": 0.0391
+    }
+   ],
+   "werDropPct": -777.44
+  },
+  {
+   "engine": "sherpa-zipformer-en-20M-int8+hotwords",
+   "n": 40,
+   "wer": 0.1858,
+   "wordEdits": 34,
+   "refWords": 183,
+   "empty": 0,
+   "exactHitRate": 0.4,
+   "avgDecodeSec": 0.2071,
+   "avgRtf": 0.0435,
+   "audioSecTotal": 90.5,
+   "rows": [
+    {
+     "id": "A_a_s01",
+     "ref": "Good morning, everyone.",
+     "hyp": "'S GOOD MORNING EVERYONE",
+     "edits": 1,
+     "words": 3,
+     "wer": 0.3333333333333333,
+     "decodeSec": 0.2154,
+     "audioSec": 2.53,
+     "rtf": 0.0428
+    },
+    {
+     "id": "A_a_s02",
+     "ref": "Good evening, everyone.",
+     "hyp": "'S GOOD EVENING EVERY ONE",
+     "edits": 3,
+     "words": 3,
+     "wer": 1.0,
+     "decodeSec": 0.213,
+     "audioSec": 2.505,
+     "rtf": 0.0425
+    },
+    {
+     "id": "A_a_s03",
+     "ref": "I'm fine, thank you.",
+     "hyp": "I'M FINE THANK YOU",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.2179,
+     "audioSec": 2.42,
+     "rtf": 0.0443
+    },
+    {
+     "id": "A_a_s04",
+     "ref": "Thank you so much.",
+     "hyp": "ULAR THANK YOU SO MUCH",
+     "edits": 1,
+     "words": 4,
+     "wer": 0.25,
+     "decodeSec": 0.1838,
+     "audioSec": 1.985,
+     "rtf": 0.041
+    },
+    {
+     "id": "A_a_s05",
+     "ref": "My name is Lily.",
+     "hyp": "MY NAME IS LILY",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.1879,
+     "audioSec": 1.825,
+     "rtf": 0.0434
+    },
+    {
+     "id": "A_a_s06",
+     "ref": "What's your name, please?",
+     "hyp": "O WHAT'S YOUR NAME PLEASE",
+     "edits": 1,
+     "words": 4,
+     "wer": 0.25,
+     "decodeSec": 0.2206,
+     "audioSec": 2.615,
+     "rtf": 0.0431
+    },
+    {
+     "id": "A_a_s07",
+     "ref": "Nice to meet you, too.",
+     "hyp": "ULAR NICE TO MEET YOU TOO",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.2139,
+     "audioSec": 2.465,
+     "rtf": 0.0431
+    },
+    {
+     "id": "A_a_s08",
+     "ref": "See you tomorrow.",
+     "hyp": "SEE YOU TO MORROW",
+     "edits": 2,
+     "words": 3,
+     "wer": 0.6666666666666666,
+     "decodeSec": 0.1846,
+     "audioSec": 1.84,
+     "rtf": 0.0425
+    },
+    {
+     "id": "A_a_s09",
+     "ref": "Take care, everyone.",
+     "hyp": "TAKE CARE EVERY ONE",
+     "edits": 2,
+     "words": 3,
+     "wer": 0.6666666666666666,
+     "decodeSec": 0.2213,
+     "audioSec": 2.455,
+     "rtf": 0.0447
+    },
+    {
+     "id": "A_a_s10",
+     "ref": "Excuse me, please.",
+     "hyp": "EXCUSE ME PLEASE",
+     "edits": 0,
+     "words": 3,
+     "wer": 0.0,
+     "decodeSec": 0.2126,
+     "audioSec": 2.575,
+     "rtf": 0.0419
+    },
+    {
+     "id": "A_a_s11",
+     "ref": "Nice to meet you, everyone.",
+     "hyp": "ULAR NICE TO MEET YOU EVERY ONE",
+     "edits": 3,
+     "words": 5,
+     "wer": 0.6,
+     "decodeSec": 0.2289,
+     "audioSec": 2.75,
+     "rtf": 0.0436
+    },
+    {
+     "id": "A_a_s12",
+     "ref": "See you again, everyone.",
+     "hyp": "SEE YOU AGAIN EVERY ONE",
+     "edits": 2,
+     "words": 4,
+     "wer": 0.5,
+     "decodeSec": 0.2185,
+     "audioSec": 2.685,
+     "rtf": 0.0421
+    },
+    {
+     "id": "B_b_s01",
+     "ref": "I'd like the menu, please.",
+     "hyp": "I'D LIKE THE MENU PLEASE",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.229,
+     "audioSec": 2.71,
+     "rtf": 0.0439
+    },
+    {
+     "id": "B_b_s02",
+     "ref": "I'd like a glass of water.",
+     "hyp": "I'D LIKE A GLASS OF WATER",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 0.2054,
+     "audioSec": 2.195,
+     "rtf": 0.0437
+    },
+    {
+     "id": "B_b_s03",
+     "ref": "Can I see the menu?",
+     "hyp": "IN I SEE THE MENU",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.1849,
+     "audioSec": 1.945,
+     "rtf": 0.0416
+    },
+    {
+     "id": "B_b_s04",
+     "ref": "I need some help, thanks.",
+     "hyp": "I NEED SOME HELP THANKS",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.2322,
+     "audioSec": 2.735,
+     "rtf": 0.0444
+    },
+    {
+     "id": "B_b_s05",
+     "ref": "We want a table for two.",
+     "hyp": "O WE WANT A TABLE FUR TOO",
+     "edits": 3,
+     "words": 6,
+     "wer": 0.5,
+     "decodeSec": 0.2077,
+     "audioSec": 2.235,
+     "rtf": 0.0439
+    },
+    {
+     "id": "B_b_s06",
+     "ref": "Could we have the bill?",
+     "hyp": "UL COULD WE HAVE THE BILL",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.1863,
+     "audioSec": 1.845,
+     "rtf": 0.0429
+    },
+    {
+     "id": "B_b_s07",
+     "ref": "I'll have a cup of coffee.",
+     "hyp": "I'LL HAVE A CUP OF COFFEE",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 0.2117,
+     "audioSec": 2.215,
+     "rtf": 0.0449
+    },
+    {
+     "id": "B_b_s08",
+     "ref": "Bring a bottle of wine.",
+     "hyp": "A BOTTLE OF WINE",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.1886,
+     "audioSec": 1.99,
+     "rtf": 0.042
+    },
+    {
+     "id": "B_b_s09",
+     "ref": "I ate a piece of cake.",
+     "hyp": "I ATE A PIECE OF CAKE",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 0.2051,
+     "audioSec": 2.075,
+     "rtf": 0.0448
+    },
+    {
+     "id": "B_b_s10",
+     "ref": "I bought a pair of shoes.",
+     "hyp": "I BOUGHT A PAIR OF SHOES",
+     "edits": 0,
+     "words": 6,
+     "wer": 0.0,
+     "decodeSec": 0.2024,
+     "audioSec": 2.215,
+     "rtf": 0.0429
+    },
+    {
+     "id": "B_b_s11",
+     "ref": "Could I have some water?",
+     "hyp": "UL COULD I HAVE SOME WATER",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.1816,
+     "audioSec": 1.98,
+     "rtf": 0.0405
+    },
+    {
+     "id": "B_b_s12",
+     "ref": "Do you have a map?",
+     "hyp": "O YOU HAVE A MAP",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.1809,
+     "audioSec": 1.84,
+     "rtf": 0.0417
+    },
+    {
+     "id": "B_b_s13",
+     "ref": "I need a taxi, please.",
+     "hyp": "I NEED A TAXI PLEASE",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.2431,
+     "audioSec": 2.7,
+     "rtf": 0.0467
+    },
+    {
+     "id": "B_b_s14",
+     "ref": "Give me the red one.",
+     "hyp": "Y THE RED ONE",
+     "edits": 2,
+     "words": 5,
+     "wer": 0.4,
+     "decodeSec": 0.2322,
+     "audioSec": 1.89,
+     "rtf": 0.0529
+    },
+    {
+     "id": "B_b_s15",
+     "ref": "Pass me the salt, please.",
+     "hyp": "O PASS ME THE SALT PLEASE",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.2284,
+     "audioSec": 2.745,
+     "rtf": 0.0436
+    },
+    {
+     "id": "B_b_s16",
+     "ref": "Bring me the check, thanks.",
+     "hyp": "T BRING ME THE CHECK THANKS",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.2229,
+     "audioSec": 2.805,
+     "rtf": 0.042
+    },
+    {
+     "id": "B_b_s17",
+     "ref": "I'm looking for the bank.",
+     "hyp": "I'M LOOKING FOR THE BANK",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.1895,
+     "audioSec": 2.0,
+     "rtf": 0.0421
+    },
+    {
+     "id": "B_b_s18",
+     "ref": "Where can I sit down?",
+     "hyp": "WHERE CAN I SIT DOWN",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.2254,
+     "audioSec": 1.99,
+     "rtf": 0.0502
+    },
+    {
+     "id": "B_b_s19",
+     "ref": "Can you help me?",
+     "hyp": "IN YOU HELP ME",
+     "edits": 1,
+     "words": 4,
+     "wer": 0.25,
+     "decodeSec": 0.1864,
+     "audioSec": 1.735,
+     "rtf": 0.044
+    },
+    {
+     "id": "B_b_s20",
+     "ref": "Just a little, thanks.",
+     "hyp": "'S A LITTLE THANKS",
+     "edits": 1,
+     "words": 4,
+     "wer": 0.25,
+     "decodeSec": 0.2111,
+     "audioSec": 2.575,
+     "rtf": 0.0416
+    },
+    {
+     "id": "B_b_s21",
+     "ref": "We have a lot of time.",
+     "hyp": "O WE HAVE A LOT OF TIME",
+     "edits": 1,
+     "words": 6,
+     "wer": 0.16666666666666666,
+     "decodeSec": 0.1997,
+     "audioSec": 2.055,
+     "rtf": 0.0438
+    },
+    {
+     "id": "B_b_s22",
+     "ref": "I want some more, please.",
+     "hyp": "I WANT SOME MORE PLEASE",
+     "edits": 0,
+     "words": 5,
+     "wer": 0.0,
+     "decodeSec": 0.2312,
+     "audioSec": 2.76,
+     "rtf": 0.044
+    },
+    {
+     "id": "B_b_s23",
+     "ref": "Make it a little less.",
+     "hyp": "T MAKE IT A LITTLE LESS",
+     "edits": 1,
+     "words": 5,
+     "wer": 0.2,
+     "decodeSec": 0.1884,
+     "audioSec": 2.015,
+     "rtf": 0.0417
+    },
+    {
+     "id": "B_b_s24",
+     "ref": "I'll take another one.",
+     "hyp": "I'LL TAKE ANOTHER ONE",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.1965,
+     "audioSec": 1.965,
+     "rtf": 0.044
+    },
+    {
+     "id": "B_b_s25",
+     "ref": "I'll have the same.",
+     "hyp": "I'LL HAVE THE SAME",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.1824,
+     "audioSec": 1.795,
+     "rtf": 0.0425
+    },
+    {
+     "id": "C_c_s01",
+     "ref": "I'll get a coffee.",
+     "hyp": "I'LL GET A COFFEE",
+     "edits": 0,
+     "words": 4,
+     "wer": 0.0,
+     "decodeSec": 0.1821,
+     "audioSec": 1.83,
+     "rtf": 0.042
+    },
+    {
+     "id": "C_c_s02",
+     "ref": "Coffee with milk, please.",
+     "hyp": "ULAR COFFEE WITH MILK PLEASE",
+     "edits": 1,
+     "words": 4,
+     "wer": 0.25,
+     "decodeSec": 0.2319,
+     "audioSec": 2.77,
+     "rtf": 0.044
+    },
+    {
+     "id": "C_c_s03",
+     "ref": "Tea, no sugar.",
+     "hyp": "NO SUGAR",
+     "edits": 1,
+     "words": 3,
+     "wer": 0.3333333333333333,
+     "decodeSec": 0.1979,
+     "audioSec": 2.25,
+     "rtf": 0.0417
+    }
+   ],
+   "werDropPct": -277.64
+  }
+ ],
+ "gate": {
+  "baseline": "vosk-small-en-us-0.15",
+  "baselineWer": 0.0492,
+  "candidates": [
+   {
+    "engine": "sherpa-zipformer-en-20M-int8",
+    "wer": 0.4317,
+    "werDropPct": -777.44,
+    "rtf": 0.0371,
+    "pass": false
+   },
+   {
+    "engine": "sherpa-zipformer-en-20M-int8+hotwords",
+    "wer": 0.1858,
+    "werDropPct": -277.64,
+    "rtf": 0.0435,
+    "pass": false
+   }
+  ],
+  "anyPass": false
+ }
+}

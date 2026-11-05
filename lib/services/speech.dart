@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
+import 'asr_budget.dart';
 import 'audio_format.dart';
 import 'speech_judge.dart'
     show wordClose, tokenizeSpeech, isFunctionWord;
@@ -166,8 +167,19 @@ class SpeechService {
 
   /// B5：开放输出统一走全模型（不传场景词表），展示层只认这个原始文本。
   /// [e2ePhrases] 有两个用途：① debugTranscriberOverride 脚本化识别；
-  /// ② ASR-209 B 层：增强 zipformer 的**目标热词偏置**（生产路径里传进来的
-  /// 就是当前目标句/词块；实测带热词后 20M 空结果 10/40 → 0/40，WER 0.43 → 0.19）。
+  /// ② 增强 zipformer 的兜底调用热词（见下）。
+  ///
+  /// **ASR-214 F1（2026-11-05）：增强引擎不再顶替默认路径。**
+  /// 真机取证：第 6/6 步自由造句，目标词块 `main course`、参考句
+  /// "The main course was great."，用户被回「USE WAS GREAT（增强识别）」。
+  /// 本机用**生产同款模型**复现（`release/ASR-214/`）：
+  ///  - Vosk small-en-us-0.15 自由解码：句首 0–200 ms 截断内**逐字全对**；
+  ///  - zipformer-en-20M-int8：**零截断**就把 "the main" 听成 "in"
+  ///    （`IN COURSE WAS GREAT`），截 300 ms 精确复现 `USE WAS GREAT`。
+  /// 而 ASR-191「模式 B」把增强做成了**主引擎**（用户一开就顶掉 Vosk），
+  /// 与拍板的「并列」不符，也造成「用户说对了却被判错」。
+  /// 现按拍板与实测回到本意：**Vosk 一过优先**，只有它空结果/不可用时
+  /// 才让增强兜底；两引擎取优仍由判定层的 grammar 二过 + [retryOpenWithFallback] 负责。
   Future<VoskResult> recognizeOpen(String wavPath,
       {List<String>? e2ePhrases}) async {
     final override = debugTranscriberOverride;
@@ -175,17 +187,23 @@ class SpeechService {
       _lastOpenSource = AsrSource.vosk;
       return override.transcribe(wavPath, e2ePhrases ?? const []);
     }
-    // ASR-191 模式 B：用户显式开启增强引擎后，开放式识别优先用它；
-    // 未开启/未就绪/任何异常返回 null → 立刻继续用默认 Vosk（不改变默认路径）。
-    final hotwords = asrHotwordsFrom((e2ePhrases ?? const []).join(' '));
+    final vosk = await _transcriber.transcribeOpen(wavPath);
+    if (vosk.text.trim().isNotEmpty) {
+      _lastOpenSource = AsrSource.vosk;
+      return vosk;
+    }
+    // 兜底：Vosk 什么都没听出来（静音/损坏/模型未就绪）才轮到增强包。
     final enhanced = await EnhancedAsrService.instance
-        .transcribeOpen(wavPath, hotwords: hotwords);
-    if (enhanced != null) {
+        .transcribeOpen(wavPath,
+            hotwords: asrHotwordsFrom((e2ePhrases ?? const []).join(' ')));
+    if (useEnhancedFirstPass(
+        voskHasText: false,
+        enhancedHasText: enhanced?.text.trim().isNotEmpty ?? false)) {
       _lastOpenSource = AsrSource.enhanced;
-      return enhanced;
+      return enhanced!;
     }
     _lastOpenSource = AsrSource.vosk;
-    return _transcriber.transcribeOpen(wavPath);
+    return vosk;
   }
 
   /// M1（2026-11-03）：识别明显不对时的**本地优先降级重识**。
@@ -250,6 +268,12 @@ class SpeechService {
   /// 本方法用**目标句词表**跑一次 Vosk grammar（受限解码），词表由
   /// [voskGrammarWords] 从整句展开（保留缩写里的 `'`，如 `i'll`）。
   ///
+  /// **ASR-214 F4**：[extraPhrases] 把「本级其他句 + 词块」也并进词表。
+  /// 真机复现：自由造句的目标是词块 `main course`，旧实现只喂了这两个词，
+  /// 受限解码产出 `main course course main` 这种重复串，clip 300/400 ms 时
+  /// 反而不如喂整句（`course was great`）。词表变宽不会放松守门：
+  /// 二过仍须同时过 `guardAsr(checkChunkStack: true)` + 判定层才改判。
+  ///
   /// 三条硬约束：
   /// 1. **不替换一过**——一过的自由文本仍是展示口径（B5 展示与校验分立不破）；
   ///    只有二过同时通过 `guardAsr` + 判定层，调用方才允许改判「过」。
@@ -265,10 +289,12 @@ class SpeechService {
     required String wavPath,
     required String targetSentence,
     required String firstText,
+    List<String> extraPhrases = const [],
   }) async {
-    if (voskGrammarWords([targetSentence]).isEmpty) return null;
+    final phrases = [targetSentence, ...extraPhrases];
+    if (voskGrammarWords(phrases).isEmpty) return null;
     if (!_transcriber.isReady) return null;
-    final r = await _transcriber.transcribe(wavPath, [targetSentence]);
+    final r = await _transcriber.transcribe(wavPath, phrases);
     final text = r.text.trim();
     if (text.isEmpty || text == firstText.trim()) return null;
     return r;
