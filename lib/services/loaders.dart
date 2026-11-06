@@ -481,6 +481,10 @@ class ProgressService {
   Future<void> setChangelogSeenVersion(String v) =>
       _put('changelogSeenVersion', v);
 
+  /// ASR-217：新装「3 行上手卡」看过没有（只给一次，不挡第二次进入）。
+  bool get quickStartSeen => _kv('quickStartSeen') == '1';
+  Future<void> setQuickStartSeen() => _put('quickStartSeen', '1');
+
   /// ASR-216 D：同一词块的语音失败次数**跨屏记账**。
   /// 没有这本账，「补练未通过块」就是死循环：同一台仪器对同一个词必然再次失败。
   int voiceFailCount(String chunkId) =>
