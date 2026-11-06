@@ -14,6 +14,7 @@ import 'level.dart';
 import 'license_activate.dart';
 import 'review.dart';
 import 'free_build_screen.dart';
+import 'user_preview_screen.dart';
 
 import '../ui/labels.dart';
 import '../ui/count_up.dart';
@@ -191,6 +192,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 onReturn: _reload,
               ),
               const SizedBox(height: 18),
+              // ASR-223 v2 = D3 正式 UI 第一片：分区先占位，入口先可达。
+              // 不是沙盒专用代码——D3 落库后同一分区列出用户自己的包，
+              // 底部说明换成「确认导入（将写入本机）」并接 store。
+              const _UserModuleSection(),
+              const SizedBox(height: 18),
               if (levels.any((lv) => lv.optional)) ...[
                 const _TierHeader('生存'),
                 const SizedBox(height: 8),
@@ -335,6 +341,68 @@ class _FreeBuildCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// ASR-223 v2（= D3 正式 UI 第一片）：「我的模块」分区。
+///
+/// 结构上仍守四红线：本组件**只导航**，不 import store/db、不读不写任何进度，
+/// 落到 [UserPreviewScreen] 后由那一侧的「零 DB 写入」约束继续兜底。
+class _UserModuleSection extends StatelessWidget {
+  const _UserModuleSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _TierHeader('我的模块'),
+        const SizedBox(height: 8),
+        InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const UserPreviewScreen()),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: kCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: kBorder),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.upload_file, color: kPrimary, size: 26),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('导入我自己的词块（CSV / JSON）',
+                          style: TextStyle(
+                              color: kText,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 4),
+                      Text('只预览解析结果，不落库、不动进度、不影响官方模块',
+                          style: TextStyle(color: kTextMuted, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios, size: 16, color: kPrimary),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text('先把表贴进去看看解析成什么样 —— 这一步不写入任何东西，'
+              '官方模块、复习和进度都不受影响。',
+              style: TextStyle(color: kTextFaint, fontSize: 12)),
+        ),
+      ],
     );
   }
 }
