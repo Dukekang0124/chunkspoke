@@ -36,7 +36,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: UserPreviewBody(
         result: parseAndValidateUserPackage(
-            'front,back,module_name' + String.fromCharCode(10) + ',盘子,餐饮点餐'),
+            'front,back,module_name${String.fromCharCode(10)},盘子,餐饮点餐'),
       ),
     ));
     expect(find.textContaining('未过闸'), findsOneWidget);
