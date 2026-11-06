@@ -195,7 +195,8 @@ class _UserImportFeedbackScreenState extends State<UserImportFeedbackScreen> {
 
   List<String> get questions => UserImportFeedbackScreen.questions;
   final List<TextEditingController> _answers =
-      List.generate(questions.length, (_) => TextEditingController());
+      List.generate(UserImportFeedbackScreen.questions.length,
+          (_) => TextEditingController());
 
   @override
   void dispose() {

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chunkspoke_flutter/screens/user_preview_screen.dart';
 import 'package:chunkspoke_flutter/services/user_package.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// ASR-215 小片钉测：只预览不落库（四红线里的两条靠测试守住）。
