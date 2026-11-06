@@ -86,6 +86,9 @@ void main() {
       await tester.pump();
       expect(find.textContaining('校验通过'), findsOneWidget);
       expect(find.text('确认导入（将写入本机）'), findsOneWidget);
+      // 文案与实装一致（ASR-228 装机腿抓到的冲突）：落库页不许再说「不占名额」。
+      expect(find.textContaining('确认后即占用名额'), findsOneWidget);
+      expect(find.textContaining('不占名额'), findsNothing);
 
       // 取消：一行都不写。
       await tester.tap(find.text('取消（不写入）'));

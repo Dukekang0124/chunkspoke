@@ -104,9 +104,15 @@ class _UserPreviewScreenState extends State<UserPreviewScreen> {
 }
 
 /// 预览主体 = D3 导入确认步的同一组件。
+///
+/// [previewOnly] 决定名额那一行怎么说（ASR-228 装机腿抓到的文案与实装冲突）：
+///  - true（预览页）：这一版确实不占名额；
+///  - false（导入器确认步）：确认后就要占名额了，不能再写「不占名额」。
 class UserPreviewBody extends StatelessWidget {
   final UserPackageValidation result;
-  const UserPreviewBody({super.key, required this.result});
+  final bool previewOnly;
+  const UserPreviewBody(
+      {super.key, required this.result, this.previewOnly = true});
 
   @override
   Widget build(BuildContext context) {
@@ -135,8 +141,12 @@ class UserPreviewBody extends StatelessWidget {
                   style: TextStyle(color: kTextSecondary, fontSize: 12)),
               const SizedBox(height: 4),
               Text(
-                  '上限：每包 $kUserPackageMaxChunks 块 · 每台设备 '
-                  '$kUserPackageMaxPackages 包（本版只预览，不占名额）',
+                  previewOnly
+                      ? '上限：每包 $kUserPackageMaxChunks 块 · 每台设备 '
+                          '$kUserPackageMaxPackages 包（本页只预览，不占名额）'
+                      : '上限：每包 $kUserPackageMaxChunks 块 · 每台设备 '
+                          '$kUserPackageMaxPackages 包（确认后即占用名额；'
+                          '同名模块重新导入=整包替换）',
                   style: TextStyle(color: kTextFaint, fontSize: 12)),
             ],
           ),

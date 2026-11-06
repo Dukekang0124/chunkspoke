@@ -233,7 +233,7 @@ class _UserImportScreenState extends State<UserImportScreen> {
             Text('确认步（和预览页同一套主体）',
                 style: TextStyle(color: kText, fontSize: 15)),
             const SizedBox(height: 8),
-            UserPreviewBody(result: v),
+            UserPreviewBody(result: v, previewOnly: false),
             const SizedBox(height: 12),
             if (v.ok)
               Row(
