@@ -14,7 +14,7 @@ import 'level.dart';
 import 'license_activate.dart';
 import 'review.dart';
 import 'free_build_screen.dart';
-import 'user_preview_screen.dart';
+import 'user_import_screen.dart';
 
 import '../ui/labels.dart';
 import '../ui/count_up.dart';
@@ -345,10 +345,11 @@ class _FreeBuildCard extends StatelessWidget {
   }
 }
 
-/// ASR-223 v2（= D3 正式 UI 第一片）：「我的模块」分区。
+/// ASR-223 v2（= D3 正式 UI 第一片）/ ASR-228 D3：「我的模块」分区。
 ///
-/// 结构上仍守四红线：本组件**只导航**，不 import store/db、不读不写任何进度，
-/// 落到 [UserPreviewScreen] 后由那一侧的「零 DB 写入」约束继续兜底。
+/// 结构上仍守红线：本组件**只导航**，不 import store/db、不读不写任何进度。
+/// D3 起入口指向 [UserImportScreen]（三入口 + 确认步 + 落库）；
+/// 「我的模块」列出真包体是 D4 的分区实装项，这里仍是占位分区。
 class _UserModuleSection extends StatelessWidget {
   const _UserModuleSection();
 
@@ -362,7 +363,7 @@ class _UserModuleSection extends StatelessWidget {
         InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const UserPreviewScreen()),
+            MaterialPageRoute(builder: (_) => const UserImportScreen()),
           ),
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -385,7 +386,8 @@ class _UserModuleSection extends StatelessWidget {
                               fontSize: 16,
                               fontWeight: FontWeight.w700)),
                       const SizedBox(height: 4),
-                      Text('只预览解析结果，不落库、不动进度、不影响官方模块',
+                      Text('文件 / 粘贴 / 模板三个入口；确认前不写入，'
+                          '确认后只进「我的模块」',
                           style: TextStyle(color: kTextMuted, fontSize: 12)),
                     ],
                   ),
@@ -398,8 +400,8 @@ class _UserModuleSection extends StatelessWidget {
         const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.only(left: 4),
-          child: Text('先把表贴进去看看解析成什么样 —— 这一步不写入任何东西，'
-              '官方模块、复习和进度都不受影响。',
+          child: Text('官方模块的已掌握数、复习排期与断点都不因为你导入而改变；'
+              '没点「确认导入」之前，这一页一行都不写。',
               style: TextStyle(color: kTextFaint, fontSize: 12)),
         ),
       ],

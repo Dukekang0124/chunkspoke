@@ -73,6 +73,34 @@ class UserChunkEntry {
 
   /// 六步可用位：拆解/影子跟读/定向替换都要整句，只有 example（或 front 本身是句子）时才可跑。
   bool get hasSentenceForSpeakingSteps => sentenceSourceText != null;
+
+  /// 落库序列化（D3）：档案里存的是**用户自己的文本**，`row` 不落库——
+  /// 行号只属于「这份表当时怎么排的」，重排不该让块变成另一个块。
+  Map<String, dynamic> toJson() => {
+        'front': front,
+        'back': back,
+        'module_name': moduleName,
+        if ((phonetic ?? '').isNotEmpty) 'phonetic': phonetic,
+        if ((example ?? '').isNotEmpty) 'example': example,
+        if ((cefr ?? '').isNotEmpty) 'cefr': cefr,
+        if (tags.isNotEmpty) 'tags': tags,
+      };
+
+  factory UserChunkEntry.fromJson(Map<String, dynamic> j) => UserChunkEntry(
+        row: 0,
+        front: (j['front'] ?? '').toString(),
+        back: (j['back'] ?? '').toString(),
+        moduleName: (j['module_name'] ?? j['moduleName'] ?? '').toString(),
+        phonetic: (j['phonetic'] ?? '').toString().isEmpty
+            ? null
+            : j['phonetic'].toString(),
+        example:
+            (j['example'] ?? '').toString().isEmpty ? null : j['example'].toString(),
+        cefr: (j['cefr'] ?? '').toString().isEmpty ? null : j['cefr'].toString(),
+        tags: [
+          for (final t in (j['tags'] as List? ?? const [])) t.toString(),
+        ],
+      );
 }
 
 /// 行级报错：第几行、哪个字段、什么问题。

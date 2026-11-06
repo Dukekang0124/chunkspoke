@@ -7,14 +7,14 @@ import 'package:sqflite_common_ffi/sqflite_common_ffi.dart';
 
 import 'package:chunkspoke_flutter/models/content_pack.dart';
 import 'package:chunkspoke_flutter/screens/map.dart';
-import 'package:chunkspoke_flutter/screens/user_preview_screen.dart';
+import 'package:chunkspoke_flutter/screens/user_import_screen.dart';
 import 'package:chunkspoke_flutter/services/database.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
 
-/// ASR-223 v2 钉测：「我的模块」分区在地图里可达，点入即达只预览页。
+/// ASR-223 v2 / ASR-228 D3 钉测：地图「我的模块」分区可达导入器，且入口段只导航。
 ///
-/// v1 的缺口是「页面存在但没有导航入口」，本文件把这条钉死：
-/// 入口在地图上、点得动、落地页首屏仍写着「只预览，不落库」。
+/// v1 的缺口是「页面存在但没有导航入口」，本文件把这条钉死；
+/// D3 起入口指向落库版导入器（三入口 + 确认步），入口段本身仍然不许碰任何写路径。
 Level _level(String id, String theme, int count) => Level(
       id: id,
       theme: theme,
@@ -57,33 +57,34 @@ void main() {
       'progress',
       'Progress',
       'store',
+      'Store',
       'Provider',
       'chunkStore',
       'await',
-      'import',
+      'import ',
       'userPackage',
     ]) {
       expect(section.contains(forbidden), isFalse,
           reason: '入口段出现了 $forbidden —— 它应该只负责跳转');
     }
-    expect(section.contains('UserPreviewScreen'), isTrue);
+    expect(section.contains('UserImportScreen'), isTrue);
   });
 
-  testWidgets('地图有「我的模块」分区，点入即达预览页且首屏写明不落库',
+  testWidgets('地图有「我的模块」分区，点入即达落库版导入器（三入口都在）',
       (tester) async {
-    // 首屏可见性也是验收项：分区排在「今日卡 + 自由造句沙盒」之后、关卡列表之前。
+    // 首屏可见性也是验收项：分区排在「自由造句沙盒」卡之后、关卡列表之前。
     await tester.binding.setSurfaceSize(const Size(900, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.runAsync(() async {
-      final dir = await Directory.systemTemp.createTemp('v2_map_entry');
-      final progress = ProgressService(db: AppDatabase(path: '${dir.path}/t.db'));
+      final dir = await Directory.systemTemp.createTemp('d3_map_entry');
+      final progress =
+          ProgressService(db: AppDatabase(path: '${dir.path}/t.db'));
       await progress.init();
       final content = ContentPack(
           version: 'test', levels: [_level('A', 'Greetings', 12)]);
 
-      await tester
-          .pumpWidget(MultiProvider(
+      await tester.pumpWidget(MultiProvider(
         providers: [
           Provider<ProgressService>.value(value: progress),
           Provider<ContentPack>.value(value: content),
@@ -92,20 +93,24 @@ void main() {
       ));
       await _pumpUntil(tester, find.text('我的模块'));
 
-      // 分区标题 + 导入入口都在地图上。
       expect(find.text('导入我自己的词块（CSV / JSON）'), findsOneWidget);
-      expect(find.textContaining('只预览解析结果，不落库'), findsOneWidget);
+      expect(find.textContaining('确认前不写入'), findsOneWidget);
 
       await tester.tap(find.text('导入我自己的词块（CSV / JSON）'));
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 60));
       }
 
-      expect(find.byType(UserPreviewScreen), findsOneWidget);
-      expect(find.text('我的模块 · 导入预览'), findsOneWidget);
-      // 红线 4 在真实导航路径上仍然首屏可见。
-      expect(find.textContaining('只预览，不落库'), findsWidgets);
-      expect(find.text('把 CSV 或 JSON 的内容粘贴进来'), findsOneWidget);
+      expect(find.byType(UserImportScreen), findsOneWidget);
+      expect(find.text('我的模块 · 导入'), findsOneWidget);
+      // 三入口 + 诚实文案都在首屏可达处。
+      expect(find.text('从剪贴板粘贴'), findsOneWidget);
+      expect(find.text('生成 CSV 模板文件'), findsOneWidget);
+      expect(find.text('生成 JSON 模板文件'), findsOneWidget);
+      expect(find.textContaining('本机文件'), findsOneWidget);
+      expect(
+          find.textContaining('未点「确认导入（将写入本机）」之前，不写入任何东西'),
+          findsOneWidget);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
