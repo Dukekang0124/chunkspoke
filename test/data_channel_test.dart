@@ -384,4 +384,39 @@ void main() {
       expect(await db.getKv('baseRate'), '1.25');
     });
   });
+
+  // ASR-230 裁定 1 的硬要求：selfEval 台账标记必须**可查**。
+  // 真机没有 root 时唯一的查证通道是「设置→数据备份→导出 JSON」，
+  // 所以这条链路不能只靠口头承诺，得有钉测：导出带得上、导入回得来。
+  group('自评标记可查（票5 的验证口径）', () {
+    test('自评写进台账 → 备份件带 l4_self_eval:1 → 导入回来仍是 1', () async {
+      await db.upsertChunk(const ChunkRow(
+        chunkKey: 'c1',
+        level: ChunkLevel.review,
+        dueDate: 5000,
+        failCount: 0,
+        lastScore: 0,
+        l2OneTry: 1,
+        l4SelfEval: true,
+        assetState: ChunkAssetState.learning,
+      ));
+
+      final exported = await buildChannelExport(db: db, gate: gate);
+      final decoded = jsonDecode(exported.json) as Map<String, dynamic>;
+      final row = (decoded['chunks'] as List)
+          .cast<Map<String, Object?>>()
+          .firstWhere((c) => c['chunk_key'] == 'c1');
+      expect(row.containsKey('l4_self_eval'), isTrue,
+          reason: '备份件的字段白名单里没有自评标记 ⇒ 票5 在真机上无从验证「算我说过」这条腿');
+      expect(row['l4_self_eval'], 1);
+
+      // 抹掉本机行再导入：证明这个字段真的落库、也真的回得来（不是只在内存里好看）。
+      await db.deleteChunksByKeys(['c1']);
+      expect(await db.getChunk('c1'), isNull);
+      final plan = await applyChannelImport(db: db, gate: gate, text: exported.json);
+      expect(plan.newChunks, 1);
+      expect((await db.getChunk('c1'))!.l4SelfEval, isTrue,
+          reason: '导入合并丢了自评标记：清过数据再导回来的用户会被判成没自评');
+    });
+  });
 }
