@@ -49,6 +49,46 @@ class _AppNavState extends State<AppNav> with WidgetsBindingObserver {
     }
   }
 
+  /// ASR-217 P1-1 后半：全新安装的「3 行上手卡」。
+  ///
+  /// 升级方案 §1.8.4 P1-1 写的是「新装走 3 行上手卡」，1.8.4 只做到了「不弹更新日志」，
+  /// 新人进来其实没人告诉他下一步做什么。三行只讲这台机器上真实存在的东西，
+  /// 不写没实装的能力（P2-6 那条教训）。
+  Future<void> _showQuickStartCard(ProgressService p) async {
+    await p.setQuickStartSeen();
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: kCard,
+        title: Text('三步上手', style: TextStyle(color: kText)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('1. 首页点任意场景，六步过一遍一个词块，一次约 3 分钟。',
+                  style: TextStyle(color: kTextSecondary)),
+              const SizedBox(height: 8),
+              Text('2. 开口没听清可以直接打字，照样算过——机器的问题不该算你的。',
+                  style: TextStyle(color: kTextSecondary)),
+              const SizedBox(height: 8),
+              Text('3. 复习排期由系统记着，到期出现在首页；内容全在本机，不联网上传。',
+                  style: TextStyle(color: kTextSecondary)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('知道了', style: TextStyle(color: kPrimary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// A6：一次性「本次更新」清单，标题/内容由当前版本号动态生成，看过记忆不再弹。
   ///
   /// ASR-213 P1-1：全新安装 **不弹**——新用户第一次点「开始学习」就被一屏老用户
@@ -63,7 +103,11 @@ class _AppNavState extends State<AppNav> with WidgetsBindingObserver {
       currentVersion: version,
     )) {
       // 新装用户：只记账，不打扰；下次升级才会看到更新说明。
-      if (p.changelogSeenVersion == null) await p.setChangelogSeenVersion(version);
+      if (p.changelogSeenVersion == null) {
+        await p.setChangelogSeenVersion(version);
+        // ASR-217 P1-1 后半：新装用户改看「3 行上手卡」（升级方案 §1.8.4 P1-1 的欠项）。
+        if (!p.quickStartSeen && mounted) await _showQuickStartCard(p);
+      }
       return;
     }
     final c = buildChangelog(version);

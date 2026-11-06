@@ -161,4 +161,29 @@ void main() {
       }
     });
   });
+
+  group('ASR-217 上手卡与双通道', () {
+    test('打字出口从第一次失败就在（不再等撞满两次）', () {
+      final step = File('lib/steps/l4_step.dart').readAsStringSync();
+      expect(step.contains('Text(shouldOfferTypingFirst(_voiceFails)'), isTrue,
+          reason: '失败屏的打字出口必须无条件出现，文案按次数分级');
+      expect(step.contains('说不清也没关系：直接把句子打出来，照样算过。'), isTrue);
+    });
+
+    test('新装走 3 行上手卡，且只讲实装存在的能力', () {
+      final nav = File('lib/screens/nav.dart').readAsStringSync();
+      expect(nav.contains('_showQuickStartCard(p)'), isTrue, reason: '新装分支必须真的弹卡');
+      expect(nav.contains('setQuickStartSeen'), isTrue, reason: '只给一次');
+      expect(nav.contains('三步上手'), isTrue);
+      // 红线：上手卡里不许出现未实装的能力（P2-6 教训）
+      expect(nav.contains('场景对话'), isFalse);
+      expect(nav.contains('AI'), isFalse);
+    });
+
+    test('changelog 不再声称未实装的场景对话', () {
+      final src = File('lib/services/changelog.dart').readAsStringSync();
+      expect(src.contains('场景对话里的每一次块完成'), isFalse,
+          reason: 'P2-6：该入口不存在，属文案超实装');
+    });
+  });
 }

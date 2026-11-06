@@ -1231,11 +1231,10 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                 ),
                 // ASR-216：连续两次没被听清 → 明说不是用户的问题，并把打字出口
                 // 提成一级按钮（1.8.4 的折叠把它藏在了最需要它的那一屏）。
-                if (shouldOfferTypingFirst(_voiceFails)) ...[
-                  Text('这台机器两次没听清你——这不是你的问题。',
-                      style: TextStyle(color: kTextSecondary, fontSize: 12),
-                      textAlign: TextAlign.center),
-                  Text('不想再录了就直接把句子打出来，照样算过。',
+                ...[
+                  Text(shouldOfferTypingFirst(_voiceFails)
+                      ? '这台机器两次没听清你——这不是你的问题。'
+                      : '说不清也没关系：直接把句子打出来，照样算过。',
                       style: TextStyle(color: kTextSecondary, fontSize: 12),
                       textAlign: TextAlign.center),
                   const SizedBox(height: 6),
