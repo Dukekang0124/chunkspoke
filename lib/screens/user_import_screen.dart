@@ -301,6 +301,11 @@ class _UserImportScreenState extends State<UserImportScreen> {
           ),
           Text(_dirNote.isEmpty ? '目录准备中…' : '目录：$_dirNote',
               style: TextStyle(color: kTextFaint, fontSize: 11)),
+          // ASR-229 §二 裁定①：不加 SAF/文件选择器，就把路径说清楚，
+          // 并且明写「日常导入请用粘贴」——文件入口是给批量/离线编辑的人用的。
+          Text('日常导入建议直接用上面的「从剪贴板粘贴」；'
+              '这个入口是给已经从电脑/表格软件存好文件的人用的。',
+              style: TextStyle(color: kTextMuted, fontSize: 12)),
           const SizedBox(height: 6),
           if (_found.isEmpty)
             Text('这个目录里还没有 .csv / .json。'

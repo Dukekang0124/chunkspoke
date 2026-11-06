@@ -41,6 +41,47 @@ class UserPackageStore {
     return out;
   }
 
+  /// ASR-229 · D4 件 1 的连坐项：坏档案**不许静默跳过**。
+  ///
+  /// `listPackages()` 为了不炸 UI 会跳过解析失败的档案，但"跳过"本身必须可被看见，
+  /// 否则用户的包会无声消失（这正是自检该抓的东西）。`inspect()` 把两边都交出来：
+  /// 好档案 + 坏档案的 kv 键 + 台账行数与档案块数的差额（差额≠0 就是双源分歧）。
+  Future<UserPackageInventory> inspect() async {
+    final raw = await _db.kvKeysWithPrefix(AppDatabase.kUserPkgKvPrefix);
+    final good = <UserPackageRecord>[];
+    final corrupt = <String>[];
+    for (final json in raw) {
+      if (json.trim().isEmpty) continue;
+      try {
+        final r = UserPackageRecord.fromJson(
+            jsonDecode(json) as Map<String, dynamic>);
+        if (r.entries.isEmpty) {
+          corrupt.add(r.moduleKey.isEmpty ? '（空档案）' : r.moduleKey);
+        } else {
+          good.add(r);
+        }
+      } catch (_) {
+        corrupt.add('（无法解析的档案）');
+      }
+    }
+    good.sort((a, b) => b.importedAt.compareTo(a.importedAt));
+    final rows = await _db.allUserChunks();
+    final declared = good.fold<int>(0, (s, r) => s + r.chunkCount);
+    // 台账里出现但没有任何档案声明的 user 行（手改库/删包半途都算）。
+    final declaredKeys = <String>{for (final r in good) for (final e in r.entries) e.chunkKey};
+    final stray = rows.where((r) => !declaredKeys.contains(r.chunkKey)).length;
+    // 两个差额各管一个方向，不重叠：档案>台账 = 半截写入；台账>档案 = 没人认领的行。
+    final missing = declared - rows.length;
+    return UserPackageInventory(
+      packages: good,
+      corruptCount: corrupt.length,
+      userRowCount: rows.length,
+      declaredChunks: declared,
+      missingRows: missing > 0 ? missing : 0,
+      strayRows: stray,
+    );
+  }
+
   /// 台账里实际存在的 `user:` 行数（与档案对账用）。
   Future<int> userRowCount() async => (await _db.allUserChunks()).length;
 
@@ -148,6 +189,44 @@ class UserPackageStore {
         lastScore: 0,
         assetState: ChunkAssetState.learning,
       );
+}
+
+/// 自检扩区用的档案盘点（D4 件 1）。
+class UserPackageInventory {
+  final List<UserPackageRecord> packages;
+  final int corruptCount;
+  final int userRowCount;
+  final int declaredChunks;
+
+  /// 档案声明了块、台账里却没有对应行（>0 = 半截写入或外部改动）。
+  final int missingRows;
+
+  /// 台账里有 user 行、但没有任何档案声明（删包半途/手改库）。
+  final int strayRows;
+
+  const UserPackageInventory({
+    required this.packages,
+    required this.corruptCount,
+    required this.userRowCount,
+    required this.declaredChunks,
+    required this.missingRows,
+    required this.strayRows,
+  });
+
+  int get packageCount => packages.length;
+  bool get consistent =>
+      corruptCount == 0 && missingRows == 0 && strayRows == 0 &&
+      userRowCount == declaredChunks;
+
+  Map<String, Object?> toJson() => {
+        'packages': packageCount,
+        'declaredChunks': declaredChunks,
+        'userRows': userRowCount,
+        'corruptArchives': corruptCount,
+        'missingRows': missingRows,
+        'strayRows': strayRows,
+        'consistent': consistent,
+      };
 }
 
 /// 一个已导入的包。

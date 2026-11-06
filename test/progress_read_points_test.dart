@@ -109,17 +109,25 @@ const Map<String, Set<String>> _matrix = {
     'kUserKeyExclude', // 注释里点名排除口径，扫描器按字符串计
   },
   'lib/services/progress_guard.dart': {'reconcileAll'},
-  'lib/screens/diagnostics.dart': {'reconcileAll'},
+  'lib/screens/diagnostics.dart': {'reconcileAll', 'UserPackageStore'},
   'lib/screens/user_import_screen.dart': {
     'UserPackageStore',
     'importValidation',
     'reconcileAll', // 件 3：导入写完同帧对账，不许等下次冷启动
   },
+  // —— ASR-229 D4：只读侧（分区列表 / 包详情 / 地图）——
+  'lib/screens/user_package_detail_screen.dart': {
+    'UserPackageStore', // 详情读档案 + 唯一的删包出口（removePackage），不碰断点
+  },
   // —— 渲染单源与自检 ——
   'lib/services/progress_display.dart': {'LevelDisplay'},
   'lib/services/self_check.dart': {'LevelDisplay'},
   // —— UI 读取点 ——
-  'lib/screens/map.dart': {'allMasteredKeys', 'allRows'},
+  'lib/screens/map.dart': {
+    'allMasteredKeys',
+    'allRows',
+    'UserPackageStore', // ASR-229 D4 件 3：分区列真包，只读 listPackages()
+  },
   'lib/screens/me.dart': {'allMasteredKeys'},
   'lib/screens/library.dart': {'allRows'},
   'lib/screens/free_build_screen.dart': {'allRows'},
@@ -320,6 +328,17 @@ void main() {
             e.key,
       ];
       expect(writers, isEmpty, reason: '出现第二个写入口：$writers');
+
+      // ASR-229 D4 件 2：删包出口也必须唯一（档案 + 台账行的级联清理只有一处实现，
+      // 只允许详情页调用它）；否则「卸载级联」会出现第二份说法不一的实现。
+      final deleters = [
+        for (final e in files.entries)
+          if (e.value.contains('removePackage') &&
+              !{'lib/services/user_package_store.dart',
+                'lib/screens/user_package_detail_screen.dart'}.contains(e.key))
+            e.key,
+      ];
+      expect(deleters, isEmpty, reason: '出现第二个删包出口：$deleters');
 
       final ui = _code(files['lib/screens/user_import_screen.dart']!);
       // 件 3 的静态闸：导入器必须同帧调 reconcileAll，不许等下次冷启动/回前台。

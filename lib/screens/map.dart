@@ -8,6 +8,8 @@ import '../services/loaders.dart';
 import '../services/license_state.dart';
 import '../services/progress_guard.dart';
 import '../services/scene_progression.dart';
+import '../services/user_package.dart';
+import '../services/user_package_store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'level.dart';
@@ -15,6 +17,7 @@ import 'license_activate.dart';
 import 'review.dart';
 import 'free_build_screen.dart';
 import 'user_import_screen.dart';
+import 'user_package_detail_screen.dart';
 
 import '../ui/labels.dart';
 import '../ui/count_up.dart';
@@ -192,10 +195,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 onReturn: _reload,
               ),
               const SizedBox(height: 18),
-              // ASR-223 v2 = D3 正式 UI 第一片：分区先占位，入口先可达。
-              // 不是沙盒专用代码——D3 落库后同一分区列出用户自己的包，
-              // 底部说明换成「确认导入（将写入本机）」并接 store。
-              const _UserModuleSection(),
+              // ASR-223 v2 = D3 正式 UI 第一片，ASR-229 D4 件 3：分区列真包。
+              // D3 落库后同一分区读「我的模块」自己的包档案；点包名进只读详情（含级联删除），
+              // 点卡片进导入器（三入口 + 确认步 + 落库）。本组件只读不写，钉测见
+              // test/userpack_map_entry_test.dart。
+              _UserModuleSection(onReturn: _reload),
               const SizedBox(height: 18),
               if (levels.any((lv) => lv.optional)) ...[
                 const _TierHeader('生存'),
@@ -345,13 +349,63 @@ class _FreeBuildCard extends StatelessWidget {
   }
 }
 
-/// ASR-223 v2（= D3 正式 UI 第一片）/ ASR-228 D3：「我的模块」分区。
+/// ASR-223 v2 / ASR-228 D3 / ASR-229 D4 件 3：「我的模块」分区 = 真包列表 + 导入入口。
 ///
-/// 结构上仍守红线：本组件**只导航**，不 import store/db、不读不写任何进度。
-/// D3 起入口指向 [UserImportScreen]（三入口 + 确认步 + 落库）；
-/// 「我的模块」列出真包体是 D4 的分区实装项，这里仍是占位分区。
-class _UserModuleSection extends StatelessWidget {
-  const _UserModuleSection();
+/// D4 起这里读包档案列表（`UserPackageStore.listPackages()`，纯读）把用户自己导进来的包
+/// 列成分区里的行；档案坏掉的包不在列表里（列表侧为了不炸 UI 会跳过），
+/// 但**不静默消失**——自检「我的模块」区块会把它连它的行一起打出来（D4 件 1 的连坐项）。
+///
+/// 红线从 v2 的「只导航」升级成 D4 的「只读不写」，仍然靠结构保证：
+/// 本组件不许出现落库写入口、不许删包、不许碰断点与官方台账 API——
+/// 写入只发生在导入器的确认步，删除只发生在详情页里用户明确确认之后。
+/// 两条都钉在 `test/userpack_map_entry_test.dart`。
+class _UserModuleSection extends StatefulWidget {
+  final VoidCallback onReturn;
+  const _UserModuleSection({required this.onReturn});
+
+  @override
+  State<_UserModuleSection> createState() => _UserModuleSectionState();
+}
+
+class _UserModuleSectionState extends State<_UserModuleSection> {
+  Future<List<UserPackageRecord>>? _packages;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  void _reload() {
+    // 只读：store.listPackages() 不写库、不碰断点、不动官方口径。
+    final store = UserPackageStore(
+        Provider.of<ProgressService>(context, listen: false).database);
+    _packages = store.listPackages();
+  }
+
+  Future<void> _openImport() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const UserImportScreen()),
+    );
+    if (!mounted) return;
+    setState(_reload);
+    widget.onReturn();
+  }
+
+  Future<void> _openDetail(UserPackageRecord rec) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+          builder: (_) => UserPackageDetailScreen(moduleKey: rec.moduleKey)),
+    );
+    if (!mounted) return;
+    setState(_reload);
+    widget.onReturn();
+  }
+
+  String _importedDate(int ms) {
+    final d = DateTime.fromMillisecondsSinceEpoch(ms);
+    return '${d.month}月${d.day}日';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -362,9 +416,7 @@ class _UserModuleSection extends StatelessWidget {
         const SizedBox(height: 8),
         InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const UserImportScreen()),
-          ),
+          onTap: _openImport,
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -396,6 +448,85 @@ class _UserModuleSection extends StatelessWidget {
               ],
             ),
           ),
+        ),
+        // D4 件 3：真包体列表（已导入才出现；没导入时一句话说明，不留空白分区）。
+        FutureBuilder<List<UserPackageRecord>>(
+          future: _packages,
+          builder: (ctx, snap) {
+            final recs = snap.data;
+            if (recs == null) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 10, left: 4),
+                child: Text('正在读本机的自定义包…',
+                    style: TextStyle(color: kTextFaint, fontSize: 12)),
+              );
+            }
+            if (recs.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 10, left: 4),
+                child: Text('还没有导入过的包。用上面的入口先看模板，'
+                    '粘贴或选文件都行，确认前一行都不写。',
+                    style: TextStyle(color: kTextFaint, fontSize: 12)),
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 10),
+                for (final rec in recs)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () => _openDetail(rec),
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+                        decoration: BoxDecoration(
+                          color: kBg,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.library_books_outlined,
+                                color: kPrimary, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(rec.moduleName,
+                                      style: TextStyle(
+                                          color: kText,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                      '${rec.chunkCount} 块 · '
+                                      '${_importedDate(rec.importedAt)}导入 · '
+                                      '不进官方已掌握数与复习排期',
+                                      style: TextStyle(
+                                          color: kTextMuted, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_ios,
+                                size: 14, color: kTextFaint),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, top: 2),
+                  child: Text('本机 ${recs.length}/$kUserPackageMaxPackages 个包，'
+                      '每包上限 $kUserPackageMaxChunks 块；'
+                      '同名模块重新导入＝整包替换。',
+                      style: TextStyle(color: kTextFaint, fontSize: 12)),
+                ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 8),
         Padding(

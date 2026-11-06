@@ -78,6 +78,10 @@ void main() {
       expect(find.text('生成 CSV 模板文件'), findsOneWidget);
       expect(find.text('生成 JSON 模板文件'), findsOneWidget);
       expect(find.textContaining('本机文件'), findsOneWidget);
+      // ASR-229 §二·① 裁定（不加 SAF 的补偿两条）：目录路径写明白 + 指回粘贴主路。
+      await _pumpUntil(tester, find.textContaining('目录：'));
+      expect(find.textContaining('user_packages'), findsOneWidget);
+      expect(find.textContaining('这个入口是给已经从电脑'), findsOneWidget);
 
       await tester.tap(find.text('或直接填进下面输入框（CSV 模板）'));
       await tester.pump();
