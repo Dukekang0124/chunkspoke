@@ -51,6 +51,12 @@ Future<void> _freshDb() async {
 Future<UserPackageValidation> _validate(String text) =>
     Future.value(parseAndValidateUserPackage(text));
 
+/// 去注释后的源码：结构闸只看代码，不能被注释里的说明文字误伤。
+String _code(String src) => src
+    .split('\n')
+    .where((l) => !l.trimLeft().startsWith('//'))
+    .join('\n');
+
 /// 官方口径的一次性快照（级联删除前后必须逐字段相同）。
 Future<Map<String, Object?>> _officialSnapshot() async {
   final now = DateTime.now().millisecondsSinceEpoch;
@@ -293,6 +299,28 @@ void main() {
       }
       expect(defs.where((p) => p.endsWith('l4_step.dart')), isEmpty,
           reason: '判卷阈值被复制进了 L4：$defs');
+    });
+    test('装机腿抓到的坑钉死：失败屏可滚，小屏不许裁掉打字出口', () {
+      // 模拟器 720×1600 实测：加了低置信卡片后，失败屏把「打字作答（不计发音分）」
+      // 顶到屏幕外——那一出口是 ASR-216 明令「第一次失败就给」的，裁掉=红线。
+      final raw = File('lib/steps/l4_step.dart').readAsStringSync();
+      final src = _code(raw).split(RegExp(r'\s+')).join(' ');
+      expect(src.contains('bool get _failureScreen =>'), isTrue,
+          reason: '失败屏判定被删了（Spacer 条件会失去依据）');
+      expect(
+          src.contains('if (_failureScreen) const SizedBox(height: 10) else const Spacer()'),
+          isTrue,
+          reason: '失败态仍在用 Spacer 居中，内容一多就顶出屏幕');
+      expect(
+          src.contains('else if (_judge != null && !_passed) Expanded( '
+              'child: SingleChildScrollView( child: Column('),
+          isTrue,
+          reason: '失败屏没包在可滚容器里');
+      // 条件顺序必须与 build 的分支链一致，否则 _failureScreen 会与实际渲染不同步。
+      for (final guard in ['!_permBlocked', '!_engineFailed', '!_showAnswer',
+        '!_selfAssess', '!_followAlong', '!_thinking', '!_listening']) {
+        expect(src.contains(guard), isTrue, reason: '_failureScreen 少了 $guard 这一条');
+      }
     });
   });
 }

@@ -771,6 +771,21 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
 
   /// 「机器自己没把握」的四种形态：灰带、守门器拒判、空/超短转写、低置信。
   /// 它们是**仪器侧**的不确定，不是用户说错；手改文本/打字作答不算（那是文本比对）。
+  /// 「机器侧不确定」的四种形态见 [machineUncertain]；本 getter 只回答一件事：
+  /// 现在屏幕上是不是**失败屏**（内容最多的一屏）。
+  /// 条件顺序与 build 里的分支链一致，所以它和真正渲染出来的那一支永远同步。
+  bool get _failureScreen =>
+      !_permBlocked &&
+      !_engineFailed &&
+      !_showAnswer &&
+      !_selfAssess &&
+      !_followAlong &&
+      !_thinking &&
+      !_listening &&
+      _judge != null &&
+      !_passed;
+
+  /// ASR-229 D4 件 4：低置信判据（灰带 / 守门拒判 / 空 / 低置信 / 过短）。
   bool get _machineUnsure {
     final o = _judge;
     if (o == null) return false;
@@ -1221,7 +1236,11 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 10),
           if (_judge != null && !_selfAssess) _targetSentence(),
-          const Spacer(),
+          // ASR-229 D4 装机腿抓到的坑：失败屏内容最多（判定说明 + 低置信卡片 +
+          // 三个出口 + 打字出口 + 更多选择），Spacer 居中会把最下面的
+          // 「打字作答」顶出屏幕——那一出口是 ASR-216 明令「第一次失败就要给」的。
+          // ⇒ 失败态不再居中：装得下就贴顶，装不下就能滚，绝不裁。
+          if (_failureScreen) const SizedBox(height: 10) else const Spacer(),
           if (_permBlocked)
             _permCard()
           else if (_engineFailed)
@@ -1269,7 +1288,10 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               ],
             )
           else if (_judge != null && !_passed)
-            Column(
+            // 小屏保护（见上面 _failureScreen）：这一支可滚，绝不裁掉出口。
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
               children: [
                 Text(
                   _transcript.trim().isEmpty && !_edited
@@ -1392,6 +1414,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                   ),
                 ],
               ],
+            ),
+              ),
             )
           else if (_judge != null && _passed)
             Column(
