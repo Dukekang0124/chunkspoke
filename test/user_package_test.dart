@@ -87,8 +87,9 @@ void main() {
     final bad = parseAndValidateUserPackage(
         'front,back,module_name,cefr\nplate,盘子,餐饮点餐,B9\n');
     expect(bad.issues.map((e) => e.reason).join(' | '), contains('A1/A2/B1/B2/C1/C2'));
+    final nine = List.filled(9, 't').join(', ');
     final manyTags = parseAndValidateUserPackage(
-        'front,back,module_name,tags\nplate,盘子,餐饮点餐,${List.filled(9, 't').join(', ')}\n');
+        'front,back,module_name,tags\nplate,盘子,餐饮点餐,"$nine"\n');
     expect(manyTags.issues.map((e) => e.reason).join(' | '), contains('最多 8 个标签'));
   });
 
