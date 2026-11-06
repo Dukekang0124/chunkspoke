@@ -1,35 +1,35 @@
 {
   "versionName": "1.8.6",
   "versionCode": 4087,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.5.1/chunkspoke-latest.apk",
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.6/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.5.1/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.8.5.1/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.8.6/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.8.6/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
-  "sha256": "015a9c7943ca9953239ee19435bbe96d4a7144679e0da4f6b6eb87b0e6953c86",
-  "size": 60277283,
-  "notes": "v1.8.5.1 热修：自由造句连续两次没被听清时，不再让你无限「再说一遍」——直接给一级按钮「打字作答（不计发音分）」，明说这不是你的问题，打出来照样算过；同一词块的语音失败次数改为跨屏记账，上次撞过两次的话这次一进屏就摊开出口。判卷阈值、识别引擎、内容、激活码零改动。",
+  "sha256": "cdb867c8f7e530bcba727aa5962a46a9aa0a4ca88f43ab528a995d7dcf30684f",
+  "size": 60277239,
+  "notes": "v1.8.6：开口这一步不再是关卡——从第一次没听清起「打字作答」就一直摆在屏幕上，语音或打字任一条路都能过；全新安装第一次进首页给「三步上手」三行卡；更正 1.7.1 更新说明里不存在的「场景对话」入口。判卷阈值、识别引擎、内容、激活码零改动。",
   "parts": [
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5.1/parts/apk.part0",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.6/parts/apk.part0",
       "size": 15728640,
-      "sha256": "5b46f765d1dcabffe32572a20b6e64a8c6025b21eba7c372faebb4923489aa0e"
+      "sha256": "41e9119f3d397949dcc81556118208660ce3aaaef290051cf67c84af05159496"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5.1/parts/apk.part1",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.6/parts/apk.part1",
       "size": 15728640,
       "sha256": "baca1148451d5750e1a3fbd2c174708ca921c561923571252620d75a424dfe00"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5.1/parts/apk.part2",
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.6/parts/apk.part2",
       "size": 15728640,
       "sha256": "9b9067d1e209271744fdeeb9bf093adefd34910b47acb2158d8cd5947f04b02d"
     },
     {
-      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.5.1/parts/apk.part3",
-      "size": 13091363,
-      "sha256": "41aefcd1b3297c1fb3ca47bd5f352a1cc191daf78d46f1a4b233a71c03605ede"
+      "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.8.6/parts/apk.part3",
+      "size": 13091319,
+      "sha256": "a8eda677e23942464d3da0b6544aae420b71b83cafdd2373f5ddc3dfb60c1c3c"
     }
   ],
   "model": {
