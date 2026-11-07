@@ -77,6 +77,10 @@ enum LicenseFeature {
 
   /// 1.6.0 新生：入口存在但标锁（非 PRO / 非老用户）。
   oralDiary,
+
+  /// ASR-233：自定义词块「确认导入」才受门；解析与预览永久免费（§一/§三）。
+  /// 与 oralDiary 同款：自动继承老用户 grandfather 与 TRIAL/BETA 不放行的既有语义。
+  customImport,
 }
 
 class LicenseActivation {
@@ -169,6 +173,7 @@ class LicenseState extends ChangeNotifier {
   bool allows(LicenseFeature feature) {
     switch (feature) {
       case LicenseFeature.oralDiary:
+      case LicenseFeature.customImport:
         return hasFullAccess;
       case LicenseFeature.speechAssessment:
       case LicenseFeature.studyCalendar:

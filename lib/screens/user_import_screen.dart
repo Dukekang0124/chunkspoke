@@ -3,12 +3,14 @@ import 'package:flutter/services.dart' show Clipboard;
 import 'package:provider/provider.dart';
 
 import '../models/content_pack.dart';
+import '../services/license_state.dart';
 import '../services/loaders.dart';
 import '../services/progress_integrity.dart';
 import '../services/user_package.dart';
 import '../services/user_package_files.dart';
 import '../services/user_package_store.dart';
 import '../ui/theme.dart';
+import 'license_activate.dart';
 import 'user_preview_screen.dart';
 
 /// ASR-228 · D3 落库件 1：自定义词块包导入器（文件 / 粘贴 / 模板 三入口）。
@@ -122,16 +124,40 @@ class _UserImportScreenState extends State<UserImportScreen> {
   }
 
   /// 落库件 2 + 件 3：一次事务写 `user:` 行与包档案，写完立刻跑全模块对账。
+  ///
+  /// ASR-233 付费门（裁定甲）：解析与预览免费；墙只在按下「确认导入」这一刻。
+  /// 未授权 ⇒ 出墙 sheet 后直接 return——**不写库、不改 _imported、不置 _busy**。
   Future<void> _confirmImport() async {
     final v = _result;
     if (v == null || !v.ok || _busy) return;
+    final license = Provider.of<LicenseState>(context, listen: false);
+    final progress = Provider.of<ProgressService>(context, listen: false);
+    final allowed = license.allows(LicenseFeature.customImport);
+    if (!allowed) {
+      progress.logEvent('custom_import_wall_shown');
+      await showLicenseWallSheet(
+        context,
+        title: '导入自己的词表需要解锁码',
+        detail: '解析与预览永久免费。确认导入会写进「我的模块」'
+            '（每台 $kUserPackageMaxPackages 包、每包 $kUserPackageMaxChunks 块），'
+            '需要一枚解锁码；官方生存 S0 + A–F 共 167 块、三项输出与数据备份不受影响，'
+            '老用户终身全量。你已经导进来的词表、学习记录和删除都不受影响。',
+      );
+      if (!mounted) return;
+      // 从墙里激活回来：只提示再点一次，不自动写库（用户得看见自己按了什么）。
+      if (license.allows(LicenseFeature.customImport)) {
+        progress.logEvent('custom_import_wall_to_activate');
+        _toast('已激活。再点一次「确认导入」就会写入。');
+      }
+      return;
+    }
     setState(() => _busy = true);
     try {
-      final progress = Provider.of<ProgressService>(context, listen: false);
       final content = Provider.of<ContentPack>(context, listen: false);
       final store = UserPackageStore(progress.database);
-      final res = await store.importValidation(v);
+      final res = await store.importValidation(v, allowed: allowed);
       if (!res.ok) {
+        if (res.gated) progress.logEvent('custom_import_blocked_store');
         if (!mounted) return;
         setState(() => _imported = res);
         _toast(res.note);
@@ -171,7 +197,8 @@ class _UserImportScreenState extends State<UserImportScreen> {
         children: [
           Text(
             '未点「确认导入（将写入本机）」之前，不写入任何东西。\n'
-            '确认后也只写进「我的模块」，官方模块、复习排期与已掌握计数都不受影响。',
+            '确认后也只写进「我的模块」，官方模块、复习排期与已掌握计数都不受影响。\n'
+            '解析与预览永久免费；确认导入需要解锁码（老用户不受影响）。',
             style: TextStyle(color: kPrimary, fontSize: 13, height: 1.5),
           ),
           const SizedBox(height: 14),

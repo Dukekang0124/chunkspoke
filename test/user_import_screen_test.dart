@@ -8,6 +8,7 @@ import 'package:sqflite_common_ffi/sqflite_common_ffi.dart';
 import 'package:chunkspoke_flutter/models/content_pack.dart';
 import 'package:chunkspoke_flutter/screens/user_import_screen.dart';
 import 'package:chunkspoke_flutter/services/database.dart';
+import 'package:chunkspoke_flutter/services/license_state.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
 import 'package:chunkspoke_flutter/services/user_package.dart';
 import 'package:chunkspoke_flutter/services/user_package_files.dart';
@@ -47,6 +48,7 @@ void main() {
   late Directory tmp;
   late ProgressService progress;
   late ContentPack content;
+  late LicenseState license;
 
   setUp(() async {
     sqfliteFfiInit();
@@ -55,12 +57,16 @@ void main() {
     progress = ProgressService(db: AppDatabase(path: '${tmp.path}/t.db'));
     await progress.init();
     content = ContentPack(version: 'test', levels: [_level('A', 12)]);
+    // ASR-233：确认导入要过付费门；本文件测的是落库链路，用老用户身份放行。
+    license = LicenseState(db: progress.database, legacyEligible: true);
+    await license.load();
   });
 
   Widget app(UserPackageFiles files) => MultiProvider(
         providers: [
           Provider<ProgressService>.value(value: progress),
           Provider<ContentPack>.value(value: content),
+          ChangeNotifierProvider<LicenseState>.value(value: license),
         ],
         child: MaterialApp(home: UserImportScreen(files: files)),
       );

@@ -151,7 +151,7 @@ void main() {
       final r = await _rig();
       await _activate(r);
       await r.p.database.setKv('baseRate', '1.25');
-      await r.store.importValidation(await _validate(_csvTwoRows));
+      await r.store.importValidation(await _validate(_csvTwoRows), allowed: true);
 
       final export = await buildChannelExport(db: r.p.database, gate: r.gate);
       expect(export.json.contains('license.'), isFalse);
@@ -174,12 +174,12 @@ void main() {
       final text = jsonEncode(old);
 
       final dst = await _rig();
-      final plan = await previewChannelImport(db: dst.p.database, text: text);
+      final plan = await previewChannelImport(db: dst.p.database, text: text, allowUserPackages: true);
       expect(plan.ignoredLicenseKv, 3);
       expect(plan.newKv, 1, reason: '只有 baseRate 算新增，授权键不许混进这个数');
 
       final applied =
-          await applyChannelImport(db: dst.p.database, gate: dst.gate, text: text);
+          await applyChannelImport(db: dst.p.database, gate: dst.gate, text: text, allowUserPackages: true);
       expect(applied.ignoredLicenseKv, 3);
       final kv = await dst.p.database.getAllKv();
       expect(kv.keys.where(isLicenseKv), isEmpty,
@@ -196,7 +196,7 @@ void main() {
       final dst = await _rig();
       expect(await dst.gate.readRaw(), isNull);
       final applied = await applyChannelImport(
-          db: dst.p.database, gate: dst.gate, text: export.json);
+          db: dst.p.database, gate: dst.gate, text: export.json, allowUserPackages: true);
       expect(applied.adoptedLegacy, 1);
       expect(await dst.gate.readRaw(), kLegacyFlagYes);
     });
@@ -216,7 +216,7 @@ void main() {
     test('导出→空机合并：档案与块行一起回来，自检一致，官方口径分毫不差', () async {
       final src = await _rig();
       await _study(src);
-      await src.store.importValidation(await _validate(_csvTwoRows));
+      await src.store.importValidation(await _validate(_csvTwoRows), allowed: true);
       await src.p.database.setKv('baseRate', '1.25');
       final before = await _official(src);
       expect(await src.store.userRowCount(), 2);
@@ -232,7 +232,7 @@ void main() {
           db: dst.p.database,
           gate: dst.gate,
           text: export.json,
-          store: dst.p.chunkStore);
+          store: dst.p.chunkStore, allowUserPackages: true);
       expect(applied.rebuiltUserRows, 2, reason: '不补行就是「档案有、台账无」的红');
       expect(applied.nothingToDo, isFalse);
       expect(await dst.store.userRowCount(), 2);
@@ -250,7 +250,7 @@ void main() {
 
     test('只补缺行：本机已有的行一字不动（进度更靠后也不许被档案盖掉）', () async {
       final r = await _rig();
-      await r.store.importValidation(await _validate(_csvTwoRows));
+      await r.store.importValidation(await _validate(_csvTwoRows), allowed: true);
       final rec = (await r.store.listPackages()).single;
       final first = rec.entries.first.chunkKey;
       // 本机把第一行推到更靠后的资产态，并删掉第二行（模拟半截态）。
@@ -275,9 +275,9 @@ void main() {
 
     test('坏档案跳过：不凭猜测重建，红留给自检判', () async {
       final r = await _rig();
-      await r.store.importValidation(await _validate(_csvTwoRows));
+      await r.store.importValidation(await _validate(_csvTwoRows), allowed: true);
       await r.store.importValidation(await _validate(
-          'front,back,module_name\n"central heating",集中供暖,家居\n'));
+          'front,back,module_name\n"central heating",集中供暖,家居\n'), allowed: true);
       final home = (await r.store.listPackages())
           .firstWhere((x) => x.moduleName == '家居');
       await r.p.database
@@ -339,13 +339,13 @@ void main() {
       final text = jsonEncode(evil);
 
       final dst = await _rig();
-      final plan = await previewChannelImport(db: dst.p.database, text: text);
+      final plan = await previewChannelImport(db: dst.p.database, text: text, allowUserPackages: true);
       expect(plan.ignoredUserChunks, 1);
       final applied = await applyChannelImport(
           db: dst.p.database,
           gate: dst.gate,
           text: text,
-          store: dst.p.chunkStore);
+          store: dst.p.chunkStore, allowUserPackages: true);
       expect(applied.ignoredUserChunks, 1);
       expect(await dst.store.userRowCount(), 0, reason: '绕过名额闸写进来的行必须挡掉');
       expect((await dst.store.inspect()).strayRows, 0);

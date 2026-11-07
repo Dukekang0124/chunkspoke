@@ -104,7 +104,7 @@ void main() {
     test('正常导入 = pass，并把「档案声明 / 台账行数」两个数并排打出来', () async {
       await _freshDb();
       final store = UserPackageStore(_p.database);
-      await store.importValidation(await _validate(_csvTwoRows));
+      await store.importValidation(await _validate(_csvTwoRows), allowed: true);
       final inv = await store.inspect();
       expect(inv.consistent, isTrue, reason: jsonEncode(inv.toJson()));
       expect(inv.packageCount, 1);
@@ -120,7 +120,7 @@ void main() {
     test('坏档案 = 列表跳过但自检必须判红，且它的行连坐成孤儿（连坐项）', () async {
       await _freshDb();
       final store = UserPackageStore(_p.database);
-      await store.importValidation(await _validate(_csvTwoRows));
+      await store.importValidation(await _validate(_csvTwoRows), allowed: true);
       // 手改档案：把 JSON 打成不可解析（模拟半途写入/外部改动）。
       final inv0 = await store.inspect();
       final key = inv0.packages.single.moduleKey;
@@ -145,7 +145,7 @@ void main() {
     test('档案有、台账无（半截写入）→ 判红并给出差额', () async {
       await _freshDb();
       final store = UserPackageStore(_p.database);
-      await store.importValidation(await _validate(_csvTwoRows));
+      await store.importValidation(await _validate(_csvTwoRows), allowed: true);
       final inv0 = await store.inspect();
       // 直接删掉台账里的一行（档案仍然声明 2 块）：制造「档案有、台账无」。
       await _p.database.deleteChunksByKeys(
@@ -207,8 +207,8 @@ void main() {
         await _p.chunkStore.applyEvent(k, ChunkEvent.speakSuccess,
             accuracy: 95, fourStarsGreen: true, enforceFourStars: true);
       }
-      await store.importValidation(await _validate(_csvTwoRows));
-      await store.importValidation(await _validate(_csvOtherModule));
+      await store.importValidation(await _validate(_csvTwoRows), allowed: true);
+      await store.importValidation(await _validate(_csvOtherModule), allowed: true);
       expect(await store.userRowCount(), 3);
 
       final before = await _officialSnapshot();

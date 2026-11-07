@@ -29,6 +29,14 @@ import 'user_package_store.dart';
 ///     如实说明：user 块的学习进度不在备份件里，补回来的行按「未开始学习」记。
 const int kChannelSchema = 1;
 
+/// ASR-233：自定义词表档案的 kv 前缀（付费门的第二条通道）。
+///
+/// 导出照带（件是用户自己的数据）；**导入侧按门决定收不收**。未授权机器合并
+/// 一份别人的备份 = 白拿自定义包，所以这里与 `license.*` 同一套心智：
+/// 前缀判据单源、跳过 + 如实计数。
+bool isUserPackageArchiveKv(String key) =>
+    key.startsWith(AppDatabase.kUserPkgKvPrefix);
+
 /// 导出头里的 App 版本：发版时与 pubspec / 包内清单同 bump。
 const String kChannelAppVersion = '1.6.0';
 
@@ -94,6 +102,7 @@ class ChannelImportPlan {
     required this.payload,
     this.ignoredLicenseKv = 0,
     this.ignoredUserChunks = 0,
+    this.ignoredUserArchives = 0,
     this.rebuiltUserRows = 0,
   });
   final int newChunks;
@@ -111,6 +120,9 @@ class ChannelImportPlan {
   /// ASR-233：件里带了 `user:` 块行（手改件）→ 不走这条路。
   /// 自定义块只能由档案重建，否则绕过名额闸、还会留下没人认领的孤儿行。
   final int ignoredUserChunks;
+
+  /// ASR-233：件里带了 `userpkg.*` 词表档案、但本机没解锁 → 不写、不补行，只计数。
+  final int ignoredUserArchives;
 
   /// 合并后按档案补回的自定义块行数（预览恒为 0；执行后才有值）。
   final int rebuiltUserRows;
@@ -135,6 +147,7 @@ class ChannelImportPlan {
         payload: payload,
         ignoredLicenseKv: ignoredLicenseKv,
         ignoredUserChunks: ignoredUserChunks,
+        ignoredUserArchives: ignoredUserArchives,
         rebuiltUserRows: n,
       );
 }
@@ -278,9 +291,13 @@ String _sessionId(Map<String, Object?> s) =>
     '${s['chunk_key']}|${s['ts']}|${s['outcome']}|${(s['review'] as int?) ?? 0}';
 
 /// 合并预览：只读本机，不写任何东西。
+///
+/// ASR-233：`allowUserPackages` 必填——未授权机器的件里 `userpkg.*` 档案一律
+/// 不算「新增设置」、也不在合并时写入（与 `license.*` 同一套跳过 + 诚实计数）。
 Future<ChannelImportPlan> previewChannelImport({
   required AppDatabase db,
   required String text,
+  required bool allowUserPackages,
 }) async {
   final payload = decodeChannel(text);
   final current = {for (final r in await db.allChunks()) r.chunkKey: r};
@@ -319,11 +336,15 @@ Future<ChannelImportPlan> previewChannelImport({
     }
   }
 
-  var newKv = 0, ignoredLicenseKv = 0;
+  var newKv = 0, ignoredLicenseKv = 0, ignoredUserArchives = 0;
   for (final k in (payload['kv'] as Map).keys) {
     final key = k.toString();
     if (isLicenseKv(key)) {
       ignoredLicenseKv++;
+      continue;
+    }
+    if (isUserPackageArchiveKv(key) && !allowUserPackages) {
+      ignoredUserArchives++;
       continue;
     }
     if (!currentKv.containsKey(key)) newKv++;
@@ -343,6 +364,7 @@ Future<ChannelImportPlan> previewChannelImport({
     payload: payload,
     ignoredLicenseKv: ignoredLicenseKv,
     ignoredUserChunks: ignoredUserChunks,
+    ignoredUserArchives: ignoredUserArchives,
   );
 }
 
@@ -352,8 +374,10 @@ Future<ChannelImportPlan> applyChannelImport({
   required LegacyGate gate,
   required String text,
   ChunkProgressStore? store,
+  required bool allowUserPackages,
 }) async {
-  final plan = await previewChannelImport(db: db, text: text);
+  final plan = await previewChannelImport(
+      db: db, text: text, allowUserPackages: allowUserPackages);
   // D1：这一行必须在任何 DB 写入之前。
   await gate.adoptFromImport(plan.legacyFlag);
 
@@ -363,6 +387,8 @@ Future<ChannelImportPlan> applyChannelImport({
     // ASR-233：授权键一律不写回。旧版备份件里带着它，合并一份别人的件
     // 就等于白拿 PRO——这条必须在写库前挡住，不能只靠导出侧不带。
     if (isLicenseKv(k)) continue;
+    // ASR-233：没解锁就不写词表档案（否则合并一份别人的备份 = 白拿自定义包）。
+    if (isUserPackageArchiveKv(k) && !allowUserPackages) continue;
     if (currentKv.containsKey(k)) continue; // 本机已有设置优先，绝不覆盖
     await db.setKv(k, e.value.toString());
   }
@@ -396,6 +422,8 @@ Future<ChannelImportPlan> applyChannelImport({
 
   // ASR-233：档案随 kv 回来了、块行没有（官方口径在库层排除自定义键）。
   // 按档案补齐缺行，否则合并完自检立刻判红「档案有、台账无」、分区点进去是空的。
+  // 没解锁时档案根本没写进来，补行同样不许跑：那是「恢复已有档案」，不是新导入。
+  if (!allowUserPackages) return plan;
   final rebuilt = await UserPackageStore(db).rebuildMissingRows();
   return rebuilt == 0 ? plan : plan.withRebuiltUserRows(rebuilt);
 }

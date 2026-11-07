@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../services/data_channel.dart';
 import '../services/legacy_gate.dart';
+import '../services/license_state.dart';
 import '../services/loaders.dart';
 import '../ui/copy_morph.dart';
 import '../ui/theme.dart';
@@ -111,9 +112,18 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
     setState(() => _busy = true);
     try {
       final p = Provider.of<ProgressService>(context, listen: false);
+      final license = Provider.of<LicenseState>(context, listen: false);
+      // ASR-233 付费门：备份本身永久免费；未授权机器不接受件里的词表档案
+      // （否则合并一份别人的备份 = 白拿自定义包）。本机已有的包不受影响。
+      final allowUserPackages = license.allows(LicenseFeature.customImport);
       final gate = await openLegacyGate();
-      final plan = await previewChannelImport(db: p.database, text: text);
+      final plan = await previewChannelImport(
+          db: p.database, text: text, allowUserPackages: allowUserPackages);
       if (!mounted) return;
+      if (plan.ignoredUserArchives > 0) {
+        p.logEvent('custom_import_archive_ignored',
+            {'count': plan.ignoredUserArchives});
+      }
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -130,6 +140,8 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
                 '解锁码不随备份走，换机请重输一次自己的码。' : ''}\n'
             '${plan.ignoredUserChunks > 0 ? '\n件里有 ${plan.ignoredUserChunks} 条自定义块行，已忽略：'
                 '自定义词块只按词表档案补回。' : ''}\n'
+            '${plan.ignoredUserArchives > 0 ? '\n件里有 ${plan.ignoredUserArchives} 份自定义词表档案，已忽略：'
+                '导入自己的词表需要解锁码。本机已有的包、学习记录和删除都不受影响。' : ''}\n'
             '合并只补不删，本机比备份新的进度会被保留。',
             style: TextStyle(color: kTextSecondary, fontSize: 13, height: 1.5),
           ),
@@ -147,7 +159,11 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
       );
       if (ok != true) return;
       final applied = await applyChannelImport(
-          db: p.database, gate: gate, text: text, store: p.chunkStore);
+          db: p.database,
+          gate: gate,
+          text: text,
+          store: p.chunkStore,
+          allowUserPackages: allowUserPackages);
       // 设置可能被补进 kv 缓存，重载一次让页面立刻看到新值。
       await p.init();
       if (!mounted) return;
@@ -155,10 +171,13 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
       final rebuiltNote = applied.rebuiltUserRows > 0
           ? '，自定义词块按档案补回 ${applied.rebuiltUserRows} 行（记为未开始学习）'
           : '';
+      final ignoredArchivesNote = applied.ignoredUserArchives > 0
+          ? '，已忽略 ${applied.ignoredUserArchives} 份自定义词表档案（需要解锁码）'
+          : '';
       _toast(applied.nothingToDo
-          ? '没有需要补的数据（已是最新）'
+          ? '没有需要补的数据（已是最新）$ignoredArchivesNote'
           : '已合并：词块 +${applied.newChunks}/更新 ${applied.updatedChunks}，'
-              '记录 +${applied.newSessions}$rebuiltNote');
+              '记录 +${applied.newSessions}$rebuiltNote$ignoredArchivesNote');
     } catch (e) {
       _toast('$e');
     } finally {

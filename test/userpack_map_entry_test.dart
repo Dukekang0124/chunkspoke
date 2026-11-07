@@ -168,7 +168,7 @@ void main() {
           '"a cup of coffee",一杯咖啡,点单\n'
           '"the bill, please",买单,点单\n');
       expect(v.ok, isTrue, reason: v.firstErrorText);
-      expect((await store.importValidation(v)).ok, isTrue);
+      expect((await store.importValidation(v, allowed: true)).ok, isTrue);
 
       await _pumpMap(tester, progress);
 
@@ -220,7 +220,7 @@ void main() {
       ]) {
         final v = parseAndValidateUserPackage(csv);
         expect(v.ok, isTrue, reason: v.firstErrorText);
-        expect((await store.importValidation(v)).ok, isTrue);
+        expect((await store.importValidation(v, allowed: true)).ok, isTrue);
       }
       // 把「家居」的档案打成不可解析（模拟半途写入/外部改动）。
       final home = (await store.listPackages())
@@ -251,7 +251,7 @@ void main() {
       final store = UserPackageStore(progress.database);
       final v = parseAndValidateUserPackage(
           'front,back,module_name\n"a cup of coffee",一杯咖啡,点单\n');
-      expect((await store.importValidation(v)).ok, isTrue);
+      expect((await store.importValidation(v, allowed: true)).ok, isTrue);
       final rec = (await store.listPackages()).single;
       await progress.database
           .setKv('${AppDatabase.kUserPkgKvPrefix}${rec.moduleKey}', 'not-json');

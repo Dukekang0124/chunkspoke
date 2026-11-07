@@ -125,7 +125,19 @@ class UserPackageStore {
   /// 落库：把已过闸的校验结果写进本机。返回写入统计与人类可读的一句话。
   ///
   /// 同名模块 = 重新导入：整包替换（旧的行删干净再写），不追加重复块。
-  Future<UserImportResult> importValidation(UserPackageValidation v) async {
+  ///
+  /// ASR-233 付费门：`allowed` **必填**，不默认——逼每个调用方表态。库层也判一遍，
+  /// 是因为 UI 门能被绕（备份通道、未来新入口、测试直调）。判据由调用方注入，
+  /// 库层不依赖 LicenseState，免得 store 拖上授权装配。
+  /// 「恢复本机已有档案」（[rebuildMissingRows]）不走这条路，不受门影响：挡它会让
+  /// 老用户清数据后回不来（与 D1 同款不可逆伤害）。
+  Future<UserImportResult> importValidation(
+    UserPackageValidation v, {
+    required bool allowed,
+  }) async {
+    if (!allowed) {
+      return UserImportResult.blockedByLicense();
+    }
     if (!v.ok) {
       return UserImportResult.failed(v.firstErrorText);
     }
@@ -300,6 +312,9 @@ class UserImportResult {
   final int replacedPackages;
   final String note;
 
+  /// ASR-233：被付费门挡下（不是校验失败、也不是名额不足）。UI 用它记埋点。
+  final bool gated;
+
   const UserImportResult({
     required this.ok,
     this.writtenChunks = 0,
@@ -307,6 +322,7 @@ class UserImportResult {
     this.packagesAfter = 0,
     this.replacedPackages = 0,
     this.note = '',
+    this.gated = false,
   });
 
   UserImportResult.failed(String why)
@@ -315,5 +331,17 @@ class UserImportResult {
         moduleNames = const [],
         packagesAfter = 0,
         replacedPackages = 0,
-        note = why;
+        note = why,
+        gated = false;
+
+  /// 库层兜底被门挡下：零写入，文案与墙 sheet 同一口径。
+  UserImportResult.blockedByLicense()
+      : ok = false,
+        writtenChunks = 0,
+        moduleNames = const [],
+        packagesAfter = 0,
+        replacedPackages = 0,
+        note = '导入自己的词表需要解锁码：解析与预览永久免费，确认导入会写进「我的模块」。'
+            '你已经导进来的词表、学习记录和删除都不受影响。',
+        gated = true;
 }
