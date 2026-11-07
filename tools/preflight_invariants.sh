@@ -62,6 +62,9 @@ if [ -d "$REL" ]; then
   fi
 
   echo "== 5. sandbox 只留最新一代 + sha sidecar"
+  if [ ! -d "$REL/sandbox" ]; then
+    bad "releases 里没有 sandbox/ 目录（第 5～6 格无法核对）"
+  else
   cd "$REL/sandbox" || exit 1
   n=$(ls *.apk 2>/dev/null | wc -l | tr -d ' ')
   [ "$n" = "1" ] && ok "sandbox/ 只有 1 个 APK" || bad "sandbox/ 有 $n 个 APK（裁定：只留最新一代）"
@@ -75,6 +78,7 @@ if [ -d "$REL" ]; then
   raw=$(curl -s --ssl-no-revoke -m 40 -o /dev/null -w '%{http_code}' \
     "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/sandbox/$(ls *.apk | head -1)")
   [ "$raw" = "200" ] && ok "沙盒 raw 直链 200" || bad "沙盒 raw 直链 $raw"
+  fi
 
   echo "== 6. 体积格（B-6 末格；原子轮后才是硬闸）"
   wt=$(du -sm --exclude=.git "$REL" 2>/dev/null | awk '{print $1}')
@@ -87,6 +91,64 @@ fi
 
 echo "== 7. 停车点自检口径"
 info "FAIL 四类=硬断言/钉测红、票5 未过、Pages 复验失败、读回闸不绿；其余 WARN/INFO 不拦路"
+
+# ── ASR-231 裁定 1：清单自洽闸 ────────────────────────────────────────────
+# 起因：dev 工作树曾躺着一份「半截清单」——urls/parts 已换成 1.8.6，
+# sha256/size 却还是 1.8.5.1 的真身（015a9c79…）。这种文件带进 bump 轮＝发布事故
+# （用户下到 1.8.6 的包、按 1.8.5.1 的 sha 校验，必然失败）。
+# 规则：清单里第一个 sha256 就是 arm64 整包 sha ⇒ 必须等于 releases 里同代
+#       apk/<versionName>/chunkspoke-latest.apk 的实算值。main 底版硬判；
+#       本代未 bump 前只记 INFO（第 4 步才改），bump 后转硬判。
+vn_of() { grep -o '"versionName": *"[^"]*"' "$1" | head -1 | sed 's/.*: *"//; s/"//'; }
+sha_of() { grep -o '"sha256": *"[^"]*"' "$1" | head -1 | sed 's/.*: *"//; s/"//'; }
+merged=0
+selfcheck_manifest() { # $1=标签 $2=清单文件 $3=releases 根
+  local tag="$1" file="$2" rel="$3" vn sh actual apk
+  vn=$(vn_of "$file"); sh=$(sha_of "$file")
+  apk="$rel/apk/$vn/chunkspoke-latest.apk"
+  if [ ! -f "$apk" ]; then
+    warn "$tag：清单写 $vn，但 releases 里没有 apk/$vn/chunkspoke-latest.apk，无法对账"
+    return
+  fi
+  actual=$(sha256sum "$apk" | awk '{print $1}')
+  if [ -n "$sh" ] && [ "$sh" = "$actual" ]; then
+    ok "$tag：$vn 的清单 sha=${sh:0:16}… == 同代 arm64 整包实算（自洽）"
+  else
+    bad "$tag：$vn 的清单 sha=${sh:0:16}… ≠ 实算 ${actual:0:16}…（半截清单形态：URL 换了、sha 没换）"
+  fi
+}
+echo "== 8. 清单自洽（merge 底版 + bump 后 arm64 sha=新包 sha）"
+cd "$ROOT" || exit 1
+tmp_main_vj="$ROOT/.pf_main_version.json"
+if git show origin/main:assets/version.json > "$tmp_main_vj" 2>/dev/null; then
+  selfcheck_manifest "main 底版" "$tmp_main_vj" "$REL"
+  mvn=$(vn_of "$tmp_main_vj")
+  mcommit=$(git log -1 --format=%h origin/main -- assets/version.json)
+  if git merge-base --is-ancestor "$mcommit" HEAD 2>/dev/null; then
+    merged=1
+    ok "dev HEAD 已含 main 的清单提交（$mcommit / $mvn）⇒ 清单自洽已转硬判"
+  else
+    warn "dev HEAD 落后 main 的清单提交（$mcommit / $mvn）⇒ 合并时必须以 main 清单为底再改写，不许让 dev 陈旧件覆盖"
+  fi
+  # 底版 sha 只出前 8 位，方便与发布记录对眼。
+  info "main 底版 sha（前 8 位）= $(sha_of "$tmp_main_vj" | cut -c1-8)"
+else
+  bad "读不到 origin/main:assets/version.json（fetch 未做？）"
+fi
+rm -f "$tmp_main_vj"
+pubver=$(grep -oE '^version: [0-9][^ ]*' pubspec.yaml | head -1 | sed 's/^version: //; s/+.*//')
+wtvn=$(vn_of assets/version.json 2>/dev/null)
+wtsha=$(sha_of assets/version.json 2>/dev/null)
+if [ "$wtvn" = "$pubver" ] && [ "${merged:-0}" = "1" ]; then
+  # merge 已把 main 底版带进来 ⇒ 这条从此是硬闸（原子轮第 4 步不改到位就别想推）。
+  selfcheck_manifest "本代（已 merge 底版、已 bump）" assets/version.json "$REL"
+elif [ "$wtvn" = "$pubver" ]; then
+  # dev 还没 merge main 的清单提交：这里的清单是「上代头 + 来历不明的 sha」，
+  # 不判死但必须说清——它会在 merge 后那一轮被 main 底版覆盖，届时转硬判。
+  warn "本代清单 sha=${wtsha:0:16}… 未与任何在库 APK 对过账（dev 尚未取 main 底版）；merge 后本条转硬判"
+else
+  info "清单仍是上代态（$wtvn，pubspec 本代 $pubver）⇒ 属原子轮第 4 步，本轮不硬判"
+fi
 echo
 echo "结果：FAIL=$fails WARN=$warns"
 [ "$fails" = "0" ] && echo "结论：可继续（无停车点）" || echo "结论：停车回报"
