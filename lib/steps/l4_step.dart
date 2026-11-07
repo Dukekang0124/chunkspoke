@@ -15,6 +15,7 @@ import '../services/speech_judge.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import '../ui/feedback.dart';
+import '../ui/machine_unsure_card.dart';
 import '../ui/motion.dart';
 import '../ui/permission_preprompt.dart';
 
@@ -822,44 +823,14 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   }
 
   /// ASR-229 · D4 件 4：低置信卡片——先承认机器不确定，再给一条自证出口。
-  /// 明写「不计发音分」与「是否算掌握仍走原门槛」，不超实装、不给后门。
-  Widget _lowConfidenceCard() {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kPrimary.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('这台机器没把握，不是给你判错',
-              style: TextStyle(
-                  color: kPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          Text(_machineUnsureWhy,
-              style: TextStyle(color: kTextSecondary, fontSize: 12, height: 1.5)),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: kUnlocked),
-              onPressed: _recPath == null ? null : _selfAttest,
-              child: Text('就是这句，算我说过（不计发音分）',
-                  style: TextStyle(color: kText, fontSize: 14)),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text('这条按「你自己确认」记账，不记发音分；是否算掌握仍走原有门槛'
-              '（前面步骤一次通过 + 星级），本页没改任何判定阈值。',
-              style: TextStyle(color: kTextFaint, fontSize: 11, height: 1.4)),
-        ],
-      ),
-    );
-  }
+  /// ASR-233：卡片本体抽到 `ui/machine_unsure_card.dart`，第 5/6 步共用同一张；
+  /// 这里只保留本步真实的记账口径（本步确实写 `l4_self_eval`）。
+  Widget _lowConfidenceCard() => MachineUnsureCard(
+        why: _machineUnsureWhy,
+        onAttest: _recPath == null ? null : _selfAttest,
+        note: '这条按「你自己确认」记账，不记发音分；是否算掌握仍走原有门槛'
+            '（前面步骤一次通过 + 星级），本页没改任何判定阈值。',
+      );
 
   /// 有波动但明显偏弱 → 「靠近一点说」。纯提示，不改判定、不打断采集。
   bool get _tooQuiet => _levelActive && _level < _comfortLevel;

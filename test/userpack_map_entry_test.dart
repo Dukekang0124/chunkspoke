@@ -105,9 +105,12 @@ void main() {
           reason: '分区出现了写路径 $forbidden —— D4 的红线是「只读不写」');
     }
     // D4 件 3 的反向钉：不许退回 v2 的「纯占位分区」。
+    // ASR-233：读的是盘点（inspect）而不是好包列表——坏档案也要在分区里看得见。
     for (final required in [
       'UserPackageStore',
-      'listPackages',
+      'inspect',
+      'corruptCount',
+      'DiagnosticsScreen', // 坏档案红牌必须给一条去诊断的路，不能只报错不给出口
       'UserPackageDetailScreen',
       'UserImportScreen',
     ]) {
@@ -196,6 +199,67 @@ void main() {
 
       // 只点进来看，不真的删：包还在。
       expect((await store.listPackages()).length, 1);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
+  });
+
+  // ── ASR-233 A4：坏档案不许在分区里隐身 ────────────────────────────────
+  testWidgets('一份档案坏掉：分区出红牌 + 好包照列，不谎称「还没有导入过的包」',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(900, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.runAsync(() async {
+      final progress = await _service();
+      final store = UserPackageStore(progress.database);
+      for (final csv in [
+        'front,back,module_name\n"a cup of coffee",一杯咖啡,点单\n',
+        'front,back,module_name\n"central heating",集中供暖,家居\n',
+      ]) {
+        final v = parseAndValidateUserPackage(csv);
+        expect(v.ok, isTrue, reason: v.firstErrorText);
+        expect((await store.importValidation(v)).ok, isTrue);
+      }
+      // 把「家居」的档案打成不可解析（模拟半途写入/外部改动）。
+      final home = (await store.listPackages())
+          .firstWhere((r) => r.moduleName == '家居');
+      await progress.database
+          .setKv('${AppDatabase.kUserPkgKvPrefix}${home.moduleKey}', '{坏掉的档案');
+      expect((await store.listPackages()).map((r) => r.moduleName), ['点单'],
+          reason: '列表侧仍跳过坏档案（不炸 UI），但分区必须把这件事说出来');
+
+      await _pumpMap(tester, progress);
+      await _pumpUntil(tester, find.text('1 份包档案读不出来'));
+      expect(find.text('点单'), findsOneWidget);
+      expect(find.textContaining('还没有导入过的包'), findsNothing);
+      expect(find.textContaining('重新导入同名模块即可修好'), findsOneWidget);
+      expect(find.byKey(const Key('userCorruptNotice')), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
+  });
+
+  testWidgets('唯一的包档案坏掉：红牌顶上空态，名额行不许谎报 0/5', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(900, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.runAsync(() async {
+      final progress = await _service();
+      final store = UserPackageStore(progress.database);
+      final v = parseAndValidateUserPackage(
+          'front,back,module_name\n"a cup of coffee",一杯咖啡,点单\n');
+      expect((await store.importValidation(v)).ok, isTrue);
+      final rec = (await store.listPackages()).single;
+      await progress.database
+          .setKv('${AppDatabase.kUserPkgKvPrefix}${rec.moduleKey}', 'not-json');
+
+      await _pumpMap(tester, progress);
+      await _pumpUntil(tester, find.text('1 份包档案读不出来'));
+      expect(find.textContaining('还没有导入过的包'), findsNothing);
+      expect(find.textContaining('本机 0/5 个包'), findsNothing);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();

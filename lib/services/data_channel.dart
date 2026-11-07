@@ -6,16 +6,27 @@ import 'package:path_provider/path_provider.dart';
 import 'database.dart';
 import 'chunk_progress.dart';
 import 'legacy_gate.dart';
+import 'license_state.dart';
+import 'user_package.dart';
+import 'user_package_store.dart';
 
 /// 1.5.10（#209 通道版）· 整机数据 JSON 导出 / 导入。
 ///
-/// 只做通道，不碰任何既有学习逻辑：
+/// 只做通道，不改任何判定阈值与推进语义：
 ///   · 导出 = 读 `kv` / `chunks` / `sessions` 三张表 + `legacy.flag` 原样带上；
 ///   · 导入 = **合并**（不覆盖本机更新的进度、不重复追加会话、不覆盖已有设置）；
 ///   · 全程本机，不联网、不上传。
 ///
 /// 为什么导出件要带 legacy 标记：`legacy.flag` 在库外，清数据会一起抹掉；
 /// 1.6.0 判「老用户」只看这个文件。导出件带不上，清过数据的爷爷就再也回不来（D1）。
+///
+/// ASR-233 两条边界：
+///   · 授权态（`license.` 命名空间）**不进备份件、也不从备份件写回**：备份是明文
+///     JSON，谁拿到都能粘进来，随件走等于白送 PRO。换机重输一次自己的码即可，
+///     老用户身份仍走库外标记，不受这条影响。
+///   · 自定义词块的**档案**随 kv 走、**块行**走官方口径被库层排除，所以合并完要按
+///     档案补齐缺行，否则自检立刻判红「档案有、台账无」。只补缺行、不覆盖任何进度；
+///     如实说明：user 块的学习进度不在备份件里，补回来的行按「未开始学习」记。
 const int kChannelSchema = 1;
 
 /// 导出头里的 App 版本：发版时与 pubspec / 包内清单同 bump。
@@ -81,6 +92,9 @@ class ChannelImportPlan {
     required this.newKv,
     required this.legacyFlag,
     required this.payload,
+    this.ignoredLicenseKv = 0,
+    this.ignoredUserChunks = 0,
+    this.rebuiltUserRows = 0,
   });
   final int newChunks;
   final int updatedChunks;
@@ -91,10 +105,38 @@ class ChannelImportPlan {
   final String legacyFlag;
   final Map<String, dynamic> payload;
 
+  /// ASR-233：件里带了授权键（旧版备份或手改件）→ 一律忽略，且要如实告诉用户。
+  final int ignoredLicenseKv;
+
+  /// ASR-233：件里带了 `user:` 块行（手改件）→ 不走这条路。
+  /// 自定义块只能由档案重建，否则绕过名额闸、还会留下没人认领的孤儿行。
+  final int ignoredUserChunks;
+
+  /// 合并后按档案补回的自定义块行数（预览恒为 0；执行后才有值）。
+  final int rebuiltUserRows;
+
   bool get nothingToDo =>
-      newChunks == 0 && updatedChunks == 0 && newSessions == 0 && newKv == 0;
+      newChunks == 0 &&
+      updatedChunks == 0 &&
+      newSessions == 0 &&
+      newKv == 0 &&
+      rebuiltUserRows == 0;
 
   int get adoptedLegacy => LegacyGate.isLegacy(legacyFlag) ? 1 : 0;
+
+  ChannelImportPlan withRebuiltUserRows(int n) => ChannelImportPlan(
+        newChunks: newChunks,
+        updatedChunks: updatedChunks,
+        keptChunks: keptChunks,
+        newSessions: newSessions,
+        dupSessions: dupSessions,
+        newKv: newKv,
+        legacyFlag: legacyFlag,
+        payload: payload,
+        ignoredLicenseKv: ignoredLicenseKv,
+        ignoredUserChunks: ignoredUserChunks,
+        rebuiltUserRows: n,
+      );
 }
 
 /// 组导出 JSON。纯函数：不读 IO、不看时钟，便于单测逐字段断言。
@@ -119,6 +161,13 @@ Map<String, dynamic> buildChannelMap({
   }
   if (since == 0) since = now.millisecondsSinceEpoch;
 
+  // ASR-233：授权态整段不进件。这里是导出件成形前的最后一道，
+  // 单测直接调本函数也拿不到 license.*（不许只在 IO 层过滤）。
+  final safeKv = {
+    for (final e in kv.entries)
+      if (!isLicenseKv(e.key)) e.key: e.value,
+  };
+
   return {
     'schema_version': kChannelSchema,
     'app_version': kChannelAppVersion,
@@ -130,11 +179,11 @@ Map<String, dynamic> buildChannelMap({
       'since': since,
     },
     'counts': {
-      'kv': kv.length,
+      'kv': safeKv.length,
       'chunks': chunks.length,
       'sessions': sessions.length,
     },
-    'kv': kv,
+    'kv': safeKv,
     'chunks': [
       for (final c in chunks)
         {for (final k in _chunkKeys) k: c[k]},
@@ -191,7 +240,10 @@ Future<ChannelExport> buildChannelExport({
   final chunks = [
     for (final r in await db.allChunks()) r.toMap(),
   ];
-  final sessions = await db.allSessionRows();
+  final sessions = [
+    for (final s in await db.allSessionRows())
+      if (!isUserChunkKey((s['chunk_key'] ?? '').toString())) s,
+  ];
   final flag = (await gate.readRaw()) ?? kLegacyFlagNo;
   final map = buildChannelMap(
     kv: kv,
@@ -210,7 +262,8 @@ Future<ChannelExport> buildChannelExport({
     filename: 'chunkspoke_backup_$stamp.json',
     chunkCount: chunks.length,
     sessionCount: sessions.length,
-    kvCount: kv.length,
+    // 数以件里真有的为准：授权键已在成形时剔除，不能报库里的原始条数。
+    kvCount: (map['kv'] as Map).length,
     legacyFlag: flag,
   );
 }
@@ -236,11 +289,15 @@ Future<ChannelImportPlan> previewChannelImport({
   };
   final currentKv = await db.getAllKv();
 
-  var newChunks = 0, updatedChunks = 0, keptChunks = 0;
+  var newChunks = 0, updatedChunks = 0, keptChunks = 0, ignoredUserChunks = 0;
   for (final raw in (payload['chunks'] as List)) {
     final incoming = Map<String, Object?>.from(raw as Map);
     final key = (incoming['chunk_key'] ?? '').toString();
     if (key.isEmpty) continue;
+    if (isUserChunkKey(key)) {
+      ignoredUserChunks++;
+      continue;
+    }
     final local = current[key];
     if (local == null) {
       newChunks++;
@@ -254,6 +311,7 @@ Future<ChannelImportPlan> previewChannelImport({
   var newSessions = 0, dupSessions = 0;
   for (final raw in (payload['sessions'] as List)) {
     final s = Map<String, Object?>.from(raw as Map);
+    if (isUserChunkKey((s['chunk_key'] ?? '').toString())) continue;
     if (seen.contains(_sessionId(s))) {
       dupSessions++;
     } else {
@@ -261,9 +319,14 @@ Future<ChannelImportPlan> previewChannelImport({
     }
   }
 
-  var newKv = 0;
+  var newKv = 0, ignoredLicenseKv = 0;
   for (final k in (payload['kv'] as Map).keys) {
-    if (!currentKv.containsKey(k)) newKv++;
+    final key = k.toString();
+    if (isLicenseKv(key)) {
+      ignoredLicenseKv++;
+      continue;
+    }
+    if (!currentKv.containsKey(key)) newKv++;
   }
 
   final legacy = payload['legacy'];
@@ -278,6 +341,8 @@ Future<ChannelImportPlan> previewChannelImport({
     newKv: newKv,
     legacyFlag: flag,
     payload: payload,
+    ignoredLicenseKv: ignoredLicenseKv,
+    ignoredUserChunks: ignoredUserChunks,
   );
 }
 
@@ -295,6 +360,9 @@ Future<ChannelImportPlan> applyChannelImport({
   final currentKv = await db.getAllKv();
   for (final e in (plan.payload['kv'] as Map).entries) {
     final k = e.key.toString();
+    // ASR-233：授权键一律不写回。旧版备份件里带着它，合并一份别人的件
+    // 就等于白拿 PRO——这条必须在写库前挡住，不能只靠导出侧不带。
+    if (isLicenseKv(k)) continue;
     if (currentKv.containsKey(k)) continue; // 本机已有设置优先，绝不覆盖
     await db.setKv(k, e.value.toString());
   }
@@ -305,6 +373,7 @@ Future<ChannelImportPlan> applyChannelImport({
     final m = Map<String, Object?>.from(raw as Map);
     final key = (m['chunk_key'] ?? '').toString();
     if (key.isEmpty) continue;
+    if (isUserChunkKey(key)) continue; // 自定义块只由档案重建，不走块行合并
     final local = current[key];
     if (local != null && !_incomingWins(m, local)) continue;
     writes.add(_rowFrom(m));
@@ -320,9 +389,15 @@ Future<ChannelImportPlan> applyChannelImport({
   }
 
   for (final raw in (plan.payload['sessions'] as List)) {
-    await db.insertSessionIfMissing(Map<String, Object?>.from(raw as Map));
+    final s = Map<String, Object?>.from(raw as Map);
+    if (isUserChunkKey((s['chunk_key'] ?? '').toString())) continue;
+    await db.insertSessionIfMissing(s);
   }
-  return plan;
+
+  // ASR-233：档案随 kv 回来了、块行没有（官方口径在库层排除自定义键）。
+  // 按档案补齐缺行，否则合并完自检立刻判红「档案有、台账无」、分区点进去是空的。
+  final rebuilt = await UserPackageStore(db).rebuildMissingRows();
+  return rebuilt == 0 ? plan : plan.withRebuiltUserRows(rebuilt);
 }
 
 /// 同一条块：资产状态更靠后者胜；再比复习次数、最近复习时间。

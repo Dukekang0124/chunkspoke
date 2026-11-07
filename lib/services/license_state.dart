@@ -36,6 +36,17 @@ const String kKvLicenseTail = 'license.tail';
 const String kKvLicenseSecretFp = 'license.secretFp';
 const String kKvLicenseDeviceId = 'license.deviceId';
 
+/// ASR-233：授权态的**唯一命名空间前缀**，备份通道按它整段排除。
+///
+/// 为什么必须排除：备份件是明文 JSON，谁拿到都能粘进「导入备份」。
+/// 授权键随件走 = 换机/清数据后合并一份别人的备份就白拿 PRO，码体形同虚设。
+/// 不受影响的两条：老用户身份在库外 `legacy.flag`（D1 照旧带回）；
+/// 正版换机走既有换绑——重输一次自己的码即可（`license.deviceId` 也重新生成）。
+const String kKvLicensePrefix = 'license.';
+
+/// 备份通道两侧（导出/导入）共用的排除判据，不许各写一份 startsWith。
+bool isLicenseKv(String key) => key.startsWith(kKvLicensePrefix);
+
 const String kVerifyOk = 'ok';
 const String kVerifyUnverified = 'unverified';
 const String kVerifyRejected = 'rejected';

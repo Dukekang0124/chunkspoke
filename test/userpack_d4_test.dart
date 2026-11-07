@@ -283,9 +283,25 @@ void main() {
           reason: '判据里出现数字 = 在 UI 侧偷偷新增阈值');
       expect(src.contains('_selfConfirm(true)'), isTrue);
       expect(src.contains("selfEval: true"), isTrue);
-      expect(src.contains('就是这句，算我说过'), isTrue, reason: '低置信卡片的一级出口没了');
-      expect(src.contains('这台机器没把握，不是给你判错'), isTrue);
-      expect(src.contains('不计发音分'), isTrue);
+      // ASR-231 裁定②：卡片抽成共享组件（第 4/5/6 步同一份），文案钉测跟着组件走。
+      final card = File('lib/ui/machine_unsure_card.dart').readAsStringSync();
+      expect(card.contains('就是这句，算我说过'), isTrue, reason: '低置信卡片的一级出口没了');
+      expect(card.contains('这台机器没把握，不是给你判错'), isTrue);
+      expect(card.contains('不计发音分'), isTrue);
+      expect(src.contains('MachineUnsureCard('), isTrue, reason: 'L4 没改用共享卡片');
+      for (final f in [
+        'lib/steps/substitute_step.dart',
+        'lib/steps/free_use_step.dart',
+      ]) {
+        final s = File(f).readAsStringSync();
+        expect(s.contains('MachineUnsureCard('), isTrue, reason: '$f 没复用共享卡片');
+        expect(s.contains('machineUncertain('), isTrue,
+            reason: '$f 自造判据 = 判据双源，阈值早晚会被抄第二份');
+        expect(s.contains('这台机器没把握'), isFalse,
+            reason: '$f 自己抄了一份卡片文案');
+        expect(s.contains('就是这句，算我说过'), isFalse,
+            reason: '$f 自己抄了一份一级出口文案');
+      }
       // 判定阈值仍然单源：低置信 UI 不许在 lib/ 里复制第二份阈值定义。
       final defs = <String>[];
       for (final e in Directory('lib').listSync(recursive: true).whereType<File>()) {
@@ -321,6 +337,32 @@ void main() {
         '!_selfAssess', '!_followAlong', '!_thinking', '!_listening']) {
         expect(src.contains(guard), isTrue, reason: '_failureScreen 少了 $guard 这一条');
       }
+    });
+
+    test('ASR-233：第5步失败屏同样可滚，第6步卡片必须在滚动容器里', () {
+      // 同一条装机腿教训：卡片一加，小屏就把原有出口顶出去。
+      final sub = _code(File('lib/steps/substitute_step.dart').readAsStringSync())
+          .split(RegExp(r'\s+'))
+          .join(' ');
+      expect(sub.contains('bool get _failureScreen =>'), isTrue);
+      expect(
+          sub.contains(
+              'if (_failureScreen) const SizedBox(height: 10) else const Spacer()'),
+          isTrue,
+          reason: '第5步失败态还在用 Spacer 居中，卡片一加就顶出屏幕');
+      expect(sub.contains('Expanded( child: SingleChildScrollView( child: Column('),
+          isTrue, reason: '第5步失败屏没包在可滚容器里');
+      // 卡片出现时不许再并排摆一个「自己算通过」旧出口（两个一级出口=用户猜）。
+      expect(sub.contains('if (!_machineUnsure &&'), isTrue,
+          reason: '旧的自评出口没有与卡片互斥');
+
+      final free = _code(File('lib/steps/free_use_step.dart').readAsStringSync())
+          .split(RegExp(r'\s+'))
+          .join(' ');
+      final scrollAt = free.indexOf('Expanded( child: SingleChildScrollView(');
+      final cardAt = free.indexOf('if (_machineUnsure)');
+      expect(scrollAt, greaterThan(0), reason: '第6步没有可滚容器');
+      expect(cardAt, greaterThan(scrollAt), reason: '第6步卡片落在滚动容器之外');
     });
   });
 }

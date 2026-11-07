@@ -12,6 +12,7 @@ import '../services/user_package.dart';
 import '../services/user_package_store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import 'diagnostics.dart';
 import 'level.dart';
 import 'license_activate.dart';
 import 'review.dart';
@@ -368,7 +369,7 @@ class _UserModuleSection extends StatefulWidget {
 }
 
 class _UserModuleSectionState extends State<_UserModuleSection> {
-  Future<List<UserPackageRecord>>? _packages;
+  Future<UserPackageInventory>? _inventory;
 
   @override
   void initState() {
@@ -377,10 +378,20 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
   }
 
   void _reload() {
-    // 只读：store.listPackages() 不写库、不碰断点、不动官方口径。
+    // 只读盘点：不写库、不碰断点、不动官方口径。
+    // ASR-233：这里必须用盘点而不是「好包列表」——坏档案被列表跳过，
+    // 分区就会无声少一个包，用户以为数据没了。坏档案要在这里看得见。
     final store = UserPackageStore(
         Provider.of<ProgressService>(context, listen: false).database);
-    _packages = store.listPackages();
+    _inventory = store.inspect();
+  }
+
+  Future<void> _openDiagnostics() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const DiagnosticsScreen()),
+    );
+    if (!mounted) return;
+    setState(_reload);
   }
 
   Future<void> _openImport() async {
@@ -406,6 +417,48 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
     final d = DateTime.fromMillisecondsSinceEpoch(ms);
     return '${d.month}月${d.day}日';
   }
+
+  /// ASR-233：读不出来的档案要在分区里明说，并给一条去诊断的路。
+  /// 不猜内容、不自动删——自检判红后由用户决定重新导入还是清掉。
+  Widget _corruptNotice(int n) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: InkWell(
+          key: const Key('userCorruptNotice'),
+          borderRadius: BorderRadius.circular(14),
+          onTap: _openDiagnostics,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+            decoration: BoxDecoration(
+              color: kErrorTint,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: kError),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.report_gmailerrorred, color: kError, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('$n 份包档案读不出来',
+                          style: TextStyle(
+                              color: kText,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      Text('包还在本机，只是档案坏了，所以这里列不出内容。'
+                          '去诊断看详情；重新导入同名模块即可修好。',
+                          style: TextStyle(color: kTextMuted, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios, size: 14, color: kError),
+              ],
+            ),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -450,18 +503,19 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
           ),
         ),
         // D4 件 3：真包体列表（已导入才出现；没导入时一句话说明，不留空白分区）。
-        FutureBuilder<List<UserPackageRecord>>(
-          future: _packages,
+        FutureBuilder<UserPackageInventory>(
+          future: _inventory,
           builder: (ctx, snap) {
-            final recs = snap.data;
-            if (recs == null) {
+            final inv = snap.data;
+            if (inv == null) {
               return Padding(
                 padding: const EdgeInsets.only(top: 10, left: 4),
                 child: Text('正在读本机的自定义包…',
                     style: TextStyle(color: kTextFaint, fontSize: 12)),
               );
             }
-            if (recs.isEmpty) {
+            final recs = inv.packages;
+            if (recs.isEmpty && inv.corruptCount == 0) {
               return Padding(
                 padding: const EdgeInsets.only(top: 10, left: 4),
                 child: Text('还没有导入过的包。用上面的入口先看模板，'
@@ -473,6 +527,7 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 10),
+                if (inv.corruptCount > 0) _corruptNotice(inv.corruptCount),
                 for (final rec in recs)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
@@ -517,13 +572,14 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
                       ),
                     ),
                   ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, top: 2),
-                  child: Text('本机 ${recs.length}/$kUserPackageMaxPackages 个包，'
-                      '每包上限 $kUserPackageMaxChunks 块；'
-                      '同名模块重新导入＝整包替换。',
-                      style: TextStyle(color: kTextFaint, fontSize: 12)),
-                ),
+                if (recs.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, top: 2),
+                    child: Text('本机 ${recs.length}/$kUserPackageMaxPackages 个包，'
+                        '每包上限 $kUserPackageMaxChunks 块；'
+                        '同名模块重新导入＝整包替换。',
+                        style: TextStyle(color: kTextFaint, fontSize: 12)),
+                  ),
               ],
             );
           },

@@ -157,6 +157,10 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
     final progress = Provider.of<ProgressService>(context, listen: false);
     final content = Provider.of<ContentPack>(context, listen: false);
     try {
+      // ASR-233：一键修复也管「我的模块」——档案在、行不在（备份恢复/半截写入）
+      // 同样是红名单里的一项。先按档案补齐缺行，再归位断点、复跑自检。
+      final rebuilt =
+          await UserPackageStore(progress.database).rebuildMissingRows();
       final r =
           await ProgressIntegrity.reconcileAll(progress, content, reason: 'heal_button');
       await progress
@@ -164,6 +168,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
         'healed': r.healed,
         'reds': r.reds,
         'remaining': r.remaining,
+        'userRowsRebuilt': rebuilt,
       }).catchError((_) {});
     } finally {
       if (mounted) setState(() => _healing = false);

@@ -126,7 +126,7 @@ const Map<String, Set<String>> _matrix = {
   'lib/screens/map.dart': {
     'allMasteredKeys',
     'allRows',
-    'UserPackageStore', // ASR-229 D4 件 3：分区列真包，只读 listPackages()
+    'UserPackageStore', // ASR-229 D4 件 3 / ASR-233：分区只读盘点 inspect()（坏档案也列）
   },
   'lib/screens/me.dart': {'allMasteredKeys'},
   'lib/screens/library.dart': {'allRows'},
@@ -135,6 +135,10 @@ const Map<String, Set<String>> _matrix = {
   'lib/screens/listening_player.dart': {'chunkStore.get', 'allRows'},
   'lib/services/ai_coach.dart': {'allMasteredKeys', 'allAssetMasteredKeys'},
   'lib/services/learning_export.dart': {'allRows'},
+  // —— ASR-233：备份通道（授权键整段排除 + 自定义档案补行）——
+  'lib/services/data_channel.dart': {
+    'UserPackageStore', // 合并完按档案补齐缺失的自定义块行：只补缺、不覆盖进度
+  },
   // —— 练习会话：位置来自台账，块内书签只在锚定会话写 ——
   'lib/steps/practice_loop.dart': {
     'chunkStore.get',

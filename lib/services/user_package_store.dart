@@ -85,6 +85,33 @@ class UserPackageStore {
   /// 台账里实际存在的 `user:` 行数（与档案对账用）。
   Future<int> userRowCount() async => (await _db.allUserChunks()).length;
 
+  /// ASR-233：按档案补齐**缺失**的台账行（备份恢复 / 半截写入的自愈口）。
+  ///
+  /// 为什么必须有它：备份件的 `kv` 会带走 `userpkg.*` 档案，但 `chunks` 走官方口径
+  /// （库层排除 `user:`），所以换机/清数据后合并备份只回来档案、不回来行 ⇒
+  /// 自检判红「档案有、台账无」，分区里看得见包、点进去没有行。
+  ///
+  /// 三条边界（钉测见 `test/userpack_backup_test.dart`）：
+  ///  1. 只补缺行，既有行一字不动（不覆盖任何进度）；
+  ///  2. 坏档案跳过——读不出来的东西不凭猜测重建，留给自检判红；
+  ///  3. 官方口径完全不碰（写的仍全是 `user:` 键，一次事务落盘）。
+  /// 如实说明：user 块的学习进度不在备份件里，补回来的行按「未开始学习」记。
+  Future<int> rebuildMissingRows() async {
+    final inv = await inspect();
+    if (inv.missingRows == 0) return 0;
+    final seen = {for (final r in await _db.allUserChunks()) r.chunkKey};
+    final rows = <ChunkRow>[];
+    for (final rec in inv.packages) {
+      for (final e in rec.entries) {
+        if (!seen.add(e.chunkKey)) continue;
+        rows.add(_rowFor(e));
+      }
+    }
+    if (rows.isEmpty) return 0;
+    await _db.upsertChunksAndKv(rows, const {});
+    return rows.length;
+  }
+
   Future<UserPackageRecord?> packageOf(String moduleKey) async {
     final json = await _db.getKv('${AppDatabase.kUserPkgKvPrefix}$moduleKey');
     if (json == null || json.trim().isEmpty) return null;

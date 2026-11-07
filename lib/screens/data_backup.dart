@@ -49,6 +49,7 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: kCard,
+          scrollable: true,
           title: Text('备份已生成', style: TextStyle(color: kText, fontSize: 17)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -64,7 +65,10 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
                   style: TextStyle(color: kPrimary, fontSize: 12)),
               const SizedBox(height: 10),
               Text('换机或重装时，用这份 JSON 在「导入备份」里合并回来。\n'
-                  '不含录音、不含任何 Key；是否备份由你决定。',
+                  '不含录音、不含任何 Key，也不含解锁码与授权状态'
+                  '（换机后重输一次自己的码即可，老用户标记照旧带回）。\n'
+                  '自定义词块只带走词表档案，块上的学习进度不随备份走；'
+                  '合并后按档案补回，记为未开始学习。是否备份由你决定。',
                   style: TextStyle(color: kTextFaint, fontSize: 12)),
             ],
           ),
@@ -114,6 +118,7 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: kCard,
+          scrollable: true,
           title: Text('确认合并', style: TextStyle(color: kText, fontSize: 17)),
           content: Text(
             '新增词块 ${plan.newChunks} 个、更新进度 ${plan.updatedChunks} 个、'
@@ -121,6 +126,10 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
             '追加学习记录 ${plan.newSessions} 条（重复 ${plan.dupSessions} 条跳过）\n'
             '补充设置 ${plan.newKv} 项（已有的不覆盖）\n'
             '${plan.adoptedLegacy == 1 ? '\n这份备份带老用户标记，会一并恢复。' : ''}\n'
+            '${plan.ignoredLicenseKv > 0 ? '\n件里有 ${plan.ignoredLicenseKv} 项授权信息，已忽略：'
+                '解锁码不随备份走，换机请重输一次自己的码。' : ''}\n'
+            '${plan.ignoredUserChunks > 0 ? '\n件里有 ${plan.ignoredUserChunks} 条自定义块行，已忽略：'
+                '自定义词块只按词表档案补回。' : ''}\n'
             '合并只补不删，本机比备份新的进度会被保留。',
             style: TextStyle(color: kTextSecondary, fontSize: 13, height: 1.5),
           ),
@@ -143,10 +152,13 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
       await p.init();
       if (!mounted) return;
       setState(() => _ctl.clear());
+      final rebuiltNote = applied.rebuiltUserRows > 0
+          ? '，自定义词块按档案补回 ${applied.rebuiltUserRows} 行（记为未开始学习）'
+          : '';
       _toast(applied.nothingToDo
           ? '没有需要补的数据（已是最新）'
           : '已合并：词块 +${applied.newChunks}/更新 ${applied.updatedChunks}，'
-              '记录 +${applied.newSessions}');
+              '记录 +${applied.newSessions}$rebuiltNote');
     } catch (e) {
       _toast('$e');
     } finally {
