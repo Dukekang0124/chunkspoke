@@ -54,6 +54,8 @@ class _FreeUseStepState extends State<FreeUseStep> {
   bool _showReference = false;
   bool _passed = false;
   String _asrRaw = '';
+  // ASR-233：录到过一段音频（哪怕没转出文字）就允许自证；与第 4/5 步同一口径。
+  String? _recPath;
   AsrGuardResult? _guard;
   bool _fromVoice = false;
   bool _confirmedByUser = false; // S2：ASR 不确定时由用户点「就是这句」确认
@@ -236,6 +238,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
         _thinking = true;
       });
       final path = await _rec.stop();
+      _recPath = path;
       if (path == null) {
         if (mounted) setState(() { _thinking = false; _micBlocked = true; });
         return;
@@ -456,7 +459,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
                     const SizedBox(height: 10),
                     MachineUnsureCard(
                       why: _machineUnsureWhy,
-                      onAttest: _asrRaw.trim().isEmpty ? null : _selfAttest,
+                      onAttest: _recPath == null ? null : _selfAttest,
                     ),
                   ],
                   if (needConfirm) ...[

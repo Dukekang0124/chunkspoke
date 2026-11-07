@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_common_ffi.dart';
 
 import 'package:chunkspoke_flutter/models/content_pack.dart';
+import 'package:chunkspoke_flutter/services/database.dart';
 import 'package:chunkspoke_flutter/services/learning_flow.dart';
 import 'package:chunkspoke_flutter/services/loaders.dart';
 import 'package:chunkspoke_flutter/services/speech.dart';
@@ -214,5 +216,88 @@ void main() {
     expect(find.text('替换的「Good evening」还没听到'), findsOneWidget);
     expect(find.text('开口说这句'), findsOneWidget);
     expect(find.text('完成替换 · 下一步'), findsNothing);
+  });
+
+  testWidgets('ASR-233：第5步空转写 → 机器自证卡可直接确认通过', (tester) async {
+    SpeechService.debugTranscriberOverride = _FakeTranscriber('');
+
+    // 真实 IO（sqflite ffi）必须放在 runAsync 里，否则会被 fake async 挂住。
+    late ProgressService progress;
+    await tester.runAsync(() async {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+      progress = ProgressService(db: AppDatabase(path: ':memory:'));
+      await progress.init();
+    });
+
+    final chunk = _chunk('a01', 'Good morning');
+    final other = _chunk('a02', 'Good evening');
+    final level = Level(
+      id: 'A',
+      theme: 'Greetings',
+      sceneImage: '',
+      chunks: [chunk, other],
+      sentences: [
+        TargetSentence(
+            id: 's1',
+            text: 'Good morning, everyone.',
+            meaningCN: '大家早上好',
+            chunkIds: ['a01']),
+      ],
+    );
+    final plan = buildSubstitutionPlan(
+        chunk: chunk, sentence: level.sentences.first, allChunks: level.chunks);
+
+    int? passedWith;
+    await tester.binding.setSurfaceSize(const Size(900, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        Provider<TtsService>.value(value: TtsService(adapter: _FakeTts())),
+        Provider<ProgressService>.value(value: progress),
+      ],
+      child: MaterialApp(
+        home: Scaffold(
+          body: SubstituteStep(
+            chunk: chunk,
+            level: level,
+            plan: plan,
+            onPass: (acc) => passedWith = acc,
+            onSkip: () {},
+          ),
+        ),
+      ),
+    ));
+
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      if (find.text('开口说这句').evaluate().isNotEmpty) break;
+    }
+    await tester.tap(find.text('开口说这句'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.byIcon(Icons.stop));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // 空转写 ⇒ 机器没把握：卡片是一级出口，旧的小字自评按钮不重复摊出来。
+    expect(find.byKey(const Key('machineUnsureCard')), findsOneWidget);
+    expect(find.text('这台机器没把握，不是给你判错'), findsOneWidget);
+    expect(find.text('就是这句，算我说过（不计发音分）'), findsOneWidget);
+    expect(find.text('跟着读一遍，我说对了 →'), findsNothing);
+    expect(find.text('完成替换 · 下一步'), findsNothing);
+
+    await tester.tap(find.text('就是这句，算我说过（不计发音分）'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    // 文案必须如实区分「机器判过」与「你自己确认」。
+    expect(find.text('按你的确认通过（不计发音分）'), findsOneWidget);
+    expect(find.byKey(const Key('machineUnsureCard')), findsNothing);
+    await tester.tap(find.text('完成替换 · 下一步'));
+    await tester.pump();
+    expect(passedWith, 100);
   });
 }
