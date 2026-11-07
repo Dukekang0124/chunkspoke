@@ -9,6 +9,8 @@ import 'progress_display.dart';
 import 'progress_integrity.dart';
 import 'update/update_service.dart';
 import 'update/version_compare.dart';
+import 'user_package.dart';
+import 'user_package_store.dart';
 
 /// ASR-203 自检（设置 → 诊断）的判定层。
 ///
@@ -177,6 +179,41 @@ class SelfCheck {
                 ? CheckState.pass
                 : (o.orphanMastered > 0 ? CheckState.fail : CheckState.warn)),
       ];
+
+  /// ASR-229 · D4 件 1：自检扩区到「我的模块」（自定义词块包）。
+  ///
+  /// 三条各管一种半截态，都不许静默过：
+  ///  - 坏档案（连坐项：`listPackages` 会跳过它，包会无声消失）；
+  ///  - 档案声明的块数 ≠ 台账 `user:` 行数（写入半途/外部改动）；
+  ///  - 台账有 `user:` 行但没有档案声明它（删包半途）。
+  /// 官方口径不受影响是**默认期望**，所以这里只报 user 区自己的分歧，不去动进度类行。
+  static List<CheckRow> userPackageRows(UserPackageInventory inv) {
+    final rows = <CheckRow>[
+      CheckRow(
+          '我的模块',
+          inv.packageCount == 0
+              ? '未导入任何自定义包（0 个，上限 $kUserPackageMaxPackages）'
+              : '${inv.packageCount} 个包 · 档案声明 ${inv.declaredChunks} 块 · 台账 ${inv.userRowCount} 行'
+                  '（上限 每包 $kUserPackageMaxChunks 块 / 每台 $kUserPackageMaxPackages 包）',
+          inv.consistent ? CheckState.pass : CheckState.warn),
+    ];
+    if (inv.corruptCount > 0) {
+      rows.add(CheckRow('坏档案',
+          '${inv.corruptCount} 份档案解析失败，已在列表里跳过——请重新导入这些包',
+          CheckState.fail));
+    }
+    if (inv.missingRows > 0) {
+      rows.add(CheckRow('档案有、台账无',
+          '档案声明 ${inv.declaredChunks} 块，台账只有 ${inv.userRowCount} 行（差 ${inv.missingRows}）',
+          CheckState.fail));
+    }
+    if (inv.strayRows > 0) {
+      rows.add(CheckRow('台账有、档案无',
+          '${inv.strayRows} 行 user 块没有任何档案声明（删包半途或外部改动）',
+          CheckState.warn));
+    }
+    return rows;
+  }
 
   /// 区块②之一：识别引擎自检。
   static List<CheckRow> engineRows({
@@ -385,6 +422,7 @@ class SelfCheck {
     required String localVersion,
     required int localVersionCode,
     OrphanScan? orphans,
+    List<CheckRow> user = const [],
   }) {
     return SelfCheckReport(
       at: at,
@@ -396,6 +434,8 @@ class SelfCheck {
         progressSection(audits, orphans: orphans),
         CheckSection('资源完整性', [...engine, ...packs, ...audio]),
         CheckSection('更新链路', update),
+        // ASR-229 D4 件 1：自定义包区（无导入时传空 ⇒ 整段不出现，老包自检零变化）。
+        if (user.isNotEmpty) CheckSection('我的模块', user),
       ],
     );
   }

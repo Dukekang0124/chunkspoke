@@ -15,11 +15,35 @@ import '../services/speech_judge.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import '../ui/feedback.dart';
+import '../ui/machine_unsure_card.dart';
 import '../ui/motion.dart';
 import '../ui/permission_preprompt.dart';
 
 /// 琥珀高亮色（统一收口“目标词琥珀高亮”意图）。
 Color get kAmber => kPrimary;
+
+/// ASR-229 · D4 件 4：「机器侧不确定」的判据（顶层纯函数，便于钉测）。
+///
+/// 一句话口径：**判定结果一个字不改，只是把“机器自己没底”这件事说出口**，
+/// 并因此把自证出口提到一级。四种形态都来自仪器，不是来自用户：
+///  - [softBand]：灰带 / 句首被吞（ASR-209、ASR-214 F3 的「差一点」）；
+///  - [guardOk] 为 false：守门器认为这条转写不可信（噪声、同词堆叠）；
+///  - [reason] 落在 `band` / `lowConf` / `empty` / `tooShort`：判定层自己不敢下结论。
+/// 已通过与「手改文本 / 打字作答」（文本比对，不是识别不确定）都不算。
+/// 本函数**不含任何数字阈值**——阈值单源在 `speech_judge.dart` 与 `asr_guard.dart`，
+/// 这里只读它们的结论（钉测见 `test/userpack_d4_test.dart`）。
+bool machineUncertain({
+  required bool passed,
+  required bool edited,
+  required bool softBand,
+  bool? guardOk,
+  String? reason,
+}) {
+  if (passed || edited) return false;
+  if (softBand) return true;
+  if (guardOk != null && !guardOk) return true;
+  return const ['band', 'lowConf', 'empty', 'tooShort'].contains(reason);
+}
 
 /// 开口题型（复用收紧后的判定管线 judgeSpeech：规范化 + 词级序列比对 + 置信度门槛 + 空/静音拒绝）。
 /// 同一份代码服务于两个环节：
@@ -733,6 +757,81 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
 
   void _selfConfirm(bool ok) => _resolveAttempt(ok, selfEval: ok);
 
+  /// ASR-229 · D4 件 4：低置信自证出口。
+  ///
+  /// 与 `_selfConfirm(true)` 的差别只有一处：**把「这台机器没听清你」的跨屏账清掉**。
+  /// 用户已经明确说「这就是我那句」，继续留着失败账会让下一屏仍按撞墙处理
+  /// （ASR-216 的一级打字出口会一直摊开）。判定阈值、记账规则都没改。
+  void _selfAttest() {
+    if (_voiceFails > 0) {
+      _voiceFails = 0;
+      unawaited(_p.clearVoiceFails(widget.chunk.id));
+    }
+    _selfConfirm(true);
+  }
+
+  /// 「机器自己没把握」的四种形态：灰带、守门器拒判、空/超短转写、低置信。
+  /// 它们是**仪器侧**的不确定，不是用户说错；手改文本/打字作答不算（那是文本比对）。
+  /// 「机器侧不确定」的四种形态见 [machineUncertain]；本 getter 只回答一件事：
+  /// 现在屏幕上是不是**失败屏**（内容最多的一屏）。
+  /// 条件顺序与 build 里的分支链一致，所以它和真正渲染出来的那一支永远同步。
+  bool get _failureScreen =>
+      !_permBlocked &&
+      !_engineFailed &&
+      !_showAnswer &&
+      !_selfAssess &&
+      !_followAlong &&
+      !_thinking &&
+      !_listening &&
+      _judge != null &&
+      !_passed;
+
+  /// ASR-229 D4 件 4：低置信判据（灰带 / 守门拒判 / 空 / 低置信 / 过短）。
+  bool get _machineUnsure {
+    final o = _judge;
+    if (o == null) return false;
+    return machineUncertain(
+      passed: _passed,
+      edited: _edited,
+      softBand: _softBand,
+      guardOk: _guard?.ok,
+      reason: o.reason,
+    );
+  }
+
+  String get _machineUnsureWhy {
+    final o = _judge!;
+    final pct = (o.similarity * 100).round();
+    if (_softBand) {
+      return '差一点：核心词没全命中但已经很接近（相似度 $pct%），'
+          '机器自己也说不准该不该判你对。';
+    }
+    if (_guard != null && !_guard!.ok) {
+      return '守门器认为这条识别结果不可信（噪声/同词堆叠），'
+          '所以没拿它当你的答案。';
+    }
+    switch (o.reason) {
+      case 'empty':
+        return '整条录音没检出可信文本——通常是声音太小或离麦太远，不是你读错。';
+      case 'lowConf':
+        return '识别置信度没到线（相似度 $pct%），机器不敢下判定。';
+      case 'tooShort':
+        return '检出的内容太短，不够判这一句。';
+      default:
+        return '相似度 $pct%，机器没把握。';
+    }
+  }
+
+  /// ASR-229 · D4 件 4：低置信卡片——先承认机器不确定，再给一条自证出口。
+  /// ASR-233：卡片本体抽到 `ui/machine_unsure_card.dart`，第 5/6 步共用同一张；
+  /// 这里只保留本步真实的记账口径（本步确实写 `l4_self_eval`）。
+  Widget _lowConfidenceCard() => MachineUnsureCard(
+        why: _machineUnsureWhy,
+        onAttest: _recPath == null ? null : _selfAttest,
+        note: '这条按「你自己确认」记账，不记发音分；是否算掌握仍走原有门槛'
+            '（前面步骤一次通过 + 星级），本页没改任何判定阈值。',
+      );
+
   /// 有波动但明显偏弱 → 「靠近一点说」。纯提示，不改判定、不打断采集。
   bool get _tooQuiet => _levelActive && _level < _comfortLevel;
 
@@ -1108,7 +1207,11 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 10),
           if (_judge != null && !_selfAssess) _targetSentence(),
-          const Spacer(),
+          // ASR-229 D4 装机腿抓到的坑：失败屏内容最多（判定说明 + 低置信卡片 +
+          // 三个出口 + 打字出口 + 更多选择），Spacer 居中会把最下面的
+          // 「打字作答」顶出屏幕——那一出口是 ASR-216 明令「第一次失败就要给」的。
+          // ⇒ 失败态不再居中：装得下就贴顶，装不下就能滚，绝不裁。
+          if (_failureScreen) const SizedBox(height: 10) else const Spacer(),
           if (_permBlocked)
             _permCard()
           else if (_engineFailed)
@@ -1156,7 +1259,10 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               ],
             )
           else if (_judge != null && !_passed)
-            Column(
+            // 小屏保护（见上面 _failureScreen）：这一支可滚，绝不裁掉出口。
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
               children: [
                 Text(
                   _transcript.trim().isEmpty && !_edited
@@ -1201,6 +1307,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                   style: TextStyle(color: kTextMuted, fontSize: 13),
                 ),
                 const SizedBox(height: 10),
+                // ASR-229 D4 件 4：机器侧不确定 → 承认它，并把自证出口放到一级。
+                if (_machineUnsure) _lowConfidenceCard(),
                 Row(
                   children: [
                     Expanded(
@@ -1277,6 +1385,8 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
                   ),
                 ],
               ],
+            ),
+              ),
             )
           else if (_judge != null && _passed)
             Column(

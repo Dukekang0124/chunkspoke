@@ -12,8 +12,10 @@ import '../services/recording.dart';
 import '../services/speech.dart';
 import '../ui/theme.dart';
 import '../ui/feedback.dart';
+import '../ui/machine_unsure_card.dart';
 import '../ui/motion.dart';
 import '../ui/permission_preprompt.dart';
+import 'l4_step.dart' show machineUncertain;
 
 /// ④ 定向替换：在目标句中把当前词块换成同类搭档，开口说出新句。
 /// 双校验：骨架词有序覆盖率 ≥0.8 + 替代词命中；失败给重试/听标准/自评三条路，
@@ -59,6 +61,7 @@ class _SubstituteStepState extends State<SubstituteStep> {
   int _attempts = 0;
   bool _showSelfEval = false;
   bool _passed = false;
+  bool _selfPassed = false; // 由用户确认通过（不是机器判过），文案必须如实区分
   int _accuracy = 0;
   Timer? _playTimer;
 
@@ -231,9 +234,55 @@ class _SubstituteStepState extends State<SubstituteStep> {
   void _selfConfirm() {
     setState(() {
       _passed = true;
+      _selfPassed = true;
       _accuracy = 100;
     });
     _speakTarget();
+  }
+
+  /// ASR-233：机器没把握时的一级自证出口（与第 4 步同一张卡、同一判据）。
+  ///
+  /// 本步不写 `l4_self_eval`（那本账在第 4 步的开口环节），只把跨屏语音失败账清掉：
+  /// 用户已明说「这就是我那句」，留着账会让下一屏继续按撞墙处理（ASR-216 的口径）。
+  /// 判定阈值、星级门槛、`onPass` 的记账事件一个字没改。
+  void _selfAttest() {
+    if (_p.voiceFailCount(widget.chunk.id) > 0) {
+      unawaited(_p.clearVoiceFails(widget.chunk.id));
+    }
+    _selfConfirm();
+  }
+
+  /// 现在渲染的是不是失败屏（与 build 的分支链逐条对齐）。
+  /// 失败屏内容最多，必须可滚——否则小屏会把出口顶出视口（D4 装机腿第 4 例）。
+  bool get _failureScreen => !_passed && !_thinking && !_listening;
+
+  /// 机器侧不确定：守门器拒判 / 空转写 / 过短。
+  /// `lowSkeleton`、`missingSlot` 是判卷结论（真没说对），不算仪器没底。
+  bool get _machineUnsure {
+    final v = _verdict;
+    if (v == null) return false;
+    return machineUncertain(
+      passed: _passed,
+      edited: false,
+      softBand: false,
+      guardOk: _guard?.ok,
+      reason: v.reason,
+    );
+  }
+
+  String get _machineUnsureWhy {
+    if (_guard != null && !_guard!.ok) {
+      return '守门器认为这条识别结果不可信（噪声/同词堆叠），'
+          '所以没拿它当你的答案。';
+    }
+    switch (_verdict?.reason) {
+      case 'empty':
+        return '整条录音没检出可信文本——通常是声音太小或离麦太远，不是你读错。';
+      case 'tooShort':
+        return '检出的内容太短，不够判这一句。';
+      default:
+        return '机器没把握这一句有没有说完整。';
+    }
   }
 
   void _confirmPass() {
@@ -392,11 +441,11 @@ class _SubstituteStepState extends State<SubstituteStep> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: kTextMuted, fontSize: 12)),
-          const Spacer(),
+          if (_failureScreen) const SizedBox(height: 10) else const Spacer(),
           if (_passed)
             Column(
               children: [
-                Text('替换成功，句子说完整了',
+                Text(_selfPassed ? '按你的确认通过（不计发音分）' : '替换成功，句子说完整了',
                     style: TextStyle(
                         color: kUnlocked,
                         fontSize: 17,
@@ -452,67 +501,86 @@ class _SubstituteStepState extends State<SubstituteStep> {
                 ),
               ],
             )
-          else ...[
-            if (_transcript.trim().isNotEmpty)
-              Container(
-                key: const Key('substituteAsrRaw'),
-                width: double.infinity,
-                padding: const EdgeInsets.all(9),
-                margin: const EdgeInsets.only(bottom: 6),
-                decoration: BoxDecoration(
-                  color: kCard,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: kBorderStrong),
+          else
+            // 小屏保护（与第 4 步同一口径）：失败屏可滚，绝不把出口顶出视口。
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_transcript.trim().isNotEmpty)
+                      Container(
+                        key: const Key('substituteAsrRaw'),
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(9),
+                        margin: const EdgeInsets.only(bottom: 6),
+                        decoration: BoxDecoration(
+                          color: kCard,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: kBorderStrong),
+                        ),
+                        child: Text('你说：$_transcript',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: kTextSecondary, fontSize: 13)),
+                      ),
+                    if (hint != null)
+                      Text(hint,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: hintColor, fontSize: 13))
+                    else
+                      Text('选好替换词，开口说出新句子',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: kTextSecondary)),
+                    const SizedBox(height: 8),
+                    // ASR-233：机器没把握 → 与第 4 步同一张卡、同一条一级自证出口。
+                    if (_machineUnsure)
+                      MachineUnsureCard(
+                        why: _machineUnsureWhy,
+                        onAttest: _recPath == null ? null : _selfAttest,
+                      ),
+                    if (_permBlocked)
+                      Text('麦克风未授权，可以先跟着读一遍（自评）',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: kTextMuted, fontSize: 12))
+                    else
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimary,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 22, vertical: 12),
+                        ),
+                        onPressed: _ready ? _start : null,
+                        icon: Icon(Icons.mic, color: kOnPrimary, size: 20),
+                        label: Text('开口说这句',
+                            style: TextStyle(color: kOnPrimary)),
+                      ),
+                    if (!_ready)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text('识别引擎准备中…',
+                            style: TextStyle(color: kTextFaint, fontSize: 12)),
+                      ),
+                    // 卡片已在上面给了一级出口时不再重复摊一条同义小字按钮。
+                    if (!_machineUnsure &&
+                        (_showSelfEval || _permBlocked || !_ready)) ...[
+                      const SizedBox(height: 6),
+                      TextButton(
+                        onPressed: _selfConfirm,
+                        child: Text('跟着读一遍，我说对了 →',
+                            style: TextStyle(color: kPrimary, fontSize: 13)),
+                      ),
+                    ],
+                    TextButton(
+                      onPressed: widget.onSkip,
+                      child: Text(
+                          widget.review ? '先跳过这块，明天再来' : '跳过这一步',
+                          style: TextStyle(color: kTextFaint)),
+                    ),
+                  ],
                 ),
-                child: Text('你说：$_transcript',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: kTextSecondary, fontSize: 13)),
               ),
-            if (hint != null)
-              Text(hint,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: hintColor, fontSize: 13))
-            else
-              Text('选好替换词，开口说出新句子',
-                  style: TextStyle(color: kTextSecondary)),
-            const SizedBox(height: 8),
-            if (_permBlocked)
-              Text('麦克风未授权，可以先跟着读一遍（自评）',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: kTextMuted, fontSize: 12))
-            else
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimary,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                ),
-                onPressed: _ready ? _start : null,
-                icon: Icon(Icons.mic, color: kOnPrimary, size: 20),
-                label: Text('开口说这句',
-                    style: TextStyle(color: kOnPrimary)),
-              ),
-            if (!_ready)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text('识别引擎准备中…',
-                    style: TextStyle(color: kTextFaint, fontSize: 12)),
-              ),
-            if (_showSelfEval || _permBlocked || !_ready) ...[
-              const SizedBox(height: 6),
-              TextButton(
-                onPressed: _selfConfirm,
-                child: Text('跟着读一遍，我说对了 →',
-                    style: TextStyle(color: kPrimary, fontSize: 13)),
-              ),
-            ],
-            TextButton(
-              onPressed: widget.onSkip,
-              child: Text(widget.review ? '先跳过这块，明天再来' : '跳过这一步',
-                  style: TextStyle(color: kTextFaint)),
             ),
-          ],
           const SizedBox(height: 10),
         ],
       ),

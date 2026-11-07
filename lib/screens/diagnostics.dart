@@ -11,14 +11,16 @@ import '../services/hd_voice.dart';
 import '../services/loaders.dart';
 import '../services/progress_integrity.dart';
 import '../services/self_check.dart';
+import '../services/user_package_store.dart';
 import '../services/vosk_engine.dart';
 import '../services/zipformer_asr.dart';
 import '../ui/theme.dart';
 
 /// ASR-203 自检页（设置 → 诊断）。
 ///
-/// 四个区块：进度完整性（逐模块 台账/断点/环/分数 比对 + 红名单一键修复）、
+/// 区块：进度完整性（逐模块 台账/断点/环/分数 比对 + 红名单一键修复）、
 /// 资源完整性（引擎自检 + 增强包状态 + 音频抽检）、更新链路（清单可达 + 版本解析）、
+/// ASR-229 D4 起再加「我的模块」（自定义包的档案↔台账对账，坏档案记红），
 /// 以及每次自检都自动归档一份 JSON（发版前全模块扫描留证）。
 class DiagnosticsScreen extends StatefulWidget {
   const DiagnosticsScreen({super.key});
@@ -114,6 +116,9 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
         // ASR-211 修复 4：孤儿行（台账有、内容包没有）随自检归档一起回传，
         // 「要不要做 id 迁移表」看这份真机数据，不靠猜。
         orphans: await ProgressIntegrity.orphans(progress, content),
+        // ASR-229 D4 件 1：自定义包扩区（坏档案不许静默跳过）。
+        user: SelfCheck.userPackageRows(
+            await UserPackageStore(progress.database).inspect()),
       );
 
       String? path;
@@ -152,6 +157,10 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
     final progress = Provider.of<ProgressService>(context, listen: false);
     final content = Provider.of<ContentPack>(context, listen: false);
     try {
+      // ASR-233：一键修复也管「我的模块」——档案在、行不在（备份恢复/半截写入）
+      // 同样是红名单里的一项。先按档案补齐缺行，再归位断点、复跑自检。
+      final rebuilt =
+          await UserPackageStore(progress.database).rebuildMissingRows();
       final r =
           await ProgressIntegrity.reconcileAll(progress, content, reason: 'heal_button');
       await progress
@@ -159,6 +168,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
         'healed': r.healed,
         'reds': r.reds,
         'remaining': r.remaining,
+        'userRowsRebuilt': rebuilt,
       }).catchError((_) {});
     } finally {
       if (mounted) setState(() => _healing = false);

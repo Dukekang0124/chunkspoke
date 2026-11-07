@@ -214,7 +214,7 @@ void main() {
         ],
       );
 
-      final plan = await previewChannelImport(db: db, text: text);
+      final plan = await previewChannelImport(db: db, text: text, allowUserPackages: true);
       expect(plan.newChunks, 1);
       expect(plan.updatedChunks, 0);
       expect(plan.keptChunks, 1);
@@ -222,7 +222,7 @@ void main() {
       expect(plan.dupSessions, 1);
       expect(plan.newKv, 1); // baseRate 已存在 → 不算新增
 
-      await applyChannelImport(db: db, gate: gate, text: text);
+      await applyChannelImport(db: db, gate: gate, text: text, allowUserPackages: true);
 
       final c1 = await db.getChunk('c1');
       expect(c1!.assetState, ChunkAssetState.consolidated); // 本机更新未被压回
@@ -249,7 +249,7 @@ void main() {
           {'chunk_key': 'c9', 'ts': 1, 'outcome': 'x', 'score': 0, 'review': 0}
         ],
       );
-      final plan = await applyChannelImport(db: db, gate: gate, text: text);
+      final plan = await applyChannelImport(db: db, gate: gate, text: text, allowUserPackages: true);
       expect(plan.updatedChunks, 1);
       final row = await db.getChunk('c9');
       expect(row!.assetState, ChunkAssetState.mastered);
@@ -266,8 +266,8 @@ void main() {
           {'chunk_key': 'c3', 'ts': 3000, 'outcome': 'speakSuccess', 'score': 80, 'review': 0},
         ],
       );
-      await applyChannelImport(db: db, gate: gate, text: text);
-      final again = await previewChannelImport(db: db, text: text);
+      await applyChannelImport(db: db, gate: gate, text: text, allowUserPackages: true);
+      final again = await previewChannelImport(db: db, text: text, allowUserPackages: true);
       expect(again.newChunks, 0);
       expect(again.updatedChunks, 0);
       expect(again.newSessions, 0);
@@ -306,7 +306,7 @@ void main() {
         legacyFlag: kLegacyFlagYes,
         now: DateTime.fromMillisecondsSinceEpoch(1700000000000),
       ));
-      await applyChannelImport(db: db, gate: fresh, text: text);
+      await applyChannelImport(db: db, gate: fresh, text: text, allowUserPackages: true);
       expect(await fresh.readRaw(), kLegacyFlagYes);
       expect(probes, 1, reason: '导入路径不得再探一次库（顺序反了身份就回不来）');
 
@@ -376,12 +376,47 @@ void main() {
         now: DateTime.fromMillisecondsSinceEpoch(1700000000000),
       ));
 
-      final plan = await applyChannelImport(db: db, gate: fresh, text: text);
+      final plan = await applyChannelImport(db: db, gate: fresh, text: text, allowUserPackages: true);
       expect(plan.newKv, 2);
       expect(plan.newChunks, 0);
       expect(await fresh.readRaw(), kLegacyFlagYes);
       expect(probes, 1, reason: '只有设置也不能再去探库');
       expect(await db.getKv('baseRate'), '1.25');
+    });
+  });
+
+  // ASR-230 裁定 1 的硬要求：selfEval 台账标记必须**可查**。
+  // 真机没有 root 时唯一的查证通道是「设置→数据备份→导出 JSON」，
+  // 所以这条链路不能只靠口头承诺，得有钉测：导出带得上、导入回得来。
+  group('自评标记可查（票5 的验证口径）', () {
+    test('自评写进台账 → 备份件带 l4_self_eval:1 → 导入回来仍是 1', () async {
+      await db.upsertChunk(const ChunkRow(
+        chunkKey: 'c1',
+        level: ChunkLevel.review,
+        dueDate: 5000,
+        failCount: 0,
+        lastScore: 0,
+        l2OneTry: 1,
+        l4SelfEval: true,
+        assetState: ChunkAssetState.learning,
+      ));
+
+      final exported = await buildChannelExport(db: db, gate: gate);
+      final decoded = jsonDecode(exported.json) as Map<String, dynamic>;
+      final row = (decoded['chunks'] as List)
+          .cast<Map<String, Object?>>()
+          .firstWhere((c) => c['chunk_key'] == 'c1');
+      expect(row.containsKey('l4_self_eval'), isTrue,
+          reason: '备份件的字段白名单里没有自评标记 ⇒ 票5 在真机上无从验证「算我说过」这条腿');
+      expect(row['l4_self_eval'], 1);
+
+      // 抹掉本机行再导入：证明这个字段真的落库、也真的回得来（不是只在内存里好看）。
+      await db.deleteChunksByKeys(['c1']);
+      expect(await db.getChunk('c1'), isNull);
+      final plan = await applyChannelImport(db: db, gate: gate, text: exported.json, allowUserPackages: true);
+      expect(plan.newChunks, 1);
+      expect((await db.getChunk('c1'))!.l4SelfEval, isTrue,
+          reason: '导入合并丢了自评标记：清过数据再导回来的用户会被判成没自评');
     });
   });
 }

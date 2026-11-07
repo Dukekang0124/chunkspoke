@@ -27,6 +27,10 @@ import 'package:chunkspoke_flutter/services/state_machine.dart';
 /// 跑法：`flutter test test/progress_read_points_test.dart`（发版门禁同套全量里跑）。
 
 /// 扫描用的 token 表；新增进度 API 时先加到这里，再登记进矩阵。
+///
+/// ASR-228 D3 追加最后一组：`user:` 命名空间的写点与排除口径。
+/// 它们与进度同源的理由只有一个——**导入会往同一张 chunks 表写行**；
+/// 排除口径一旦散落到各读点，案三就会以「我的模块污染官方计数」的形式重演。
 const List<String> _tokens = [
   'allMasteredKeys',
   'allAssetMasteredKeys',
@@ -44,6 +48,12 @@ const List<String> _tokens = [
   'deriveResume',
   'resumeKvAfterChunkDone',
   'LevelDisplay',
+  'kUserKeyExclude',
+  'officialOnly',
+  'allUserChunks',
+  'UserPackageStore',
+  'importValidation',
+  'reconcileAll',
 ];
 
 /// 矩阵：文件 → 该文件允许出现的进度调用点。
@@ -55,6 +65,9 @@ const Map<String, Set<String>> _matrix = {
     'allMasteredKeys', // 关卡轴已掌握 key 集合（唯一真源）
     'assetStateCounts', // 资产轴分组计数
     'countAssetMastered', // 资产轴已掌握数
+    'kUserKeyExclude', // ASR-228 D3：user: 排除口径的唯一一份
+    'officialOnly', // 同上，拼 where 用的单源助手
+    'allUserChunks', // 「我的模块」自己的读路径（不与官方口径混用）
   },
   // —— 台账派生层（断点唯一派生式在这里）——
   'lib/services/chunk_progress.dart': {
@@ -86,12 +99,35 @@ const Map<String, Set<String>> _matrix = {
     'learnResumeKey',
     'reconcileResume',
     'resumeKvAfterChunkDone',
+    'reconcileAll', // 自愈入口本体
+  },
+  // —— ASR-228 D3：自定义包写点（同一张 chunks 表，命名空间隔离）——
+  'lib/services/user_package_store.dart': {
+    'allUserChunks', // userRowCount 只数自己的行
+    'UserPackageStore',
+    'importValidation', // 唯一写入口
+    'kUserKeyExclude', // 注释里点名排除口径，扫描器按字符串计
+  },
+  'lib/services/progress_guard.dart': {'reconcileAll'},
+  'lib/screens/diagnostics.dart': {'reconcileAll', 'UserPackageStore'},
+  'lib/screens/user_import_screen.dart': {
+    'UserPackageStore',
+    'importValidation',
+    'reconcileAll', // 件 3：导入写完同帧对账，不许等下次冷启动
+  },
+  // —— ASR-229 D4：只读侧（分区列表 / 包详情 / 地图）——
+  'lib/screens/user_package_detail_screen.dart': {
+    'UserPackageStore', // 详情读档案 + 唯一的删包出口（removePackage），不碰断点
   },
   // —— 渲染单源与自检 ——
   'lib/services/progress_display.dart': {'LevelDisplay'},
   'lib/services/self_check.dart': {'LevelDisplay'},
   // —— UI 读取点 ——
-  'lib/screens/map.dart': {'allMasteredKeys', 'allRows'},
+  'lib/screens/map.dart': {
+    'allMasteredKeys',
+    'allRows',
+    'UserPackageStore', // ASR-229 D4 件 3 / ASR-233：分区只读盘点 inspect()（坏档案也列）
+  },
   'lib/screens/me.dart': {'allMasteredKeys'},
   'lib/screens/library.dart': {'allRows'},
   'lib/screens/free_build_screen.dart': {'allRows'},
@@ -99,6 +135,10 @@ const Map<String, Set<String>> _matrix = {
   'lib/screens/listening_player.dart': {'chunkStore.get', 'allRows'},
   'lib/services/ai_coach.dart': {'allMasteredKeys', 'allAssetMasteredKeys'},
   'lib/services/learning_export.dart': {'allRows'},
+  // —— ASR-233：备份通道（授权键整段排除 + 自定义档案补行）——
+  'lib/services/data_channel.dart': {
+    'UserPackageStore', // 合并完按档案补齐缺失的自定义块行：只补缺、不覆盖进度
+  },
   // —— 练习会话：位置来自台账，块内书签只在锚定会话写 ——
   'lib/steps/practice_loop.dart': {
     'chunkStore.get',
@@ -138,14 +178,19 @@ Map<String, String> _libFiles(String root) {
   return map;
 }
 
-Map<String, Set<String>> _scan(Map<String, String> files) {
-  final out = <String, Set<String>>{};
+Map<String, Set<String>> _scan(Map<String, String> files) {  final out = <String, Set<String>>{};
   for (final e in files.entries) {
     final hits = <String>{for (final t in _tokens) if (e.value.contains(t)) t};
     if (hits.isNotEmpty) out[e.key] = hits;
   }
   return out;
 }
+
+/// 去注释后的源码：禁用词检查必须看代码，不能被文档注释里的说明文字误伤。
+String _code(String src) => src
+    .split('\n')
+    .where((l) => !l.trimLeft().startsWith('//'))
+    .join('\n');
 
 Level _level(String id, int count) => Level(
       id: id,
@@ -258,6 +303,65 @@ void main() {
           reason: '非锚定会话不许写整模块断点（_writeResume 的门）');
       expect(src.contains('LevelDisplay'), isTrue,
           reason: '进度文案必须走渲染单源，不许就地拼数字');
+    });
+
+    // ── ASR-228 D3 · 落库件 4：写点登记齐 + 排除口径单源 ──────────────────
+    test('user: 排除口径只允许一份定义，别处手写 SQL 即红', () {
+      final definers = [
+        for (final e in files.entries)
+          if (e.value.contains('String kUserKeyExclude')) e.key,
+      ];
+      expect(definers, ['lib/services/database.dart'],
+          reason: '排除口径复制第二份，就等于给未来的漏写读点开门');
+
+      final handWritten = [
+        for (final e in files.entries)
+          if (e.key != 'lib/services/database.dart' &&
+              e.value.contains(r"chunk_key NOT LIKE 'user:%'"))
+            e.key,
+      ];
+      expect(handWritten, isEmpty, reason: '这些文件绕开单源自己拼了排除式：$handWritten');
+    });
+
+    test('自定义包只有登记的写入口能写 user 行（UI 不许直接碰库）', () {
+      final writers = [
+        for (final e in files.entries)
+          if (e.value.contains('importValidation') &&
+              !{'lib/services/user_package_store.dart',
+                'lib/screens/user_import_screen.dart'}.contains(e.key))
+            e.key,
+      ];
+      expect(writers, isEmpty, reason: '出现第二个写入口：$writers');
+
+      // ASR-229 D4 件 2：删包出口也必须唯一（档案 + 台账行的级联清理只有一处实现，
+      // 只允许详情页调用它）；否则「卸载级联」会出现第二份说法不一的实现。
+      final deleters = [
+        for (final e in files.entries)
+          if (e.value.contains('removePackage') &&
+              !{'lib/services/user_package_store.dart',
+                'lib/screens/user_package_detail_screen.dart'}.contains(e.key))
+            e.key,
+      ];
+      expect(deleters, isEmpty, reason: '出现第二个删包出口：$deleters');
+
+      final ui = _code(files['lib/screens/user_import_screen.dart']!);
+      // 件 3 的静态闸：导入器必须同帧调 reconcileAll，不许等下次冷启动/回前台。
+      expect(ui.contains('reconcileAll'), isTrue,
+          reason: '导入后立刻对账是 D3 件 3，摘掉它就回到「写完不归位」的老路');
+      expect(ui.contains('applyImportedRows'), isFalse,
+          reason: 'applyImportedRows 会按官方关卡重算锚点，user 行不许走那条路');
+
+      final store = _code(files['lib/services/user_package_store.dart']!);
+      for (final forbidden in ['setLearnResume', 'clearLearnResume', 'applyImportedRows']) {
+        expect(store.contains(forbidden), isFalse,
+            reason: '落库写手不许碰断点：$forbidden');
+      }
+    });
+
+    test('D3 之后登记规模只增不减（写点 × 读点矩阵扩容到 30+）', () {
+      final n = _matrix.values.fold<int>(0, (s, v) => s + v.length);
+      expect(n, greaterThanOrEqualTo(30),
+          reason: 'ASR-228 D3 应把命名空间写点与排除口径一并登记，当前 $n 个点');
     });
   });
 

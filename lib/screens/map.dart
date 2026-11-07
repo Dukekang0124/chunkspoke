@@ -8,12 +8,17 @@ import '../services/loaders.dart';
 import '../services/license_state.dart';
 import '../services/progress_guard.dart';
 import '../services/scene_progression.dart';
+import '../services/user_package.dart';
+import '../services/user_package_store.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import 'diagnostics.dart';
 import 'level.dart';
 import 'license_activate.dart';
 import 'review.dart';
 import 'free_build_screen.dart';
+import 'user_import_screen.dart';
+import 'user_package_detail_screen.dart';
 
 import '../ui/labels.dart';
 import '../ui/count_up.dart';
@@ -191,6 +196,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 onReturn: _reload,
               ),
               const SizedBox(height: 18),
+              // ASR-223 v2 = D3 正式 UI 第一片，ASR-229 D4 件 3：分区列真包。
+              // D3 落库后同一分区读「我的模块」自己的包档案；点包名进只读详情（含级联删除），
+              // 点卡片进导入器（三入口 + 确认步 + 落库）。本组件只读不写，钉测见
+              // test/userpack_map_entry_test.dart。
+              _UserModuleSection(onReturn: _reload),
+              const SizedBox(height: 18),
               if (levels.any((lv) => lv.optional)) ...[
                 const _TierHeader('生存'),
                 const SizedBox(height: 8),
@@ -335,6 +346,252 @@ class _FreeBuildCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// ASR-223 v2 / ASR-228 D3 / ASR-229 D4 件 3：「我的模块」分区 = 真包列表 + 导入入口。
+///
+/// D4 起这里读包档案列表（`UserPackageStore.listPackages()`，纯读）把用户自己导进来的包
+/// 列成分区里的行；档案坏掉的包不在列表里（列表侧为了不炸 UI 会跳过），
+/// 但**不静默消失**——自检「我的模块」区块会把它连它的行一起打出来（D4 件 1 的连坐项）。
+///
+/// 红线从 v2 的「只导航」升级成 D4 的「只读不写」，仍然靠结构保证：
+/// 本组件不许出现落库写入口、不许删包、不许碰断点与官方台账 API——
+/// 写入只发生在导入器的确认步，删除只发生在详情页里用户明确确认之后。
+/// 两条都钉在 `test/userpack_map_entry_test.dart`。
+class _UserModuleSection extends StatefulWidget {
+  final VoidCallback onReturn;
+  const _UserModuleSection({required this.onReturn});
+
+  @override
+  State<_UserModuleSection> createState() => _UserModuleSectionState();
+}
+
+class _UserModuleSectionState extends State<_UserModuleSection> {
+  Future<UserPackageInventory>? _inventory;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  void _reload() {
+    // 只读盘点：不写库、不碰断点、不动官方口径。
+    // ASR-233：这里必须用盘点而不是「好包列表」——坏档案被列表跳过，
+    // 分区就会无声少一个包，用户以为数据没了。坏档案要在这里看得见。
+    final store = UserPackageStore(
+        Provider.of<ProgressService>(context, listen: false).database);
+    _inventory = store.inspect();
+  }
+
+  Future<void> _openDiagnostics() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const DiagnosticsScreen()),
+    );
+    if (!mounted) return;
+    setState(_reload);
+  }
+
+  Future<void> _openImport() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const UserImportScreen()),
+    );
+    if (!mounted) return;
+    setState(_reload);
+    widget.onReturn();
+  }
+
+  Future<void> _openDetail(UserPackageRecord rec) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+          builder: (_) => UserPackageDetailScreen(moduleKey: rec.moduleKey)),
+    );
+    if (!mounted) return;
+    setState(_reload);
+    widget.onReturn();
+  }
+
+  String _importedDate(int ms) {
+    final d = DateTime.fromMillisecondsSinceEpoch(ms);
+    return '${d.month}月${d.day}日';
+  }
+
+  /// ASR-233：读不出来的档案要在分区里明说，并给一条去诊断的路。
+  /// 不猜内容、不自动删——自检判红后由用户决定重新导入还是清掉。
+  Widget _corruptNotice(int n) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: InkWell(
+          key: const Key('userCorruptNotice'),
+          borderRadius: BorderRadius.circular(14),
+          onTap: _openDiagnostics,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+            decoration: BoxDecoration(
+              color: kErrorTint,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: kError),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.report_gmailerrorred, color: kError, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('$n 份包档案读不出来',
+                          style: TextStyle(
+                              color: kText,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      Text('包还在本机，只是档案坏了，所以这里列不出内容。'
+                          '去诊断看详情；重新导入同名模块即可修好。',
+                          style: TextStyle(color: kTextMuted, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios, size: 14, color: kError),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _TierHeader('我的模块'),
+        const SizedBox(height: 8),
+        InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _openImport,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: kCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: kBorder),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.upload_file, color: kPrimary, size: 26),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('导入我自己的词块（CSV / JSON）',
+                          style: TextStyle(
+                              color: kText,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 4),
+                      Text('文件 / 粘贴 / 模板三个入口；确认前不写入，'
+                          '确认后只进「我的模块」',
+                          style: TextStyle(color: kTextMuted, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios, size: 16, color: kPrimary),
+              ],
+            ),
+          ),
+        ),
+        // D4 件 3：真包体列表（已导入才出现；没导入时一句话说明，不留空白分区）。
+        FutureBuilder<UserPackageInventory>(
+          future: _inventory,
+          builder: (ctx, snap) {
+            final inv = snap.data;
+            if (inv == null) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 10, left: 4),
+                child: Text('正在读本机的自定义包…',
+                    style: TextStyle(color: kTextFaint, fontSize: 12)),
+              );
+            }
+            final recs = inv.packages;
+            if (recs.isEmpty && inv.corruptCount == 0) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 10, left: 4),
+                child: Text('还没有导入过的包。用上面的入口先看模板，'
+                    '粘贴或选文件都行，确认前一行都不写。',
+                    style: TextStyle(color: kTextFaint, fontSize: 12)),
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 10),
+                if (inv.corruptCount > 0) _corruptNotice(inv.corruptCount),
+                for (final rec in recs)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () => _openDetail(rec),
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+                        decoration: BoxDecoration(
+                          color: kBg,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.library_books_outlined,
+                                color: kPrimary, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(rec.moduleName,
+                                      style: TextStyle(
+                                          color: kText,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                      '${rec.chunkCount} 块 · '
+                                      '${_importedDate(rec.importedAt)}导入 · '
+                                      '不进官方已掌握数与复习排期',
+                                      style: TextStyle(
+                                          color: kTextMuted, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_ios,
+                                size: 14, color: kTextFaint),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                if (recs.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, top: 2),
+                    child: Text('本机 ${recs.length}/$kUserPackageMaxPackages 个包，'
+                        '每包上限 $kUserPackageMaxChunks 块；'
+                        '同名模块重新导入＝整包替换。',
+                        style: TextStyle(color: kTextFaint, fontSize: 12)),
+                  ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text('官方模块的已掌握数、复习排期与断点都不因为你导入而改变；'
+              '没点「确认导入」之前，这一页一行都不写。',
+              style: TextStyle(color: kTextFaint, fontSize: 12)),
+        ),
+      ],
     );
   }
 }

@@ -13,8 +13,10 @@ import '../services/speech.dart';
 import '../ui/theme.dart';
 import '../ui/labels.dart';
 import '../ui/feedback.dart';
+import '../ui/machine_unsure_card.dart';
 import '../ui/motion.dart';
 import '../ui/permission_preprompt.dart';
+import 'l4_step.dart' show machineUncertain;
 
 /// ⑤ 自由造句 + 场景应用：用今天的词块说/写一句自己的话。
 /// 宽松校验（用上词块 + 至少 3 词 + 有新增内容），通过后给母语者参考句对照。
@@ -52,6 +54,8 @@ class _FreeUseStepState extends State<FreeUseStep> {
   bool _showReference = false;
   bool _passed = false;
   String _asrRaw = '';
+  // ASR-233：录到过一段音频（哪怕没转出文字）就允许自证；与第 4/5 步同一口径。
+  String? _recPath;
   AsrGuardResult? _guard;
   bool _fromVoice = false;
   bool _confirmedByUser = false; // S2：ASR 不确定时由用户点「就是这句」确认
@@ -135,6 +139,46 @@ class _FreeUseStepState extends State<FreeUseStep> {
     _toggleMic();
   }
 
+  /// ASR-233：机器没把握时的一级自证出口（与第 4/5 步同一张卡、同一判据）。
+  /// 走既有的「按你的确认」通道，不新造判定；只额外把跨屏语音失败账清掉，
+  /// 免得下一屏仍按撞墙处理。阈值、`onPass` 的记账事件一个字没改。
+  void _selfAttest() {
+    if (_p.voiceFailCount(widget.chunk.id) > 0) {
+      unawaited(_p.clearVoiceFails(widget.chunk.id));
+    }
+    _confirmHeard();
+  }
+
+  /// 机器侧不确定：守门器拒判 / 空转写 / 过短（仅限语音路径）。
+  /// 打字或手改文本属文本比对，不算仪器没底；`uncertain` 由 S2 确认卡处理，
+  /// `noChunk` 是判卷结论（真没用上），都不弹这张卡。
+  bool get _machineUnsure {
+    final v = _verdict;
+    if (v == null || v.reason == 'uncertain') return false;
+    return machineUncertain(
+      passed: _passed,
+      edited: !_fromVoice,
+      softBand: false,
+      guardOk: _fromVoice ? _guard?.ok : null,
+      reason: v.reason,
+    );
+  }
+
+  String get _machineUnsureWhy {
+    if (_fromVoice && _guard != null && !_guard!.ok) {
+      return '守门器认为这条识别结果不可信（噪声/同词堆叠），'
+          '所以没拿它当你的答案。';
+    }
+    switch (_verdict?.reason) {
+      case 'empty':
+        return '整条录音没检出可信文本——通常是声音太小或离麦太远，不是你读错。';
+      case 'tooShort':
+        return '检出的内容太短，不够判这一句。';
+      default:
+        return '机器没把握你这句有没有用上今天的词块。';
+    }
+  }
+
   /// M1：本地增强（zipformer）优先、云端 Azure 兜底的第二次识别。
   /// 只有拿到非空结果才覆盖展示；来源写进 [_asrSrc]，UI 如实标注。
   Future<void> _retryWithFallback(String path,
@@ -194,6 +238,7 @@ class _FreeUseStepState extends State<FreeUseStep> {
         _thinking = true;
       });
       final path = await _rec.stop();
+      _recPath = path;
       if (path == null) {
         if (mounted) setState(() { _thinking = false; _micBlocked = true; });
         return;
@@ -408,6 +453,15 @@ class _FreeUseStepState extends State<FreeUseStep> {
                         ),
                       ],
                     ),
+                  // ASR-233：机器没把握 → 与第 4/5 步同一张卡（内容区本就可滚，
+                  // 卡片不会把底部「检查句子 / 跳过这一步」顶出视口）。
+                  if (_machineUnsure) ...[
+                    const SizedBox(height: 10),
+                    MachineUnsureCard(
+                      why: _machineUnsureWhy,
+                      onAttest: _recPath == null ? null : _selfAttest,
+                    ),
+                  ],
                   if (needConfirm) ...[
                     const SizedBox(height: 10),
                     _confirmHeardCard(),

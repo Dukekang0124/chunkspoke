@@ -230,6 +230,21 @@ class AppDatabase {
       )''');
   }
 
+  /// ASR-228 · D3 落库件 2 的**库层单源**：官方读路径一律排除 `user:` 命名空间。
+  ///
+  /// 为什么写在库层而不是 21 个调用点各写一遍：案三的教训正是「没人知道有几处在读进度」。
+  /// 排除口径在这里只有一份，新增读点默认继承，不可能漏写；
+  /// `test/user_package_store_test.dart` 再对每个官方读 API 做一次运行时断言
+  /// （返回集合里出现任何 `user:` 键即红）。
+  static const String kUserKeyExclude = "chunk_key NOT LIKE 'user:%'";
+
+  /// 自定义包档案的 kv 前缀（档案与块行同生命周期，见 [resetChunks]）。
+  static const String kUserPkgKvPrefix = 'userpkg.';
+
+  /// 把既有 where 串成「官方口径」版本（空串直接返回排除式）。
+  static String officialOnly([String where = '']) =>
+      where.isEmpty ? kUserKeyExclude : '$where AND $kUserKeyExclude';
+
   // —— kv (legacy surface) ——
   Future<String?> getKv(String key) async {
     final rows =
@@ -246,6 +261,24 @@ class AppDatabase {
   Future<Map<String, String>> getAllKv() async {
     final rows = await (await db).query('kv');
     return {for (final r in rows) r['key'] as String: r['value'] as String};
+  }
+
+  /// 按前缀取 kv 值（自定义包档案 `userpkg.*` 用；不含键名，值可能为空串=已删）。
+  Future<List<String>> kvKeysWithPrefix(String prefix) async {
+    final rows = await (await db)
+        .query('kv', columns: ['value'], where: 'key LIKE ?', whereArgs: ['$prefix%']);
+    return rows.map((r) => (r['value'] ?? '') as String).toList();
+  }
+
+  /// 按 key 列表删块行（同名重导/删包的清场用；空列表直接返回，不开事务）。
+  Future<void> deleteChunksByKeys(List<String> keys) async {
+    if (keys.isEmpty) return;
+    final d = await db;
+    await d.transaction((txn) async {
+      for (final k in keys) {
+        await txn.delete('chunks', where: 'chunk_key = ?', whereArgs: [k]);
+      }
+    });
   }
 
   // —— chunks (structured progress) ——
@@ -300,7 +333,7 @@ class AppDatabase {
   /// [limit] 用于每日上限截断；超出部分保持到期，次日自然顺延。
   Future<List<ChunkRow>> dueChunks(int now, {int? limit}) async {
     final rows = await (await db).query('chunks',
-        where: 'due_date > 0 AND due_date <= ? AND asset_state IN (?, ?, ?, ?)',
+        where: officialOnly('due_date > 0 AND due_date <= ? AND asset_state IN (?, ?, ?, ?)'),
         whereArgs: [
           now,
           ChunkAssetState.consolidating.index,
@@ -317,7 +350,7 @@ class AppDatabase {
   Future<int> countDueChunks(int now) async {
     final r = await (await db).rawQuery(
         'SELECT COUNT(*) c FROM chunks WHERE due_date > 0 AND due_date <= ? '
-        'AND asset_state IN (?, ?, ?, ?)',
+        'AND asset_state IN (?, ?, ?, ?) AND $kUserKeyExclude',
         [
           now,
           ChunkAssetState.consolidating.index,
@@ -331,19 +364,30 @@ class AppDatabase {
   /// 今日已复习块数（按每块最近一次复习时间统计，天然去重）。
   Future<int> countReviewedSince(int sinceMs) async {
     final r = await (await db).rawQuery(
-        'SELECT COUNT(*) c FROM chunks WHERE last_review_at >= ?', [sinceMs]);
+        'SELECT COUNT(*) c FROM chunks WHERE last_review_at >= ? AND $kUserKeyExclude',
+        [sinceMs]);
     return (r.first['c'] as int?) ?? 0;
   }
 
+  /// 官方台账行（排除 `user:` 命名空间）——所有官方计数与列表的唯一出口。
   Future<List<ChunkRow>> allChunks() async {
-    final rows = await (await db).query('chunks', orderBy: 'chunk_key ASC');
+    final rows = await (await db)
+        .query('chunks', where: kUserKeyExclude, orderBy: 'chunk_key ASC');
+    return rows.map(ChunkRow.fromMap).toList();
+  }
+
+  /// ASR-228 D3：`user:` 命名空间的行（只给「我的模块」自己的读路径用）。
+  Future<List<ChunkRow>> allUserChunks() async {
+    final rows = await (await db).query('chunks',
+        where: "chunk_key LIKE 'user:%'", orderBy: 'chunk_key ASC');
     return rows.map(ChunkRow.fromMap).toList();
   }
 
   /// 资产轴分组计数（词块库 / W2-1 口径唯一真源）。
   Future<Map<ChunkAssetState, int>> assetStateCounts() async {
     final rows = await (await db).rawQuery(
-        'SELECT asset_state, COUNT(*) c FROM chunks GROUP BY asset_state');
+        'SELECT asset_state, COUNT(*) c FROM chunks '
+        'WHERE $kUserKeyExclude GROUP BY asset_state');
     final out = <ChunkAssetState, int>{
       for (final s in ChunkAssetState.values) s: 0,
     };
@@ -359,7 +403,7 @@ class AppDatabase {
   /// 已掌握（资产轴）= 走完 1/3/7/14 天复习的块数。
   Future<int> countAssetMastered() async {
     final r = await (await db).rawQuery(
-        'SELECT COUNT(*) c FROM chunks WHERE asset_state = ?',
+        'SELECT COUNT(*) c FROM chunks WHERE asset_state = ? AND $kUserKeyExclude',
         [ChunkAssetState.mastered.index]);
     return (r.first['c'] as int?) ?? 0;
   }
@@ -368,15 +412,20 @@ class AppDatabase {
   //
   // ASR-206 §二：清台账必须同事务清断点快照，否则「锚点还在第 N 块、台账已归零」
   // 会变成反向脏数据（锚点>台账），一键修复也只会把它再派生回去。
+  //
+  // ASR-228 D3：同事务一并清掉 `userpkg.*` 包档案。档案留在 kv 而块行被删，
+  // 会变成「我的模块显示 12 块、台账 0 行」的新双源——正是这一类雷的第三次变形。
   Future<void> resetChunks() async {
     final d = await db;
     await d.transaction((txn) async {
       await txn.delete('chunks');
-      final stale = await txn.query('kv',
-          columns: ['key'], where: "key LIKE 'learnResume_%'");
-      for (final r in stale) {
-        await txn.insert('kv', {'key': r['key'], 'value': ''},
-            conflictAlgorithm: ConflictAlgorithm.replace);
+      for (final prefix in ['learnResume_%', '$kUserPkgKvPrefix%']) {
+        final stale =
+            await txn.query('kv', columns: ['key'], where: 'key LIKE ?', whereArgs: [prefix]);
+        for (final r in stale) {
+          await txn.insert('kv', {'key': r['key'], 'value': ''},
+              conflictAlgorithm: ConflictAlgorithm.replace);
+        }
       }
     });
   }
@@ -385,7 +434,7 @@ class AppDatabase {
   Future<List<String>> allMasteredKeys() async {
     final rows = await (await db).query('chunks',
         columns: ['chunk_key'],
-        where: 'level = ?',
+        where: officialOnly('level = ?'),
         whereArgs: [ChunkLevel.mastered.index]);
     return rows.map((r) => r['chunk_key'] as String).toList();
   }
@@ -394,7 +443,7 @@ class AppDatabase {
   Future<int?> nextDueTimestamp(int now) async {
     final rows = await (await db).query('chunks',
         columns: ['due_date'],
-        where: 'due_date > ? AND asset_state IN (?, ?, ?, ?)',
+        where: officialOnly('due_date > ? AND asset_state IN (?, ?, ?, ?)'),
         whereArgs: [
           now,
           ChunkAssetState.consolidating.index,
@@ -412,7 +461,7 @@ class AppDatabase {
   Future<int?> earliestDueTimestamp() async {
     final rows = await (await db).query('chunks',
         columns: ['due_date'],
-        where: 'due_date > 0 AND asset_state IN (?, ?, ?, ?)',
+        where: officialOnly('due_date > 0 AND asset_state IN (?, ?, ?, ?)'),
         whereArgs: [
           ChunkAssetState.consolidating.index,
           ChunkAssetState.consolidated.index,
@@ -426,9 +475,12 @@ class AppDatabase {
   }
 
   // —— M7 AI 周报统计（绝不读录音原文，仅聚合数字 + 词块 ID）—— //
+  // ASR-228 D3：会话轴同样排除 `user:` 键——「开口次数/平均分」是官方口径的数字，
+  // 用户自己的模块练了多少不该混进今日/周报统计（混了就是新的案三）。
   Future<int> countSessionEvent(String name) async {
     final r = await (await db).rawQuery(
-        'SELECT COUNT(*) c FROM sessions WHERE outcome = ?', [name]);
+        'SELECT COUNT(*) c FROM sessions WHERE outcome = ? AND $kUserKeyExclude',
+        [name]);
     return (r.first['c'] as int?) ?? 0;
   }
 
@@ -454,7 +506,8 @@ class AppDatabase {
   Future<Map<String, int>> sessionOutcomeCounts({bool? review}) async {
     final rows = await (await db).rawQuery(
       'SELECT outcome, COUNT(*) c FROM sessions'
-      '${review == null ? '' : ' WHERE review = ?'} GROUP BY outcome',
+      ' WHERE ${review == null ? kUserKeyExclude : 'review = ? AND $kUserKeyExclude'}'
+      ' GROUP BY outcome',
       review == null ? null : [review ? 1 : 0],
     );
     return {
@@ -465,14 +518,16 @@ class AppDatabase {
 
   Future<double> avgSessionScore() async {
     final r = await (await db).rawQuery(
-        'SELECT AVG(score) a FROM sessions WHERE score > 0');
+        'SELECT AVG(score) a FROM sessions WHERE score > 0 AND $kUserKeyExclude');
     final v = r.first['a'];
     return v == null ? 0.0 : (v as num).toDouble();
   }
 
   Future<List<ChunkRow>> topFailChunks(int n) async {
     final rows = await (await db).query('chunks',
-        where: 'fail_count > 0', orderBy: 'fail_count DESC', limit: n);
+        where: officialOnly('fail_count > 0'),
+        orderBy: 'fail_count DESC',
+        limit: n);
     return rows.map((m) => ChunkRow.fromMap(m)).toList();
   }
 
