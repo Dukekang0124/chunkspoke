@@ -1,15 +1,15 @@
 {
-  "versionName": "1.9.0",
-  "versionCode": 4090,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.9.0/chunkspoke-latest.apk",
+  "versionName": "1.9.1",
+  "versionCode": 4091,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.9.1/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.9.0/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.9.0/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.9.1/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.9.1/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
   "sha256": "1639e9f2f855eccc745eadae23eb7dd39997c8c8e6a77bdaf94d88216f7043a4",
   "size": 60408643,
-  "notes": "v1.9.0：新增「我的模块 · 导入自己的词表」——粘贴 / 本机文件 / 模板三入口，先预览解析再确认落库；确认导入需解锁码，解析预览、已导入词表的阅读删除与学习记录永久免费，老用户不受影响。未解锁时备份恢复不写自定义词表档案；设置→诊断新增「我的模块」对账与一键修复；第 5、6 步接入「机器不确定」卡片与打字出口。官方学习内容、判卷阈值与识别引擎零改动。",
+  "notes": "v1.9.1：修复「我的模块 · 导入」粘贴纯清单时报「未知字段 / 表头缺少必填列」的问题——现在会识别序号清单并一键生成带正面的 CSV 模板，背面填上中文即可导入。自定义模块接入和官方同一套六步学习闭环（学完按 1/3/7/14 天进复习），并在词块库、磨耳朵互通互链；进度只记在「我的模块」，不影响官方已掌握数与复习排期。导入仍只在「确认导入」一步需要解锁码，解析预览、已导入词表的阅读删除与学习记录永久免费。官方学习内容、判卷阈值与识别引擎零改动。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.9.0/parts/apk.part0",
