@@ -142,6 +142,10 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
                 '自定义词块只按词表档案补回。' : ''}\n'
             '${plan.ignoredUserArchives > 0 ? '\n件里有 ${plan.ignoredUserArchives} 份自定义词表档案，已忽略：'
                 '导入自己的词表需要解锁码。本机已有的包、学习记录和删除都不受影响。' : ''}\n'
+            '${plan.skippedUserArchives > 0 ? '\n件里有 ${plan.skippedUserArchives} 份自定义词表档案没过校验'
+                '（超名额 / 脏字段 / 撞名等），已拒收，不会写进本机。' : ''}\n'
+            '${plan.skippedUserEntries > 0 ? '\n收下的档案里剔除了 ${plan.skippedUserEntries} 条坏条目'
+                '（字段闸不过），其余好条目照常补回。' : ''}\n'
             '合并只补不删，本机比备份新的进度会被保留。',
             style: TextStyle(color: kTextSecondary, fontSize: 13, height: 1.5),
           ),
@@ -174,10 +178,17 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
       final ignoredArchivesNote = applied.ignoredUserArchives > 0
           ? '，已忽略 ${applied.ignoredUserArchives} 份自定义词表档案（需要解锁码）'
           : '';
+      final skippedArchivesNote = applied.skippedUserArchives > 0
+          ? '，拒收 ${applied.skippedUserArchives} 份没过校验的词表档案'
+          : '';
+      final skippedEntriesNote = applied.skippedUserEntries > 0
+          ? '，剔除 ${applied.skippedUserEntries} 条坏条目'
+          : '';
       _toast(applied.nothingToDo
-          ? '没有需要补的数据（已是最新）$ignoredArchivesNote'
+          ? '没有需要补的数据（已是最新）$ignoredArchivesNote$skippedArchivesNote$skippedEntriesNote'
           : '已合并：词块 +${applied.newChunks}/更新 ${applied.updatedChunks}，'
-              '记录 +${applied.newSessions}$rebuiltNote$ignoredArchivesNote');
+              '记录 +${applied.newSessions}$rebuiltNote$ignoredArchivesNote'
+              '$skippedArchivesNote$skippedEntriesNote');
     } catch (e) {
       _toast('$e');
     } finally {

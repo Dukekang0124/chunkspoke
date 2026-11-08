@@ -182,7 +182,7 @@ class UserPreviewBody extends StatelessWidget {
   }
 }
 
-/// 六项体验清单：填完一键复制，作为 D3 可用性输入入档。
+/// 六项体验清单：填完一键复制，作为自定义导入的可用性反馈入档。
 class UserImportFeedbackScreen extends StatefulWidget {
   const UserImportFeedbackScreen({super.key});
 
@@ -217,7 +217,7 @@ class _UserImportFeedbackScreenState extends State<UserImportFeedbackScreen> {
   }
 
   String compose() {
-    final lines = <String>['自定义导入小片 · 六项体验回执（只预览不落库版）'];
+    final lines = <String>['自定义导入 · 六项体验回执'];
     for (var i = 0; i < questions.length; i++) {
       lines.add('${questions[i]}：${_answers[i].text.trim()}');
     }
@@ -231,7 +231,7 @@ class _UserImportFeedbackScreenState extends State<UserImportFeedbackScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Text('这一版只做预览：不写库、不碰进度。反馈是给 D3 落库版的可用性输入。',
+          Text('本页只收集反馈：不写库、不碰进度。填完复制给开发者，作为自定义导入的可用性输入。',
               style: TextStyle(color: kTextFaint, fontSize: 12)),
           const SizedBox(height: 14),
           for (var i = 0; i < questions.length; i++) ...[

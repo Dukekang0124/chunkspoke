@@ -1,4 +1,6 @@
 import 'review_scheduler.dart';
+import 'user_package.dart';
+import 'user_package_store.dart';
 import '../models/content_pack.dart';
 
 /// 简化 SM-2 调度（M4）：以 ReviewScheduler 的 1/3/7/14 天阶梯为基底，
@@ -73,6 +75,55 @@ class PracticeSession {
 
   /// 是否有内容可练（决定是否显示总结屏 / 冷启动空态）。
   static bool hasContent(int practicedCount) => practicedCount > 0;
+
+  /// ASR-234：由一个已导入的自定义包构造「合成场景」，供六步 PracticeLoop 使用。
+  ///
+  /// 与 [reviewLevel] 同款**非完整关卡**会话（调用方传 chunks != null）：
+  ///  · Chunk.id 一律 `user:` 键 → 六步写入只落 user 行，官方计数/锚点/断点不受影响
+  ///    （库层 kUserKeyExclude 排除官方读路径；非锚定会话不写 learnResume kv）；
+  ///  · 开口说句目标 = 该条 example（≥3 词）或 front 本身（≥3 词），都没有则用 front，
+  ///    与 [UserChunkEntry.sentenceSourceText] 同源——不伪造句子、不自动翻译；
+  ///  · level.id = moduleKey（`user_module:` 前缀），PracticeLoop 据此把定向替换的
+  ///    替代池限定在本包内（见 isUserModuleKey），绝不拿官方块替换用户自己的句子。
+  static Level userModuleLevel(UserPackageRecord rec) {
+    final chunks = <Chunk>[];
+    final sentences = <TargetSentence>[];
+    for (final e in rec.entries) {
+      final src = e.sentenceSourceText ?? e.front;
+      chunks.add(Chunk(
+        id: e.chunkKey,
+        text: e.front,
+        semantic: 'content',
+        meaningCN: e.back,
+        sentence: ChunkSentence(
+          text: src,
+          slots: [Slot(text: src, type: 'content')],
+          coreWords: src
+              .toLowerCase()
+              .split(RegExp(r"[^a-z0-9']+"))
+              .where((w) => w.isNotEmpty)
+              .toList(),
+          swapSlotIndex: -1,
+          swapOptions: const [],
+        ),
+        cefr: e.cefr ?? '',
+        sources: ['我的模块 · ${rec.moduleName}'],
+      ));
+      sentences.add(TargetSentence(
+        id: e.chunkKey,
+        text: src,
+        meaningCN: e.back,
+        chunkIds: [e.chunkKey],
+      ));
+    }
+    return Level(
+      id: rec.moduleKey,
+      theme: rec.moduleName,
+      sceneImage: '',
+      chunks: chunks,
+      sentences: sentences,
+    );
+  }
 }
 
 /// 每日会话计划：新块（六步）+ 到期复习块（后四步）。

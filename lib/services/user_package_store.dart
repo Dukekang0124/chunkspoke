@@ -14,8 +14,8 @@ import 'user_package.dart';
 ///  2. **不碰断点**：本文件不 import 任何 resume/anchor API，也不调
 ///     `applyImportedRows`（那条路会为「有 level 归属的块」重算锚点）；
 ///     `user:` 键不属于任何官方 level，锚点因此不可能被它推动。
-///  3. **同事务落盘**：块行 + 包档案在一次 `upsertChunksAndKv` 里写完，
-///     不留「档案说 12 块、台账只有 5 行」的半截态。
+///  3. **同事务落盘**：删旧行 + 块行 + 包档案在一次 `replaceChunksAndKv` 里写完，
+///     不留「档案说 12 块、台账只有 5 行」或「旧行已删、新档案没写」的半截态。
 class UserPackageStore {
   UserPackageStore(this._db, {DateTime Function()? clock})
       : _clock = clock ?? DateTime.now;
@@ -66,18 +66,22 @@ class UserPackageStore {
     }
     good.sort((a, b) => b.importedAt.compareTo(a.importedAt));
     final rows = await _db.allUserChunks();
-    final declared = good.fold<int>(0, (s, r) => s + r.chunkCount);
-    // 台账里出现但没有任何档案声明的 user 行（手改库/删包半途都算）。
+    final rowKeys = {for (final r in rows) r.chunkKey};
+    // 档案声明的键去重：同一个 front 理论上只属一个包（归属闸已挡），但历史撞名/手改库
+    // 可能让多份档案声明同一键，按集合算才不会虚增 declared。
     final declaredKeys = <String>{for (final r in good) for (final e in r.entries) e.chunkKey};
+    final declared = declaredKeys.length;
+    // 台账里出现但没有任何档案声明的 user 行（手改库/删包半途都算）。
     final stray = rows.where((r) => !declaredKeys.contains(r.chunkKey)).length;
-    // 两个差额各管一个方向，不重叠：档案>台账 = 半截写入；台账>档案 = 没人认领的行。
-    final missing = declared - rows.length;
+    // 档案声明了、台账里却没有的键（半截写入/外部删行）。用集合差，不用算术差——
+    // 算术差会被「一边缺、一边多」互相抵消掩盖（缺 B 又多 C 时 declared==rows 却其实不一致）。
+    final missing = declaredKeys.difference(rowKeys).length;
     return UserPackageInventory(
       packages: good,
       corruptCount: corrupt.length,
       userRowCount: rows.length,
       declaredChunks: declared,
-      missingRows: missing > 0 ? missing : 0,
+      missingRows: missing,
       strayRows: stray,
     );
   }
@@ -120,6 +124,89 @@ class UserPackageStore {
     } catch (_) {
       return null;
     }
+  }
+
+  /// ASR-233 深度自查修复：备份恢复的**档案消毒闸**（licensed 机器专用）。
+  ///
+  /// 未授权机器在通道层就把 `userpkg.*` 整段跳过（ignoredUserArchives），到不了这里。
+  /// 授权机器恢复备份时，旧写法把档案 JSON 原样写回 ⇒ 手改件能绕过导入校验器与名额闸
+  /// （塞 6 个包 / 单包 300 块 / 超长脏字符 / 与本机包撞名）。这里对每份**新**档案
+  /// （本机已有的不覆盖、不算新）统一过闸，只放行 canonical 重编码后的干净档案：
+  ///  · 解析 + 模块键自洽（kv 后缀 == rec.moduleKey == userModuleKey(name)）；
+  ///  · 条目数 1..200；逐条过 [normalizeUserEntry]（字段闸 + 归属本模块）；
+  ///  · 名额：本机已有包 + 本批新收 ≤ 5；
+  ///  · 撞名：档案内 / 档案间 / 与本机既有包，同一 front 只能属一个包（撞名整份拒收）。
+  /// 整份不可用 → skippedArchives++；个别条目坏但整份仍收 → skippedEntries++。
+  /// 只读本机包列表，不写库；写由调用方按 accepted 执行（与通道「只补不覆盖」一致）。
+  Future<UserArchiveAdoption> adoptUserArchives(
+      Map<String, String> incomingArchives) async {
+    final local = await listPackages();
+    final localModuleKeys = {for (final r in local) r.moduleKey};
+    var freeSlots = kUserPackageMaxPackages - local.length;
+    final reserved = <String>{
+      for (final r in local) for (final e in r.entries) e.chunkKey,
+    };
+    final accepted = <String, String>{};
+    var skippedArchives = 0, skippedEntries = 0;
+    final keys = incomingArchives.keys.toList()..sort();
+    for (final kvKey in keys) {
+      final suffix = kvKey.substring(AppDatabase.kUserPkgKvPrefix.length);
+      UserPackageRecord rec;
+      try {
+        rec = UserPackageRecord.fromJson(
+            jsonDecode(incomingArchives[kvKey]!) as Map<String, dynamic>);
+      } catch (_) {
+        skippedArchives++;
+        continue;
+      }
+      if (rec.moduleKey.isEmpty ||
+          rec.moduleKey != suffix ||
+          rec.moduleKey != userModuleKey(rec.moduleName) ||
+          rec.entries.isEmpty ||
+          rec.entries.length > kUserPackageMaxChunks ||
+          localModuleKeys.contains(rec.moduleKey) ||
+          freeSlots <= 0) {
+        skippedArchives++;
+        continue;
+      }
+      final good = <UserChunkEntry>[];
+      final seen = <String>{};
+      var localBad = 0;
+      var collision = false;
+      for (final e in rec.entries) {
+        final norm =
+            normalizeUserEntry(e.toJson(), expectedModule: rec.moduleName);
+        if (norm == null) {
+          localBad++;
+          continue;
+        }
+        if (reserved.contains(norm.chunkKey) || !seen.add(norm.chunkKey)) {
+          collision = true;
+          break;
+        }
+        good.add(norm);
+      }
+      if (collision || good.isEmpty) {
+        // 整份拒收：本份内已数的坏条目随整份作废，不并入 skippedEntries（诚实计数）。
+        skippedArchives++;
+        continue;
+      }
+      skippedEntries += localBad;
+      freeSlots--;
+      localModuleKeys.add(rec.moduleKey);
+      reserved.addAll(good.map((e) => e.chunkKey));
+      accepted[kvKey] = jsonEncode(UserPackageRecord(
+        moduleKey: rec.moduleKey,
+        moduleName: rec.moduleName,
+        entries: good,
+        importedAt: rec.importedAt,
+      ).toJson());
+    }
+    return UserArchiveAdoption(
+      accepted: accepted,
+      skippedArchives: skippedArchives,
+      skippedEntries: skippedEntries,
+    );
   }
 
   /// 落库：把已过闸的校验结果写进本机。返回写入统计与人类可读的一句话。
@@ -165,6 +252,28 @@ class UserPackageStore {
       }
     }
 
+    // 跨包同名块归属闸：chunkKey 只由 front 决定，同一个 front 只能属于一个包。
+    // 否则 B 包导入会顶掉 A 包的同名行，日后删 B / 重导 B 又把 A 仍声明的行删掉 ⇒
+    // missingRows、自检判红、A 包静默丢块（深度自查实测）。写库前挡住，让用户改 front
+    // 或并入原包。同名模块重导（owner == 本模块）不算冲突——那是整包替换，下面会删旧写新。
+    final ownerOf = <String, String>{};
+    for (final r in existing) {
+      for (final e in r.entries) {
+        ownerOf[e.chunkKey] = r.moduleKey;
+      }
+    }
+    for (final grp in incoming.entries) {
+      for (final e in grp.value) {
+        final owner = ownerOf[e.chunkKey];
+        if (owner != null && owner != grp.key) {
+          final ownerName = byModule[owner]?.moduleName ?? owner;
+          return UserImportResult.failed(
+              '「${e.front}」已在包「$ownerName」里。同一个词条只能属于一个包：'
+              '改一下这条的正面文本，或把它并进「$ownerName」再导入。');
+        }
+      }
+    }
+
     final now = _clock().millisecondsSinceEpoch;
     final rows = <ChunkRow>[];
     final dropKeys = <String>[];
@@ -188,12 +297,16 @@ class UserPackageStore {
       ).toJson());
     }
     // 跨包同名块（front 相同）只留一行，防止 chunkKey 撞车互相覆盖。
+    // 上面的归属闸已挡住「与既有别的包撞名」，校验器也挡住「同一份表内撞名」，
+    // 所以这里通常不会真的折叠；保留作为最后一道防线。
     final dedup = <String, ChunkRow>{for (final r in rows) r.chunkKey: r};
 
-    if (dropKeys.isNotEmpty) {
-      await _db.deleteChunksByKeys(dropKeys.toList());
-    }
-    await _db.upsertChunksAndKv(dedup.values.toList(), kv);
+    // 删旧行 + 写新行 + 写档案同一事务：进程中途被杀不留「旧行已删、新档案没写」的半截态。
+    await _db.replaceChunksAndKv(
+      deleteKeys: dropKeys.toList(),
+      upsertRows: dedup.values.toList(),
+      kv: kv,
+    );
 
     final names = [for (final e in incoming.entries) e.value.first.moduleName];
     return UserImportResult(
@@ -210,12 +323,30 @@ class UserPackageStore {
   }
 
   /// 删包：档案与块行同事务清掉（D4「卸载级联」的库层底座）。
+  ///
+  /// 只删**本包独占**的行：若某个 front 还被别的包声明（历史撞名 / 手改库留下的共享行），
+  /// 删掉它会让那个包 missingRows、自检判红。所以先算出其他包仍声明的键，跳过它们。
+  /// 返回实际清掉的台账行数（共享行不计——它仍属于别的包）。
   Future<int> removePackage(String moduleKey) async {
     final rec = await packageOf(moduleKey);
     if (rec == null) return 0;
-    await _db.deleteChunksByKeys(rec.entries.map((e) => e.chunkKey).toList());
-    await _db.setKv('${AppDatabase.kUserPkgKvPrefix}$moduleKey', '');
-    return rec.entries.length;
+    final others = await listPackages();
+    final shared = <String>{
+      for (final r in others)
+        if (r.moduleKey != moduleKey)
+          for (final e in r.entries) e.chunkKey,
+    };
+    final drop = rec.entries
+        .map((e) => e.chunkKey)
+        .where((k) => !shared.contains(k))
+        .toList();
+    // 删行 + 清档案同一事务（空档案串 = 墓碑），不留「档案没了、行还在」的孤儿态。
+    await _db.replaceChunksAndKv(
+      deleteKeys: drop,
+      upsertRows: const [],
+      kv: {'${AppDatabase.kUserPkgKvPrefix}$moduleKey': ''},
+    );
+    return drop.length;
   }
 
   /// 新导入的块一律记成「未开始学习」：level=l1、不排期、资产态 learning。
@@ -344,4 +475,22 @@ class UserImportResult {
         note = '导入自己的词表需要解锁码：解析与预览永久免费，确认导入会写进「我的模块」。'
             '你已经导进来的词表、学习记录和删除都不受影响。',
         gated = true;
+}
+
+/// 备份恢复档案消毒闸的结果（ASR-233 深度自查）。
+class UserArchiveAdoption {
+  /// 通过闸的档案：kvKey → canonical 重编码 JSON（调用方只写这些）。
+  final Map<String, String> accepted;
+
+  /// 整份拒收的档案数（解析失败 / 模块键不自洽 / 超 200 / 名额满 / 撞名 / 全坏）。
+  final int skippedArchives;
+
+  /// 被收档案里剔除的坏条目数（字段闸不过；整份仍收其余好条目）。
+  final int skippedEntries;
+
+  const UserArchiveAdoption({
+    required this.accepted,
+    required this.skippedArchives,
+    required this.skippedEntries,
+  });
 }

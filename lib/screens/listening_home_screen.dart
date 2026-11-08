@@ -8,11 +8,13 @@ import '../services/listening_home.dart';
 import '../services/listening_palette.dart';
 import '../services/listening_store.dart';
 import '../services/loaders.dart';
+import '../services/user_package_store.dart';
 import '../ui/pressable.dart';
 import '../ui/stagger.dart';
 import '../ui/theme.dart';
 import '../ui/count_up.dart';
 import 'listening_player.dart';
+import 'user_module_listening_screen.dart';
 
 /// 磨耳朵内容首页（tab）：
 /// 最近 7 天推荐 → 继续听续播卡 → 全部篇目（最近更新 / 按场景）。
@@ -40,6 +42,9 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
   int _todaySeconds = 0;
   int _weekSeconds = 0;
 
+  /// ASR-234：本机导入的自定义包（只读 `user:` 命名空间），给「我的模块 · 磨耳朵」入口用。
+  List<UserPackageRecord> _userPkgs = const [];
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +56,8 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
     final pack = Provider.of<ListeningPack>(context, listen: false);
     final store = progress.listening;
     final rows = await progress.chunkStore.allRows();
+    final userPkgs =
+        await UserPackageStore(progress.database).listPackages();
     if (!mounted) return;
 
     final now = DateTime.now();
@@ -91,6 +98,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
       _data = data;
       _todaySeconds = store.todaySeconds;
       _weekSeconds = store.secondsSince(weekStart);
+      _userPkgs = userPkgs;
     });
   }
 
@@ -150,6 +158,10 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
               style: TextStyle(color: kTextMuted, fontSize: 12)),
           const SizedBox(height: 12),
           _immersionCard(),
+          if (_userPkgs.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _userModuleCard(),
+          ],
           if (data.noNewContent) ...[
             const SizedBox(height: 14),
             _noNewContentCard(data),
@@ -334,6 +346,67 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
   }
 
   static int _minutesOf(int seconds) => (seconds / 60).round();
+
+  /// ASR-234：磨耳朵 ↔ 我的模块。只列已导入的包，点进去端侧朗读，
+  /// 不改学习进度、不排复习、不产生官方计数（与官方篇目彻底分开两本账）。
+  Widget _userModuleCard() {
+    return Material(
+      key: const Key('listening_user_modules'),
+      color: kCard,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.upload_file, color: kPrimary, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('我的模块 · 也能磨耳朵',
+                      style: TextStyle(
+                          color: kText,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            Text('听你自己导入的句子和词块。只播放，不改学习进度。',
+                style: TextStyle(color: kTextMuted, fontSize: 11)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final rec in _userPkgs)
+                  ActionChip(
+                    key: Key('listening_userpkg_${rec.moduleKey}'),
+                    avatar: Icon(Icons.headphones, size: 16, color: kPrimary),
+                    label: Text('${rec.moduleName} · ${rec.chunkCount} 块',
+                        style: TextStyle(color: kText, fontSize: 12)),
+                    onPressed: () => _openUserListening(rec),
+                    backgroundColor: kLocked,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(color: kBorder),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openUserListening(UserPackageRecord rec) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => UserModuleListeningScreen(rec: rec)));
+    // 纯播放不写库，回到首页仍刷新一次，避免别处改了包在这里显示旧数。
+    if (mounted) await _load();
+  }
 
   /// 级别筛选 chips（§一.4）：只列出库里真实存在的档位，避免空 chip。
   Widget _levelChips(ListeningHomeData data) {
