@@ -125,6 +125,11 @@ class UserPackageValidation {
 /// 命名空间守卫：官方读点（词块库/复习/磨耳朵/免费 167 口径/关卡锚点）一律不得聚合 user 键。
 bool isUserChunkKey(String key) => key.startsWith('user:');
 
+/// 合成场景守卫：自定义包接入六步时，PracticeLoop 的 level.id 即 moduleKey
+/// （`user_module:<sha8>`）。据此把「定向替换」的替代池限定在本包内，
+/// 绝不拿官方块去替换用户自己的句子（官方/收听/复习会话不受影响）。
+bool isUserModuleKey(String key) => key.startsWith('user_module:');
+
 String userModuleKey(String moduleName) =>
     'user_module:${sha8Of(moduleName.trim().toLowerCase())}';
 
@@ -170,8 +175,22 @@ UserPackageValidation _validateJson(String text) {
       issues.add(UserPackageIssue(i + 1, 'row', '这一项不是对象'));
       continue;
     }
-    _checkKeys(r.keys.map((k) => k.toString().toLowerCase()), i + 1, issues);
-    entries.add(_entryFrom(row: i + 1, get: (f) => r[f]?.toString(), issues: issues));
+    // 键名先归一到小写再查表/取值：旧写法只在 _checkKeys 里 toLowerCase，
+    // 取值仍按原样 r[f]，于是 `Front` 过了字段检查却被报「front 必填缺失」。
+    final norm = <String, Object?>{
+      for (final e in r.entries) e.key.toString().toLowerCase(): e.value,
+    };
+    _checkKeys(norm.keys, i + 1, issues);
+    entries.add(_entryFrom(
+        row: i + 1,
+        // JSON 数组值（如 tags: ['a','b']）拼成 | 分隔串交给 _entryFrom 统一切分；
+        // 旧写法 .toString() 会得到 "[a, b]"，切出带方括号的脏标签。档案回读也走这里。
+        get: (f) {
+          final v = norm[f];
+          if (v is List) return v.map((x) => x.toString()).join('|');
+          return v?.toString();
+        },
+        issues: issues));
   }
   return _finish(entries, issues);
 }
@@ -179,14 +198,22 @@ UserPackageValidation _validateJson(String text) {
 UserPackageValidation _validateCsv(String text) {
   final issues = <UserPackageIssue>[];
   final entries = <UserChunkEntry>[];
-  final lines = text.split(RegExp('\r\n|\r|\n'))
-    ..removeWhere((l) => l.trim().isEmpty);
-  if (lines.length < 2) {
+  // 保留原始行号：按行切后记下每行在文件里的真实序号（1-based），再跳过空行。
+  // 旧写法 removeWhere 抹掉空行后 li+1 与用户文件对不上，中间有空行时报错指到错误的行。
+  final raw = text.split(RegExp('\r\n|\r|\n'));
+  final kept = <String>[];
+  final rowNos = <int>[];
+  for (var i = 0; i < raw.length; i++) {
+    if (raw[i].trim().isEmpty) continue;
+    kept.add(raw[i]);
+    rowNos.add(i + 1);
+  }
+  if (kept.length < 2) {
     return const UserPackageValidation([], [
       UserPackageIssue(0, 'file', '只有表头，没有数据行'),
     ]);
   }
-  final header = _splitCsvLine(lines.first).map((s) => s.trim().toLowerCase()).toList();
+  final header = _splitCsvLine(kept.first).map((s) => s.trim().toLowerCase()).toList();
   final col = <String, int>{};
   for (var i = 0; i < header.length; i++) {
     col[header[i]] = i;
@@ -196,9 +223,9 @@ UserPackageValidation _validateCsv(String text) {
     if (!col.containsKey(f)) issues.add(UserPackageIssue(0, f, '表头缺少必填列 $f'));
   }
   if (issues.isNotEmpty) return _finish(entries, issues);
-  for (var li = 1; li < lines.length; li++) {
-    final cells = _splitCsvLine(lines[li]);
-    entries.add(_entryFrom(row: li + 1, get: (f) {
+  for (var li = 1; li < kept.length; li++) {
+    final cells = _splitCsvLine(kept[li]);
+    entries.add(_entryFrom(row: rowNos[li], get: (f) {
       final idx = col[f];
       if (idx == null || idx >= cells.length) return null;
       return cells[idx].trim();
@@ -219,7 +246,7 @@ UserChunkEntry _entryFrom({
     } else if (v.length > max) {
       issues.add(UserPackageIssue(row, f, '超过 $max 字（当前 ${v.length}）'));
     } else if (!_allowedText(v)) {
-      issues.add(UserPackageIssue(row, f, '含不允许的字符（控制符/生僻符号）'));
+      issues.add(UserPackageIssue(row, f, '含控制符或不可见字符'));
     }
     return v;
   }
@@ -233,7 +260,7 @@ UserChunkEntry _entryFrom({
     if (phonetic.length > kUserFieldMaxPhonetic) {
       issues.add(UserPackageIssue(row, 'phonetic', '超过 $kUserFieldMaxPhonetic 字'));
     } else if (!_allowedText(phonetic)) {
-      issues.add(UserPackageIssue(row, 'phonetic', '只接受 IPA 扩展区与 ASCII 符号'));
+      issues.add(UserPackageIssue(row, 'phonetic', '含控制符或不可见字符'));
     }
   }
 
@@ -269,17 +296,55 @@ UserChunkEntry _entryFrom({
   );
 }
 
-/// 字符白名单：可见 ASCII、汉字、IPA 扩展与组合音标、少量中文标点。
+/// 备份恢复 / 档案重建用的单条归一校验：把档案里的一条 entry JSON 过**同一套**字段闸
+/// （[_entryFrom]），通过则返回 canonical 条目（trim 过、tags 切好、cefr 大写），否则 null。
+///
+/// 为什么必须有它：备份件是明文 JSON，谁都能手改。授权机器恢复备份时若把
+/// `userpkg.*` 档案原样写回，就绕过了导入校验器（超长/脏字符/非法 cefr）与名额闸。
+/// 这里与导入同源，所以手改件塞进来的脏条目会被同样挡下、如实计数。
+/// [expectedModule] 非空时强制条目归属与档案声明同一模块命名空间（防跨包串名）。
+UserChunkEntry? normalizeUserEntry(Map<String, dynamic> raw,
+    {String? expectedModule}) {
+  final norm = <String, Object?>{
+    for (final e in raw.entries) e.key.toString().toLowerCase(): e.value,
+  };
+  final issues = <UserPackageIssue>[];
+  final entry = _entryFrom(
+    row: 0,
+    get: (f) {
+      final v = norm[f];
+      if (v is List) return v.map((x) => x.toString()).join('|');
+      return v?.toString();
+    },
+    issues: issues,
+  );
+  if (issues.isNotEmpty) return null;
+  if (expectedModule != null &&
+      entry.moduleKey != userModuleKey(expectedModule)) {
+    return null;
+  }
+  return entry;
+}
+
+/// 字符校验走「黑名单」：只拒控制符、不可见字符、私有区与代理对，其余可见字符一律放行。
+///
+/// 为什么从白名单改黑名单：旧白名单只认 ASCII + U+4E00–9FA5 + IPA + 四个中文标点，
+/// 把重音拉丁（café/résumé/naïve）、中日韩标点（。！？（）「」；…—）、扩展汉字与 emoji
+/// 全判成「生僻符号」挡在门外——这些恰恰是用户自己词表里的正常内容（深度自查实测误拒）。
+/// 安全意图不变：控制符/零宽/双向覆盖字符仍拒（它们能把渲染与判卷搅乱）。
 /// 用码位判断而不是正则——raw 字符串里放引号会把字符串自己截断，这是本文件踩过的坑。
 bool _allowedText(String v) {
   for (final u in v.runes) {
-    if (u >= 0x20 && u <= 0x7e) continue;
-    if (u >= 0x4e00 && u <= 0x9fa5) continue;
-    if (u >= 0x250 && u <= 0x2ff) continue;
-    if (u >= 0x300 && u <= 0x36f) continue;
-    if (u == 0x2018 || u == 0x2019 || u == 0x201c || u == 0x201d) continue;
-    if (u == 0xff0c || u == 0x3001 || u == 0xff1a || u == 0xb7) continue;
-    return false;
+    if (u < 0x20) return false; // C0 控制符（含 \t\n\r，字段内不该有）
+    if (u >= 0x7f && u <= 0x9f) return false; // DEL + C1
+    if (u >= 0x200b && u <= 0x200f) return false; // 零宽空格/连接符/方向标记
+    if (u >= 0x202a && u <= 0x202e) return false; // 双向嵌入/覆盖
+    if (u >= 0x2066 && u <= 0x2069) return false; // 双向隔离
+    if (u == 0xfeff) return false; // BOM / 零宽不换行
+    if (u >= 0xd800 && u <= 0xdfff) return false; // 代理对（runes 已合并，正常不出现）
+    if (u >= 0xe000 && u <= 0xf8ff) return false; // 私有区
+    if (u >= 0xfdd0 && u <= 0xfdef) return false; // 非字符
+    if (u >= 0xfff0 && u <= 0xffff) return false; // specials 区
   }
   return true;
 }
@@ -343,6 +408,112 @@ String userPackageJsonTemplate() => jsonEncode([
         'tags': 'tableware',
       },
     ]);
+
+/// 粘贴入口的「清单 → 模板骨架」引导转换（ASR-234）。
+///
+/// 用户在手机上的真实路径常常是「从别处复制一段编号清单再粘进来」，而不是先打开
+/// 表格软件填好表头。真机截图实测：`1. how's it going?` … `10. Catch you later.`
+/// 被当成 CSV 表头，报「未知字段」+「表头缺少必填列」——两句话都说"格式不对"，
+/// 却没告诉用户"怎么改"。
+///
+/// 这里只做**结构转换**，不做内容创造：
+///  · 去掉行首编号 / 项目符号，整行放进 `front`；
+///  · `back`（释义）**留空**——路线 B 不自动翻译、不猜词义，释义必须用户自己给；
+///  · `module_name` 填占位名，用户可改；
+///  · 超过 [kUserPackageMaxChunks] 的行不写进骨架，如实回报 [skipped]。
+///
+/// 返回 null 表示「这不是一份可转换的纯清单」（JSON、CSV 表头、空内容、或大面积
+/// 逗号分隔）——宁可不出按钮，也不把一份表格搅成清单。
+class PlainListSuggestion {
+  final String csv;
+  final int lineCount;
+  final int skipped;
+  final String modulePlaceholder;
+  const PlainListSuggestion({
+    required this.csv,
+    required this.lineCount,
+    required this.skipped,
+    required this.modulePlaceholder,
+  });
+}
+
+/// 占位模块名：导入前用户可以改成自己想要的（改名后就是另一个包）。
+const String kUserListModulePlaceholder = '我的词表';
+
+PlainListSuggestion? suggestTemplateFromPlainList(String raw) {
+  final text = raw.replaceFirst('\uFEFF', '').trim();
+  if (text.isEmpty) return null;
+  // JSON 有自己的模板，不在这里转。
+  if (text.startsWith('{') || text.startsWith('[')) return null;
+
+  final lines = <String>[];
+  for (final l in text.split(RegExp('\r\n|\r|\n'))) {
+    final t = l.trim();
+    if (t.isNotEmpty) lines.add(t);
+  }
+  if (lines.isEmpty) return null;
+
+  // 已经像 CSV 的不做清单转换，否则会把表格搅乱：
+  //  · 第一行是已知表头；
+  //  · 或过半的行含 ≥2 个逗号（典型的多列数据）。
+  final head = lines.first.toLowerCase();
+  if (head.contains('front') &&
+      (head.contains('back') || head.contains('module_name'))) {
+    return null;
+  }
+  var commaRich = 0;
+  for (final l in lines) {
+    if (','.allMatches(l).length >= 2) commaRich++;
+  }
+  if (commaRich * 2 >= lines.length) return null;
+
+  // 行首标记：`1.` / `2)` / `3、` / `- ` / `•` 等。
+  // 数字 + 句点后必须跟空白，避免把 `3.14 is pi` 削成 `14 is pi`。
+  final marker =
+      RegExp(r'^\s*(?:\d{1,3}\s*[\)、．]\s*|\d{1,3}\s*\.\s+|[-*]\s+|[•·–—]\s*)');
+  final fronts = <String>[];
+  for (final line in lines) {
+    final front = _cleanFront(line.replaceFirst(marker, '').trim());
+    if (front.isEmpty) continue;
+    fronts.add(front);
+  }
+  if (fronts.isEmpty) return null;
+
+  final kept = fronts.take(kUserPackageMaxChunks).toList();
+  final rows = <String>[
+    'front,back,module_name',
+    for (final f in kept) '${_csvField(f)},,$kUserListModulePlaceholder',
+  ];
+  return PlainListSuggestion(
+    csv: rows.join('\n'),
+    lineCount: kept.length,
+    skipped: fronts.length - kept.length,
+    modulePlaceholder: kUserListModulePlaceholder,
+  );
+}
+
+/// 去掉整行被引号包住的外壳（从聊天/文档复制时常见）。
+String _cleanFront(String s) {
+  var v = s.trim();
+  if (v.length >= 2 &&
+      ((v.startsWith('"') && v.endsWith('"')) ||
+          (v.startsWith('“') && v.endsWith('”')) ||
+          (v.startsWith("'") && v.endsWith("'")))) {
+    v = v.substring(1, v.length - 1).trim();
+  }
+  return v;
+}
+
+/// CSV 单元格转义：含逗号/引号/换行时用双引号包住，内部引号翻倍。
+String _csvField(String s) {
+  if (s.contains(',') ||
+      s.contains('"') ||
+      s.contains('\n') ||
+      s.contains('\r')) {
+    return '"${s.replaceAll('"', '""')}"';
+  }
+  return s;
+}
 
 List<String> _splitCsvLine(String line) {
   final out = <String>[];

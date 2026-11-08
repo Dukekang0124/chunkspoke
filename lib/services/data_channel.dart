@@ -38,7 +38,7 @@ bool isUserPackageArchiveKv(String key) =>
     key.startsWith(AppDatabase.kUserPkgKvPrefix);
 
 /// 导出头里的 App 版本：发版时与 pubspec / 包内清单同 bump。
-const String kChannelAppVersion = '1.6.0';
+const String kChannelAppVersion = '1.9.1';
 
 const List<String> _chunkKeys = [
   'chunk_key',
@@ -104,6 +104,9 @@ class ChannelImportPlan {
     this.ignoredUserChunks = 0,
     this.ignoredUserArchives = 0,
     this.rebuiltUserRows = 0,
+    this.acceptedUserArchives = const {},
+    this.skippedUserArchives = 0,
+    this.skippedUserEntries = 0,
   });
   final int newChunks;
   final int updatedChunks;
@@ -127,6 +130,16 @@ class ChannelImportPlan {
   /// 合并后按档案补回的自定义块行数（预览恒为 0；执行后才有值）。
   final int rebuiltUserRows;
 
+  /// ASR-233 深度自查：licensed 恢复时通过消毒闸的档案（kvKey → canonical JSON）。
+  /// 通道只写这些；手改件里超名额/脏字段/撞名的档案不在其中。预览/执行共用同一份结论。
+  final Map<String, String> acceptedUserArchives;
+
+  /// 整份拒收的自定义档案数（解析失败/模块键不自洽/超 200/名额满/撞名/全坏）。
+  final int skippedUserArchives;
+
+  /// 被收档案里剔除的坏条目数（字段闸不过，整份仍收其余好条目）。
+  final int skippedUserEntries;
+
   bool get nothingToDo =>
       newChunks == 0 &&
       updatedChunks == 0 &&
@@ -149,6 +162,9 @@ class ChannelImportPlan {
         ignoredUserChunks: ignoredUserChunks,
         ignoredUserArchives: ignoredUserArchives,
         rebuiltUserRows: n,
+        acceptedUserArchives: acceptedUserArchives,
+        skippedUserArchives: skippedUserArchives,
+        skippedUserEntries: skippedUserEntries,
       );
 }
 
@@ -337,17 +353,34 @@ Future<ChannelImportPlan> previewChannelImport({
   }
 
   var newKv = 0, ignoredLicenseKv = 0, ignoredUserArchives = 0;
-  for (final k in (payload['kv'] as Map).keys) {
+  // 本批「新」自定义档案（本机已有的不覆盖、不算新）先收齐，交给消毒闸统一判
+  // 名额/撞名/字段——licensed 机器也不许把明文备份件里的档案原样写回（手改件能绕闸）。
+  final incomingArchives = <String, String>{};
+  final kvMap = payload['kv'] as Map;
+  for (final k in kvMap.keys) {
     final key = k.toString();
     if (isLicenseKv(key)) {
       ignoredLicenseKv++;
       continue;
     }
-    if (isUserPackageArchiveKv(key) && !allowUserPackages) {
-      ignoredUserArchives++;
-      continue;
+    if (isUserPackageArchiveKv(key)) {
+      if (!allowUserPackages) {
+        ignoredUserArchives++;
+      } else if (!currentKv.containsKey(key)) {
+        incomingArchives[key] = kvMap[k].toString();
+      }
+      continue; // 档案的新增数由消毒闸结果决定，不在这里逐条加
     }
     if (!currentKv.containsKey(key)) newKv++;
+  }
+  var acceptedUserArchives = <String, String>{};
+  var skippedUserArchives = 0, skippedUserEntries = 0;
+  if (incomingArchives.isNotEmpty) {
+    final adoption = await UserPackageStore(db).adoptUserArchives(incomingArchives);
+    acceptedUserArchives = adoption.accepted;
+    skippedUserArchives = adoption.skippedArchives;
+    skippedUserEntries = adoption.skippedEntries;
+    newKv += adoption.accepted.length;
   }
 
   final legacy = payload['legacy'];
@@ -365,6 +398,9 @@ Future<ChannelImportPlan> previewChannelImport({
     ignoredLicenseKv: ignoredLicenseKv,
     ignoredUserChunks: ignoredUserChunks,
     ignoredUserArchives: ignoredUserArchives,
+    acceptedUserArchives: acceptedUserArchives,
+    skippedUserArchives: skippedUserArchives,
+    skippedUserEntries: skippedUserEntries,
   );
 }
 
@@ -387,8 +423,16 @@ Future<ChannelImportPlan> applyChannelImport({
     // ASR-233：授权键一律不写回。旧版备份件里带着它，合并一份别人的件
     // 就等于白拿 PRO——这条必须在写库前挡住，不能只靠导出侧不带。
     if (isLicenseKv(k)) continue;
-    // ASR-233：没解锁就不写词表档案（否则合并一份别人的备份 = 白拿自定义包）。
-    if (isUserPackageArchiveKv(k) && !allowUserPackages) continue;
+    if (isUserPackageArchiveKv(k)) {
+      // ASR-233：没解锁就不写词表档案（否则合并一份别人的备份 = 白拿自定义包）。
+      if (!allowUserPackages) continue;
+      // 深度自查：只写消毒闸通过的 canonical 档案；超名额/脏字段/撞名的一律不写。
+      final canonical = plan.acceptedUserArchives[k];
+      if (canonical == null) continue;
+      if (currentKv.containsKey(k)) continue;
+      await db.setKv(k, canonical);
+      continue;
+    }
     if (currentKv.containsKey(k)) continue; // 本机已有设置优先，绝不覆盖
     await db.setKv(k, e.value.toString());
   }

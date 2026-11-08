@@ -329,6 +329,32 @@ class AppDatabase {
     });
   }
 
+  /// 自定义包同名重导 / 删包：删旧行 + 写新行 + 写档案**同一事务**。
+  ///
+  /// 旧写法 deleteChunksByKeys 与 upsertChunksAndKv 各开一个事务，进程在中间被杀
+  /// 会留下「旧行已删、新行/档案没写」的半截态（自检判红 missingRows）。合并成事务后
+  /// 三者要么都在、要么都不在。deleteKeys 为空时只写不删。
+  Future<void> replaceChunksAndKv({
+    required List<String> deleteKeys,
+    required List<ChunkRow> upsertRows,
+    required Map<String, String> kv,
+  }) async {
+    final d = await db;
+    await d.transaction((txn) async {
+      for (final k in deleteKeys) {
+        await txn.delete('chunks', where: 'chunk_key = ?', whereArgs: [k]);
+      }
+      for (final row in upsertRows) {
+        await txn.insert('chunks', row.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      for (final e in kv.entries) {
+        await txn.insert('kv', {'key': e.key, 'value': e.value},
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
   /// 到期复习队列（资产轴）：巩固中/已巩固/长期/需重修且到期。
   /// [limit] 用于每日上限截断；超出部分保持到期，次日自然顺延。
   Future<List<ChunkRow>> dueChunks(int now, {int? limit}) async {
@@ -586,6 +612,8 @@ class AppDatabase {
   //
   // 只读既有两表，不建新表；按**本地日**分桶（ts 是 epoch ms，跨时区/夏令时由
   // DateTime.toLocal() 处理，SQL 的 date() 不做时区换算，故在 Dart 侧分组）。
+  // ASR-234：两表都带 chunk_key，一律加 kUserKeyExclude——自定义包接入六步后，
+  // user 块的复习会话与首学时间戳不得混进官方学习日历（与今日新学同一口径）。
   Future<Map<String, DayActivity>> dayActivityBetween(
       DateTime from, DateTime to) async {
     final start = DateTime(from.year, from.month, from.day);
@@ -597,13 +625,13 @@ class AppDatabase {
     final sessionRows = await db.query(
       'sessions',
       columns: ['ts', 'outcome', 'review'],
-      where: 'ts >= ? AND ts < ?',
+      where: 'ts >= ? AND ts < ? AND $kUserKeyExclude',
       whereArgs: [startMs, endMs],
     );
     final learnedRows = await db.query(
       'chunks',
       columns: ['first_learned_at'],
-      where: 'first_learned_at >= ? AND first_learned_at < ?',
+      where: 'first_learned_at >= ? AND first_learned_at < ? AND $kUserKeyExclude',
       whereArgs: [startMs, endMs],
     );
 

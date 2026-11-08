@@ -14,6 +14,7 @@ import '../services/progress_display.dart';
 import '../services/progress_integrity.dart';
 import '../services/state_machine.dart';
 import '../services/session_report.dart';
+import '../services/user_package.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'anchor_step.dart';
@@ -41,6 +42,17 @@ bool challengeAfterChunks({
     mastered &&
     chunkIndex == chunkTotal - 1 &&
     sentenceTotal > 0;
+
+/// ASR-234：定向替换的替代池单源。
+///
+/// 自定义包会话（level.id 是 `user_module:` 键）只用**本包内**的块做替代池，
+/// 绝不拿官方块去替换用户自己的句子；单块包没有搭档 → `buildSubstitutionPlan`
+/// 退化为原句复述。官方 / 收听 / 复习会话仍用全量官方块池，行为一字不变。
+List<Chunk> substitutionPoolFor({
+  required Level level,
+  required List<Chunk> allChunks,
+}) =>
+    isUserModuleKey(level.id) ? level.chunks : allChunks;
 
 /// 闯关句索引推进：返回 -1 表示本关最后一句已完成。
 int nextChallengeIndex(int current, int total) =>
@@ -1326,10 +1338,13 @@ class _PracticeLoopState extends State<PracticeLoop>
         );
       case LearnPhase.substitute:
         final s = _sentenceForChunk(_chunk);
+        // ASR-234：替代池选择见 substitutionPoolFor（单源，钉测直测这个函数）。
+        final subPool =
+            substitutionPoolFor(level: widget.level, allChunks: _allChunks);
         final plan = buildSubstitutionPlan(
           chunk: _chunk,
           sentence: s,
-          allChunks: _allChunks,
+          allChunks: subPool,
         );
         return SubstituteStep(
           key: stepKey,

@@ -10,6 +10,7 @@ import '../services/database.dart';
 import '../services/learning_export.dart';
 import '../services/loaders.dart';
 import '../services/session.dart';
+import '../services/user_package_store.dart';
 import '../steps/practice_loop.dart';
 import '../ui/feedback.dart';
 import '../ui/theme.dart';
@@ -18,6 +19,7 @@ import '../ui/count_up.dart';
 import '../ui/pressable.dart';
 import '../ui/stagger.dart';
 import '../ui/widgets.dart';
+import 'user_package_detail_screen.dart';
 
 /// 词块库（波 2 · 模块 D）：资产轴唯一口径。
 /// 分组：需重修 / 巩固中 / 长期（已巩固+长期）/ 已掌握。
@@ -133,8 +135,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
         return yd.compareTo(xd);
       });
     }
+    // ASR-234：自定义包互链。只读 `user:` 命名空间，官方口径（上面的 rows/chunks）不变。
+    final packages = await UserPackageStore(p.database).listPackages();
+    final userRows = await p.database.allUserChunks();
+    final userByKey = {for (final r in userRows) r.chunkKey: r};
+    final userModules = <_UserLibModule>[];
+    for (final rec in packages) {
+      var mastered = 0, started = 0;
+      for (final e in rec.entries) {
+        final s = userByKey[e.chunkKey]?.assetState;
+        if (s == null || s == ChunkAssetState.learning) continue;
+        started++;
+        if (s == ChunkAssetState.mastered) mastered++;
+      }
+      userModules.add(
+          _UserLibModule(rec: rec, mastered: mastered, started: started));
+    }
     return _LibraryData(
-        chunks: chunks, rows: byKey, combos: combos, sources: sources);
+        chunks: chunks,
+        rows: byKey,
+        combos: combos,
+        sources: sources,
+        userModules: userModules);
   }
 
   @override
@@ -194,6 +216,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
             _header(mastered, learned, total),
             const SizedBox(height: 12),
             _exportCard(),
+            if (data.userModules.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _userModulesCard(data.userModules),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [
@@ -441,6 +467,106 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
+  /// ASR-234：词块库 ↔ 我的模块互链。
+  ///
+  /// 口径红线：这一区块只用 `user:` 读路径（包档案 + user 行），
+  /// 上面的官方「已掌握 / 已学完 / 总数」仍只算官方块，两本账不合并。
+  Widget _userModulesCard(List<_UserLibModule> mods) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.upload_file, color: kPrimary, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('我的模块',
+                    style: TextStyle(
+                        color: kText,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700)),
+              ),
+              Text('${mods.length} 个包',
+                  style: TextStyle(color: kTextFaint, fontSize: 11)),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text('和官方词块走同一套六步学习与复习；进度独立记账，不混进上面的官方计数。',
+              style: TextStyle(color: kTextMuted, fontSize: 11, height: 1.4)),
+          const SizedBox(height: 6),
+          for (final (i, m) in mods.indexed) ...[
+            if (i > 0)
+              Divider(height: 1, color: kBorder.withValues(alpha: 0.5)),
+            InkWell(
+              key: Key('library_usermod_${m.rec.moduleKey}'),
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => _openUserModuleDetail(m.rec),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(m.rec.moduleName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color: kText,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 2),
+                          Text(
+                              '${m.rec.chunkCount} 块 · 已掌握 ${m.mastered} · 已学 ${m.started}',
+                              style: TextStyle(
+                                  color: kTextFaint, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      key: Key('library_usermod_learn_${m.rec.moduleKey}'),
+                      visualDensity: VisualDensity.compact,
+                      tooltip: m.mastered >= m.rec.chunkCount ? '复习这个包' : '六步学习',
+                      icon: Icon(
+                          m.mastered >= m.rec.chunkCount
+                              ? Icons.replay
+                              : Icons.play_arrow,
+                          color: kPrimary,
+                          size: 20),
+                      onPressed: () => _learnUserModule(m),
+                    ),
+                    Icon(Icons.arrow_forward_ios, size: 12, color: kTextFaint),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openUserModuleDetail(UserPackageRecord rec) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => UserPackageDetailScreen(moduleKey: rec.moduleKey)));
+    if (mounted) _reload();
+  }
+
+  Future<void> _learnUserModule(_UserLibModule m) async {
+    // 全掌握 ⇒ 复习模式；否则从首个未掌握块续学（PracticeLoop 自己定位）。
+    final review = m.started > 0 && m.mastered >= m.rec.chunkCount;
+    await UserPackageDetailScreen.openPractice(context, m.rec, review: review);
+    if (mounted) _reload();
+  }
+
   List<_AssetGroup> _buildGroups(_LibraryData data) {
     List<Chunk> of(Set<ChunkAssetState> states) => data.chunks.where((c) {
           final r = data.rows[c.id];
@@ -618,11 +744,29 @@ class _LibraryData {
   final Map<String, ChunkRow> rows;
   final Map<String, int> combos;
   final Map<String, List<ListeningArticle>> sources;
+
+  /// ASR-234：用户自定义包（只读 `user:` 命名空间），与官方 chunks 分开记。
+  final List<_UserLibModule> userModules;
   const _LibraryData({
     required this.chunks,
     required this.rows,
     required this.combos,
     this.sources = const {},
+    this.userModules = const [],
+  });
+}
+
+/// 一个自定义包在词块库里的只读摘要。
+class _UserLibModule {
+  final UserPackageRecord rec;
+  final int mastered;
+  final int started;
+
+  /// started = 资产态不是「未学」的块数（含已掌握）。
+  const _UserLibModule({
+    required this.rec,
+    required this.mastered,
+    required this.started,
   });
 }
 

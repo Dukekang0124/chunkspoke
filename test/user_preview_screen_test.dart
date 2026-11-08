@@ -48,6 +48,6 @@ void main() {
   test('六项体验清单齐六条且带「不写库、不碰进度」声明', () {
     expect(UserImportFeedbackScreen.questions.length, 6);
     final src = File('lib/screens/user_preview_screen.dart').readAsStringSync();
-    expect(src.contains('这一版只做预览：不写库、不碰进度'), isTrue);
+    expect(src.contains('本页只收集反馈：不写库、不碰进度'), isTrue);
   });
 }

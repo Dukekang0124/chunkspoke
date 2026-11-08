@@ -118,6 +118,14 @@ const Map<String, Set<String>> _matrix = {
   // —— ASR-229 D4：只读侧（分区列表 / 包详情 / 地图）——
   'lib/screens/user_package_detail_screen.dart': {
     'UserPackageStore', // 详情读档案 + 唯一的删包出口（removePackage），不碰断点
+    // ASR-234 六步桥：包详情按 user 专属读路径取本包行的进度（只读、只渲染本包）。
+    'allUserChunks',
+    'kUserKeyExclude', // 注释里说明为何不进官方口径，扫描器按字符串计
+  },
+  // —— ASR-234：自定义模块的六步会话（Level 由档案合成，不读官方台账）——
+  'lib/services/session.dart': {
+    // 仅注释点名排除口径：userModuleLevel 只搬运档案条目，不查 chunk rows / 断点。
+    'kUserKeyExclude',
   },
   // —— 渲染单源与自检 ——
   'lib/services/progress_display.dart': {'LevelDisplay'},
@@ -129,9 +137,19 @@ const Map<String, Set<String>> _matrix = {
     'UserPackageStore', // ASR-229 D4 件 3 / ASR-233：分区只读盘点 inspect()（坏档案也列）
   },
   'lib/screens/me.dart': {'allMasteredKeys'},
-  'lib/screens/library.dart': {'allRows'},
+  'lib/screens/library.dart': {
+    'allRows',
+    // ASR-234：「我的模块」卡片按档案列包、按 user 专属读路径数每包的掌握数；
+    // 不进官方台账口径，也不影响词块库总计数。
+    'UserPackageStore',
+    'allUserChunks',
+  },
   'lib/screens/free_build_screen.dart': {'allRows'},
-  'lib/screens/listening_home_screen.dart': {'allRows'},
+  'lib/screens/listening_home_screen.dart': {
+    'allRows',
+    // ASR-234：磨耳朵首页的「我的模块」入口只列档案（listPackages），不写库。
+    'UserPackageStore',
+  },
   'lib/screens/listening_player.dart': {'chunkStore.get', 'allRows'},
   'lib/services/ai_coach.dart': {'allMasteredKeys', 'allAssetMasteredKeys'},
   'lib/services/learning_export.dart': {'allRows'},

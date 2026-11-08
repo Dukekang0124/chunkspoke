@@ -184,8 +184,13 @@ void main() {
         await tester.pump(const Duration(milliseconds: 60));
       }
       await _pumpUntil(tester, find.byType(UserPackageDetailScreen));
-      // 详情页不超实装：明说还不能走六步；删除按钮明写是级联的。
-      await _pumpUntil(tester, find.textContaining('还不能像官方模块那样走六步学习'));
+      // ASR-234 更正：自定义包已接入同一套六步闭环——详情页明说这一点，
+      // 并给出唯一的六步入口（「开始/继续学习（六步）」）；删除按钮仍明写是级联的。
+      await _pumpUntil(
+          tester, find.textContaining('这些块和官方模块走同一套六步学习闭环'));
+      expect(find.text('开始学习（六步）'), findsOneWidget);
+      expect(find.text('复习这个包'), findsOneWidget);
+      expect(find.textContaining('还不能像官方模块那样走六步学习'), findsNothing);
       expect(find.text('删除这个包（含级联清理）'), findsOneWidget);
 
       await tester.tap(find.text('删除这个包（含级联清理）'));

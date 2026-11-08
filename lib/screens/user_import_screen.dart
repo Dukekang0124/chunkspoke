@@ -20,7 +20,8 @@ import 'user_preview_screen.dart';
 ///  - 这一页是**确认步**：主体复用同一个 [UserPreviewBody]，
 ///    只有按下「确认导入（将写入本机）」才落库，落库只写 `user:` 命名空间。
 ///
-/// 文案红线：不承诺没实装的能力（六步/复习对 user 块何时可用属 D4 之后的事）。
+/// 文案红线：不承诺没实装的能力。六步与复习已接通（见 `user_package_detail_screen`），
+/// 这里只说「确认导入写进我的模块、官方计数不受影响」。
 class UserImportScreen extends StatefulWidget {
   const UserImportScreen({super.key, this.files});
 
@@ -36,6 +37,7 @@ class _UserImportScreenState extends State<UserImportScreen> {
   final TextEditingController _input = TextEditingController();
 
   UserPackageValidation? _result;
+  PlainListSuggestion? _suggestion;
   UserImportResult? _imported;
   List<UserPackageFile> _found = const [];
   String _dirNote = '';
@@ -84,6 +86,7 @@ class _UserImportScreenState extends State<UserImportScreen> {
     setState(() {
       _input.text = text;
       _result = null;
+      _suggestion = null;
       _imported = null;
     });
   }
@@ -92,6 +95,7 @@ class _UserImportScreenState extends State<UserImportScreen> {
     setState(() {
       _input.text = text;
       _result = null;
+      _suggestion = null;
       _imported = null;
     });
   }
@@ -117,8 +121,11 @@ class _UserImportScreenState extends State<UserImportScreen> {
   }
 
   void _parse() {
+    final v = parseAndValidateUserPackage(_input.text);
     setState(() {
-      _result = parseAndValidateUserPackage(_input.text);
+      _result = v;
+      // 解析失败且内容像「编号/项目符号清单」时，给出结构转换出口（不自动翻译）。
+      _suggestion = v.ok ? null : suggestTemplateFromPlainList(_input.text);
       _imported = null;
     });
   }
@@ -246,7 +253,10 @@ class _UserImportScreenState extends State<UserImportScreen> {
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
-            onChanged: (_) => setState(() => _result = null),
+            onChanged: (_) => setState(() {
+                  _result = null;
+                  _suggestion = null;
+                }),
           ),
           const SizedBox(height: 10),
           FilledButton(
@@ -280,9 +290,11 @@ class _UserImportScreenState extends State<UserImportScreen> {
                   ),
                 ],
               )
-            else
+            else ...[
+              if (_suggestion != null) _listSuggestionCard(_suggestion!),
               Text('这一份没过闸：一行都不会写入。按上面的行号改完再解析。',
                   style: TextStyle(color: kTextSecondary, fontSize: 12)),
+            ],
           ],
           if (_imported != null) _importedBanner(_imported!),
           const SizedBox(height: 18),
@@ -299,6 +311,47 @@ class _UserImportScreenState extends State<UserImportScreen> {
                   ),
               child: Text('六项体验清单（填完复制给开发者）',
                   style: TextStyle(color: kPrimary))),
+        ],
+      ),
+    );
+  }
+
+  /// ASR-234：粘贴进来的「编号/项目符号清单」一键转成模板骨架。
+  ///
+  /// 只转结构：整行进 front，back 留空等用户自己补释义，模块名给个可改的占位。
+  /// 不自动翻译、不猜词义——路线 B 的模板化边界不变，只是把"怎么改"摆到眼前。
+  Widget _listSuggestionCard(PlainListSuggestion s) {
+    final over = s.skipped > 0
+        ? '（超出每包 $kUserPackageMaxChunks 行的 ${s.skipped} 行没有放进骨架）'
+        : '';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+          color: kPrimary.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('看着像一份清单，可以一键转成模板骨架',
+              style: TextStyle(
+                  color: kText, fontSize: 13, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(
+              '会把 ${s.lineCount} 行整行放进 front 列，释义（back）留空等你补，'
+              '模块名先填「${s.modulePlaceholder}」可以改。转换不会替你翻译。$over',
+              style: TextStyle(color: kTextSecondary, fontSize: 12, height: 1.5)),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            key: const Key('userpkg_convert_list'),
+            onPressed: () {
+              _fill(s.csv);
+              _toast('已转成模板骨架：把每行的 back 释义补上，再点「解析并预览」');
+            },
+            icon: Icon(Icons.auto_fix_high, color: kPrimary, size: 16),
+            label: Text('转成模板骨架（${s.lineCount} 行）',
+                style: TextStyle(color: kPrimary, fontSize: 12)),
+          ),
         ],
       ),
     );

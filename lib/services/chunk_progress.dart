@@ -2,6 +2,7 @@ import 'chunk_asset.dart';
 import 'database.dart';
 import 'learning_flow.dart';
 import 'state_machine.dart';
+import 'user_package.dart';
 
 /// 每日复习上限：防到期堆积（超出部分保持到期，次日自然顺延）。
 const int kDailyReviewCap = 20;
@@ -347,7 +348,11 @@ class ChunkProgressStore {
       await db.insertSession(
           key, event.name, accuracy > 0 ? accuracy : p.lastScore,
           review: isReviewEvent, ts: atMs);
-      if (newlyMastered) onNewMastery?.call();
+      // ASR-234：自定义包接入六步后，user 块也会走到这条「本块完成」分支。
+      // 每日新学（地图今日卡）是**官方内容**掌握口径，user 块练得再多也不该混进去
+      // （混了就是新的案三：官方今日新学被用户自己的词表灌水）。连击/开口数属参与度，
+      // 由 practice_loop 的 bumpStreak/noteSpoken 照常累计，不在这条官方计数里。
+      if (newlyMastered && !isUserChunkKey(key)) onNewMastery?.call();
       return;
     }
 
