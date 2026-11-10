@@ -84,11 +84,13 @@ class _AnchorStepState extends State<AnchorStep> {
                         color: kText,
                         fontSize: 30,
                         fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                Text(widget.chunk.meaningCN,
-                    textAlign: TextAlign.center,
-                    style:
-                        TextStyle(color: kPrimary, fontSize: 16)),
+                if (widget.chunk.meaningCN.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(widget.chunk.meaningCN,
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(color: kPrimary, fontSize: 16)),
+                ],
               ],
             ),
           ),

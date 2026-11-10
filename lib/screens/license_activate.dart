@@ -310,7 +310,7 @@ Future<void> showLicenseWallSheet(
               Center(
                 child: TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: Text('先继续学生存 S0 + A–F',
+                  child: Text('先继续学免费内容',
                       style: TextStyle(color: kTextMuted, fontSize: 13)),
                 ),
               ),

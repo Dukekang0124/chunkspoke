@@ -467,10 +467,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
-  /// ASR-234：词块库 ↔ 我的模块互链。
+  /// ASR-234：内容库 ↔ 我的英语本互链。
   ///
   /// 口径红线：这一区块只用 `user:` 读路径（包档案 + user 行），
-  /// 上面的官方「已掌握 / 已学完 / 总数」仍只算官方块，两本账不合并。
+  /// 上面的官方「已掌握 / 已学完 / 总数」仍只算官方内容，两本账不合并。
   Widget _userModulesCard(List<_UserLibModule> mods) {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -487,18 +487,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
               Icon(Icons.upload_file, color: kPrimary, size: 20),
               const SizedBox(width: 8),
               Expanded(
-                child: Text('我的模块',
+                child: Text('我的英语本',
                     style: TextStyle(
                         color: kText,
                         fontSize: 15,
                         fontWeight: FontWeight.w700)),
               ),
-              Text('${mods.length} 个包',
+              Text('${mods.length} 本',
                   style: TextStyle(color: kTextFaint, fontSize: 11)),
             ],
           ),
           const SizedBox(height: 2),
-          Text('和官方词块走同一套六步学习与复习；进度独立记账，不混进上面的官方计数。',
+          Text('和官方内容用同一套练习；你的学习记录单独记，不混进上面的官方数字。',
               style: TextStyle(color: kTextMuted, fontSize: 11, height: 1.4)),
           const SizedBox(height: 6),
           for (final (i, m) in mods.indexed) ...[
@@ -525,7 +525,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                   fontWeight: FontWeight.w600)),
                           const SizedBox(height: 2),
                           Text(
-                              '${m.rec.chunkCount} 块 · 已掌握 ${m.mastered} · 已学 ${m.started}',
+                              '${m.rec.chunkCount} 句 · 学会 ${m.mastered} · 开始学 ${m.started}',
                               style: TextStyle(
                                   color: kTextFaint, fontSize: 11)),
                         ],
@@ -534,7 +534,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     IconButton(
                       key: Key('library_usermod_learn_${m.rec.moduleKey}'),
                       visualDensity: VisualDensity.compact,
-                      tooltip: m.mastered >= m.rec.chunkCount ? '复习这个包' : '六步学习',
+                      tooltip: m.mastered >= m.rec.chunkCount ? '复习这本' : '开始学',
                       icon: Icon(
                           m.mastered >= m.rec.chunkCount
                               ? Icons.replay

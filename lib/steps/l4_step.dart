@@ -1167,6 +1167,9 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final waiting = !_ready && !_permBlocked && !_engineFailed;
+    // 没填中文意思时，反向练习（看中文说英文）与长按中文卡都没有内容，
+    // 直接退化为「看英文开口说」，不摆空白框。
+    final hasCn = widget.chunk.meaningCN.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -1181,29 +1184,34 @@ class _L4StepState extends State<L4Step> with SingleTickerProviderStateMixin {
               color: kBg.withValues(alpha: 0.5),
               border: Border.all(color: kBorderStrong),
             ),
-            child: _reverse
+            child: _reverse && hasCn
                 ? Text(widget.chunk.meaningCN,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         color: kPrimary, fontSize: 18, fontWeight: FontWeight.w600))
-                : CnText(
-                    widget.targetText,
-                    widget.chunk.meaningCN,
-                    style: TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
+                : (hasCn
+                    ? CnText(
+                        widget.targetText,
+                        widget.chunk.meaningCN,
+                        style: TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.w600),
+                      )
+                    : Text(widget.targetText,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.w600))),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => setState(() => _reverse = !_reverse),
-                child: Text(_reverse ? '显示英文' : '看中文练 →',
-                    style: TextStyle(color: kPrimary, fontSize: 13)),
-              ),
-            ],
-          ),
+          if (hasCn)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => setState(() => _reverse = !_reverse),
+                  child: Text(_reverse ? '显示英文' : '看中文练 →',
+                      style: TextStyle(color: kPrimary, fontSize: 13)),
+                ),
+              ],
+            ),
           const SizedBox(height: 8),
-          Text(_reverse ? '看中文，说出英文' : '开口说出来',
+          Text(_reverse && hasCn ? '看中文，说出英文' : '开口说出来',
               style: TextStyle(color: kTextSecondary)),
           const SizedBox(height: 10),
           if (_judge != null && !_selfAssess) _targetSentence(),

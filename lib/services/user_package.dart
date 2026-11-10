@@ -14,8 +14,19 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
-const List<String> kUserPackageRequiredFields = ['front', 'back', 'module_name'];
-const List<String> kUserPackageOptionalFields = ['phonetic', 'example', 'cefr', 'tags'];
+/// 必填只有「英文」和「词表名」。
+///
+/// 中文意思（back）自 1.9.2 起**可选**：用户粘一段英文进来就是为了学，
+/// 不该先被逼着翻译一遍才能保存。空释义在六步里降级为「不显示翻译行」，
+/// 校验闸（长度/不可见字符/CEFR）对非空的释义照旧生效。
+const List<String> kUserPackageRequiredFields = ['front', 'module_name'];
+const List<String> kUserPackageOptionalFields = [
+  'back',
+  'phonetic',
+  'example',
+  'cefr',
+  'tags',
+];
 
 const int kUserPackageMaxChunks = 200;
 const int kUserPackageMaxPackages = 5;
@@ -141,7 +152,7 @@ UserPackageValidation parseAndValidateUserPackage(String raw) {
   final text = raw.replaceFirst('\uFEFF', '').trim();
   if (text.isEmpty) {
     return const UserPackageValidation([], [
-      UserPackageIssue(0, 'file', '内容为空，先用「下载模板」拿到表头再填'),
+      UserPackageIssue(0, 'file', '还没有内容，先把想学的英文粘进来'),
     ]);
   }
   if (text.startsWith('{') || text.startsWith('[')) return _validateJson(text);
@@ -252,8 +263,17 @@ UserChunkEntry _entryFrom({
   }
 
   final front = need('front', kUserFieldMaxFront);
-  final back = need('back', kUserFieldMaxBack);
   final module = need('module_name', kUserFieldMaxModule);
+
+  // 释义可选：空着就空着，有内容才过长/字符闸。
+  final back = (get('back') ?? '').trim();
+  if (back.isNotEmpty) {
+    if (back.length > kUserFieldMaxBack) {
+      issues.add(UserPackageIssue(row, 'back', '超过 $kUserFieldMaxBack 字（当前 ${back.length}）'));
+    } else if (!_allowedText(back)) {
+      issues.add(UserPackageIssue(row, 'back', '含控制符或不可见字符'));
+    }
+  }
 
   final phonetic = (get('phonetic') ?? '').trim();
   if (phonetic.isNotEmpty) {
@@ -365,7 +385,7 @@ void _checkKeys(Iterable<String> keys, int row, List<UserPackageIssue> issues) {
 UserPackageValidation _finish(List<UserChunkEntry> entries, List<UserPackageIssue> issues) {
   final seen = <String, int>{};
   for (final e in entries) {
-    if (e.front.isEmpty || e.back.isEmpty || e.moduleName.isEmpty) continue;
+    if (e.front.isEmpty || e.moduleName.isEmpty) continue;
     final dup = seen[e.chunkKey];
     if (dup != null) {
       issues.add(UserPackageIssue(e.row, 'front', '与第 $dup 行内容重复'));
@@ -375,7 +395,7 @@ UserPackageValidation _finish(List<UserChunkEntry> entries, List<UserPackageIssu
   }
   if (entries.length > kUserPackageMaxChunks) {
     issues.add(UserPackageIssue(0, 'file',
-        '超出每包 $kUserPackageMaxChunks 块上限（当前 ${entries.length}）'));
+        '超出每本 $kUserPackageMaxChunks 句（现在有 ${entries.length} 句）'));
   }
   return UserPackageValidation(entries, issues);
 }
@@ -409,103 +429,73 @@ String userPackageJsonTemplate() => jsonEncode([
       },
     ]);
 
-/// 粘贴入口的「清单 → 模板骨架」引导转换（ASR-234）。
+/// 用户没给词表起名时的默认名。
 ///
-/// 用户在手机上的真实路径常常是「从别处复制一段编号清单再粘进来」，而不是先打开
-/// 表格软件填好表头。真机截图实测：`1. how's it going?` … `10. Catch you later.`
-/// 被当成 CSV 表头，报「未知字段」+「表头缺少必填列」——两句话都说"格式不对"，
-/// 却没告诉用户"怎么改"。
+/// 叫「英语本」而不是「模块/包」：这一份东西在用户眼里就是自己的一个本子。
+/// 表里的 `module_name` 仍是存储口径，只换展示词。
+const String kUserDefaultModuleName = '我的英语本';
+
+/// 旧的占位名保留导出（1.9.1 的测试/调用可能还在用），值跟默认名同步。
+const String kUserListModulePlaceholder = kUserDefaultModuleName;
+
+/// 行级问题翻成学习者看得懂的人话（只用于展示，不改校验口径）。
 ///
-/// 这里只做**结构转换**，不做内容创造：
-///  · 去掉行首编号 / 项目符号，整行放进 `front`；
-///  · `back`（释义）**留空**——路线 B 不自动翻译、不猜词义，释义必须用户自己给；
-///  · `module_name` 填占位名，用户可改；
-///  · 超过 [kUserPackageMaxChunks] 的行不写进骨架，如实回报 [skipped]。
-///
-/// 返回 null 表示「这不是一份可转换的纯清单」（JSON、CSV 表头、空内容、或大面积
-/// 逗号分隔）——宁可不出按钮，也不把一份表格搅成清单。
-class PlainListSuggestion {
-  final String csv;
-  final int lineCount;
-  final int skipped;
-  final String modulePlaceholder;
-  const PlainListSuggestion({
-    required this.csv,
-    required this.lineCount,
-    required this.skipped,
-    required this.modulePlaceholder,
-  });
-}
-
-/// 占位模块名：导入前用户可以改成自己想要的（改名后就是另一个包）。
-const String kUserListModulePlaceholder = '我的词表';
-
-PlainListSuggestion? suggestTemplateFromPlainList(String raw) {
-  final text = raw.replaceFirst('\uFEFF', '').trim();
-  if (text.isEmpty) return null;
-  // JSON 有自己的模板，不在这里转。
-  if (text.startsWith('{') || text.startsWith('[')) return null;
-
-  final lines = <String>[];
-  for (final l in text.split(RegExp('\r\n|\r|\n'))) {
-    final t = l.trim();
-    if (t.isNotEmpty) lines.add(t);
+/// 用模式匹配而不是「复制一份 reason 字符串表」：校验器的原话仍留在
+/// [UserPackageIssue] 里，展示层只负责加人称、去黑话；两条入口（粘贴/表格）
+/// 共用这一处，避免同一句错误在页面上出现两种说法。
+String describeIssueForLearner(UserPackageIssue issue) {
+  final field = switch (issue.field) {
+    'front' => '英文',
+    'back' => '中文意思',
+    'module_name' => '本子的名字',
+    'phonetic' => '音标',
+    'example' => '例句',
+    'cefr' => '难度',
+    'tags' => '标签',
+    'file' => '内容',
+    'row' => '这一行',
+    _ => issue.field,
+  };
+  final raw = issue.reason;
+  // 整包级问题：不加「英文：」这种前缀，直接说人话。
+  if (issue.row == 0) {
+    if (raw.startsWith('表头缺少必填列')) {
+      return '第一行的标题少了「English / 英文」这一列。直接粘贴文字就不用管标题行。';
+    }
+    if (raw.startsWith('未知字段')) {
+      return '有一列我不认识。可以直接粘贴文字，我帮你整理。';
+    }
+    if (raw.startsWith('JSON')) {
+      return '这份文件格式有点乱，多半少了逗号或引号。也可以直接粘贴文字让我整理。';
+    }
+    if (raw.startsWith('只有表头')) return '只有第一行标题，下面还没有内容。';
+    if (raw.startsWith('超出每本')) return raw;
+    if (raw.startsWith('内容为空')) return '还没有内容。';
+    if (raw.startsWith('没认出') || raw.startsWith('先把')) return raw;
+    return raw;
   }
-  if (lines.isEmpty) return null;
-
-  // 已经像 CSV 的不做清单转换，否则会把表格搅乱：
-  //  · 第一行是已知表头；
-  //  · 或过半的行含 ≥2 个逗号（典型的多列数据）。
-  final head = lines.first.toLowerCase();
-  if (head.contains('front') &&
-      (head.contains('back') || head.contains('module_name'))) {
-    return null;
+  // 英文超长：不报 CSV 行号（粘贴用户看不懂「第 2 行」），直接教怎么改。
+  if (issue.field == 'front' && raw.startsWith('超过')) {
+    return '有句英文太长了，一次学不下。在中间加个句号分成两句，再点「整理成句子」就好。';
   }
-  var commaRich = 0;
-  for (final l in lines) {
-    if (','.allMatches(l).length >= 2) commaRich++;
-  }
-  if (commaRich * 2 >= lines.length) return null;
-
-  // 行首标记：`1.` / `2)` / `3、` / `- ` / `•` 等。
-  // 数字 + 句点后必须跟空白，避免把 `3.14 is pi` 削成 `14 is pi`。
-  final marker =
-      RegExp(r'^\s*(?:\d{1,3}\s*[\)、．]\s*|\d{1,3}\s*\.\s+|[-*]\s+|[•·–—]\s*)');
-  final fronts = <String>[];
-  for (final line in lines) {
-    final front = _cleanFront(line.replaceFirst(marker, '').trim());
-    if (front.isEmpty) continue;
-    fronts.add(front);
-  }
-  if (fronts.isEmpty) return null;
-
-  final kept = fronts.take(kUserPackageMaxChunks).toList();
-  final rows = <String>[
-    'front,back,module_name',
-    for (final f in kept) '${_csvField(f)},,$kUserListModulePlaceholder',
-  ];
-  return PlainListSuggestion(
-    csv: rows.join('\n'),
-    lineCount: kept.length,
-    skipped: fronts.length - kept.length,
-    modulePlaceholder: kUserListModulePlaceholder,
-  );
-}
-
-/// 去掉整行被引号包住的外壳（从聊天/文档复制时常见）。
-String _cleanFront(String s) {
-  var v = s.trim();
-  if (v.length >= 2 &&
-      ((v.startsWith('"') && v.endsWith('"')) ||
-          (v.startsWith('“') && v.endsWith('”')) ||
-          (v.startsWith("'") && v.endsWith("'")))) {
-    v = v.substring(1, v.length - 1).trim();
-  }
-  return v;
+  final reason = switch (raw) {
+    '必填，不能为空' => '还是空的，补上就能继续',
+    '含控制符或不可见字符' => '里有看不见的字符，删掉重新打一遍',
+    '这一项不是对象' => '这一行格式不对',
+    _ when raw.startsWith('与第') && raw.endsWith('内容重复') => '和前面那句重复了，删掉一句',
+    _ when raw.startsWith('超过') => raw,
+    _ when raw.startsWith('只能是 A1') => '难度只填 A1–C2 里的一个，或者留空',
+    _ when raw.startsWith('最多') => raw,
+    _ => raw,
+  };
+  return '第 ${issue.row} 行 · $field：$reason';
 }
 
 /// CSV 单元格转义：含逗号/引号/换行时用双引号包住，内部引号翻倍。
-String _csvField(String s) {
+///
+/// 公开给「粘贴文本 → 词块」的解析器复用：它把识别结果拼成 CSV 再走同一套闸，
+/// 保证两条入口（粘贴/表格）的字段限制与字符校验完全同源。
+String csvField(String s) {
   if (s.contains(',') ||
       s.contains('"') ||
       s.contains('\n') ||

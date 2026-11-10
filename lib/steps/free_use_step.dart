@@ -376,8 +376,8 @@ class _FreeUseStepState extends State<FreeUseStep> {
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600)),
                         const SizedBox(height: 4),
-                        Text('场景：${sceneCn(widget.level.theme)} · '
-                            '${widget.chunk.meaningCN}',
+                        Text('场景：${sceneCn(widget.level.theme)}'
+                            '${widget.chunk.meaningCN.trim().isEmpty ? '' : ' · ${widget.chunk.meaningCN}'}',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: kTextMuted, fontSize: 12)),

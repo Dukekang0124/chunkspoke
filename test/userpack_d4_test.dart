@@ -89,7 +89,7 @@ void main() {
   });
 
   // ── D4 件 1：自检扩区（含坏档案的连坐项，不许静默跳过）────────────────
-  group('自检扩区：我的模块', () {
+  group('自检扩区：我的英语本', () {
     test('空库 = pass 一行，不制造假警', () async {
       await _freshDb();
       final inv = await UserPackageStore(_p.database).inspect();
@@ -98,7 +98,7 @@ void main() {
       final rows = SelfCheck.userPackageRows(inv);
       expect(rows, hasLength(1));
       expect(rows.single.state, CheckState.pass);
-      expect(rows.single.value, contains('未导入任何自定义包'));
+      expect(rows.single.value, contains('还没存过自己的英语本（0 本'));
     });
 
     test('正常导入 = pass，并把「档案声明 / 台账行数」两个数并排打出来', () async {
@@ -112,9 +112,9 @@ void main() {
       expect(inv.userRowCount, 2);
       final row = SelfCheck.userPackageRows(inv).first;
       expect(row.state, CheckState.pass);
-      expect(row.value, contains('1 个包'));
-      expect(row.value, contains('档案声明 2 块'));
-      expect(row.value, contains('台账 2 行'));
+      expect(row.value, contains('1 本 · 清单写着'));
+      expect(row.value, contains('清单写着 2 句'));
+      expect(row.value, contains('学习记录里 2 句'));
     });
 
     test('坏档案 = 列表跳过但自检必须判红，且它的行连坐成孤儿（连坐项）', () async {
@@ -136,10 +136,12 @@ void main() {
 
       final rows = SelfCheck.userPackageRows(inv);
       expect(rows.first.state, CheckState.warn);
-      expect(rows.any((r) => r.label == '坏档案' && r.state == CheckState.fail), isTrue,
+      expect(rows.any((r) => r.label == '读不出来的本子' && r.state == CheckState.fail),
+          isTrue,
           reason: '坏档案必须判红（fail），不许只是黄牌');
-      expect(rows.firstWhere((r) => r.label == '坏档案').value, contains('重新导入'));
-      expect(rows.any((r) => r.label == '台账有、档案无'), isTrue);
+      expect(rows.firstWhere((r) => r.label == '读不出来的本子').value,
+          contains('用同一个名字重新存一次'));
+      expect(rows.any((r) => r.label == '记录有、清单无'), isTrue);
     });
 
     test('档案有、台账无（半截写入）→ 判红并给出差额', () async {
@@ -147,7 +149,7 @@ void main() {
       final store = UserPackageStore(_p.database);
       await store.importValidation(await _validate(_csvTwoRows), allowed: true);
       final inv0 = await store.inspect();
-      // 直接删掉台账里的一行（档案仍然声明 2 块）：制造「档案有、台账无」。
+      // 直接删掉台账里的一行（清单仍然写着 2 句）：制造「清单有、记录无」。
       await _p.database.deleteChunksByKeys(
           [inv0.packages.single.entries.first.chunkKey]);
 
@@ -157,12 +159,12 @@ void main() {
       expect(inv.missingRows, 1);
       expect(inv.consistent, isFalse);
       final rows = SelfCheck.userPackageRows(inv);
-      final r = rows.firstWhere((x) => x.label == '档案有、台账无');
+      final r = rows.firstWhere((x) => x.label == '清单有、记录无');
       expect(r.state, CheckState.fail);
       expect(r.value, contains('差 1'));
     });
 
-    test('assemble 只在真的有内容时加「我的模块」区块（诊断页不出现空区）', () {
+    test('assemble 只在真的有内容时加「我的英语本」区块（诊断页不出现空区）', () {
       const ok = UserPackageInventory(
           packages: [], corruptCount: 0, userRowCount: 0,
           declaredChunks: 0, missingRows: 0, strayRows: 0);
@@ -177,7 +179,7 @@ void main() {
         localVersionCode: 1,
         user: SelfCheck.userPackageRows(ok),
       );
-      expect(withOut.sections.any((s) => s.title == '我的模块'), isTrue);
+      expect(withOut.sections.any((s) => s.title == '我的英语本'), isTrue);
 
       final plain = SelfCheck.assemble(
         at: DateTime(2026, 11, 6),
@@ -189,13 +191,13 @@ void main() {
         localVersion: 'test',
         localVersionCode: 1,
       );
-      expect(plain.sections.any((s) => s.title == '我的模块'), isFalse);
+      expect(plain.sections.any((s) => s.title == '我的英语本'), isFalse);
     });
   });
 
   // ── D4 件 2：卸载级联（删包只清自己的东西，官方一字不动）──────────────
   group('卸载级联', () {
-    test('删一个包：该包行 + 档案一起清；另一个包与官方口径分毫不动', () async {
+    test('删一本：该本的行 + 档案一起清；另一本与官方口径分毫不动', () async {
       await _freshDb();
       final store = UserPackageStore(_p.database);
       // 官方进度：前 3 块走完六步。

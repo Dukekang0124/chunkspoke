@@ -125,7 +125,10 @@ class _BuildStepState extends State<BuildStep>
         children: [
           SceneCard(widget.level.theme),
           const SizedBox(height: 16),
-          Text('用中文意思，把「词块」拖进槽位拼出句子',
+          Text(
+              widget.sentence.meaningCN.trim().isNotEmpty
+                  ? '用中文意思，把「词块」拖进槽位拼出句子'
+                  : '按顺序把词块拖进槽位，拼出这句话',
               style: TextStyle(
                   color: kPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
@@ -138,7 +141,7 @@ class _BuildStepState extends State<BuildStep>
               border: Border.all(color: kBorderStrong),
             ),
             child: Text(
-              _revealEn || _built
+              _revealEn || _built || widget.sentence.meaningCN.trim().isEmpty
                   ? widget.sentence.text
                   : widget.sentence.meaningCN,
               style: TextStyle(
@@ -150,11 +153,12 @@ class _BuildStepState extends State<BuildStep>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(
-                onPressed: () => setState(() => _revealEn = !_revealEn),
-                child: Text(_revealEn || _built ? '隐藏英文' : '看英文',
-                    style: TextStyle(color: kPrimary)),
-              ),
+              if (widget.sentence.meaningCN.trim().isNotEmpty)
+                TextButton(
+                  onPressed: () => setState(() => _revealEn = !_revealEn),
+                  child: Text(_revealEn || _built ? '隐藏英文' : '看英文',
+                      style: TextStyle(color: kPrimary)),
+                ),
               TextButton(
                 onPressed: () => speakOrHint(
                     context,

@@ -68,8 +68,9 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
               Text('换机或重装时，用这份 JSON 在「导入备份」里合并回来。\n'
                   '不含录音、不含任何 Key，也不含解锁码与授权状态'
                   '（换机后重输一次自己的码即可，老用户标记照旧带回）。\n'
-                  '自定义词块只带走词表档案，块上的学习进度不随备份走；'
-                  '合并后按档案补回，记为未开始学习。是否备份由你决定。',
+                  '你自己存进「我的英语本」的句子会连内容一起带走；'
+                  '但当时的学习记录不随备份走，合并回来算作还没开始学。'
+                  '要不要备份由你决定。',
                   style: TextStyle(color: kTextFaint, fontSize: 12)),
             ],
           ),
@@ -138,14 +139,14 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
             '${plan.adoptedLegacy == 1 ? '\n这份备份带老用户标记，会一并恢复。' : ''}\n'
             '${plan.ignoredLicenseKv > 0 ? '\n件里有 ${plan.ignoredLicenseKv} 项授权信息，已忽略：'
                 '解锁码不随备份走，换机请重输一次自己的码。' : ''}\n'
-            '${plan.ignoredUserChunks > 0 ? '\n件里有 ${plan.ignoredUserChunks} 条自定义块行，已忽略：'
-                '自定义词块只按词表档案补回。' : ''}\n'
-            '${plan.ignoredUserArchives > 0 ? '\n件里有 ${plan.ignoredUserArchives} 份自定义词表档案，已忽略：'
-                '导入自己的词表需要解锁码。本机已有的包、学习记录和删除都不受影响。' : ''}\n'
-            '${plan.skippedUserArchives > 0 ? '\n件里有 ${plan.skippedUserArchives} 份自定义词表档案没过校验'
-                '（超名额 / 脏字段 / 撞名等），已拒收，不会写进本机。' : ''}\n'
-            '${plan.skippedUserEntries > 0 ? '\n收下的档案里剔除了 ${plan.skippedUserEntries} 条坏条目'
-                '（字段闸不过），其余好条目照常补回。' : ''}\n'
+            '${plan.ignoredUserChunks > 0 ? '\n件里有 ${plan.ignoredUserChunks} 条英语本里的句子记录，已略过：'
+                '这些句子只按本子的清单补回。' : ''}\n'
+            '${plan.ignoredUserArchives > 0 ? '\n件里有 ${plan.ignoredUserArchives} 个英语本，已略过：'
+                '存自己的句子需要解锁码。手机上已有的英语本、学习记录和删除都不受影响。' : ''}\n'
+            '${plan.skippedUserArchives > 0 ? '\n件里有 ${plan.skippedUserArchives} 个英语本没能核对上'
+                '（超过上限 / 内容不合规 / 名字撞了），已拒收，不会写进手机。' : ''}\n'
+            '${plan.skippedUserEntries > 0 ? '\n收下的英语本里丢掉了 ${plan.skippedUserEntries} 句有问题的句子，'
+                '其余照常补回。' : ''}\n'
             '合并只补不删，本机比备份新的进度会被保留。',
             style: TextStyle(color: kTextSecondary, fontSize: 13, height: 1.5),
           ),
@@ -173,16 +174,16 @@ class _DataBackupScreenState extends State<DataBackupScreen> {
       if (!mounted) return;
       setState(() => _ctl.clear());
       final rebuiltNote = applied.rebuiltUserRows > 0
-          ? '，自定义词块按档案补回 ${applied.rebuiltUserRows} 行（记为未开始学习）'
+          ? '，英语本里的句子按清单补回 ${applied.rebuiltUserRows} 句（记为还没开始学）'
           : '';
       final ignoredArchivesNote = applied.ignoredUserArchives > 0
-          ? '，已忽略 ${applied.ignoredUserArchives} 份自定义词表档案（需要解锁码）'
+          ? '，略过 ${applied.ignoredUserArchives} 个英语本（需要解锁码）'
           : '';
       final skippedArchivesNote = applied.skippedUserArchives > 0
-          ? '，拒收 ${applied.skippedUserArchives} 份没过校验的词表档案'
+          ? '，拒收 ${applied.skippedUserArchives} 个没过检查的英语本'
           : '';
       final skippedEntriesNote = applied.skippedUserEntries > 0
-          ? '，剔除 ${applied.skippedUserEntries} 条坏条目'
+          ? '，丢掉 ${applied.skippedUserEntries} 句有问题的句子'
           : '';
       _toast(applied.nothingToDo
           ? '没有需要补的数据（已是最新）$ignoredArchivesNote$skippedArchivesNote$skippedEntriesNote'

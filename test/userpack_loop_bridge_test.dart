@@ -15,6 +15,7 @@ import 'package:chunkspoke_flutter/services/session.dart';
 import 'package:chunkspoke_flutter/services/state_machine.dart';
 import 'package:chunkspoke_flutter/services/user_package.dart';
 import 'package:chunkspoke_flutter/services/user_package_store.dart';
+import 'package:chunkspoke_flutter/services/user_text_parser.dart';
 import 'package:chunkspoke_flutter/steps/practice_loop.dart';
 
 /// ASR-234：自定义导入「三个入口 → 六步学习 → 词块库/磨耳朵」互通互链的钉死回归。
@@ -114,36 +115,30 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('粘贴入口 → 模板骨架（不自动翻译，守路线 B）', () {
-    test('截图里的编号清单：10 行全部转出，编号剥掉、back 留空、模块名占位', () {
-      final s = suggestTemplateFromPlainList(_pastedList);
-      expect(s, isNotNull);
-      expect(s!.lineCount, 10);
-      expect(s.skipped, 0);
-      expect(s.modulePlaceholder, kUserListModulePlaceholder);
+  group('粘贴入口：任意文本 → 认结构 → 同一个校验闸', () {
+    test('编号清单：10 行全转出，编号剥掉，没写中文意思的如实留空', () {
+      final plan = parsePastedUserText(_pastedList);
+      expect(plan, isNotNull);
+      expect(plan!.ok, isTrue);
+      expect(plan.kindLabel, '一段英文');
+      expect(plan.moduleName, kUserDefaultModuleName);
+      expect(plan.entries.length, 10);
+      expect(plan.pairedCount, 0);
+      expect(plan.meaningMissing, 10);
+      expect(plan.entries.first.front, "how's it going?");
+      expect(plan.entries.first.back, '');
+      expect(plan.entries.last.front, 'Catch you later.');
+      expect(plan.notes.first, contains('整理成 10 句'));
 
-      final rows = s.csv.split('\n');
-      expect(rows.first, 'front,back,module_name');
-      expect(rows[1], "how's it going?,,$kUserListModulePlaceholder");
-      expect(rows.last, 'Catch you later.,,$kUserListModulePlaceholder');
-
-      // 骨架只补了 front：直接解析会停在 back 必填——就是「请你补释义」的提示，
-      // 不是静默替用户翻译，也不是假装导入成功。
-      final v = parseAndValidateUserPackage(s.csv);
-      expect(v.ok, isFalse);
-      final backIssues = v.issues.where((i) => i.field == 'back').toList();
-      expect(backIssues.length, 10);
-      expect(backIssues.first.reason, '必填，不能为空');
-      // front 已就位，用户补完 back 就能过闸并进六步。
-      expect(v.entries.map((e) => e.front), contains("how's it going?"));
-      expect(v.entries.map((e) => e.front), contains('Catch you later.'));
+      // 没写中文意思不是错误，更不会被静默翻译：空 back 直接过闸。
+      expect(plan.validation.issues, isEmpty);
     });
 
-    test('编号/项目符号只剥行首标记，小数和年份不被削', () {
-      final s = suggestTemplateFromPlainList('3.14 is pi\n2.5 kg of rice\n2) second\n'
+    test('编号/项目符号只剥行首标记，小数、缩写、年份不被削', () {
+      final plan = parsePastedUserText('3.14 is pi\n2.5 kg of rice\n2) second\n'
           '3、third\n- dash item\n• bullet item\n“quoted line”');
-      expect(s, isNotNull);
-      final fronts = s!.csv.split('\n').skip(1).map((r) => r.split(',').first);
+      expect(plan, isNotNull);
+      final fronts = plan!.entries.map((e) => e.front).toList();
       expect(fronts, contains('3.14 is pi'));
       expect(fronts, contains('2.5 kg of rice'));
       expect(fronts, contains('second'));
@@ -153,30 +148,98 @@ void main() {
       expect(fronts, contains('quoted line'));
     });
 
-    test('含逗号的 front 用 CSV 引号包住，回读不会被拆列', () {
-      final s = suggestTemplateFromPlainList('1. hi, there\n2. bye');
-      expect(s, isNotNull);
-      expect(s!.csv, contains('"hi, there"'));
-      final v = parseAndValidateUserPackage(s.csv);
-      expect(v.entries.first.front, 'hi, there');
+    test('对话：剥掉说话人、认出是一段对话，句子照常拆开', () {
+      final plan = parsePastedUserText(
+          'Tom: How are you today?\nLily: I am fine, thanks.\nTom: Shall we go?\nLily: Sure.');
+      expect(plan, isNotNull);
+      expect(plan!.ok, isTrue);
+      expect(plan.kindLabel, '一段对话');
+      expect(plan.entries.map((e) => e.front).toList(),
+          ['How are you today?', 'I am fine, thanks.', 'Shall we go?', 'Sure.']);
+      expect(plan.entries.every((e) => !e.front.contains(':')), isTrue);
     });
 
-    test('已经像 CSV / JSON / 多列表格的，一律不转（不搅乱用户原格式）', () {
-      expect(suggestTemplateFromPlainList(
-              'front,back,module_name\nplate,盘子,餐饮点餐'), isNull);
-      expect(suggestTemplateFromPlainList('{"chunks": []}'), isNull);
-      expect(suggestTemplateFromPlainList('[{"front":"plate"}]'), isNull);
-      expect(suggestTemplateFromPlainList('a,b,c\nd,e,f'), isNull);
-      expect(suggestTemplateFromPlainList('   \n  '), isNull);
+    test('中英对照：竖线 / 制表符 / 英文下一行中文，都直接当释义', () {
+      final plan = parsePastedUserText(
+          'how are you | 你好吗\nTake care.\t保重\nplate\n盘子\nIt is a nice day.\n今天天气不错。');
+      expect(plan, isNotNull);
+      expect(plan!.ok, isTrue);
+      expect(plan.kindLabel, '中英对照');
+      expect(plan.pairedCount, 4);
+      expect(plan.meaningMissing, 0);
+      final pairs = {for (final e in plan.entries) e.front: e.back};
+      expect(pairs['how are you'], '你好吗');
+      expect(pairs['Take care.'], '保重');
+      expect(pairs['plate'], '盘子');
+      expect(pairs['It is a nice day.'], '今天天气不错。');
     });
 
-    test('超 200 行按上限截断，并如实报 skipped', () {
+    test('一整段英文按句切开：小数点、缩写不乱切', () {
+      final plan = parsePastedUserText(
+          'I get up at 6.30 every morning. Mr. Smith drives me to school! Do you know why?');
+      expect(plan, isNotNull);
+      expect(plan!.entries.map((e) => e.front).toList(), [
+        'I get up at 6.30 every morning.',
+        'Mr. Smith drives me to school!',
+        'Do you know why?',
+      ]);
+      expect(plan.kindLabel, '一段英文');
+    });
+
+    test('重复句合并计数；超过 200 句按上限截断并如实报数', () {
+      final dup = parsePastedUserText('Hello.\nhello.\nHello.');
+      expect(dup, isNotNull);
+      expect(dup!.entries.length, 1);
+      expect(dup.duplicates, 2);
+
       final raw = [for (var i = 1; i <= kUserPackageMaxChunks + 5; i++) '$i. word$i']
           .join('\n');
-      final s = suggestTemplateFromPlainList(raw);
-      expect(s!.lineCount, kUserPackageMaxChunks);
-      expect(s.skipped, 5);
-      expect(s.csv.split('\n').length, kUserPackageMaxChunks + 1);
+      final big = parsePastedUserText(raw);
+      expect(big, isNotNull);
+      expect(big!.entries.length, kUserPackageMaxChunks);
+      expect(big.skipped, 5);
+      expect(big.entries.last.front, 'word$kUserPackageMaxChunks');
+    });
+
+    test('没有英文 / 没有内容：给一句人话，而不是硬造条目', () {
+      final cn = parsePastedUserText('今天天气不错。\n我们下午去公园吧。');
+      expect(cn, isNotNull);
+      expect(cn!.ok, isFalse);
+      expect(cn.validation.firstErrorText, contains('没认出英文内容'));
+      expect(cn.entries, isEmpty);
+      expect(cn.droppedNonEnglish, 2);
+
+      final empty = parsePastedUserText('   \n ');
+      expect(empty, isNotNull);
+      expect(empty!.ok, isFalse);
+      expect(empty.validation.firstErrorText, contains('先把想学的英文粘贴进来'));
+    });
+
+    test('已经像表格 / JSON 的返回 null，交给表格入口，不硬切', () {
+      expect(parsePastedUserText('front,back,module_name\nplate,盘子,餐饮点餐'), isNull);
+      expect(parsePastedUserText('{"chunks": []}'), isNull);
+      expect(parsePastedUserText('[{"front":"plate"}]'), isNull);
+      expect(parsePastedUserText('a,b,c\nd,e,f'), isNull);
+    });
+  });
+
+  group('粘贴 → 直接进六步（没有中文意思也照常能学）', () {
+    test('粘进来的纯英文清单能保存，学的时候只是不显示翻译', () async {
+      final f = await _fx('paste_e2e');
+      final plan = parsePastedUserText(_pastedList);
+      expect(plan, isNotNull);
+
+      final store = UserPackageStore(f.db);
+      final r = await store.importValidation(plan!.validation, allowed: true);
+      expect(r.ok, isTrue, reason: r.note);
+      expect(r.writtenChunks, 10);
+
+      final rec = (await store.listPackages()).single;
+      final level = PracticeSession.userModuleLevel(rec);
+      expect(level.chunks.length, 10);
+      expect(level.chunks.every((c) => c.meaningCN.isEmpty), isTrue);
+      expect(level.chunks.every((c) => isUserChunkKey(c.id)), isTrue);
+      expect(level.chunks.first.text, "how's it going?");
     });
   });
 
@@ -347,7 +410,7 @@ void main() {
       expect(find.byKey(const Key('userlisten_current')), findsOneWidget);
       // 第一行是 example（整句优先），不是只有 front；主卡与行列表各出现一次。
       expect(find.text('How\'s it going today?'), findsNWidgets(2));
-      expect(find.text('只播放，不改变学习进度、不排复习、不算进官方计数。'),
+      expect(find.text('只念给你听，不改学习进度、不排复习，也不算进官方的数。'),
           findsOneWidget);
       for (var i = 0; i < rec.entries.length; i++) {
         expect(find.byKey(Key('userlisten_line_$i')), findsOneWidget);

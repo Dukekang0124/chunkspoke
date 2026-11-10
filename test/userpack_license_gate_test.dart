@@ -21,7 +21,7 @@ import 'package:chunkspoke_flutter/services/user_package_store.dart';
 
 /// ASR-233 · 自定义导入付费门（裁定：甲 + 读删免费 + 不收档案 + 测试 secret + 同代首发）。
 ///
-/// 一句话口径：**解析与预览永久免费；「确认导入」要解锁码。**
+/// 一句话口径：**整理与预览永久免费；「保存」要解锁码。**
 /// 免费三块写死在判据里，不许被这道门顺带锁掉：官方 167 块 / 三项输出 / 数据备份；
 /// 已在本机的包读删永久免费（门关闭只挡新增与整包替换）。
 /// 这里的六组钉测就是规划 §八 的 T-B1..T-B6。
@@ -144,7 +144,7 @@ void main() {
         isTrue, reason: '断网宽限态（unverified）仍按本地 PRO 放行');
   });
 
-  // ── T-B2 UI 墙：确认导入这一刻拦，零写入 ───────────────────────────────
+  // ── T-B2 UI 墙：点「保存」这一刻拦，零写入 ───────────────────────────────
   group('T-B2 导入器墙 sheet', () {
     late Directory tmp;
     late ProgressService progress;
@@ -177,32 +177,30 @@ void main() {
           ),
         );
 
-    testWidgets('未授权点「确认导入」→ 出墙、user 行 0、档案 0', (tester) async {
+    testWidgets('未授权点「保存并开始学」→ 出墙、user 行 0、档案 0', (tester) async {
       await tester.binding.setSurfaceSize(const Size(900, 2400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.runAsync(() async {
         await tester.pumpWidget(app());
-        await _pumpUntil(tester, find.text('我的模块 · 导入'));
+        await _pumpUntil(tester, find.text('添加我的英文本'));
 
-        final field = find.byType(TextField);
-        await tester.enterText(field, _csvTwoRows);
+        await tester.enterText(find.byKey(const Key('userpkg_input')), _csvTwoRows);
         await tester.pump();
-        await tester.tap(find.text('解析并预览'));
+        await tester.tap(find.text('整理成句子'));
         await tester.pump();
-        expect(find.text('确认导入（将写入本机）'), findsOneWidget);
+        expect(find.text('保存并开始学'), findsOneWidget);
 
-        await tester.tap(find.text('确认导入（将写入本机）'));
+        await tester.tap(find.byKey(const Key('userpkg_save')));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
 
         // 墙：标题 + 免费说明 + 价格单源（价格不在这里二次写死）。
-        expect(find.text('导入自己的词表需要解锁码'), findsOneWidget);
-        // 顶部实话与墙内说明都讲「预览免费」——出现两次是对的，不是重复。
-        expect(find.textContaining('解析与预览永久免费'), findsWidgets);
-        expect(find.textContaining('确认导入会写进「我的模块」'), findsOneWidget);
+        expect(find.text('保存到我的英语本需要解锁码'), findsOneWidget);
+        // 顶部实话与墙内说明都讲「免费」——出现两次是对的，不是重复。
+        expect(find.textContaining('整理和预览一直免费'), findsWidgets);
         expect(find.text('¥$kEarlyBirdPrice'), findsOneWidget);
-        expect(find.text('已写入本机'), findsNothing);
+        expect(find.textContaining('已经存进'), findsNothing);
 
         // 结构上零写入：一行台账、一份档案都不许有。
         final store = UserPackageStore(progress.database);
@@ -330,7 +328,7 @@ void main() {
         reason: '功能门必须走单一出口，不许散落 if (isPro)');
     expect(uiCode.contains('showLicenseWallSheet('), isTrue);
     expect(uiCode.contains('importValidation(v, allowed: allowed)'), isTrue,
-        reason: '确认导入必须把门判据传进库层');
+        reason: '保存必须把门判据传进库层');
     expect(RegExp(r'\b(isPro|hasFullAccess)\b').hasMatch(uiCode), isFalse,
         reason: 'UI 直判授权态 = 绕过 allows() 的第二份判据');
     expect(ui.contains('¥'), isFalse, reason: '墙点价格只有一个真源（license_activate）');

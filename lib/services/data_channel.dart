@@ -38,7 +38,7 @@ bool isUserPackageArchiveKv(String key) =>
     key.startsWith(AppDatabase.kUserPkgKvPrefix);
 
 /// 导出头里的 App 版本：发版时与 pubspec / 包内清单同 bump。
-const String kChannelAppVersion = '1.9.1';
+const String kChannelAppVersion = '1.9.2';
 
 const List<String> _chunkKeys = [
   'chunk_key',

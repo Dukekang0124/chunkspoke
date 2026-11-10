@@ -38,14 +38,14 @@ void main() {
     expect(r.issues.map((e) => e.toString()).join(' | '), contains('密钥类字段一律禁止'));
   });
 
-  test('每包 200 块上限，超限明示原因', () {
+  test('每本 200 句上限，超限明示原因', () {
     final rows = [
       'front,back,module_name',
-      for (var i = 0; i < kUserPackageMaxChunks + 1; i++) 'w$i,释义$i,我的模块',
+      for (var i = 0; i < kUserPackageMaxChunks + 1; i++) 'w$i,释义$i,点单',
     ].join('\n');
     final r = parseAndValidateUserPackage(rows);
     expect(r.ok, isFalse);
-    expect(r.issues.map((e) => e.reason).join(' | '), contains('超出每包'));
+    expect(r.issues.map((e) => e.reason).join(' | '), contains('超出每本'));
   });
 
   test('块 ID 走 user: 命名空间且内容寻址稳定', () {

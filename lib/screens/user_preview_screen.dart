@@ -2,28 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/user_package.dart';
+import '../services/user_text_parser.dart';
 import '../ui/theme.dart';
 
-/// ASR-215 小片 · 自定义词块包「只预览，不落库」。
+/// 「先看看整理结果」（1.9.2）。
 ///
 /// 四红线（结构性，不靠自觉）：
 ///  1. **零 DB 写入** —— 本文件不 import 任何 store/db/provider，只吃字符串与纯函数；
 ///  2. **零进度触碰** —— 同上，页面里没有任何能改状态的通路；
 ///  3. 不合 main、不动 version.json（发版侧约束，见分支 dev/1.9.0-userpack）；
-///  4. 「只预览，不落库」字样在 UI 上，且有钉测。
+///  4. 「只是看看，不会保存」字样在 UI 上，且有钉测（说人话，不用「落库」这类词）。
 ///
-/// 预览主体 [UserPreviewBody] 就是 D3 的「导入确认步」：同一组件，D3 时只把底部
-/// 说明换成「确认导入（将写入本机）」并接 store，不重写第二份。
+/// 预览主体 [UserPreviewBody] 就是添加页的「确认步」：同一组件、同一套校验，
+/// 两边只有底部说明不同（这里永远不写，添加页写 `user:` 命名空间）。
 class UserPreviewScreen extends StatefulWidget {
-  const UserPreviewScreen({super.key});
+  const UserPreviewScreen({super.key, this.initialText = ''});
+
+  /// 从添加页带过来的原文：用户已经粘过一次，不该让他再粘第二次。
+  final String initialText;
 
   @override
   State<UserPreviewScreen> createState() => _UserPreviewScreenState();
 }
 
 class _UserPreviewScreenState extends State<UserPreviewScreen> {
-  final TextEditingController _input = TextEditingController();
+  late final TextEditingController _input =
+      TextEditingController(text: widget.initialText);
   UserPackageValidation? _result;
+
+  @override
+  void initState() {
+    super.initState();
+    // 带原文进来就直接排好，用户点开就能看到自己那几句。
+    if (widget.initialText.trim().isNotEmpty) _parse();
+  }
 
   @override
   void dispose() {
@@ -32,41 +44,44 @@ class _UserPreviewScreenState extends State<UserPreviewScreen> {
   }
 
   void _parse() {
-    setState(() => _result = parseAndValidateUserPackage(_input.text));
+    final raw = _input.text;
+    final plan = parsePastedUserText(raw);
+    setState(() => _result = plan?.validation ?? parseAndValidateUserPackage(raw));
   }
 
   void _fill(String text) {
-    setState(() {
-      _input.text = text;
-      _result = null;
-    });
+    _input.text = text;
+    _parse();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('我的模块 · 导入预览')),
+      appBar: AppBar(title: const Text('先看看整理结果')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // 红线 4：这句必须在屏上，被 widget 测试钉住。
-          Text('只预览，不落库 —— 这一步不写入任何进度，也不影响官方模块。',
-              style: TextStyle(color: Colors.orange.shade300, fontSize: 13)),
+          // 红线 4：这句必须在屏上，被 widget 测试钉住。说人话，不用「落库」。
+          Text('这一页只是看看，不会保存 —— 不动你的学习记录，也不影响官方内容。',
+              style: TextStyle(color: Colors.orange.shade300, fontSize: 13, height: 1.5)),
           const SizedBox(height: 16),
-          Text('把 CSV 或 JSON 的内容粘贴进来',
+          Text(
+              widget.initialText.trim().isEmpty
+                  ? '把英文粘进来，看看我会怎么分句'
+                  : '这就是你刚粘进来的内容，我按句子排好了',
               style: TextStyle(color: kText, fontSize: 15)),
           const SizedBox(height: 8),
           TextField(
             controller: _input,
             maxLines: 8,
-            style: TextStyle(color: kText, fontSize: 13),
+            style: TextStyle(color: kText, fontSize: 14, height: 1.5),
             decoration: InputDecoration(
-              hintText: 'front,back,module_name…',
-              hintStyle: TextStyle(color: kTextFaint),
+              hintText: '一句、一段、一段对话，或者中英文对照都行。',
+              hintStyle: TextStyle(color: kTextFaint, fontSize: 13),
               filled: true,
               fillColor: kCard,
               border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
           const SizedBox(height: 10),
@@ -76,14 +91,16 @@ class _UserPreviewScreenState extends State<UserPreviewScreen> {
             children: [
               OutlinedButton(
                   onPressed: () => _fill(userPackageCsvTemplate()),
-                  child: Text('填入 CSV 模板', style: TextStyle(color: kText))),
+                  child: Text('看看示例表格',
+                      style: TextStyle(color: kText, fontSize: 12))),
               OutlinedButton(
                   onPressed: () => _fill(userPackageJsonTemplate()),
-                  child: Text('填入 JSON 模板', style: TextStyle(color: kText))),
+                  child: Text('看看示例文件',
+                      style: TextStyle(color: kText, fontSize: 12))),
               FilledButton(
                   onPressed: _parse,
-                  child:
-                      Text('解析并预览', style: TextStyle(color: kOnPrimary))),
+                  child: Text('整理一下',
+                      style: TextStyle(color: kOnPrimary, fontSize: 13))),
             ],
           ),
           const SizedBox(height: 18),
@@ -94,8 +111,8 @@ class _UserPreviewScreenState extends State<UserPreviewScreen> {
               MaterialPageRoute(
                   builder: (_) => const UserImportFeedbackScreen()),
             ),
-            child: Text('六项体验清单（填完复制给开发者）',
-                style: TextStyle(color: kPrimary)),
+            child: Text('六项体验清单（填完给开发者）',
+                style: TextStyle(color: kPrimary, fontSize: 13)),
           ),
         ],
       ),
@@ -103,11 +120,11 @@ class _UserPreviewScreenState extends State<UserPreviewScreen> {
   }
 }
 
-/// 预览主体 = D3 导入确认步的同一组件。
+/// 预览主体 = 添加页确认步的同一组件。
 ///
-/// [previewOnly] 决定名额那一行怎么说（ASR-228 装机腿抓到的文案与实装冲突）：
-///  - true（预览页）：这一版确实不占名额；
-///  - false（导入器确认步）：确认后就要占名额了，不能再写「不占名额」。
+/// [previewOnly] 决定名额那一行怎么说：
+///  - true（预览页）：这一版确实不存，也就不占地方；
+///  - false（添加页）：保存后就要占名额了，不能再写「不占」。
 class UserPreviewBody extends StatelessWidget {
   final UserPackageValidation result;
   final bool previewOnly;
@@ -130,24 +147,26 @@ class UserPreviewBody extends StatelessWidget {
             children: [
               Text(
                 result.ok
-                    ? '校验通过：${entries.length} 块 · ${modules.length} 个模块'
-                    : '未过闸：${result.issues.length} 处问题，本包一行都不会写入',
+                    ? '可以了：${entries.length} 句'
+                    : '还有 ${result.issues.length} 处要看看，改好之前一句都不会保存',
                 style: TextStyle(
                     color: result.ok ? kPrimary : Colors.redAccent,
-                    fontSize: 14),
+                    fontSize: 14,
+                    height: 1.4),
               ),
-              const SizedBox(height: 6),
-              Text('模块：${modules.join('、')}',
-                  style: TextStyle(color: kTextSecondary, fontSize: 12)),
+              if (modules.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text('放进「${modules.join('、')}」',
+                    style: TextStyle(color: kTextSecondary, fontSize: 12)),
+              ],
               const SizedBox(height: 4),
               Text(
                   previewOnly
-                      ? '上限：每包 $kUserPackageMaxChunks 块 · 每台设备 '
-                          '$kUserPackageMaxPackages 包（本页只预览，不占名额）'
-                      : '上限：每包 $kUserPackageMaxChunks 块 · 每台设备 '
-                          '$kUserPackageMaxPackages 包（确认后即占用名额；'
-                          '同名模块重新导入=整包替换）',
-                  style: TextStyle(color: kTextFaint, fontSize: 12)),
+                      ? '一本最多 $kUserPackageMaxChunks 句，手机上最多 '
+                          '$kUserPackageMaxPackages 本。这一页只看不存，不占地方。'
+                      : '一本最多 $kUserPackageMaxChunks 句，手机上最多 '
+                          '$kUserPackageMaxPackages 本；同名再存一次会替换之前那一本。',
+                  style: TextStyle(color: kTextFaint, fontSize: 11, height: 1.45)),
             ],
           ),
         ),
@@ -156,25 +175,24 @@ class UserPreviewBody extends StatelessWidget {
           for (final issue in result.issues.take(20))
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
-              child: Text('· $issue',
-                  style: TextStyle(color: kTextSecondary, fontSize: 12)),
+              child: Text('· ${describeIssueForLearner(issue)}',
+                  style: TextStyle(color: kTextSecondary, fontSize: 12, height: 1.4)),
             ),
         if (!result.ok && result.issues.length > 20)
           Text('…另有 ${result.issues.length - 20} 处',
               style: TextStyle(color: kTextFaint, fontSize: 12)),
         if (entries.isNotEmpty) ...[
           const SizedBox(height: 6),
-          Text('前 ${entries.length < 5 ? entries.length : 5} 行示例',
-              style: TextStyle(color: kText, fontSize: 14)),
+          Text('大概会这样排', style: TextStyle(color: kText, fontSize: 14)),
           const SizedBox(height: 6),
           for (final e in entries.take(5))
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Text(
-                  '${e.front}  →  ${e.back}'
-                  '${e.cefr == null ? '' : '  ·  ${e.cefr}'}'
-                  '${e.hasSentenceForSpeakingSteps ? '' : '  ·  无整句，跟读类步骤将置灰'}',
-                  style: TextStyle(color: kTextSecondary, fontSize: 12)),
+                  e.back.trim().isEmpty
+                      ? '${e.front}  ·  还没有中文意思'
+                      : '${e.front}  ·  ${e.back}',
+                  style: TextStyle(color: kTextSecondary, fontSize: 12, height: 1.4)),
             ),
         ],
       ],
@@ -186,14 +204,14 @@ class UserPreviewBody extends StatelessWidget {
 class UserImportFeedbackScreen extends StatefulWidget {
   const UserImportFeedbackScreen({super.key});
 
-  /// 六项体验清单的题目（D3 可用性输入的固定口径，测试钉条数）。
+  /// 六项体验清单的题目（可用性输入的固定口径，测试钉条数）。
   static const List<String> questions = [
-    '1. 模板下载顺手度（能不能一眼拿到、字段看得懂吗）',
-    '2. 粘贴摩擦（从 Excel/WPS 复制过来要改几处）',
-    '3. 报错可懂度（第 N 行·字段·原因，够不够定位）',
-    '4. 字段够不够（front/back/module_name/phonetic/example/cefr/tags 缺哪个）',
-    '5. 200 块上限提示（超限时是否明白为什么、下一步做什么）',
-    '6. 想不想用（愿意导入自己的词表吗，为什么）',
+    '1. 粘贴顺手吗？（从微信/文档复制过来，能不能直接用）',
+    '2. 分句合不合心意？（有没有被切错、漏掉）',
+    '3. 中文意思对不对？（你自己带的中文有没有放对位置）',
+    '4. 没中文的句子，练起来会不会别扭？',
+    '5. 保存后直接开始学，这个顺序顺不顺？',
+    '6. 还愿不愿意把自己的句子里存进来？为什么？',
   ];
 
   @override
@@ -202,7 +220,6 @@ class UserImportFeedbackScreen extends StatefulWidget {
 }
 
 class _UserImportFeedbackScreenState extends State<UserImportFeedbackScreen> {
-
   List<String> get questions => UserImportFeedbackScreen.questions;
   final List<TextEditingController> _answers =
       List.generate(UserImportFeedbackScreen.questions.length,
@@ -231,8 +248,8 @@ class _UserImportFeedbackScreenState extends State<UserImportFeedbackScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Text('本页只收集反馈：不写库、不碰进度。填完复制给开发者，作为自定义导入的可用性输入。',
-              style: TextStyle(color: kTextFaint, fontSize: 12)),
+          Text('这一页只是收集你的意见：不会保存任何句子，也不动学习记录。填完复制给开发者就行。',
+              style: TextStyle(color: kTextFaint, fontSize: 12, height: 1.45)),
           const SizedBox(height: 14),
           for (var i = 0; i < questions.length; i++) ...[
             Text(questions[i], style: TextStyle(color: kText, fontSize: 14)),

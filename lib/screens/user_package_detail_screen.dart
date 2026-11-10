@@ -89,12 +89,12 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
 
   Widget _stateBadge(ChunkAssetState s) {
     final (label, color) = switch (s) {
-      ChunkAssetState.learning => ('未学', kTextFaint),
-      ChunkAssetState.consolidating => ('巩固中', kInfo),
-      ChunkAssetState.consolidated => ('已巩固', kPrimary),
-      ChunkAssetState.longTerm => ('长期', kUnlocked),
-      ChunkAssetState.mastered => ('已掌握', kUnlocked),
-      ChunkAssetState.relearning => ('需重修', kError),
+      ChunkAssetState.learning => ('没学过', kTextFaint),
+      ChunkAssetState.consolidating => ('正在练', kInfo),
+      ChunkAssetState.consolidated => ('练熟了', kPrimary),
+      ChunkAssetState.longTerm => ('长期记忆', kUnlocked),
+      ChunkAssetState.mastered => ('学会了', kUnlocked),
+      ChunkAssetState.relearning => ('再练练', kError),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
@@ -133,14 +133,14 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: kCard,
-        title: Text('删除「${rec.moduleName}」？',
+        title: Text('删掉「${rec.moduleName}」？',
             style: TextStyle(color: kText, fontSize: 17)),
         content: Text(
-          '会一起清掉：\n'
-          '· 这个包的档案（${rec.chunkCount} 块的定义）\n'
-          '· 台账里属于它的行（含六步学习进度，一并清）\n\n'
-          '不会动：官方模块的已掌握数、复习排期、断点，以及其他自定义包。\n'
-          '同一份表随时可以再导回来（块 ID 由内容决定，重导是整包替换）。',
+          '会一起删掉：\n'
+          '· 这本里的 ${rec.chunkCount} 句\n'
+          '· 这些句子学过的记录\n\n'
+          '不会动：官方内容和学习记录，以及别的小本子。\n'
+          '想再学，把内容重新粘一次就行。',
           style: TextStyle(color: kTextSecondary, fontSize: 13, height: 1.5)),
         actions: [
           TextButton(
@@ -148,7 +148,7 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
               child: Text('取消', style: TextStyle(color: kTextMuted))),
           TextButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('确认删除',
+              child: const Text('删掉',
                   style: TextStyle(color: Colors.redAccent))),
         ],
       ),
@@ -159,7 +159,8 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
     final removed = await store.removePackage(rec.moduleKey);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('已删除「${rec.moduleName}」（清掉 $removed 行台账 + 1 份档案）'),
+        content: Text('已删掉「${rec.moduleName}」'
+            '${removed > 0 ? '，连同 $removed 条学习记录' : ''}。'),
         duration: const Duration(seconds: 2)));
     Navigator.of(context).pop();
   }
@@ -168,29 +169,29 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
   Widget build(BuildContext context) {
     final rec = _rec;
     return Scaffold(
-      appBar: AppBar(title: Text(rec?.moduleName ?? '我的模块')),
+      appBar: AppBar(title: Text(rec?.moduleName ?? '我的英语本')),
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
           : rec == null
               ? Center(
-                  child: Text('这个档案已经不在了。',
+                  child: Text('这本已经找不到了。',
                       style: TextStyle(color: kTextMuted)))
               : ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
-                    Text('${rec.chunkCount} 块 · ${rec.moduleName}',
+                    Text('共 ${rec.chunkCount} 句',
                         style: TextStyle(
                             color: kText,
                             fontSize: 17,
                             fontWeight: FontWeight.w700)),
                     const SizedBox(height: 6),
-                    Text('导入时间：'
-                        '${DateTime.fromMillisecondsSinceEpoch(rec.importedAt).toString().substring(0, 19)}',
+                    Text('存于 '
+                        '${DateTime.fromMillisecondsSinceEpoch(rec.importedAt).toString().substring(0, 16)}',
                         style: TextStyle(color: kTextFaint, fontSize: 12)),
                     const SizedBox(height: 10),
-                    Text('这些块和官方模块走同一套六步学习闭环'
-                        '（锚定→拆解→听辨→跟读→替换→开口），学完进 1/3/7/14 天复习。'
-                        '进度只记在「我的模块」，不影响官方已掌握计数与复习排期。',
+                    Text('这些句子和官方内容用同一套练习：先听懂，再拆开，'
+                        '跟着读、换着说，最后自己说出来。学完会按 1/3/7/14 天提醒你复习。'
+                        '学习记录只记在这本里，官方进度不变。',
                         style: TextStyle(color: kTextMuted, fontSize: 12, height: 1.5)),
                     const SizedBox(height: 12),
                     Container(
@@ -203,8 +204,8 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                                '已掌握 $_masteredCount / ${rec.chunkCount} 块'
-                                '${_hasStarted ? ' · 已进复习周期' : ' · 还没开始学'}',
+                                '已经学会 $_masteredCount / ${rec.chunkCount} 句'
+                                '${_hasStarted ? ' · 会按时提醒你复习' : ' · 还没开始学'}',
                                 style: TextStyle(color: kText, fontSize: 13)),
                           ),
                         ],
@@ -218,7 +219,7 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
                             key: const Key('userpkg_learn'),
                             onPressed: () => _learn(review: false),
                             icon: Icon(Icons.play_arrow, color: kOnPrimary, size: 20),
-                            label: Text(_hasStarted ? '继续学习（六步）' : '开始学习（六步）',
+                            label: Text(_hasStarted ? '继续学' : '开始学',
                                 style: TextStyle(color: kOnPrimary, fontSize: 14)),
                           ),
                         ),
@@ -229,7 +230,7 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
                             onPressed: _hasStarted ? () => _learn(review: true) : null,
                             icon: Icon(Icons.replay,
                                 color: _hasStarted ? kPrimary : kTextFaint, size: 18),
-                            label: Text('复习这个包',
+                            label: Text('复习这本',
                                 style: TextStyle(
                                     color: _hasStarted ? kPrimary : kTextFaint,
                                     fontSize: 14)),
@@ -240,7 +241,7 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
                     if (!_hasStarted)
                       Padding(
                         padding: const EdgeInsets.only(top: 6),
-                        child: Text('先学一遍，复习按钮才会亮（复习走的是后四步）。',
+                        child: Text('先学一遍，复习按钮才会亮。',
                             style: TextStyle(color: kTextFaint, fontSize: 11)),
                       ),
                     const SizedBox(height: 14),
@@ -268,8 +269,10 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
                               ],
                             ),
                             const SizedBox(height: 2),
-                            Text(e.back,
-                                style: TextStyle(color: kTextSecondary, fontSize: 13)),
+                            if (e.back.trim().isNotEmpty)
+                              Text(e.back,
+                                  style: TextStyle(
+                                      color: kTextSecondary, fontSize: 13)),
                             if ((e.phonetic ?? '').isNotEmpty)
                               Padding(
                                 padding: const EdgeInsets.only(top: 2),
@@ -284,14 +287,11 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
                                     style: TextStyle(
                                         color: kTextMuted, fontSize: 12)),
                               ),
-                            if ((e.cefr ?? '').isNotEmpty || e.tags.isNotEmpty)
+                            if (e.tags.isNotEmpty)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4),
                                 child: Text(
-                                    [
-                                      if ((e.cefr ?? '').isNotEmpty) e.cefr!,
-                                      ...e.tags.map((t) => '#$t'),
-                                    ].join(' · '),
+                                    e.tags.map((t) => '#$t').join(' · '),
                                     style: TextStyle(
                                         color: kTextFaint, fontSize: 11)),
                               ),
@@ -301,11 +301,11 @@ class _UserPackageDetailScreenState extends State<UserPackageDetailScreen> {
                     const SizedBox(height: 10),
                     OutlinedButton(
                         onPressed: _delete,
-                        child: const Text('删除这个包（含级联清理）',
+                        child: const Text('删掉这本',
                             style: TextStyle(color: Colors.redAccent))),
                     const SizedBox(height: 6),
-                    Text('上限提醒：每台设备 $kUserPackageMaxPackages 个包、每包 $kUserPackageMaxChunks 块；'
-                        '删掉一个才能再导新的。',
+                    Text('手机上最多 $kUserPackageMaxPackages 本、每本最多 '
+                        '$kUserPackageMaxChunks 句；删掉一本才能再存新的。',
                         style: TextStyle(color: kTextFaint, fontSize: 12)),
                   ],
             ),
