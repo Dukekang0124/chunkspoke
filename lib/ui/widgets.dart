@@ -74,6 +74,8 @@ class CnText extends StatelessWidget {
 }
 
 void showCnCard(BuildContext context, String cn) {
+  // 没填中文意思的句子不弹空白卡，也不算一次提示。
+  if (cn.trim().isEmpty) return;
   try {
     Provider.of<ProgressService>(context, listen: false).incHint();
   } catch (_) {}

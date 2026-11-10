@@ -347,7 +347,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
 
   static int _minutesOf(int seconds) => (seconds / 60).round();
 
-  /// ASR-234：磨耳朵 ↔ 我的模块。只列已导入的包，点进去端侧朗读，
+  /// ASR-234：磨耳朵 ↔ 我的英语本。只列已存进手机的英语本，点进去端侧朗读，
   /// 不改学习进度、不排复习、不产生官方计数（与官方篇目彻底分开两本账）。
   Widget _userModuleCard() {
     return Material(
@@ -364,7 +364,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                 Icon(Icons.upload_file, color: kPrimary, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('我的模块 · 也能磨耳朵',
+                  child: Text('我的英语本 · 也能听',
                       style: TextStyle(
                           color: kText,
                           fontSize: 14,
@@ -373,7 +373,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
               ],
             ),
             const SizedBox(height: 3),
-            Text('听你自己导入的句子和词块。只播放，不改学习进度。',
+            Text('听你自己存进来的句子。只播放，不改学习进度。',
                 style: TextStyle(color: kTextMuted, fontSize: 11)),
             const SizedBox(height: 8),
             Wrap(
@@ -384,7 +384,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
                   ActionChip(
                     key: Key('listening_userpkg_${rec.moduleKey}'),
                     avatar: Icon(Icons.headphones, size: 16, color: kPrimary),
-                    label: Text('${rec.moduleName} · ${rec.chunkCount} 块',
+                    label: Text('${rec.moduleName} · ${rec.chunkCount} 句',
                         style: TextStyle(color: kText, fontSize: 12)),
                     onPressed: () => _openUserListening(rec),
                     backgroundColor: kLocked,

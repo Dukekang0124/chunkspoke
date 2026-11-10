@@ -6,16 +6,16 @@ import '../services/user_package_store.dart';
 import '../ui/theme.dart';
 import 'user_package_detail_screen.dart';
 
-/// ASR-234：磨耳朵 ↔「我的模块」的最小诚实桥接。
+/// ASR-234：磨耳朵 ↔「我的英语本」的最小诚实桥接。
 ///
-/// 只做一件事：用端侧 TTS 顺序朗读用户自己导入的句子 / 词块。
+/// 只做一件事：用端侧 TTS 顺序朗读你自己存进来的句子。
 /// 结构性边界（不靠自觉）：
 ///  · **不写库**：不改资产态、不排复习、不记会话，退出即停；
 ///  · **不动收听文章**：没有把 user 块塞进 `ListeningPack`（那要改官方 schema），
 ///    这里只是把同一批内容换一种「听」的方式再走一遍；
 ///  · **不产生官方计数**：全程没有 `user:` 行的读写。
 ///
-/// 入口：磨耳朵首页「我的模块 · 也能磨耳朵」；出口：回六步学习 / 模块详情。
+/// 入口：磨耳朵首页「我的英语本 · 也能听」；出口：回六步学习 / 本子详情。
 class UserModuleListeningScreen extends StatefulWidget {
   const UserModuleListeningScreen({super.key, required this.rec});
 
@@ -133,15 +133,15 @@ class _UserModuleListeningScreenState extends State<UserModuleListeningScreen> {
   Widget build(BuildContext context) {
     final current = _current;
     return Scaffold(
-      appBar: AppBar(title: Text('磨耳朵 · ${widget.rec.moduleName}')),
+      appBar: AppBar(title: Text('听 · ${widget.rec.moduleName}')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 28),
         children: [
-          Text('听你自己的词表',
+          Text('听你自己存的句子',
               style: TextStyle(
                   color: kText, fontSize: 19, fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text('只播放，不改变学习进度、不排复习、不算进官方计数。',
+          Text('只念给你听，不改学习进度、不排复习，也不算进官方的数。',
               style: TextStyle(color: kTextMuted, fontSize: 12, height: 1.45)),
           const SizedBox(height: 14),
           if (current == null)
@@ -149,7 +149,7 @@ class _UserModuleListeningScreenState extends State<UserModuleListeningScreen> {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                   color: kCard, borderRadius: BorderRadius.circular(14)),
-              child: Text('这个包里还没有词块。',
+              child: Text('这本里还没有句子。',
                   style: TextStyle(color: kTextMuted, fontSize: 13)),
             )
           else ...[
@@ -171,11 +171,13 @@ class _UserModuleListeningScreenState extends State<UserModuleListeningScreen> {
                           fontSize: 21,
                           height: 1.35,
                           fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 6),
-                  Text(current.back,
-                      textAlign: TextAlign.center,
-                      style:
-                          TextStyle(color: kTextSecondary, fontSize: 13)),
+                  if (current.back.trim().isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(current.back,
+                        textAlign: TextAlign.center,
+                        style:
+                            TextStyle(color: kTextSecondary, fontSize: 13)),
+                  ],
                   const SizedBox(height: 10),
                   Text(
                       '${_index + 1} / ${_lines.length}'
@@ -263,12 +265,14 @@ class _UserModuleListeningScreenState extends State<UserModuleListeningScreen> {
                                     fontWeight: i == _index
                                         ? FontWeight.w700
                                         : FontWeight.w500)),
-                            const SizedBox(height: 1),
-                            Text(l.back,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    color: kTextFaint, fontSize: 11)),
+                            if (l.back.trim().isNotEmpty) ...[
+                              const SizedBox(height: 1),
+                              Text(l.back,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      color: kTextFaint, fontSize: 11)),
+                            ],
                           ],
                         ),
                       ),
@@ -286,7 +290,7 @@ class _UserModuleListeningScreenState extends State<UserModuleListeningScreen> {
                   child: FilledButton(
                     key: const Key('userlisten_go_practice'),
                     onPressed: _openPractice,
-                    child: Text('去六步学习',
+                    child: Text('去练习',
                         style: TextStyle(color: kOnPrimary, fontSize: 14)),
                   ),
                 ),
@@ -295,7 +299,7 @@ class _UserModuleListeningScreenState extends State<UserModuleListeningScreen> {
                   child: OutlinedButton(
                     key: const Key('userlisten_go_detail'),
                     onPressed: _openDetail,
-                    child: Text('看模块详情',
+                    child: Text('看这本',
                         style: TextStyle(color: kPrimary, fontSize: 14)),
                   ),
                 ),

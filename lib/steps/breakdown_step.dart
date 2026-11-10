@@ -131,10 +131,12 @@ class _BreakdownStepState extends State<BreakdownStep> {
               ],
             ),
           ),
-          const SizedBox(height: 10),
-          Text(widget.chunk.meaningCN,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: kTextMuted, fontSize: 14)),
+          if (widget.chunk.meaningCN.trim().isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(widget.chunk.meaningCN,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: kTextMuted, fontSize: 14)),
+          ],
           const Spacer(),
           Text(
             _allHeard ? '拆完了，拼回去它就长在你嘴里' : '还剩 ${_words.length - _heard.length} 张卡片没听',

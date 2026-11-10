@@ -14,8 +14,8 @@ import 'package:chunkspoke_flutter/services/loaders.dart';
 import 'package:chunkspoke_flutter/services/user_package.dart';
 import 'package:chunkspoke_flutter/services/user_package_store.dart';
 
-/// ASR-223 v2 / ASR-228 D3 / ASR-229 D4 件 3 钉测：
-/// 地图「我的模块」分区 = 入口可达 + **只读不写** + 列出真包。
+/// ASR-223 v2 / ASR-228 D3 / ASR-229 D4 件 3 / 1.9.2 钉测：
+/// 地图「我的英语本」分区 = 入口可达 + **只读不写** + 列出真本子。
 ///
 /// v1 的缺口是「页面存在但没有导航入口」；v2 补了入口但分区还是占位；
 /// D4 把两条都钉死：分区必须真读包档案（不许退回占位），同时不许出现任何写路径。
@@ -50,12 +50,12 @@ String _code(String src) => src
     .where((l) => !l.trimLeft().startsWith('//'))
     .join('\n');
 
-/// 「我的模块」分区本体（含它的 State 类，到 `_SceneRow` 为止）。
+/// 「我的英语本」分区本体（含它的 State 类，到 `_SceneRow` 为止）。
 String _sectionSrc() {
   final src = File('lib/screens/map.dart').readAsStringSync();
   final start = src.indexOf('class _UserModuleSection');
   final end = src.indexOf('class _SceneRow');
-  expect(start, greaterThan(0), reason: '「我的模块」分区被删了');
+  expect(start, greaterThan(0), reason: '「我的英语本」分区被删了');
   expect(end, greaterThan(start), reason: '找不到分区结尾');
   return _code(src.substring(start, end));
 }
@@ -77,7 +77,7 @@ Future<void> _pumpMap(WidgetTester tester, ProgressService progress) async {
     ],
     child: const MaterialApp(home: MapScreen()),
   ));
-  await _pumpUntil(tester, find.text('我的模块'));
+  await _pumpUntil(tester, find.text('我的英语本'));
 }
 
 void main() {
@@ -115,7 +115,7 @@ void main() {
       'UserImportScreen',
     ]) {
       expect(section.contains(required), isTrue,
-          reason: '分区缺了 $required —— 「我的模块」必须列真包，不能只放一个入口');
+          reason: '分区缺了 $required —— 「我的英语本」必须列真本子，不能只放一个入口');
     }
   });
 
@@ -129,35 +129,28 @@ void main() {
       final progress = await _service();
       await _pumpMap(tester, progress);
 
-      expect(find.text('导入我自己的词块（CSV / JSON）'), findsOneWidget);
-      expect(find.textContaining('确认前不写入'), findsOneWidget);
-      expect(find.textContaining('还没有导入过的包'), findsOneWidget);
+      expect(find.text('把想学的英文存进来'), findsOneWidget);
+      expect(find.textContaining('粘贴就能整理成能学的句子'), findsOneWidget);
+      expect(find.textContaining('这里还是空的'), findsOneWidget);
 
-      await tester.tap(find.text('导入我自己的词块（CSV / JSON）'));
+      await tester.tap(find.text('把想学的英文存进来'));
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 60));
       }
 
       expect(find.byType(UserImportScreen), findsOneWidget);
-      expect(find.text('我的模块 · 导入'), findsOneWidget);
-      // 三入口 + 诚实文案都在首屏可达处。
+      expect(find.text('添加我的英文本'), findsOneWidget);
+      // 主路径：粘贴 + 整理 + 保存；术语收进折叠区。
       expect(find.text('从剪贴板粘贴'), findsOneWidget);
-      expect(find.text('生成 CSV 模板文件'), findsOneWidget);
-      expect(find.text('生成 JSON 模板文件'), findsOneWidget);
-      expect(find.textContaining('本机文件'), findsOneWidget);
-      // ASR-229 §二·① 裁定：不加 SAF，就把「日常导入请用粘贴」写在文件入口上。
-      expect(find.textContaining('这个入口是给已经从电脑'), findsOneWidget);
-      expect(
-          find.textContaining('未点「确认导入（将写入本机）」之前，不写入任何东西'),
-          findsOneWidget);
-
+      expect(find.text('整理成句子'), findsOneWidget);
+      expect(find.textContaining('整理和预览不要钱'), findsOneWidget);
+      expect(find.textContaining('CSV'), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     });
   });
 
-  testWidgets('已导入的包列在分区里，点进去是只读详情（删除讲级联、也讲不动什么）',
-      (tester) async {
+  testWidgets('已存的本子列在分区里，点进去能看到六步入口与级联删除说明', (tester) async {
     await tester.binding.setSurfaceSize(const Size(900, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -172,37 +165,38 @@ void main() {
 
       await _pumpMap(tester, progress);
 
-      // 真包体出现在分区：模块名 + 块数 + 「不进官方口径」的一句话。
+      // 真本子出现在分区：名字 + 句数 + 「和官方分开记」的一句话。
       expect(find.text('点单'), findsOneWidget);
-      expect(find.textContaining('2 块 · '), findsOneWidget);
-      expect(find.textContaining('不进官方已掌握数与复习排期'), findsOneWidget);
-      expect(find.textContaining('还没有导入过的包'), findsNothing);
-      expect(find.textContaining('本机 1/5 个包'), findsOneWidget);
+      expect(find.textContaining('2 句 · '), findsOneWidget);
+      // 整行是「N 句 · X月X日存的 · 和官方内容分开记」；分区底部也有一句
+      // 「你的英语本和官方内容分开记」，所以按带分隔符的那一行钉。
+      expect(find.textContaining('· 和官方内容分开记'), findsOneWidget);
+      expect(find.textContaining('这里还是空的'), findsNothing);
+      expect(find.textContaining('手机上 1/5 本'), findsOneWidget);
 
       await tester.tap(find.text('点单'));
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 60));
       }
       await _pumpUntil(tester, find.byType(UserPackageDetailScreen));
-      // ASR-234 更正：自定义包已接入同一套六步闭环——详情页明说这一点，
-      // 并给出唯一的六步入口（「开始/继续学习（六步）」）；删除按钮仍明写是级联的。
-      await _pumpUntil(
-          tester, find.textContaining('这些块和官方模块走同一套六步学习闭环'));
-      expect(find.text('开始学习（六步）'), findsOneWidget);
-      expect(find.text('复习这个包'), findsOneWidget);
-      expect(find.textContaining('还不能像官方模块那样走六步学习'), findsNothing);
-      expect(find.text('删除这个包（含级联清理）'), findsOneWidget);
+      // ASR-234 更正：自定义本子已接入同一套六步闭环——详情页明说这一点，
+      // 并给出唯一入口（「开始学 / 继续学」）；删除按钮仍明写会级联。
+      await _pumpUntil(tester, find.textContaining('这些句子和官方内容用同一套练习'));
+      expect(find.text('开始学'), findsOneWidget);
+      expect(find.text('复习这本'), findsOneWidget);
+      expect(find.textContaining('还不能像官方内容那样走六步'), findsNothing);
+      expect(find.text('删掉这本'), findsOneWidget);
 
-      await tester.tap(find.text('删除这个包（含级联清理）'));
+      await tester.tap(find.text('删掉这本'));
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 60));
       }
-      await _pumpUntil(tester, find.textContaining('会一起清掉'));
-      expect(find.textContaining('官方模块的已掌握数、复习排期、断点，以及其他自定义包'),
+      await _pumpUntil(tester, find.textContaining('会一起删掉'));
+      expect(find.textContaining('不会动：官方内容和学习记录，以及别的小本子。'),
           findsOneWidget);
-      expect(find.textContaining('同一份表随时可以再导回来'), findsOneWidget);
+      expect(find.textContaining('把内容重新粘一次就行'), findsOneWidget);
 
-      // 只点进来看，不真的删：包还在。
+      // 只点进来看，不真的删：本子还在。
       expect((await store.listPackages()).length, 1);
 
       await tester.pumpWidget(const SizedBox.shrink());
@@ -211,7 +205,7 @@ void main() {
   });
 
   // ── ASR-233 A4：坏档案不许在分区里隐身 ────────────────────────────────
-  testWidgets('一份档案坏掉：分区出红牌 + 好包照列，不谎称「还没有导入过的包」',
+  testWidgets('一份档案坏掉：分区出红牌 + 好本子照列，不谎称「这里还是空的」',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(900, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -236,10 +230,10 @@ void main() {
           reason: '列表侧仍跳过坏档案（不炸 UI），但分区必须把这件事说出来');
 
       await _pumpMap(tester, progress);
-      await _pumpUntil(tester, find.text('1 份包档案读不出来'));
+      await _pumpUntil(tester, find.text('有 1 本暂时打不开'));
       expect(find.text('点单'), findsOneWidget);
-      expect(find.textContaining('还没有导入过的包'), findsNothing);
-      expect(find.textContaining('重新导入同名模块即可修好'), findsOneWidget);
+      expect(find.textContaining('这里还是空的'), findsNothing);
+      expect(find.textContaining('用同一个名字重新存一次就能修好'), findsOneWidget);
       expect(find.byKey(const Key('userCorruptNotice')), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox.shrink());
@@ -247,7 +241,7 @@ void main() {
     });
   });
 
-  testWidgets('唯一的包档案坏掉：红牌顶上空态，名额行不许谎报 0/5', (tester) async {
+  testWidgets('唯一的本子坏掉：红牌顶上空态，名额行不许谎报 0/5', (tester) async {
     await tester.binding.setSurfaceSize(const Size(900, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -262,9 +256,9 @@ void main() {
           .setKv('${AppDatabase.kUserPkgKvPrefix}${rec.moduleKey}', 'not-json');
 
       await _pumpMap(tester, progress);
-      await _pumpUntil(tester, find.text('1 份包档案读不出来'));
-      expect(find.textContaining('还没有导入过的包'), findsNothing);
-      expect(find.textContaining('本机 0/5 个包'), findsNothing);
+      await _pumpUntil(tester, find.text('有 1 本暂时打不开'));
+      expect(find.textContaining('这里还是空的'), findsNothing);
+      expect(find.textContaining('手机上 0/5 本'), findsNothing);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();

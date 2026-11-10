@@ -441,14 +441,14 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('$n 份包档案读不出来',
+                      Text('有 $n 本暂时打不开',
                           style: TextStyle(
                               color: kText,
                               fontSize: 14,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 2),
-                      Text('包还在本机，只是档案坏了，所以这里列不出内容。'
-                          '去诊断看详情；重新导入同名模块即可修好。',
+                      Text('内容还在手机上，只是暂时读不出来。'
+                          '去「设置 → 诊断」能看到详情；用同一个名字重新存一次就能修好。',
                           style: TextStyle(color: kTextMuted, fontSize: 12)),
                     ],
                   ),
@@ -465,7 +465,7 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _TierHeader('我的模块'),
+        const _TierHeader('我的英语本'),
         const SizedBox(height: 8),
         InkWell(
           borderRadius: BorderRadius.circular(16),
@@ -485,14 +485,13 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('导入我自己的词块（CSV / JSON）',
+                      Text('把想学的英文存进来',
                           style: TextStyle(
                               color: kText,
                               fontSize: 16,
                               fontWeight: FontWeight.w700)),
                       const SizedBox(height: 4),
-                      Text('文件 / 粘贴 / 模板三个入口；确认前不写入，'
-                          '确认后只进「我的模块」',
+                      Text('一句、一段、一段对话都行，粘贴就能整理成能学的句子',
                           style: TextStyle(color: kTextMuted, fontSize: 12)),
                     ],
                   ),
@@ -510,7 +509,7 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
             if (inv == null) {
               return Padding(
                 padding: const EdgeInsets.only(top: 10, left: 4),
-                child: Text('正在读本机的自定义包…',
+                child: Text('正在打开你的英语本…',
                     style: TextStyle(color: kTextFaint, fontSize: 12)),
               );
             }
@@ -518,8 +517,8 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
             if (recs.isEmpty && inv.corruptCount == 0) {
               return Padding(
                 padding: const EdgeInsets.only(top: 10, left: 4),
-                child: Text('还没有导入过的包。用上面的入口先看模板，'
-                    '粘贴或选文件都行，确认前一行都不写。',
+                child: Text('这里还是空的。把想学的英文粘进去，'
+                    '整理好就能直接开始学。',
                     style: TextStyle(color: kTextFaint, fontSize: 12)),
               );
             }
@@ -557,9 +556,9 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
                                           fontWeight: FontWeight.w600)),
                                   const SizedBox(height: 2),
                                   Text(
-                                      '${rec.chunkCount} 块 · '
-                                      '${_importedDate(rec.importedAt)}导入 · '
-                                      '不进官方已掌握数与复习排期',
+                                      '${rec.chunkCount} 句 · '
+                                      '${_importedDate(rec.importedAt)}存的 · '
+                                      '和官方内容分开记',
                                       style: TextStyle(
                                           color: kTextMuted, fontSize: 12)),
                                 ],
@@ -575,9 +574,9 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
                 if (recs.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(left: 4, top: 2),
-                    child: Text('本机 ${recs.length}/$kUserPackageMaxPackages 个包，'
-                        '每包上限 $kUserPackageMaxChunks 块；'
-                        '同名模块重新导入＝整包替换。',
+                    child: Text('手机上 ${recs.length}/$kUserPackageMaxPackages 本，'
+                        '每本最多 $kUserPackageMaxChunks 句；'
+                        '同一个名字再存一次会替换之前那本。',
                         style: TextStyle(color: kTextFaint, fontSize: 12)),
                   ),
               ],
@@ -587,8 +586,8 @@ class _UserModuleSectionState extends State<_UserModuleSection> {
         const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.only(left: 4),
-          child: Text('官方模块的已掌握数、复习排期与断点都不因为你导入而改变；'
-              '没点「确认导入」之前，这一页一行都不写。',
+          child: Text('你的英语本和官方内容分开记；官方进度不会因为你存了自己的句子而改变。'
+              '整理和预览不收费，保存时才需要解锁码。',
               style: TextStyle(color: kTextFaint, fontSize: 12)),
         ),
       ],

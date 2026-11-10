@@ -57,8 +57,8 @@ void main() {
     expect(find.text('前 $kEarlyBirdSeats 名 · 永久买断'), findsOneWidget);
     expect(find.textContaining(wechatSheetEntry), findsOneWidget);
     expect(find.text('我已有码，输入激活'), findsOneWidget);
-    expect(find.text('先继续学生存 S0 + A–F'), findsOneWidget,
-        reason: '1.8.0 起免费区含生存 S0，文案不能只说 A–F');
+    expect(find.text('先继续学免费内容'), findsOneWidget,
+        reason: '面向普通用户不说 S0/A–F 这类内部编号；免费区含生存 S0，不能只说 A–F');
   });
 
   testWidgets('点「加微信购买」→ 购买说明显示微信号 kz910124', (tester) async {

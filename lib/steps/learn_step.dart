@@ -81,29 +81,33 @@ class _LearnStepState extends State<LearnStep> {
                           fontSize: 30,
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 18),
-                  GestureDetector(
-                    onTap: () => setState(() => _cnDissolved = false),
-                    onLongPressStart: (_) => _beginDissolve(),
-                    onLongPressEnd: (_) => _cancelDissolve(),
-                    child: AnimatedOpacity(
-                      opacity: _cnDissolved ? 0.0 : 1.0,
-                      duration: Motion.of(context).dur(400),
-                      curve: Curves.easeOut,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: kBg.withValues(alpha: 0.5),
-                          border: Border.all(color: kBorderStrong),
+                  if (c.meaningCN.trim().isNotEmpty) ...[
+                    GestureDetector(
+                      onTap: () => setState(() => _cnDissolved = false),
+                      onLongPressStart: (_) => _beginDissolve(),
+                      onLongPressEnd: (_) => _cancelDissolve(),
+                      child: AnimatedOpacity(
+                        opacity: _cnDissolved ? 0.0 : 1.0,
+                        duration: Motion.of(context).dur(400),
+                        curve: Curves.easeOut,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: kBg.withValues(alpha: 0.5),
+                            border: Border.all(color: kBorderStrong),
+                          ),
+                          child: Text(c.meaningCN,
+                              style: TextStyle(color: kText, fontSize: 18)),
                         ),
-                        child: Text(c.meaningCN,
-                            style: TextStyle(color: kText, fontSize: 18)),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(_cnDissolved ? '已隐藏 · 点按恢复' : '长按中文卡 3.5 秒溶解（自测）',
-                      style: TextStyle(color: kTextFaint, fontSize: 12)),
+                    const SizedBox(height: 10),
+                    Text(_cnDissolved ? '已隐藏 · 点按恢复' : '长按中文卡 3.5 秒溶解（自测）',
+                        style: TextStyle(color: kTextFaint, fontSize: 12)),
+                  ] else
+                    Text('没填中文意思也没关系，先记住它在句子里怎么说。',
+                        style: TextStyle(color: kTextFaint, fontSize: 12)),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => speakOrHint(

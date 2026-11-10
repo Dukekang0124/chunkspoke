@@ -76,7 +76,7 @@ class PracticeSession {
   /// 是否有内容可练（决定是否显示总结屏 / 冷启动空态）。
   static bool hasContent(int practicedCount) => practicedCount > 0;
 
-  /// ASR-234：由一个已导入的自定义包构造「合成场景」，供六步 PracticeLoop 使用。
+  /// ASR-234：由一个已存进手机的英语本构造「合成场景」，供六步 PracticeLoop 使用。
   ///
   /// 与 [reviewLevel] 同款**非完整关卡**会话（调用方传 chunks != null）：
   ///  · Chunk.id 一律 `user:` 键 → 六步写入只落 user 行，官方计数/锚点/断点不受影响
@@ -84,7 +84,7 @@ class PracticeSession {
   ///  · 开口说句目标 = 该条 example（≥3 词）或 front 本身（≥3 词），都没有则用 front，
   ///    与 [UserChunkEntry.sentenceSourceText] 同源——不伪造句子、不自动翻译；
   ///  · level.id = moduleKey（`user_module:` 前缀），PracticeLoop 据此把定向替换的
-  ///    替代池限定在本包内（见 isUserModuleKey），绝不拿官方块替换用户自己的句子。
+  ///    替代池限定在这本内（见 isUserModuleKey），绝不拿官方块替换用户自己的句子。
   static Level userModuleLevel(UserPackageRecord rec) {
     final chunks = <Chunk>[];
     final sentences = <TargetSentence>[];
@@ -107,7 +107,7 @@ class PracticeSession {
           swapOptions: const [],
         ),
         cefr: e.cefr ?? '',
-        sources: ['我的模块 · ${rec.moduleName}'],
+        sources: ['我的英语本 · ${rec.moduleName}'],
       ));
       sentences.add(TargetSentence(
         id: e.chunkKey,

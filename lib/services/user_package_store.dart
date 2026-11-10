@@ -237,18 +237,18 @@ class UserPackageStore {
       incoming.putIfAbsent(e.moduleKey, () => <UserChunkEntry>[]).add(e);
     }
 
-    // 名额闸（库层兜底，不只信校验器）：包数 ≤5，单包 ≤200。
+    // 名额闸（库层兜底，不只信校验器）：本数 ≤5，单本 ≤200。
     final mergedModules = {...byModule.keys, ...incoming.keys};
     if (mergedModules.length > kUserPackageMaxPackages) {
       return UserImportResult.failed(
-          '本机已有 ${byModule.length} 个包，这份还带来 ${incoming.length} 个；'
-          '上限 $kUserPackageMaxPackages 个。先删掉一个再导入。');
+          '手机上已经有 ${byModule.length} 个英语本，这次还要多 ${incoming.length} 个；'
+          '最多只能放 $kUserPackageMaxPackages 个。先删掉一本再存。');
     }
     for (final e in incoming.entries) {
       if (e.value.length > kUserPackageMaxChunks) {
         return UserImportResult.failed(
-            '「${e.value.first.moduleName}」有 ${e.value.length} 块，'
-            '超过每包 $kUserPackageMaxChunks 块上限。');
+            '「${e.value.first.moduleName}」有 ${e.value.length} 句，'
+            '一本最多 $kUserPackageMaxChunks 句。');
       }
     }
 
@@ -268,8 +268,8 @@ class UserPackageStore {
         if (owner != null && owner != grp.key) {
           final ownerName = byModule[owner]?.moduleName ?? owner;
           return UserImportResult.failed(
-              '「${e.front}」已在包「$ownerName」里。同一个词条只能属于一个包：'
-              '改一下这条的正面文本，或把它并进「$ownerName」再导入。');
+              '「${e.front}」已经在「$ownerName」里了。同一句只能放在一个本子里：'
+              '改一下这句，或者把它并到「$ownerName」里再存。');
         }
       }
     }
@@ -316,9 +316,9 @@ class UserPackageStore {
       packagesAfter: mergedModules.length,
       replacedPackages: replaced,
       note: replaced > 0
-          ? '已写入 ${dedup.length} 块 · ${names.length} 个模块'
-              '（其中 $replaced 个同名模块按新表整包替换）'
-          : '已写入 ${dedup.length} 块 · ${names.length} 个模块',
+          ? '存好了 ${dedup.length} 句 · ${names.length} 本'
+              '（其中 $replaced 本同名，已用这次的替换掉）'
+          : '存好了 ${dedup.length} 句 · ${names.length} 本',
     );
   }
 
@@ -472,8 +472,8 @@ class UserImportResult {
         moduleNames = const [],
         packagesAfter = 0,
         replacedPackages = 0,
-        note = '导入自己的词表需要解锁码：解析与预览永久免费，确认导入会写进「我的模块」。'
-            '你已经导进来的词表、学习记录和删除都不受影响。',
+        note = '存到我的英语本需要解锁码：整理和预览一直免费，保存时才需要。'
+            '你已经存进来的句子、学习记录和删除都不受影响。',
         gated = true;
 }
 

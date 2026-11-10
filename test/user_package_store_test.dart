@@ -166,7 +166,7 @@ void main() {
     expect(await store.listPackages(), isEmpty);
   });
 
-  test('名额闸在库层也兜一遍：第 6 个包被拒且不写半截', () async {
+  test('名额闸在库层也兜一遍：第 6 本被拒且不写半截', () async {
     final store = UserPackageStore(_p.database);
     for (var i = 0; i < 5; i++) {
       final v = await _validate(
@@ -177,7 +177,7 @@ void main() {
     final v6 = await _validate('front,back,module_name\n"extra",多余,模块6\n');
     final res = await store.importValidation(v6, allowed: true);
     expect(res.ok, isFalse);
-    expect(res.note, contains('上限'));
+    expect(res.note, contains('先删掉一本再存'));
     expect(await store.userRowCount(), rowsBefore, reason: '被拒的导入不许留下任何行');
   });
 
