@@ -109,6 +109,12 @@ const Map<String, Set<String>> _matrix = {
     'kUserKeyExclude', // 注释里点名排除口径，扫描器按字符串计
   },
   'lib/services/progress_guard.dart': {'reconcileAll'},
+  // —— 1.10.0 词块联动：派生归档，只读包档案、不碰台账与断点 ——
+  'lib/services/clip_linkage.dart': {
+    // 词块库/播单全部由 listPackages() 现算（档案是唯一事实），
+    // 阈值只占 kv 一个数，不写 chunks/sessions，也不动断点。
+    'UserPackageStore',
+  },
   'lib/screens/diagnostics.dart': {'reconcileAll', 'UserPackageStore'},
   'lib/screens/user_import_screen.dart': {
     'UserPackageStore',

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/clip_linkage.dart';
 import '../services/loaders.dart';
 import '../services/update/update_service.dart';
 import '../services/update/update_flow.dart';
@@ -68,6 +69,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _voiceSig = '';
   bool _benchRunning = false;
 
+  /// 词块联动：阈值（设置页即时保存）+ 当前已收录句子数（只读展示）。
+  int _clipThreshold = kClipThresholdDefault;
+  int _clipSentences = 0;
+
   @override
   void initState() {
     super.initState();
@@ -87,6 +92,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _notifMinute = p.notifMinute;
     _soundOn = p.soundOn;
     _aiNetOn = p.aiNetOn;
+    // 词块联动阈值（只读一次；失败保持默认，不阻塞设置页）。
+    loadClipLinkage(p.database).then((st) {
+      if (!mounted) return;
+      setState(() {
+        _clipThreshold = st.threshold;
+        _clipSentences = st.sentenceCount;
+      });
+    }).catchError((_) {});
     final tts = Provider.of<TtsService>(context, listen: false);
     _ttsStatus = tts.status;
     if (_ttsStatus == TtsStatus.unknown) {
@@ -1562,6 +1575,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 词块联动：磨耳朵播单阈值（1.10.0）。
+  ///
+  /// 只存一个数（kv `clip.linkage.threshold`），不另记「是否已联动」——
+  /// 达标与否每次由已收录句子数现算，删包、改阈值都不会留下脏状态。
+  Widget _clipLinkageCard(BuildContext context) {
+    final off = _clipThreshold == 0;
+    return Container(
+      key: const ValueKey('settings_clip_threshold'),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('磨耳朵联动阈值', style: TextStyle(color: kText, fontSize: 15)),
+          const SizedBox(height: 4),
+          Text(
+            '收进「我的英语本」的英文句子会自动抽成词块；累计到阈值后，'
+            '磨耳朵里出现词块播单。现在已收录 $_clipSentences 句可学句子。',
+            style: TextStyle(color: kTextMuted, fontSize: 12, height: 1.45),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final v in kClipThresholdOptions)
+                ChoiceChip(
+                  key: ValueKey('settings_clip_chip_$v'),
+                  label: Text(v == 0 ? '关闭' : '$v 句'),
+                  selected: _clipThreshold == v,
+                  onSelected: (_) => _setClipThreshold(v),
+                  selectedColor: kPrimary,
+                  backgroundColor: kCardAlt,
+                  labelStyle: TextStyle(
+                    color: _clipThreshold == v ? kOnPrimary : kTextSecondary,
+                    fontSize: 13,
+                  ),
+                  side: BorderSide(color: kBorderSoft),
+                ),
+            ],
+          ),
+          if (off) ...[
+            const SizedBox(height: 8),
+            Text('关闭只是不再往磨耳朵推词块播单；词块库、收录的句子和学习记录都还在。',
+                style: TextStyle(color: kTextFaint, fontSize: 11)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _setClipThreshold(int value) async {
+    final p = Provider.of<ProgressService>(context, listen: false);
+    final saved = await saveClipThreshold(p.database, value);
+    if (mounted) setState(() => _clipThreshold = saved);
+  }
+
   /// 外观与主题（1.7.0）：卡片本体在 ui/theme_card.dart，可单独测试。
   Widget _themeCard(BuildContext context) => const ThemeCard();
 
@@ -1753,6 +1827,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _soundCard(context),
             const SizedBox(height: 12),
             _themeCard(context),
+            const SizedBox(height: 12),
+            _clipLinkageCard(context),
             const SizedBox(height: 12),
             _diagnosticsEntry(context),
             const SizedBox(height: 12),

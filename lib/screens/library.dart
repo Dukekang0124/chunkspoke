@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/content_pack.dart';
 import '../models/listening_article.dart';
 import '../services/chunk_asset.dart';
+import '../services/clip_linkage.dart';
 import '../services/crash_log.dart';
 import '../services/database.dart';
 import '../services/learning_export.dart';
@@ -19,6 +20,7 @@ import '../ui/count_up.dart';
 import '../ui/pressable.dart';
 import '../ui/stagger.dart';
 import '../ui/widgets.dart';
+import 'clip_chunk_screen.dart';
 import 'user_package_detail_screen.dart';
 
 /// 词块库（波 2 · 模块 D）：资产轴唯一口径。
@@ -151,12 +153,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
       userModules.add(
           _UserLibModule(rec: rec, mastered: mastered, started: started));
     }
+    // 词块联动归档：从同一批包档案派生（不另读一份、不落第二本账）。
+    final clip =
+        await loadClipLinkage(p.database, packages: packages);
     return _LibraryData(
         chunks: chunks,
         rows: byKey,
         combos: combos,
         sources: sources,
-        userModules: userModules);
+        userModules: userModules,
+        clip: clip);
   }
 
   @override
@@ -186,6 +192,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           rows: data.rows,
           combos: data.combos,
           sources: data.sources,
+          clip: data.clip,
         );
         final groups = _buildGroups(shown);
         final sourceCount =
@@ -219,6 +226,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
             if (data.userModules.isNotEmpty) ...[
               const SizedBox(height: 12),
               _userModulesCard(data.userModules),
+            ],
+            if (data.clip.chunkCount > 0) ...[
+              const SizedBox(height: 12),
+              _clipChunkCard(data.clip),
             ],
             const SizedBox(height: 12),
             Row(
@@ -560,6 +571,66 @@ class _LibraryScreenState extends State<LibraryScreen> {
     if (mounted) _reload();
   }
 
+  Future<void> _openClipChunks() async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const ClipChunkScreen()));
+    if (mounted) _reload();
+  }
+
+  /// 词块联动入口：只读派生归档，不改上面的官方数字。
+  Widget _clipChunkCard(ClipLinkageState st) {
+    final enabled = st.enabled;
+    return Material(
+      key: const Key('library_clip_card'),
+      color: kCard,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: _openClipChunks,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.auto_awesome_motion, color: kPrimary, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('我的词块',
+                        style: TextStyle(
+                            color: kText,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                  Text('${st.chunkCount} 个',
+                      style: TextStyle(color: kTextFaint, fontSize: 11)),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios, size: 12, color: kTextFaint),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                  '从你存的英文句子里自动挑出可学的部分，原句一起留着。'
+                  '${enabled ? (st.ready ? '已联动磨耳朵。' : '还差 ${st.remaining} 句触发磨耳朵联动。') : '磨耳朵联动已关闭。'}',
+                  style: TextStyle(color: kTextMuted, fontSize: 11, height: 1.4)),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: enabled ? st.progress : 0,
+                  minHeight: 4,
+                  backgroundColor: kBorderSoft,
+                  valueColor: AlwaysStoppedAnimation(kPrimary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _learnUserModule(_UserLibModule m) async {
     // 全掌握 ⇒ 复习模式；否则从首个未掌握块续学（PracticeLoop 自己定位）。
     final review = m.started > 0 && m.mastered >= m.rec.chunkCount;
@@ -747,12 +818,18 @@ class _LibraryData {
 
   /// ASR-234：用户自定义包（只读 `user:` 命名空间），与官方 chunks 分开记。
   final List<_UserLibModule> userModules;
+
+  /// 词块联动派生归档 + 阈值（只读，不落库）。
+  final ClipLinkageState clip;
+
   const _LibraryData({
     required this.chunks,
     required this.rows,
     required this.combos,
     this.sources = const {},
     this.userModules = const [],
+    this.clip = const ClipLinkageState(
+        archive: ClipChunkArchive.empty, threshold: kClipThresholdDefault),
   });
 }
 
