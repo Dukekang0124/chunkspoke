@@ -1,15 +1,15 @@
 {
-  "versionName": "1.9.2",
-  "versionCode": 4092,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.9.2/chunkspoke-latest.apk",
+  "versionName": "1.10.0",
+  "versionCode": 4100,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.10.0/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.9.2/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.9.2/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.10.0/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.10.0/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
   "sha256": "6a6468f9cba6f5f1d5a8612bbe70c75de8b7484d010616c6d023705aeca91ab0",
   "size": 60474335,
-  "notes": "v1.9.2：「我的模块 · 导入」重做为「我的英语本 · 添加」——直接粘贴任意文本（句子、清单、中英混排、带网址都行），自动整理成逐句英文，不再要求先懂 CSV。修复 5 个粘贴边界：逗号多的英文不再被误判成表格、含网址的句子不再被截断、超长句改成能照做的提示、句尾表情不再拆成单独一句、序号与时间戳自动去掉。整理、预览、阅读、删除永久免费，只有「保存到我的英语本」需要解锁码；官方学习内容、判卷阈值与识别引擎零改动。",
+  "notes": "v1.10.0：新增「词块联动」。存进「我的英语本」的英文句子自动抽出可学词块，连原句一起去重归档到词块库「我的词块」；累计收录句数到阈值（设置里可选 5/10/20 句或关闭，默认 10 句）后，磨耳朵首页自动出现词块播单：每个词块念两遍、再念一遍原句，只播放，不改学习进度与复习排期。不翻译、不猜词义；删掉句子对应词块一起消失。官方学习内容、判卷阈值与识别引擎零改动。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.9.2/parts/apk.part0",
