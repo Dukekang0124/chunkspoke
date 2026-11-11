@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/listening_article.dart';
 import '../services/chunk_asset.dart';
+import '../services/clip_linkage.dart';
 import '../services/listening_audio.dart';
 import '../services/listening_home.dart';
 import '../services/listening_palette.dart';
@@ -14,6 +15,8 @@ import '../ui/stagger.dart';
 import '../ui/theme.dart';
 import '../ui/count_up.dart';
 import 'listening_player.dart';
+import 'clip_chunk_listening_screen.dart';
+import 'clip_chunk_screen.dart';
 import 'user_module_listening_screen.dart';
 
 /// 磨耳朵内容首页（tab）：
@@ -45,6 +48,9 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
   /// ASR-234：本机导入的自定义包（只读 `user:` 命名空间），给「我的模块 · 磨耳朵」入口用。
   List<UserPackageRecord> _userPkgs = const [];
 
+  /// 词块联动：派生归档 + 阈值。达到阈值后这里出现「我的词块 · 可以听了」。
+  ClipLinkageState? _clip;
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +64,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
     final rows = await progress.chunkStore.allRows();
     final userPkgs =
         await UserPackageStore(progress.database).listPackages();
+    final clip = await loadClipLinkage(progress.database, packages: userPkgs);
     if (!mounted) return;
 
     final now = DateTime.now();
@@ -99,6 +106,7 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
       _todaySeconds = store.todaySeconds;
       _weekSeconds = store.secondsSince(weekStart);
       _userPkgs = userPkgs;
+      _clip = clip;
     });
   }
 
@@ -161,6 +169,10 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
           if (_userPkgs.isNotEmpty) ...[
             const SizedBox(height: 12),
             _userModuleCard(),
+          ],
+          if (_clip != null && _clip!.enabled && _clip!.chunkCount > 0) ...[
+            const SizedBox(height: 12),
+            _clipLinkageCard(_clip!),
           ],
           if (data.noNewContent) ...[
             const SizedBox(height: 14),
@@ -405,6 +417,78 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
     await Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => UserModuleListeningScreen(rec: rec)));
     // 纯播放不写库，回到首页仍刷新一次，避免别处改了包在这里显示旧数。
+    if (mounted) await _load();
+  }
+
+  /// 词块联动卡：到阈值前显示「还差 N 句」（可点进归档），到了就能直接听。
+  ///
+  /// 文案只陈述事实：句子数、词块数、还差几句；不做「即将解锁」式的悬念。
+  Widget _clipLinkageCard(ClipLinkageState st) {
+    final ready = st.ready;
+    return Material(
+      key: const Key('listening_clip_linkage'),
+      color: kCard,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: ready ? () => _openClipListening(st) : _openClipArchive,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.auto_awesome_motion, color: kPrimary, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                        ready ? '我的词块 · 可以听了' : '我的词块 · 还差 ${st.remaining} 句',
+                        style: TextStyle(
+                            color: kText,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                  Icon(Icons.arrow_forward_ios, size: 12, color: kTextFaint),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                  ready
+                      ? '${st.sentenceCount} 句 → ${st.chunkCount} 个词块。'
+                          '每个念两遍，再念一遍原句。只播放，不改学习进度。'
+                      : '累计到 ${st.threshold} 句后自动出现在这里；'
+                          '现在已收录 ${st.sentenceCount} 句。',
+                  style: TextStyle(color: kTextMuted, fontSize: 11, height: 1.4)),
+              if (ready) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    key: const Key('listening_clip_play'),
+                    onPressed: () => _openClipListening(st),
+                    icon: Icon(Icons.headphones, color: kOnPrimary, size: 18),
+                    label: Text('按词块顺序听',
+                        style: TextStyle(color: kOnPrimary, fontSize: 13)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openClipListening(ClipLinkageState st) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ClipChunkListeningScreen(state: st)));
+    if (mounted) await _load();
+  }
+
+  Future<void> _openClipArchive() async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const ClipChunkScreen()));
     if (mounted) await _load();
   }
 
