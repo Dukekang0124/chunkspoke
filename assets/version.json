@@ -1,15 +1,15 @@
 {
-  "versionName": "1.10.0",
-  "versionCode": 4100,
-  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.10.0/chunkspoke-latest.apk",
+  "versionName": "1.10.1",
+  "versionCode": 4101,
+  "url": "https://dukekang0124.github.io/chunkspoke-releases/apk/1.10.1/chunkspoke-latest.apk",
   "urls": [
-    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.10.0/chunkspoke-latest.apk",
-    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.10.0/chunkspoke-latest.apk"
+    "https://dukekang0124.github.io/chunkspoke-releases/apk/1.10.1/chunkspoke-latest.apk",
+    "https://raw.githubusercontent.com/Dukekang0124/chunkspoke-releases/main/apk/1.10.1/chunkspoke-latest.apk"
   ],
   "pageUrl": "https://dukekang0124.github.io/chunkspoke/",
   "sha256": "ab016b461f40f70c3df9c63e2cf4b91905dc3aee2c02fd5dbc1f6b4a0353ac28",
   "size": 60605455,
-  "notes": "v1.10.0：新增「词块联动」。存进「我的英语本」的英文句子自动抽出可学词块，连原句一起去重归档到词块库「我的词块」；累计收录句数到阈值（设置里可选 5/10/20 句或关闭，默认 10 句）后，磨耳朵首页自动出现词块播单：每个词块念两遍、再念一遍原句，只播放，不改学习进度与复习排期。不翻译、不猜词义；删掉句子对应词块一起消失。官方学习内容、判卷阈值与识别引擎零改动。",
+  "notes": "v1.10.1：修复「我的英语本」里复制进去的英文句子认不出词块。词块提取补了约 180 条常用短语与受控句型模板（如 be in charge of、tell me more、these days、look like、have a meeting、need to），日常句子能认出更多可学部分；词块库「我的词块」与磨耳朵空态改成如实报数——扫了几句、几句认出了、几句没有，不再只显示「还差 N 句」。仍不翻译、不猜词义；官方学习内容、判卷阈值与识别引擎零改动。",
   "parts": [
     {
       "url": "https://cdn.jsdelivr.net/gh/Dukekang0124/chunkspoke-releases@main/apk/1.10.0/parts/apk.part0",
