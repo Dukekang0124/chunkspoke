@@ -612,7 +612,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
               const SizedBox(height: 4),
               Text(
                   '从你存的英文句子里自动挑出可学的部分，原句一起留着。'
-                  '${enabled ? (st.ready ? '已联动磨耳朵。' : '还差 ${st.remaining} 句触发磨耳朵联动。') : '磨耳朵联动已关闭。'}',
+                  '${enabled ? (st.ready ? '已联动磨耳朵。' : '还差 ${st.remaining} 句触发磨耳朵联动。') : '磨耳朵联动已关闭。'}'
+                  '${st.archive.totalScanned > st.sentenceCount ? '（已扫描 ${st.archive.totalScanned} 句，${st.sentenceCount} 句认出词块）' : ''}',
                   style: TextStyle(color: kTextMuted, fontSize: 11, height: 1.4)),
               const SizedBox(height: 8),
               ClipRRect(

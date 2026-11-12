@@ -455,10 +455,12 @@ class _ListeningHomeScreenState extends State<ListeningHomeScreen> {
               const SizedBox(height: 3),
               Text(
                   ready
-                      ? '${st.sentenceCount} 句 → ${st.chunkCount} 个词块。'
+                      ? '${st.archive.totalScanned > st.sentenceCount ? '扫描 ${st.archive.totalScanned} 句英文，' : ''}'
+                          '${st.sentenceCount} 句 → ${st.chunkCount} 个词块。'
                           '每个念两遍，再念一遍原句。只播放，不改学习进度。'
                       : '累计到 ${st.threshold} 句后自动出现在这里；'
-                          '现在已收录 ${st.sentenceCount} 句。',
+                          '现在已扫描 ${st.archive.totalScanned} 句英文，'
+                          '${st.sentenceCount} 句认出了词块。',
                   style: TextStyle(color: kTextMuted, fontSize: 11, height: 1.4)),
               if (ready) ...[
                 const SizedBox(height: 10),

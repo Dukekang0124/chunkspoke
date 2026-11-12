@@ -74,7 +74,7 @@ class _ClipChunkScreenState extends State<ClipChunkScreen> {
                 _summaryCard(st),
                 if (st.chunkCount == 0) ...[
                   const SizedBox(height: 14),
-                  _emptyCard(),
+                  _emptyCard(st),
                 ] else ...[
                   const SizedBox(height: 10),
                   Text('词块按出现句数排；点小喇叭只听这一个，点「去磨耳朵」按顺序听全部。',
@@ -119,11 +119,28 @@ class _ClipChunkScreenState extends State<ClipChunkScreen> {
   Widget _summaryCard(ClipLinkageState st) {
     final enabled = st.enabled;
     final ready = st.ready;
-    final status = !enabled
-        ? '磨耳朵联动已关闭；归档照常积累，到「设置 → 磨耳朵联动阈值」打开就能听。'
-        : ready
-            ? '已联动磨耳朵：可以按「词块念两遍 + 原句一遍」的顺序听。'
-            : '还差 ${st.remaining} 句到 ${st.threshold} 句；到了会自动出现在磨耳朵首页。';
+    // 先报「扫了几句、几句认出来」，再说还差多少——否则用户刚粘贴完只看到
+    // 「还差 10 句」，会以为自己的句子根本没被读到。
+    final scanned = st.archive.totalScanned;
+    final scanLine = scanned == 0
+        ? '还没有扫到英文句子'
+        : st.sentenceCount == scanned
+            ? '已扫描 $scanned 句英文，全部认出了可学词块'
+            : '已扫描 $scanned 句英文，其中 ${st.sentenceCount} 句认出了可学词块';
+    final String status;
+    if (!enabled) {
+      status =
+          '$scanLine；磨耳朵联动已关闭，归档照常积累，到「设置 → 磨耳朵联动阈值」打开就能听。';
+    } else if (ready) {
+      status = '$scanLine；已联动磨耳朵：可以按「词块念两遍 + 原句一遍」的顺序听。';
+    } else if (st.chunkCount == 0 && scanned > 0) {
+      // 扫了句子但一个词块都没认出来：这时说「还差 10 句」会让人以为再攒几句就行，
+      // 其实卡在识别上，必须直说。
+      status = '$scanLine；这些句子里还没有我认得的短语，联动进度还没开始。';
+    } else {
+      status =
+          '$scanLine；还差 ${st.remaining} 句到 ${st.threshold} 句，到了会自动出现在磨耳朵首页。';
+    }
     return Container(
       key: const Key('clip_archive_summary'),
       padding: const EdgeInsets.all(14),
@@ -149,15 +166,15 @@ class _ClipChunkScreenState extends State<ClipChunkScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
+          Wrap(
+            spacing: 22,
+            runSpacing: 10,
             children: [
               _stat('${st.chunkCount}', '个词块'),
-              const SizedBox(width: 22),
               _stat('${st.sentenceCount}', '句已收录'),
-              if (enabled) ...[
-                const SizedBox(width: 22),
-                _stat('${st.threshold}', '句触发联动'),
-              ],
+              if (scanned > st.sentenceCount)
+                _stat('$scanned', '句已扫描'),
+              if (enabled) _stat('${st.threshold}', '句触发联动'),
             ],
           ),
           const SizedBox(height: 12),
@@ -281,8 +298,13 @@ class _ClipChunkScreenState extends State<ClipChunkScreen> {
     );
   }
 
-  Widget _emptyCard() {
+  Widget _emptyCard(ClipLinkageState st) {
+    final scanned = st.archive.totalScanned;
+    final neverScanned = scanned == 0;
     return Container(
+      key: Key(neverScanned
+          ? 'clip_archive_empty_none'
+          : 'clip_archive_empty_unmatched'),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: kCard,
@@ -294,14 +316,23 @@ class _ClipChunkScreenState extends State<ClipChunkScreen> {
         children: [
           Icon(Icons.content_paste_search, color: kTextFaint, size: 28),
           const SizedBox(height: 10),
-          Text('还没有可学的词块',
+          Text(neverScanned ? '还没有可学的词块' : '扫了 $scanned 句，暂时没认出词块',
               style: TextStyle(
                   color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           Text(
-              '在「我的英语本」里粘贴英文句子后，这里会自动挑出 '
-              'look forward to、take care of 这类可学的部分，并保留它所在的原句。\n\n'
-              '只认英文句子：单词条目、中文和网址不会产生词块。',
+              neverScanned
+                  ? '在「我的英语本」里粘贴英文句子后，这里会自动挑出 '
+                      'look forward to、take care of 这类可学的部分，并保留它所在的原句。\n\n'
+                      '只认英文句子：单词条目、中文和网址不会产生词块。'
+                  : '这些句子已经存好了，只是里面没有命中我认得的常用短语。'
+                      '我认得的是固定搭配（good morning、split the bill、'
+                      'in my opinion）、动词短语（look forward to、write down）'
+                      '和常见句型（be able to、it is important to）。\n\n'
+                      '这不是导入失败：句子照常能跟读、能听，只是词块归档暂时是空的。',
+              key: Key(neverScanned
+                  ? 'clip_archive_empty_none_text'
+                  : 'clip_archive_empty_unmatched_text'),
               style: TextStyle(color: kTextMuted, fontSize: 12, height: 1.55)),
           const SizedBox(height: 12),
           TextButton.icon(

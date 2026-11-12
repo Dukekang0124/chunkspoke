@@ -4,7 +4,9 @@
 /// 纳入系统学习的短语（动词短语 / 固定搭配 / 介词短语 / 常用句型）。
 ///
 /// 质量取向 = 宁缺毋滥：
-///  · 来源只有两类——内置短语词表 + 一个受控句型模板（be + adj + prep）；
+///  · 来源只有两类——内置短语词表（含别名词形）+ 一个受控句型模板（be + adj + prep）；
+///  · 及物短语动词允许「动词 + 宾语代词 + 小品词」的合法插入（write it down），
+///    这是语法规则，不是碰运气收相邻词；
 ///  · 不做通用 n-gram 统计、不猜词义、不生成中文释义；
 ///  · 句子不够英文（不足 3 个拉丁词）或全是网址 / 中文时返回空，
 ///    界面如实显示 0，绝不硬造一个「词块」。
@@ -172,6 +174,16 @@ const Set<String> _kBeAdjs = {
 const Set<String> _kAdjPreps = {'to', 'of', 'in', 'at', 'for', 'with', 'about', 'from'};
 
 const Set<String> _kAdverbs = {'really', 'very', 'so', 'quite', 'always', 'usually', 'often'};
+
+/// `it is/was + X + to` 模板的 X 白名单。
+///
+/// 比 [kBeAdjs] 收得更窄：`it is interested to` 这种不成立的说法必须挡掉，
+/// 只收真正能把 to 不定式当主语的形容词与 `time`。
+const Set<String> _kItToAdjs = {
+  'important', 'necessary', 'possible', 'impossible', 'easy', 'hard',
+  'difficult', 'good', 'nice', 'better', 'safe', 'right', 'wrong',
+  'common', 'useful', 'interesting', 'time', 'fun', 'great', 'normal',
+};
 
 /// 内置短语表。键 = 规范形（展示用），值 = 类型。
 ///
@@ -569,6 +581,286 @@ const Map<String, String> _kPhrases = {
   'be hard to': '常用句型',
   'be difficult to': '常用句型',
   'be safe to': '常用句型',
+
+  // —— 日常高频补充（1.10.1）——
+  // 依据：用户「我的英语本」实测 0 命中的句子 + 33 篇磨耳朵文章 1030 句的
+  // 漏认清单。只补「换掉就不地道」的组合，不放宽成相邻词就收。
+  'next to': '固定搭配',
+  'close to': '固定搭配',
+  'far from': '固定搭配',
+  'in a hurry': '固定搭配',
+  'as well': '固定搭配',
+  'by card': '固定搭配',
+  'a cup of': '固定搭配',
+  'a glass of': '固定搭配',
+  'a bottle of': '固定搭配',
+  'a bowl of': '固定搭配',
+  'a piece of': '固定搭配',
+  'at the corner': '固定搭配',
+  'have a meeting': '固定搭配',
+  'attend a meeting': '固定搭配',
+  'have breakfast': '固定搭配',
+  'have lunch': '固定搭配',
+  'have dinner': '固定搭配',
+  'get dressed': '固定搭配',
+  'make a plan': '固定搭配',
+  'send an email': '固定搭配',
+  'write a report': '固定搭配',
+  'book a table': '固定搭配',
+  'day off': '固定搭配',
+  'these days': '固定搭配',
+  'tell me more': '固定搭配',
+  'in charge of': '固定搭配',
+
+  'look like': '动词短语',
+  'turn left': '动词短语',
+  'turn right': '动词短语',
+  'meet with': '动词短语',
+  'get back to': '动词短语',
+  'follow up': '动词短语',
+  'prepare for': '动词短语',
+  'report to': '动词短语',
+  'start work': '动词短语',
+  'finish work': '动词短语',
+
+  'on the phone': '介词短语',
+  'at the office': '介词短语',
+  'in the office': '介词短语',
+
+  'be in charge of': '常用句型',
+  'be responsible for': '常用句型',
+  'need to': '常用句型',
+
+  // —— 第二批补充（1.10.1）：打招呼 / 办事 / 时间 / 连接语 ——
+  // 依据同为漏认清单的高频组合；判断标准没变：整块换掉就不地道，
+  // 或者中国人写作里最容易漏掉的那个搭配。
+  'good morning': '固定搭配',
+  'good afternoon': '固定搭配',
+  'good evening': '固定搭配',
+  'good night': '固定搭配',
+  'thank you': '固定搭配',
+  'thank you for': '固定搭配',
+  'thanks for': '固定搭配',
+  'thanks a lot': '固定搭配',
+  'see you': '固定搭配',
+  'see you later': '固定搭配',
+  'see you soon': '固定搭配',
+  'see you tomorrow': '固定搭配',
+  'nice to meet you': '固定搭配',
+  'nice to see you': '固定搭配',
+  'you are welcome': '固定搭配',
+  'no problem': '固定搭配',
+  'not at all': '固定搭配',
+  'excuse me': '固定搭配',
+  'let me know': '固定搭配',
+  'how much': '固定搭配',
+  'how much is it': '固定搭配',
+  'what about': '固定搭配',
+  'how about': '固定搭配',
+  'what if': '固定搭配',
+  'it depends': '固定搭配',
+  'have a nice day': '固定搭配',
+  'have a good day': '固定搭配',
+  'have a good weekend': '固定搭配',
+  'have a good night': '固定搭配',
+  'next time': '固定搭配',
+  'last time': '固定搭配',
+  'this time': '固定搭配',
+  'every time': '固定搭配',
+  'one more time': '固定搭配',
+  'for a while': '固定搭配',
+  'for the first time': '固定搭配',
+  'for the last time': '固定搭配',
+  'in the meantime': '固定搭配',
+  'split the bill': '固定搭配',
+  'leave a tip': '固定搭配',
+  'for here or to go': '固定搭配',
+  'by name': '固定搭配',
+  'by the window': '固定搭配',
+  'go straight': '固定搭配',
+  'in my opinion': '固定搭配',
+  'from my point of view': '固定搭配',
+  'to be honest': '固定搭配',
+  'to be fair': '固定搭配',
+  'as a matter of fact': '固定搭配',
+  'first of all': '固定搭配',
+  'above all': '固定搭配',
+  'after all': '固定搭配',
+  'in other words': '固定搭配',
+  'in particular': '固定搭配',
+  'in contrast': '固定搭配',
+  'by contrast': '固定搭配',
+  'in conclusion': '固定搭配',
+  'in summary': '固定搭配',
+  'to sum up': '固定搭配',
+  'as a result': '固定搭配',
+  'for this reason': '固定搭配',
+  'in addition to': '固定搭配',
+  'on the one hand': '固定搭配',
+  'in the long run': '固定搭配',
+  'in the short term': '固定搭配',
+  'even though': '固定搭配',
+  'even if': '固定搭配',
+  'so that': '固定搭配',
+  'as if': '固定搭配',
+  'now that': '固定搭配',
+  'by the time': '固定搭配',
+  'from now on': '固定搭配',
+  'sooner or later': '固定搭配',
+  'now and then': '固定搭配',
+  'once in a while': '固定搭配',
+  'more and more': '固定搭配',
+  'less and less': '固定搭配',
+  'at times': '固定搭配',
+  'from time to time': '固定搭配',
+  'a number of': '固定搭配',
+  'a great deal of': '固定搭配',
+  'most of': '固定搭配',
+  'the same as': '固定搭配',
+  'compared with': '固定搭配',
+  'compared to': '固定搭配',
+  'different from': '固定搭配',
+  'as soon as possible': '固定搭配',
+  'as much as possible': '固定搭配',
+  'make an appointment': '固定搭配',
+  'see a doctor': '固定搭配',
+  'take medicine': '固定搭配',
+  'catch a cold': '固定搭配',
+  'feel better': '固定搭配',
+  'get better': '固定搭配',
+  'stay healthy': '固定搭配',
+  'take a photo': '固定搭配',
+  'take a picture': '固定搭配',
+  'take a rest': '固定搭配',
+  'take a sip': '固定搭配',
+  'take a taxi': '固定搭配',
+  'take the bus': '固定搭配',
+  'take the train': '固定搭配',
+  'take the subway': '固定搭配',
+  'ride a bike': '固定搭配',
+  'do the dishes': '固定搭配',
+  'do the laundry': '固定搭配',
+  'make the bed': '固定搭配',
+  'take out the trash': '固定搭配',
+  'walk the dog': '固定搭配',
+  'run errands': '固定搭配',
+  'work overtime': '固定搭配',
+  'work from home': '固定搭配',
+  'on a business trip': '固定搭配',
+  'business trip': '固定搭配',
+  'call in sick': '固定搭配',
+  'meet a deadline': '固定搭配',
+  'on schedule': '固定搭配',
+  'behind schedule': '固定搭配',
+  'ahead of schedule': '固定搭配',
+  'sign up for': '固定搭配',
+  'graduate from': '固定搭配',
+  'major in': '固定搭配',
+  'fall in love with': '固定搭配',
+  'stay in touch': '固定搭配',
+  'make sure to': '固定搭配',
+
+  'complain about': '动词短语',
+  'worry about': '动词短语',
+  'learn about': '动词短语',
+  'know about': '动词短语',
+  'forget about': '动词短语',
+  'argue with': '动词短语',
+  'disagree with': '动词短语',
+  'communicate with': '动词短语',
+  'compare with': '动词短语',
+  'provide with': '动词短语',
+  'count on': '动词短语',
+  'insist on': '动词短语',
+  'comment on': '动词短语',
+  'suffer from': '动词短语',
+  'benefit from': '动词短语',
+  'recover from': '动词短语',
+  'escape from': '动词短语',
+  'participate in': '动词短语',
+  'engage in': '动词短语',
+  'succeed in': '动词短语',
+  'get involved in': '动词短语',
+  'be involved in': '动词短语',
+  'apologize for': '动词短语',
+  'search for': '动词短语',
+  'point at': '动词短语',
+  'smile at': '动词短语',
+  'laugh about': '动词短语',
+  'get over': '动词短语',
+  'get away': '动词短语',
+  'get by': '动词短语',
+  'come up with': '动词短语',
+  'keep up with': '动词短语',
+  'catch up with': '动词短语',
+  'make up for': '动词短语',
+  'look up to': '动词短语',
+  'look down on': '动词短语',
+  'drop out': '动词短语',
+  'drop in': '动词短语',
+  'bring about': '动词短语',
+  'bring along': '动词短语',
+  'cool down': '动词短语',
+  'pass by': '动词短语',
+  'walk through': '动词短语',
+  'check on': '动词短语',
+  'hold back': '动词短语',
+  'give it a try': '动词短语',
+
+  'on the left': '介词短语',
+  'on the right': '介词短语',
+  'at the front': '介词短语',
+  'at the back': '介词短语',
+  'at the top of': '介词短语',
+  'at the bottom of': '介词短语',
+  'in the corner': '介词短语',
+  'around the corner': '介词短语',
+  'across from': '介词短语',
+  'across the street': '介词短语',
+  'down the street': '介词短语',
+  'next door': '介词短语',
+  'next door to': '介词短语',
+  'in the country': '介词短语',
+  'on the internet': '介词短语',
+  'on TV': '介词短语',
+  'on the news': '介词短语',
+  'in cash': '介词短语',
+  'for sale': '介词短语',
+  'at half past': '介词短语',
+  'in a minute': '介词短语',
+  'in the past few years': '介词短语',
+  'over the years': '介词短语',
+  'over the weekend': '介词短语',
+  'during the day': '介词短语',
+  'in return': '介词短语',
+};
+
+/// 别名词形：同一个词块的复数/省冠词说法归到同一规范形，避免归档里出现
+/// 「have a meeting」和「have meetings」两条。
+const Map<String, String> _kAliases = {
+  'have meetings': 'have a meeting',
+  'attend meetings': 'attend a meeting',
+  'make plans': 'make a plan',
+  'send emails': 'send an email',
+  'write reports': 'write a report',
+};
+
+/// 可插入宾语的及物短语动词（write it down / turn it off / pick me up）。
+/// 只收真正允许「动词 + 代词 + 小品词」的词组；look after 这类不可拆分的不收。
+const Set<String> _kSeparable = {
+  'write down', 'turn on', 'turn off', 'turn up', 'turn down',
+  'pick up', 'pick out', 'take off', 'take out', 'take back', 'take away',
+  'put on', 'put away', 'put down', 'put off',
+  'give back', 'give away', 'give out',
+  'bring back', 'bring up', 'call back', 'cut off',
+  'clean up', 'hand in', 'hand out', 'send back', 'shut down',
+  'sort out', 'tidy up', 'try on', 'wake up', 'warm up', 'wrap up',
+  'look up', 'fill in', 'fill out', 'set up', 'throw away', 'cheer up',
+  'back up',
+};
+
+const Set<String> _kObjectPronouns = {
+  'it', 'them', 'me', 'him', 'her', 'us', 'you',
 };
 
 /// 不规则动词（只收词表里真正用到的第一词）。
@@ -642,6 +934,18 @@ Map<String, List<_Phrase>> _buildIndex() {
       out[variant]!.add(_Phrase(rest, phrase, kind));
     }
   });
+  // 别名共用规范形的文本与 key（have meetings → have a meeting）。
+  _kAliases.forEach((alias, canonical) {
+    final kind = _kPhrases[canonical];
+    if (kind == null) return; // 别名指向不存在的规范形：开发期错误，直接忽略
+    final toks = alias.split(' ');
+    final first = toks.first.toLowerCase();
+    final rest = toks.sublist(1).map((s) => s.toLowerCase()).toList();
+    for (final variant in _firstVariants(first)) {
+      add(variant);
+      out[variant]!.add(_Phrase(rest, canonical, kind));
+    }
+  });
   for (final list in out.values) {
     list.sort((a, b) => b.rest.length.compareTo(a.rest.length));
   }
@@ -702,7 +1006,24 @@ ClipChunkHit? _hitAt(List<_Tok> toks, int i) {
           break;
         }
       }
-      if (!ok) continue;
+      if (!ok) {
+        // 代词插槽：write it down / turn it off / pick me up。
+        // 只对白名单里的及物短语动词生效，且必须「动词 + 代词 + 小品词」紧邻。
+        if (p.rest.length == 1 &&
+            _kSeparable.contains(p.canonical) &&
+            i + 2 < toks.length &&
+            _kObjectPronouns.contains(toks[i + 1].lower) &&
+            toks[i + 2].lower == p.rest[0]) {
+          return ClipChunkHit(
+            text: p.canonical,
+            key: _norm(p.canonical),
+            kind: p.kind,
+            start: i,
+            end: i + 3,
+          );
+        }
+        continue;
+      }
       final text = p.canonical;
       return ClipChunkHit(
         text: text,
@@ -730,6 +1051,22 @@ ClipChunkHit? _hitAt(List<_Tok> toks, int i) {
           end: j + 2,
         );
       }
+    }
+  }
+  // 模板：it is/was + adj + to + 动词（It is important to practice every day.）
+  if (toks[i].lower == 'it' && i + 3 < toks.length) {
+    if (_kBeForms.contains(toks[i + 1].lower) &&
+        _kItToAdjs.contains(toks[i + 2].lower) &&
+        toks[i + 3].lower == 'to') {
+      final adj = toks[i + 2].lower;
+      final text = 'it is $adj to';
+      return ClipChunkHit(
+        text: text,
+        key: _norm(text),
+        kind: '常用句型',
+        start: i,
+        end: i + 4,
+      );
     }
   }
   return null;

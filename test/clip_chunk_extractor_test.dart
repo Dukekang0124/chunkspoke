@@ -118,4 +118,78 @@ void main() {
     expect(normalizeClipSentence('  I’m  LOOKING forward…  '),
         "i'm looking forward");
   });
+
+  // ---------------------------------------------------------------------
+  // 1.10.1：用户实测「粘贴的句子一个词块都没认出」的回归钉测。
+  // 六句来自截图里的「我的英语本 2」，修复前逐句 0 命中。
+  // ---------------------------------------------------------------------
+  group('用户实测句子：0 命中 → 每句至少一个词块', () {
+    const cases = <String, String>{
+      'Could you tell me more about your job?': 'tell me more',
+      "I'm in charge of marketing planning.": 'be in charge of',
+      'It keeps me pretty busy these days.': 'these days',
+      'What does your daily work look like?': 'look like',
+      'I need to write plans and analyze data.': 'need to',
+      'Sometimes I have meetings with my teammates.': 'have a meeting',
+    };
+    cases.forEach((sentence, expected) {
+      test('$sentence → $expected', () {
+        expect(texts(sentence), contains(expected), reason: sentence);
+      });
+    });
+  });
+
+  test('可拆分短语动词允许代词插入（write it down / turn it off / pick me up）', () {
+    expect(texts('Can you write it down for me?'), contains('write down'));
+    expect(texts('Please turn it off.'), contains('turn off'));
+    expect(texts('He will pick me up at six.'), contains('pick up'));
+    expect(texts('Please write them down.'), contains('write down'));
+  });
+
+  test('不可拆分的词组不会被代词插入规则误命中', () {
+    // look after 不在可拆分集合里：只认原形，不认 look it after。
+    expect(texts('I look after it.'), contains('look after'));
+    expect(texts('I look it after.'), isEmpty);
+    // talk about 同理：talk me about 不是词组。
+    expect(texts('They talk me about work.'), isEmpty);
+  });
+
+  test('复数/省冠词别名词形归到同一规范形', () {
+    final hits = extractClipChunks('We have meetings and send emails daily.');
+    final t = hits.map((h) => h.text).toList();
+    expect(t, contains('have a meeting'), reason: t.join(','));
+    expect(t, contains('send an email'), reason: t.join(','));
+    expect(t, isNot(contains('have meetings')));
+    // 跨句去重：两种说法是同一个 key。
+    expect(
+        extractClipChunks('We have meetings.')[0].key,
+        extractClipChunks('We have a meeting.')[0].key);
+  });
+
+  test('新增固定搭配在白名单类型内，且规范大小写不被拉低', () {
+    expect(texts('Good morning, everyone.'), contains('good morning'));
+    expect(texts('We split the bill at the end.'), contains('split the bill'));
+    expect(texts('I saw it on TV.'), contains('on TV'));
+    final h = extractClipChunks('We split the bill.').first;
+    expect(h.kind, '固定搭配');
+    expect(h.key, 'split the bill');
+  });
+
+  test('受控句型模板：it is/was + adj + to', () {
+    expect(texts('It was important to finish on time.'),
+        contains('it is important to'));
+    final h = extractClipChunks('It is important to practice every day.')
+        .firstWhere((x) => x.text == 'it is important to');
+    expect(h.kind, '常用句型');
+    // 不是形容词就不套模板（It is a small pleasure 不产出）。
+    expect(texts('It is a small pleasure.'), isEmpty);
+  });
+
+  test('补词表没有放宽成相邻词：框架仍不进', () {
+    final t = texts('I go to school every day.');
+    expect(t, isNot(contains('go to')));
+    expect(t, isNot(contains('to school')));
+    expect(extractClipChunks('Where is the toilet?'), isEmpty,
+        reason: '没有命中内置短语时如实返回空，不硬造');
+  });
 }
